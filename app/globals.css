@@ -1,26 +1,92 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --canvas: #f5f7fa;
+  --surface: #ffffff;
+  --surface-subtle: #f9fafb;
+  --ink: #102a43;
+  --muted: #667085;
+  --muted-strong: #475467;
+  --border: #d9e1e8;
+  --border-strong: #c6d0da;
+  --navy: #082b4c;
+  --navy-deep: #061f38;
+  --teal: #0e7c74;
+  --teal-dark: #08665f;
+  --teal-soft: #e8f5f3;
+  --indigo: #4f63d8;
+  --amber: #d98700;
+  --amber-soft: #fff4dc;
+  --red: #d14343;
+  --red-soft: #fff0f0;
+  --green: #16845b;
+  --green-soft: #e8f7f0;
+  --shadow-panel: 0 1px 2px rgb(16 42 67 / 0.04), 0 8px 24px rgb(16 42 67 / 0.03);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--canvas);
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid rgb(14 124 116 / 0.24);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgb(14 124 116 / 0.18);
+}
+
+.panel-shadow {
+  box-shadow: var(--shadow-panel);
+}
+
+.thin-scrollbar {
+  scrollbar-color: #b7c3ce transparent;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -33,6 +33,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# local course source documents
+/2026 S2 COS40005 Final Year Computing Project A-3.xlsx
+
 # vercel
 .vercel
 
