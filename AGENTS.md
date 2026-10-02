@@ -7,3 +7,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Ingestion handoff
+
+Before modifying or consuming FinSight ingestion, read [docs/handoff/AI_CONTEXT.md](docs/handoff/AI_CONTEXT.md). It links the authoritative implementation, architecture, tests and consumer example. Inspect the actual checkout and requested scope.

@@ -1,0 +1,9 @@
+transaction_date,reference,description,amount,currency,Unmapped Note
+2026-09-01,E-001,Synthetic sale,125.50,MYR,Retained raw
+2026-09-02,E-002,Synthetic fee,-20,MYR,Retained raw
+2026-09-01,E-001,Synthetic sale,125.50,MYR,Retained raw
+2026-09-04,,Missing reference,18,MYR,Retained raw
+2026-09-05,E-005,Malformed currency code,19,MYRR,Retained raw
+31/31/2026,E-006,Invalid date,20,MYR,Retained raw
+2026-09-07,E-007,Malformed amount,twelve,MYR,Retained raw
+,E-008,Missing required inputs,,MYR,Retained raw

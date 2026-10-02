@@ -1,0 +1,3671 @@
+{
+  "schema_version": "0.1",
+  "ruleset_version": "0.1",
+  "summary": {
+    "filesProcessed": 3,
+    "datasetsProcessed": 3,
+    "rowsReceived": 26,
+    "valid": 20,
+    "warning": 3,
+    "rejected": 3,
+    "accepted": 23,
+    "successRate": 88.46153846153847,
+    "cleanValidityRate": 76.92307692307692,
+    "requiredCompleteness": 96.15384615384616,
+    "duplicateRows": 1,
+    "missingDates": 1,
+    "missingMoney": 1,
+    "missingReferences": 1,
+    "unmappedColumns": 1
+  },
+  "datasets": [
+    {
+      "dataset_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0",
+      "schema_version": "0.1",
+      "ruleset_version": "0.1",
+      "file": {
+        "name": "ledger.csv",
+        "type": "CSV",
+        "sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+        "size_bytes": 676,
+        "delimiter": ","
+      },
+      "sheet": null,
+      "header_row": 1,
+      "columns": [
+        "posting_date",
+        "journal_id",
+        "account_code",
+        "debit",
+        "credit",
+        "description",
+        "currency"
+      ],
+      "options": {
+        "sourceSystem": "Ledger",
+        "monetaryMode": "debit_credit",
+        "dateBasis": "posting_date",
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "blankSideAsZero": false,
+        "negativeDebitCredit": "warn",
+        "bothDebitCredit": "warn",
+        "currencyDefault": null
+      },
+      "context": {
+        "batchId": "synthetic-handoff-example-batch-001",
+        "ingestedAt": "2026-10-02T00:00:00.000Z"
+      },
+      "profile": {
+        "rowCount": 10,
+        "columnCount": 7,
+        "columns": [
+          {
+            "name": "posting_date",
+            "inferredType": "date-like",
+            "missing": 0
+          },
+          {
+            "name": "journal_id",
+            "inferredType": "text",
+            "missing": 0
+          },
+          {
+            "name": "account_code",
+            "inferredType": "numeric-like",
+            "missing": 0
+          },
+          {
+            "name": "debit",
+            "inferredType": "numeric-like",
+            "missing": 0
+          },
+          {
+            "name": "credit",
+            "inferredType": "numeric-like",
+            "missing": 0
+          },
+          {
+            "name": "description",
+            "inferredType": "text",
+            "missing": 0
+          },
+          {
+            "name": "currency",
+            "inferredType": "text",
+            "missing": 0
+          }
+        ],
+        "duplicateRowCount": 0,
+        "duplicateRowNumbers": [],
+        "sampleRows": [
+          {
+            "rowNumber": 2,
+            "cells": [
+              "2026-09-01",
+              "J-001",
+              "00100",
+              "1500",
+              "0",
+              "Synthetic ledger entry 1",
+              "MYR"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 3,
+            "cells": [
+              "2026-09-02",
+              "J-002",
+              "00100",
+              "0",
+              "200",
+              "Synthetic ledger entry 2",
+              "MYR"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 4,
+            "cells": [
+              "2026-09-03",
+              "J-003",
+              "00100",
+              "75.25",
+              "0",
+              "Synthetic ledger entry 3",
+              "MYR"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 5,
+            "cells": [
+              "2026-09-04",
+              "J-004",
+              "00100",
+              "0",
+              "38.50",
+              "Synthetic ledger entry 4",
+              "MYR"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 6,
+            "cells": [
+              "2026-09-05",
+              "J-005",
+              "00100",
+              "210",
+              "0",
+              "Synthetic ledger entry 5",
+              "MYR"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 7,
+            "cells": [
+              "2026-09-06",
+              "J-006",
+              "00100",
+              "0",
+              "62.15",
+              "Synthetic ledger entry 6",
+              "MYR"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 8,
+            "cells": [
+              "2026-09-07",
+              "J-007",
+              "00100",
+              "300.05",
+              "0",
+              "Synthetic ledger entry 7",
+              "MYR"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 9,
+            "cells": [
+              "2026-09-08",
+              "J-008",
+              "00100",
+              "0",
+              "17.90",
+              "Synthetic ledger entry 8",
+              "MYR"
+            ],
+            "issues": []
+          }
+        ]
+      },
+      "mapping": [
+        {
+          "sourceColumn": "posting_date",
+          "sourceIndex": 0,
+          "userConfirmed": true,
+          "target": "posting_date",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "journal_id",
+          "sourceIndex": 1,
+          "userConfirmed": true,
+          "target": "reference",
+          "method": "alias_match",
+          "confidence": 0.95
+        },
+        {
+          "sourceColumn": "account_code",
+          "sourceIndex": 2,
+          "userConfirmed": true,
+          "target": "account_code",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "debit",
+          "sourceIndex": 3,
+          "userConfirmed": true,
+          "target": "debit",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "credit",
+          "sourceIndex": 4,
+          "userConfirmed": true,
+          "target": "credit",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "description",
+          "sourceIndex": 5,
+          "userConfirmed": true,
+          "target": "description",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "currency",
+          "sourceIndex": 6,
+          "userConfirmed": true,
+          "target": "currency",
+          "method": "exact_match",
+          "confidence": 1
+        }
+      ],
+      "records": [
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 2,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:2",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 2,
+            "cells": [
+              "2026-09-01",
+              "J-001",
+              "00100",
+              "1500",
+              "0",
+              "Synthetic ledger entry 1",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-01",
+            "reference": "J-001",
+            "account_code": "00100",
+            "debit": "1500",
+            "credit": "0",
+            "description": "Synthetic ledger entry 1",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 2,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:2",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-01",
+            "canonical_date": "2026-09-01",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-001",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 1",
+            "counterparty": null,
+            "debit": "1500",
+            "credit": "0",
+            "source_amount": null,
+            "derived_ledger_net": "1500",
+            "balance": null,
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 3,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:3",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 3,
+            "cells": [
+              "2026-09-02",
+              "J-002",
+              "00100",
+              "0",
+              "200",
+              "Synthetic ledger entry 2",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-02",
+            "reference": "J-002",
+            "account_code": "00100",
+            "debit": "0",
+            "credit": "200",
+            "description": "Synthetic ledger entry 2",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 3,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:3",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-02",
+            "canonical_date": "2026-09-02",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-002",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 2",
+            "counterparty": null,
+            "debit": "0",
+            "credit": "200",
+            "source_amount": null,
+            "derived_ledger_net": "-200",
+            "balance": null,
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 4,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:4",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 4,
+            "cells": [
+              "2026-09-03",
+              "J-003",
+              "00100",
+              "75.25",
+              "0",
+              "Synthetic ledger entry 3",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-03",
+            "reference": "J-003",
+            "account_code": "00100",
+            "debit": "75.25",
+            "credit": "0",
+            "description": "Synthetic ledger entry 3",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 4,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:4",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-03",
+            "canonical_date": "2026-09-03",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-003",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 3",
+            "counterparty": null,
+            "debit": "75.25",
+            "credit": "0",
+            "source_amount": null,
+            "derived_ledger_net": "75.25",
+            "balance": null,
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 5,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:5",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 5,
+            "cells": [
+              "2026-09-04",
+              "J-004",
+              "00100",
+              "0",
+              "38.50",
+              "Synthetic ledger entry 4",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-04",
+            "reference": "J-004",
+            "account_code": "00100",
+            "debit": "0",
+            "credit": "38.50",
+            "description": "Synthetic ledger entry 4",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 5,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:5",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-04",
+            "canonical_date": "2026-09-04",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-004",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 4",
+            "counterparty": null,
+            "debit": "0",
+            "credit": "38.5",
+            "source_amount": null,
+            "derived_ledger_net": "-38.5",
+            "balance": null,
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 6,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:6",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 6,
+            "cells": [
+              "2026-09-05",
+              "J-005",
+              "00100",
+              "210",
+              "0",
+              "Synthetic ledger entry 5",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-05",
+            "reference": "J-005",
+            "account_code": "00100",
+            "debit": "210",
+            "credit": "0",
+            "description": "Synthetic ledger entry 5",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 6,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:6",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-05",
+            "canonical_date": "2026-09-05",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-005",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 5",
+            "counterparty": null,
+            "debit": "210",
+            "credit": "0",
+            "source_amount": null,
+            "derived_ledger_net": "210",
+            "balance": null,
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 7,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:7",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 7,
+            "cells": [
+              "2026-09-06",
+              "J-006",
+              "00100",
+              "0",
+              "62.15",
+              "Synthetic ledger entry 6",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-06",
+            "reference": "J-006",
+            "account_code": "00100",
+            "debit": "0",
+            "credit": "62.15",
+            "description": "Synthetic ledger entry 6",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 7,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:7",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-06",
+            "canonical_date": "2026-09-06",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-006",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 6",
+            "counterparty": null,
+            "debit": "0",
+            "credit": "62.15",
+            "source_amount": null,
+            "derived_ledger_net": "-62.15",
+            "balance": null,
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 8,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:8",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 8,
+            "cells": [
+              "2026-09-07",
+              "J-007",
+              "00100",
+              "300.05",
+              "0",
+              "Synthetic ledger entry 7",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-07",
+            "reference": "J-007",
+            "account_code": "00100",
+            "debit": "300.05",
+            "credit": "0",
+            "description": "Synthetic ledger entry 7",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 8,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:8",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-07",
+            "canonical_date": "2026-09-07",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-007",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 7",
+            "counterparty": null,
+            "debit": "300.05",
+            "credit": "0",
+            "source_amount": null,
+            "derived_ledger_net": "300.05",
+            "balance": null,
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 9,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:9",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 9,
+            "cells": [
+              "2026-09-08",
+              "J-008",
+              "00100",
+              "0",
+              "17.90",
+              "Synthetic ledger entry 8",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-08",
+            "reference": "J-008",
+            "account_code": "00100",
+            "debit": "0",
+            "credit": "17.90",
+            "description": "Synthetic ledger entry 8",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 9,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:9",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-08",
+            "canonical_date": "2026-09-08",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-008",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 8",
+            "counterparty": null,
+            "debit": "0",
+            "credit": "17.9",
+            "source_amount": null,
+            "derived_ledger_net": "-17.9",
+            "balance": null,
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 10,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:10",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 10,
+            "cells": [
+              "2026-09-09",
+              "J-009",
+              "00100",
+              "44.10",
+              "0",
+              "Synthetic ledger entry 9",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-09",
+            "reference": "J-009",
+            "account_code": "00100",
+            "debit": "44.10",
+            "credit": "0",
+            "description": "Synthetic ledger entry 9",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 10,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:10",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-09",
+            "canonical_date": "2026-09-09",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-009",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 9",
+            "counterparty": null,
+            "debit": "44.1",
+            "credit": "0",
+            "source_amount": null,
+            "derived_ledger_net": "44.1",
+            "balance": null,
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 11,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:11",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 11,
+            "cells": [
+              "2026-09-10",
+              "J-010",
+              "00100",
+              "0",
+              "85",
+              "Synthetic ledger entry 10",
+              "MYR"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "posting_date": "2026-09-10",
+            "reference": "J-010",
+            "account_code": "00100",
+            "debit": "0",
+            "credit": "85",
+            "description": "Synthetic ledger entry 10",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Ledger",
+            "source_file": "ledger.csv",
+            "source_sheet": null,
+            "source_row_number": 11,
+            "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:11",
+            "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": "2026-09-10",
+            "canonical_date": "2026-09-10",
+            "canonical_date_basis": "POSTING_DATE",
+            "reference": "J-010",
+            "source_transaction_id": null,
+            "account_code": "00100",
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic ledger entry 10",
+            "counterparty": null,
+            "debit": "0",
+            "credit": "85",
+            "source_amount": null,
+            "derived_ledger_net": "-85",
+            "balance": null,
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "debit_credit"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        }
+      ],
+      "normalized": [
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 2,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:2",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-01",
+          "canonical_date": "2026-09-01",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-001",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 1",
+          "counterparty": null,
+          "debit": "1500",
+          "credit": "0",
+          "source_amount": null,
+          "derived_ledger_net": "1500",
+          "balance": null,
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 3,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:3",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-02",
+          "canonical_date": "2026-09-02",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-002",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 2",
+          "counterparty": null,
+          "debit": "0",
+          "credit": "200",
+          "source_amount": null,
+          "derived_ledger_net": "-200",
+          "balance": null,
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 4,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:4",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-03",
+          "canonical_date": "2026-09-03",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-003",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 3",
+          "counterparty": null,
+          "debit": "75.25",
+          "credit": "0",
+          "source_amount": null,
+          "derived_ledger_net": "75.25",
+          "balance": null,
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 5,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:5",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-04",
+          "canonical_date": "2026-09-04",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-004",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 4",
+          "counterparty": null,
+          "debit": "0",
+          "credit": "38.5",
+          "source_amount": null,
+          "derived_ledger_net": "-38.5",
+          "balance": null,
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 6,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:6",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-05",
+          "canonical_date": "2026-09-05",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-005",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 5",
+          "counterparty": null,
+          "debit": "210",
+          "credit": "0",
+          "source_amount": null,
+          "derived_ledger_net": "210",
+          "balance": null,
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 7,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:7",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-06",
+          "canonical_date": "2026-09-06",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-006",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 6",
+          "counterparty": null,
+          "debit": "0",
+          "credit": "62.15",
+          "source_amount": null,
+          "derived_ledger_net": "-62.15",
+          "balance": null,
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 8,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:8",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-07",
+          "canonical_date": "2026-09-07",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-007",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 7",
+          "counterparty": null,
+          "debit": "300.05",
+          "credit": "0",
+          "source_amount": null,
+          "derived_ledger_net": "300.05",
+          "balance": null,
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 9,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:9",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-08",
+          "canonical_date": "2026-09-08",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-008",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 8",
+          "counterparty": null,
+          "debit": "0",
+          "credit": "17.9",
+          "source_amount": null,
+          "derived_ledger_net": "-17.9",
+          "balance": null,
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 10,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:10",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-09",
+          "canonical_date": "2026-09-09",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-009",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 9",
+          "counterparty": null,
+          "debit": "44.1",
+          "credit": "0",
+          "source_amount": null,
+          "derived_ledger_net": "44.1",
+          "balance": null,
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Ledger",
+          "source_file": "ledger.csv",
+          "source_sheet": null,
+          "source_row_number": 11,
+          "source_row_id": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9:0:11",
+          "file_sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": null,
+          "posting_date": "2026-09-10",
+          "canonical_date": "2026-09-10",
+          "canonical_date_basis": "POSTING_DATE",
+          "reference": "J-010",
+          "source_transaction_id": null,
+          "account_code": "00100",
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic ledger entry 10",
+          "counterparty": null,
+          "debit": "0",
+          "credit": "85",
+          "source_amount": null,
+          "derived_ledger_net": "-85",
+          "balance": null,
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "debit_credit",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        }
+      ],
+      "summary": {
+        "filesProcessed": 1,
+        "datasetsProcessed": 1,
+        "rowsReceived": 10,
+        "valid": 10,
+        "warning": 0,
+        "rejected": 0,
+        "accepted": 10,
+        "successRate": 100,
+        "cleanValidityRate": 100,
+        "requiredCompleteness": 100,
+        "duplicateRows": 0,
+        "missingDates": 0,
+        "missingMoney": 0,
+        "missingReferences": 0,
+        "unmappedColumns": 0
+      }
+    },
+    {
+      "dataset_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0",
+      "schema_version": "0.1",
+      "ruleset_version": "0.1",
+      "file": {
+        "name": "bank_statement.xlsx",
+        "type": "XLSX",
+        "sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+        "size_bytes": 5933,
+        "delimiter": null
+      },
+      "sheet": "Transactions",
+      "header_row": 1,
+      "columns": [
+        "Date",
+        "Details",
+        "Narration",
+        "Direction",
+        "Amount",
+        "Balance",
+        "Currency"
+      ],
+      "options": {
+        "sourceSystem": "Bank Statement",
+        "monetaryMode": "amount_direction",
+        "dateBasis": "transaction_date",
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "blankSideAsZero": false,
+        "negativeDebitCredit": "warn",
+        "bothDebitCredit": "warn",
+        "currencyDefault": null
+      },
+      "context": {
+        "batchId": "synthetic-handoff-example-batch-001",
+        "ingestedAt": "2026-10-02T00:00:00.000Z"
+      },
+      "profile": {
+        "rowCount": 8,
+        "columnCount": 7,
+        "columns": [
+          {
+            "name": "Date",
+            "inferredType": "date-like",
+            "missing": 0
+          },
+          {
+            "name": "Details",
+            "inferredType": "text",
+            "missing": 0
+          },
+          {
+            "name": "Narration",
+            "inferredType": "text",
+            "missing": 0
+          },
+          {
+            "name": "Direction",
+            "inferredType": "text",
+            "missing": 0
+          },
+          {
+            "name": "Amount",
+            "inferredType": "numeric-like",
+            "missing": 0
+          },
+          {
+            "name": "Balance",
+            "inferredType": "numeric-like",
+            "missing": 0
+          },
+          {
+            "name": "Currency",
+            "inferredType": "text",
+            "missing": 0
+          }
+        ],
+        "duplicateRowCount": 0,
+        "duplicateRowNumbers": [],
+        "sampleRows": [
+          {
+            "rowNumber": 2,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-01T00:00:00.000Z"
+              },
+              "BANK-001",
+              "Synthetic bank entry 1",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "125.5"
+              },
+              {
+                "kind": "excel_number",
+                "value": "9874.5"
+              },
+              "MYR"
+            ]
+          },
+          {
+            "rowNumber": 3,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-02T00:00:00.000Z"
+              },
+              "BANK-002",
+              "Synthetic bank entry 2",
+              "Credit",
+              {
+                "kind": "excel_number",
+                "value": "1500"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11374.5"
+              },
+              "MYR"
+            ]
+          },
+          {
+            "rowNumber": 4,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-03T00:00:00.000Z"
+              },
+              "BANK-003",
+              "Synthetic bank entry 3",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "30.25"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11344.25"
+              },
+              "MYR"
+            ]
+          },
+          {
+            "rowNumber": 5,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-04T00:00:00.000Z"
+              },
+              "BANK-004",
+              "Synthetic bank entry 4",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "62"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11282.25"
+              },
+              "MYR"
+            ]
+          },
+          {
+            "rowNumber": 6,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-05T00:00:00.000Z"
+              },
+              "BANK-005",
+              "Synthetic bank entry 5",
+              "Credit",
+              {
+                "kind": "excel_number",
+                "value": "220"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11502.25"
+              },
+              "MYR"
+            ]
+          },
+          {
+            "rowNumber": 7,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-06T00:00:00.000Z"
+              },
+              "BANK-006",
+              "Synthetic bank entry 6",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "90.1"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11412.15"
+              },
+              "MYR"
+            ]
+          },
+          {
+            "rowNumber": 8,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-07T00:00:00.000Z"
+              },
+              "BANK-007",
+              "Synthetic bank entry 7",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "17.9"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11394.25"
+              },
+              "MYR"
+            ]
+          },
+          {
+            "rowNumber": 9,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-08T00:00:00.000Z"
+              },
+              "BANK-008",
+              "Synthetic bank entry 8",
+              "Credit",
+              {
+                "kind": "excel_number",
+                "value": "300"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11694.25"
+              },
+              "MYR"
+            ]
+          }
+        ]
+      },
+      "mapping": [
+        {
+          "sourceColumn": "Date",
+          "sourceIndex": 0,
+          "userConfirmed": true,
+          "target": "transaction_date",
+          "method": "alias_match",
+          "confidence": 0.95
+        },
+        {
+          "sourceColumn": "Details",
+          "sourceIndex": 1,
+          "userConfirmed": true,
+          "target": "reference",
+          "method": "manual",
+          "confidence": null
+        },
+        {
+          "sourceColumn": "Narration",
+          "sourceIndex": 2,
+          "userConfirmed": true,
+          "target": "description",
+          "method": "alias_match",
+          "confidence": 0.95
+        },
+        {
+          "sourceColumn": "Direction",
+          "sourceIndex": 3,
+          "userConfirmed": true,
+          "target": "entry_side",
+          "method": "alias_match",
+          "confidence": 0.95
+        },
+        {
+          "sourceColumn": "Amount",
+          "sourceIndex": 4,
+          "userConfirmed": true,
+          "target": "source_amount",
+          "method": "alias_match",
+          "confidence": 0.95
+        },
+        {
+          "sourceColumn": "Balance",
+          "sourceIndex": 5,
+          "userConfirmed": true,
+          "target": "balance",
+          "method": "alias_match",
+          "confidence": 0.95
+        },
+        {
+          "sourceColumn": "Currency",
+          "sourceIndex": 6,
+          "userConfirmed": true,
+          "target": "currency",
+          "method": "alias_match",
+          "confidence": 0.95
+        }
+      ],
+      "records": [
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 2,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:2",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 2,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-01T00:00:00.000Z"
+              },
+              "BANK-001",
+              "Synthetic bank entry 1",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "125.5"
+              },
+              {
+                "kind": "excel_number",
+                "value": "9874.5"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-01T00:00:00.000Z"
+            },
+            "reference": "BANK-001",
+            "description": "Synthetic bank entry 1",
+            "entry_side": "Debit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "125.5"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "9874.5"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 2,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:2",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-01",
+            "posting_date": null,
+            "canonical_date": "2026-09-01",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-001",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 1",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "125.5",
+            "derived_ledger_net": null,
+            "balance": "9874.5",
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 3,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:3",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 3,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-02T00:00:00.000Z"
+              },
+              "BANK-002",
+              "Synthetic bank entry 2",
+              "Credit",
+              {
+                "kind": "excel_number",
+                "value": "1500"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11374.5"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-02T00:00:00.000Z"
+            },
+            "reference": "BANK-002",
+            "description": "Synthetic bank entry 2",
+            "entry_side": "Credit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "1500"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "11374.5"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 3,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:3",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-02",
+            "posting_date": null,
+            "canonical_date": "2026-09-02",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-002",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 2",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "1500",
+            "derived_ledger_net": null,
+            "balance": "11374.5",
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 4,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:4",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 4,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-03T00:00:00.000Z"
+              },
+              "BANK-003",
+              "Synthetic bank entry 3",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "30.25"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11344.25"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-03T00:00:00.000Z"
+            },
+            "reference": "BANK-003",
+            "description": "Synthetic bank entry 3",
+            "entry_side": "Debit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "30.25"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "11344.25"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 4,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:4",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-03",
+            "posting_date": null,
+            "canonical_date": "2026-09-03",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-003",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 3",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "30.25",
+            "derived_ledger_net": null,
+            "balance": "11344.25",
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 5,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:5",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 5,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-04T00:00:00.000Z"
+              },
+              "BANK-004",
+              "Synthetic bank entry 4",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "62"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11282.25"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-04T00:00:00.000Z"
+            },
+            "reference": "BANK-004",
+            "description": "Synthetic bank entry 4",
+            "entry_side": "Debit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "62"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "11282.25"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 5,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:5",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-04",
+            "posting_date": null,
+            "canonical_date": "2026-09-04",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-004",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 4",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "62",
+            "derived_ledger_net": null,
+            "balance": "11282.25",
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 6,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:6",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 6,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-05T00:00:00.000Z"
+              },
+              "BANK-005",
+              "Synthetic bank entry 5",
+              "Credit",
+              {
+                "kind": "excel_number",
+                "value": "220"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11502.25"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-05T00:00:00.000Z"
+            },
+            "reference": "BANK-005",
+            "description": "Synthetic bank entry 5",
+            "entry_side": "Credit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "220"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "11502.25"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 6,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:6",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-05",
+            "posting_date": null,
+            "canonical_date": "2026-09-05",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-005",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 5",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "220",
+            "derived_ledger_net": null,
+            "balance": "11502.25",
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 7,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:7",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 7,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-06T00:00:00.000Z"
+              },
+              "BANK-006",
+              "Synthetic bank entry 6",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "90.1"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11412.15"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-06T00:00:00.000Z"
+            },
+            "reference": "BANK-006",
+            "description": "Synthetic bank entry 6",
+            "entry_side": "Debit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "90.1"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "11412.15"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 7,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:7",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-06",
+            "posting_date": null,
+            "canonical_date": "2026-09-06",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-006",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 6",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "90.1",
+            "derived_ledger_net": null,
+            "balance": "11412.15",
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 8,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:8",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 8,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-07T00:00:00.000Z"
+              },
+              "BANK-007",
+              "Synthetic bank entry 7",
+              "Debit",
+              {
+                "kind": "excel_number",
+                "value": "17.9"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11394.25"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-07T00:00:00.000Z"
+            },
+            "reference": "BANK-007",
+            "description": "Synthetic bank entry 7",
+            "entry_side": "Debit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "17.9"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "11394.25"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 8,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:8",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-07",
+            "posting_date": null,
+            "canonical_date": "2026-09-07",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-007",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 7",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "17.9",
+            "derived_ledger_net": null,
+            "balance": "11394.25",
+            "entry_side": "DEBIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 9,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:9",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 9,
+            "issues": [],
+            "cells": [
+              {
+                "kind": "excel_date",
+                "value": "2026-09-08T00:00:00.000Z"
+              },
+              "BANK-008",
+              "Synthetic bank entry 8",
+              "Credit",
+              {
+                "kind": "excel_number",
+                "value": "300"
+              },
+              {
+                "kind": "excel_number",
+                "value": "11694.25"
+              },
+              "MYR"
+            ]
+          },
+          "staging": {
+            "transaction_date": {
+              "kind": "excel_date",
+              "value": "2026-09-08T00:00:00.000Z"
+            },
+            "reference": "BANK-008",
+            "description": "Synthetic bank entry 8",
+            "entry_side": "Credit",
+            "source_amount": {
+              "kind": "excel_number",
+              "value": "300"
+            },
+            "balance": {
+              "kind": "excel_number",
+              "value": "11694.25"
+            },
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Bank Statement",
+            "source_file": "bank_statement.xlsx",
+            "source_sheet": "Transactions",
+            "source_row_number": 9,
+            "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:9",
+            "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-08",
+            "posting_date": null,
+            "canonical_date": "2026-09-08",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "BANK-008",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic bank entry 8",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "300",
+            "derived_ledger_net": null,
+            "balance": "11694.25",
+            "entry_side": "CREDIT",
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_amount_with_direction"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        }
+      ],
+      "normalized": [
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 2,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:2",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-01",
+          "posting_date": null,
+          "canonical_date": "2026-09-01",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-001",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 1",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "125.5",
+          "derived_ledger_net": null,
+          "balance": "9874.5",
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 3,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:3",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-02",
+          "posting_date": null,
+          "canonical_date": "2026-09-02",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-002",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 2",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "1500",
+          "derived_ledger_net": null,
+          "balance": "11374.5",
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 4,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:4",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-03",
+          "posting_date": null,
+          "canonical_date": "2026-09-03",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-003",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 3",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "30.25",
+          "derived_ledger_net": null,
+          "balance": "11344.25",
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 5,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:5",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-04",
+          "posting_date": null,
+          "canonical_date": "2026-09-04",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-004",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 4",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "62",
+          "derived_ledger_net": null,
+          "balance": "11282.25",
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 6,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:6",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-05",
+          "posting_date": null,
+          "canonical_date": "2026-09-05",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-005",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 5",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "220",
+          "derived_ledger_net": null,
+          "balance": "11502.25",
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 7,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:7",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-06",
+          "posting_date": null,
+          "canonical_date": "2026-09-06",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-006",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 6",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "90.1",
+          "derived_ledger_net": null,
+          "balance": "11412.15",
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 8,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:8",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-07",
+          "posting_date": null,
+          "canonical_date": "2026-09-07",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-007",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 7",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "17.9",
+          "derived_ledger_net": null,
+          "balance": "11394.25",
+          "entry_side": "DEBIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Bank Statement",
+          "source_file": "bank_statement.xlsx",
+          "source_sheet": "Transactions",
+          "source_row_number": 9,
+          "source_row_id": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf:0:9",
+          "file_sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-08",
+          "posting_date": null,
+          "canonical_date": "2026-09-08",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "BANK-008",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic bank entry 8",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "300",
+          "derived_ledger_net": null,
+          "balance": "11694.25",
+          "entry_side": "CREDIT",
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_amount_with_direction",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        }
+      ],
+      "summary": {
+        "filesProcessed": 1,
+        "datasetsProcessed": 1,
+        "rowsReceived": 8,
+        "valid": 8,
+        "warning": 0,
+        "rejected": 0,
+        "accepted": 8,
+        "successRate": 100,
+        "cleanValidityRate": 100,
+        "requiredCompleteness": 100,
+        "duplicateRows": 0,
+        "missingDates": 0,
+        "missingMoney": 0,
+        "missingReferences": 0,
+        "unmappedColumns": 0
+      }
+    },
+    {
+      "dataset_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0",
+      "schema_version": "0.1",
+      "ruleset_version": "0.1",
+      "file": {
+        "name": "edge_cases.csv",
+        "type": "CSV",
+        "sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+        "size_bytes": 511,
+        "delimiter": ","
+      },
+      "sheet": null,
+      "header_row": 1,
+      "columns": [
+        "transaction_date",
+        "reference",
+        "description",
+        "amount",
+        "currency",
+        "Unmapped Note"
+      ],
+      "options": {
+        "sourceSystem": "Other",
+        "monetaryMode": "signed_amount",
+        "dateBasis": "transaction_date",
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "blankSideAsZero": false,
+        "negativeDebitCredit": "warn",
+        "bothDebitCredit": "warn",
+        "currencyDefault": null
+      },
+      "context": {
+        "batchId": "synthetic-handoff-example-batch-001",
+        "ingestedAt": "2026-10-02T00:00:00.000Z"
+      },
+      "profile": {
+        "rowCount": 8,
+        "columnCount": 6,
+        "columns": [
+          {
+            "name": "transaction_date",
+            "inferredType": "date-like",
+            "missing": 1
+          },
+          {
+            "name": "reference",
+            "inferredType": "text",
+            "missing": 1
+          },
+          {
+            "name": "description",
+            "inferredType": "text",
+            "missing": 0
+          },
+          {
+            "name": "amount",
+            "inferredType": "mixed",
+            "missing": 1
+          },
+          {
+            "name": "currency",
+            "inferredType": "text",
+            "missing": 0
+          },
+          {
+            "name": "Unmapped Note",
+            "inferredType": "text",
+            "missing": 0
+          }
+        ],
+        "duplicateRowCount": 1,
+        "duplicateRowNumbers": [
+          4
+        ],
+        "sampleRows": [
+          {
+            "rowNumber": 2,
+            "cells": [
+              "2026-09-01",
+              "E-001",
+              "Synthetic sale",
+              "125.50",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 3,
+            "cells": [
+              "2026-09-02",
+              "E-002",
+              "Synthetic fee",
+              "-20",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 4,
+            "cells": [
+              "2026-09-01",
+              "E-001",
+              "Synthetic sale",
+              "125.50",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 5,
+            "cells": [
+              "2026-09-04",
+              "",
+              "Missing reference",
+              "18",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 6,
+            "cells": [
+              "2026-09-05",
+              "E-005",
+              "Malformed currency code",
+              "19",
+              "MYRR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 7,
+            "cells": [
+              "31/31/2026",
+              "E-006",
+              "Invalid date",
+              "20",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 8,
+            "cells": [
+              "2026-09-07",
+              "E-007",
+              "Malformed amount",
+              "twelve",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          {
+            "rowNumber": 9,
+            "cells": [
+              "",
+              "E-008",
+              "Missing required inputs",
+              "",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          }
+        ]
+      },
+      "mapping": [
+        {
+          "sourceColumn": "transaction_date",
+          "sourceIndex": 0,
+          "userConfirmed": true,
+          "target": "transaction_date",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "reference",
+          "sourceIndex": 1,
+          "userConfirmed": true,
+          "target": "reference",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "description",
+          "sourceIndex": 2,
+          "userConfirmed": true,
+          "target": "description",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "amount",
+          "sourceIndex": 3,
+          "userConfirmed": true,
+          "target": "source_amount",
+          "method": "alias_match",
+          "confidence": 0.95
+        },
+        {
+          "sourceColumn": "currency",
+          "sourceIndex": 4,
+          "userConfirmed": true,
+          "target": "currency",
+          "method": "exact_match",
+          "confidence": 1
+        },
+        {
+          "sourceColumn": "Unmapped Note",
+          "sourceIndex": 5,
+          "userConfirmed": true,
+          "target": null,
+          "method": "unmapped",
+          "confidence": null
+        }
+      ],
+      "records": [
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 2,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:2",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 2,
+            "cells": [
+              "2026-09-01",
+              "E-001",
+              "Synthetic sale",
+              "125.50",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "2026-09-01",
+            "reference": "E-001",
+            "description": "Synthetic sale",
+            "source_amount": "125.50",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 2,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:2",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-01",
+            "posting_date": null,
+            "canonical_date": "2026-09-01",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "E-001",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic sale",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "125.5",
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 3,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:3",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 3,
+            "cells": [
+              "2026-09-02",
+              "E-002",
+              "Synthetic fee",
+              "-20",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "2026-09-02",
+            "reference": "E-002",
+            "description": "Synthetic fee",
+            "source_amount": "-20",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 3,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:3",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-02",
+            "posting_date": null,
+            "canonical_date": "2026-09-02",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "E-002",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic fee",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "-20",
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [],
+          "status": "VALID",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 4,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:4",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 4,
+            "cells": [
+              "2026-09-01",
+              "E-001",
+              "Synthetic sale",
+              "125.50",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "2026-09-01",
+            "reference": "E-001",
+            "description": "Synthetic sale",
+            "source_amount": "125.50",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 4,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:4",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-01",
+            "posting_date": null,
+            "canonical_date": "2026-09-01",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "E-001",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Synthetic sale",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "125.5",
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [
+            {
+              "rule": "DUPLICATE_ROW",
+              "field": "record",
+              "category": "technical",
+              "severity": "WARNING",
+              "sourceColumn": null,
+              "originalValue": null,
+              "message": "Exact raw row repeats an earlier row in this dataset. It is retained and flagged, not automatically removed."
+            }
+          ],
+          "status": "WARNING",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 5,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:5",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 5,
+            "cells": [
+              "2026-09-04",
+              "",
+              "Missing reference",
+              "18",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "2026-09-04",
+            "reference": "",
+            "description": "Missing reference",
+            "source_amount": "18",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 5,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:5",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-04",
+            "posting_date": null,
+            "canonical_date": "2026-09-04",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": null,
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Missing reference",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "18",
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [
+            {
+              "rule": "MISSING_REFERENCE",
+              "field": "reference",
+              "message": "Reference is missing; accepted with attention under the provisional schema.",
+              "category": "business",
+              "severity": "WARNING",
+              "sourceColumn": "reference",
+              "originalValue": ""
+            }
+          ],
+          "status": "WARNING",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 6,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:6",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 6,
+            "cells": [
+              "2026-09-05",
+              "E-005",
+              "Malformed currency code",
+              "19",
+              "MYRR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "2026-09-05",
+            "reference": "E-005",
+            "description": "Malformed currency code",
+            "source_amount": "19",
+            "currency": "MYRR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 6,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:6",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-05",
+            "posting_date": null,
+            "canonical_date": "2026-09-05",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "E-005",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Malformed currency code",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "19",
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYRR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [
+            {
+              "rule": "MALFORMED_CURRENCY",
+              "field": "currency",
+              "message": "Supplied currency does not have a three-letter code structure. It is retained; authoritative ISO 4217 validation is outside this PoC.",
+              "category": "business",
+              "severity": "WARNING",
+              "sourceColumn": "currency",
+              "originalValue": "MYRR"
+            }
+          ],
+          "status": "WARNING",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 7,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:7",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 7,
+            "cells": [
+              "31/31/2026",
+              "E-006",
+              "Invalid date",
+              "20",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "31/31/2026",
+            "reference": "E-006",
+            "description": "Invalid date",
+            "source_amount": "20",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 7,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:7",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": null,
+            "canonical_date": null,
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "E-006",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Invalid date",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": "20",
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [
+            {
+              "rule": "INVALID_DATE",
+              "field": "transaction_date",
+              "message": "Unable to parse date with the selected convention, or calendar date is invalid.",
+              "category": "technical",
+              "severity": "REJECTED",
+              "sourceColumn": "transaction_date",
+              "originalValue": "31/31/2026"
+            }
+          ],
+          "status": "REJECTED",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 8,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:8",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 8,
+            "cells": [
+              "2026-09-07",
+              "E-007",
+              "Malformed amount",
+              "twelve",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "2026-09-07",
+            "reference": "E-007",
+            "description": "Malformed amount",
+            "source_amount": "twelve",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 8,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:8",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": "2026-09-07",
+            "posting_date": null,
+            "canonical_date": "2026-09-07",
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "E-007",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Malformed amount",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": null,
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [
+            {
+              "rule": "INVALID_NUMBER",
+              "field": "source_amount",
+              "message": "Unable to parse numeric value using the selected number convention.",
+              "category": "technical",
+              "severity": "REJECTED",
+              "sourceColumn": "amount",
+              "originalValue": "twelve"
+            }
+          ],
+          "status": "REJECTED",
+          "missingDate": false,
+          "missingMoney": false,
+          "populatedRequiredSlots": 2
+        },
+        {
+          "provenance": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 9,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:9",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z"
+          },
+          "raw": {
+            "rowNumber": 9,
+            "cells": [
+              "",
+              "E-008",
+              "Missing required inputs",
+              "",
+              "MYR",
+              "Retained raw"
+            ],
+            "issues": []
+          },
+          "staging": {
+            "transaction_date": "",
+            "reference": "E-008",
+            "description": "Missing required inputs",
+            "source_amount": "",
+            "currency": "MYR"
+          },
+          "candidate": {
+            "source_system": "Other",
+            "source_file": "edge_cases.csv",
+            "source_sheet": null,
+            "source_row_number": 9,
+            "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:9",
+            "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+            "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+            "ingested_at": "2026-10-02T00:00:00.000Z",
+            "transaction_date": null,
+            "posting_date": null,
+            "canonical_date": null,
+            "canonical_date_basis": "TRANSACTION_DATE",
+            "reference": "E-008",
+            "source_transaction_id": null,
+            "account_code": null,
+            "account_id": null,
+            "entity_id": null,
+            "description": "Missing required inputs",
+            "counterparty": null,
+            "debit": null,
+            "credit": null,
+            "source_amount": null,
+            "derived_ledger_net": null,
+            "balance": null,
+            "entry_side": null,
+            "currency": "MYR",
+            "currency_basis": "SOURCE",
+            "transformations": [],
+            "monetary_basis": "source_signed_amount"
+          },
+          "issues": [
+            {
+              "rule": "MISSING_DATE",
+              "field": "transaction_date",
+              "message": "Selected canonical date input is empty; the other date is not used as a fallback.",
+              "category": "technical",
+              "severity": "REJECTED",
+              "sourceColumn": "transaction_date",
+              "originalValue": ""
+            },
+            {
+              "rule": "MISSING_MONEY",
+              "field": "source_amount",
+              "message": "Required monetary input is empty. Blank sides require explicit approval before conversion to zero.",
+              "category": "technical",
+              "severity": "REJECTED",
+              "sourceColumn": "amount",
+              "originalValue": ""
+            }
+          ],
+          "status": "REJECTED",
+          "missingDate": true,
+          "missingMoney": true,
+          "populatedRequiredSlots": 0
+        }
+      ],
+      "normalized": [
+        {
+          "source_system": "Other",
+          "source_file": "edge_cases.csv",
+          "source_sheet": null,
+          "source_row_number": 2,
+          "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:2",
+          "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-01",
+          "posting_date": null,
+          "canonical_date": "2026-09-01",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "E-001",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic sale",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "125.5",
+          "derived_ledger_net": null,
+          "balance": null,
+          "entry_side": null,
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_signed_amount",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Other",
+          "source_file": "edge_cases.csv",
+          "source_sheet": null,
+          "source_row_number": 3,
+          "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:3",
+          "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-02",
+          "posting_date": null,
+          "canonical_date": "2026-09-02",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "E-002",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic fee",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "-20",
+          "derived_ledger_net": null,
+          "balance": null,
+          "entry_side": null,
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_signed_amount",
+          "ingestion_status": "VALID",
+          "validation_messages": []
+        },
+        {
+          "source_system": "Other",
+          "source_file": "edge_cases.csv",
+          "source_sheet": null,
+          "source_row_number": 4,
+          "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:4",
+          "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-01",
+          "posting_date": null,
+          "canonical_date": "2026-09-01",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "E-001",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Synthetic sale",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "125.5",
+          "derived_ledger_net": null,
+          "balance": null,
+          "entry_side": null,
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_signed_amount",
+          "ingestion_status": "WARNING",
+          "validation_messages": [
+            {
+              "rule": "DUPLICATE_ROW",
+              "field": "record",
+              "category": "technical",
+              "severity": "WARNING",
+              "sourceColumn": null,
+              "originalValue": null,
+              "message": "Exact raw row repeats an earlier row in this dataset. It is retained and flagged, not automatically removed."
+            }
+          ]
+        },
+        {
+          "source_system": "Other",
+          "source_file": "edge_cases.csv",
+          "source_sheet": null,
+          "source_row_number": 5,
+          "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:5",
+          "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-04",
+          "posting_date": null,
+          "canonical_date": "2026-09-04",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": null,
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Missing reference",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "18",
+          "derived_ledger_net": null,
+          "balance": null,
+          "entry_side": null,
+          "currency": "MYR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_signed_amount",
+          "ingestion_status": "WARNING",
+          "validation_messages": [
+            {
+              "rule": "MISSING_REFERENCE",
+              "field": "reference",
+              "message": "Reference is missing; accepted with attention under the provisional schema.",
+              "category": "business",
+              "severity": "WARNING",
+              "sourceColumn": "reference",
+              "originalValue": ""
+            }
+          ]
+        },
+        {
+          "source_system": "Other",
+          "source_file": "edge_cases.csv",
+          "source_sheet": null,
+          "source_row_number": 6,
+          "source_row_id": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd:0:6",
+          "file_sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+          "ingestion_batch_id": "synthetic-handoff-example-batch-001",
+          "ingested_at": "2026-10-02T00:00:00.000Z",
+          "transaction_date": "2026-09-05",
+          "posting_date": null,
+          "canonical_date": "2026-09-05",
+          "canonical_date_basis": "TRANSACTION_DATE",
+          "reference": "E-005",
+          "source_transaction_id": null,
+          "account_code": null,
+          "account_id": null,
+          "entity_id": null,
+          "description": "Malformed currency code",
+          "counterparty": null,
+          "debit": null,
+          "credit": null,
+          "source_amount": "19",
+          "derived_ledger_net": null,
+          "balance": null,
+          "entry_side": null,
+          "currency": "MYRR",
+          "currency_basis": "SOURCE",
+          "transformations": [],
+          "monetary_basis": "source_signed_amount",
+          "ingestion_status": "WARNING",
+          "validation_messages": [
+            {
+              "rule": "MALFORMED_CURRENCY",
+              "field": "currency",
+              "message": "Supplied currency does not have a three-letter code structure. It is retained; authoritative ISO 4217 validation is outside this PoC.",
+              "category": "business",
+              "severity": "WARNING",
+              "sourceColumn": "currency",
+              "originalValue": "MYRR"
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "filesProcessed": 1,
+        "datasetsProcessed": 1,
+        "rowsReceived": 8,
+        "valid": 2,
+        "warning": 3,
+        "rejected": 3,
+        "accepted": 5,
+        "successRate": 62.5,
+        "cleanValidityRate": 25,
+        "requiredCompleteness": 87.5,
+        "duplicateRows": 1,
+        "missingDates": 1,
+        "missingMoney": 1,
+        "missingReferences": 1,
+        "unmappedColumns": 1
+      }
+    }
+  ]
+}
