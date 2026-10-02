@@ -1,5 +1,7 @@
 # PoC v0.1 verification evidence
 
+Entries are dated historical evidence. The **B1/B2 finance-user UX** section at the end records the current UX increment; earlier statements about deferral, branch state and audit results describe those earlier runs.
+
 ## A3 reader and dependency hardening — 2 October 2026
 
 **PARTIALLY IMPLEMENTED; DEPENDENCY REMEDIATION BLOCKED.** The byte-view boundary, direct Node consumption and Next.js patch are verified. Normal compatible pnpm resolution still retains `brace-expansion@5.0.9`; the full audit remains **1 moderate, 2 high, 0 critical**. A3 has not met its clean-audit target, and B1/B2 finance UX remains deferred. Work is uncommitted on `feature/data-ingestion`. The A1/A2 and September sections below are dated historical evidence, including their earlier reader limitation and audit results; use this section for the current A3 status.
@@ -277,3 +279,92 @@ This is a code/control review and synthetic workflow verification, not a compreh
 Screenshots were refreshed during this follow-up: [fixture summary](evidence/summary.png) and [quarantine inspection](evidence/quarantine.png). Both show synthetic input; the latter collapses the raw-row panel to expose the new date fields while retaining the original problematic value in the issue card. Batch IDs/timestamps vary on rerun.
 
 Remaining limits are the existing browser-memory PoC boundaries: no persistent deduplication or original binary reconstruction, no economic reconciliation/currency conversion, structural currency validation only, no backend/auth/downstream integration, main-thread parsing within explicit limits, and provisional client-dependent conventions. The timestamp parser intentionally supports known-offset instants with at most millisecond precision, not every ISO 8601/RFC3339 variant. Transformation records cover approved blank-side zeros and currency origin, not every normalization operation.
+
+
+## B1/B2 finance-user UX — 2 October 2026
+
+**IMPLEMENTED IN THE CURRENT WORKING TREE; AWAITING INDEPENDENT REVIEW.** Implementation began from a clean `feature/finance-ingestion-ux` checkout with HEAD equal to `ingestion-v0.1-baseline` (`ce3c65f77ef00d567eb11abe877b35a0ceaf1513`). The three pre-existing team-integration wording edits in README/TEAM_HANDOFF/AI_CONTEXT were restored as explicitly requested. No shared repository was used or changed. This increment changes only the Data-page presentation/UI state, a pure presentation helper and its tests, and the demo/verification documentation.
+
+### Financial and contract boundaries
+
+The new Ready / Included — needs attention / Cannot include labels represent the existing `VALID` / `WARNING` / `REJECTED` codes. The first two remain accepted; the third remains quarantined. The six numbered sections are one page, with explicit dataset review and unchanged checking eligibility. “Which date should be used for these records?” is dataset-scoped. Transaction and posting dates remain independently visible in row review, beside the explicitly selected canonical date/basis. Monetary modes, exact decimal strings, identifier strings, source-currency/default origin, approved blank-side changes and source file/worksheet/row remain visible without introducing inference, currency conversion or mixed-source financial totals.
+
+Technical file/mapping/row evidence and detailed quality definitions use native disclosures. The original/staging/candidate, all issue codes/messages, IDs, hashes, batch/time, reviewed options and version context remain inspectable. Display previews are capped as before; exports keep full content. Warnings and rejected rows are shown first when they exist, using a display-only Needs review filter. On settings changes, the previous affected output is removed as before, with persistent explanation until reviewed and checked again. Unchecked choices still restart on file/sheet switches; checked dataset choices restore. No saved profiles or persistence were introduced.
+
+Before/after SHA-256 comparison verified **39 protected files unchanged**: complete ingestion engine, all nine original tests, public fixtures, consumer example, handoffs and checked evidence JSON, README/AGENTS, dependencies/lockfile, shared UI/overlay/styles, architecture and test configuration. The checked synthetic evidence JSON retains SHA-256 `2d3b2dfdbf2b8a215bb42d774e31ac813ec606f4ce164510ff2879400efa5cf6`. Schema/ruleset remain `0.1`; these are provisional and still require team/client confirmation.
+
+### New presentation regressions
+
+[presentation.test.ts](../../tests/ingestion/presentation.test.ts) adds **14 test cases**, including two date-basis cases. They independently verify:
+
+- The 26 fixture rows retain 20 VALID, 3 WARNING and 3 REJECTED statuses; 23 accepted IDs exclude every rejected ID. Needs review selects exactly the six warning/rejected rows in source order.
+- Different source dates (1 and 3 September) retain both meanings under each canonical-date basis.
+- The large signed decimal `-9007199254740993.1`, leading-zero reference/transaction/account identifiers, numeric zero, typed zero, whitespace and blank values retain their distinctions.
+- Currency supplied by the file versus a reviewed MYR default, and original blank credit versus approved zero, are described from existing evidence.
+- Ledger sides and bank amount/label representations remain separate; no financial total is created.
+- Invalid dates, missing dates and whole-row duplicate issues are not conflated. Every issue survives; unknown rules preserve the engine message and a conservative action.
+- The actual Details/Narration collision identifies both columns without altering authoritative errors. Source examples preserve leading zeros.
+- Presentation calls leave engine results, lineage, issues, evidence JSON and canonical CSV unchanged; review states distinguish blocked/reviewed/checked/invalidated output.
+
+No original engine/handoff tests were edited. No browser-test or DOM-emulation dependency was added. Interaction checks below are manual browser verification, not automated component/visual tests or a finance-staff usability study.
+
+### Working-repository commands and actual results
+
+Environment: Node **v25.8.1**, pnpm **11.19.0**, Next.js **16.3.6**, Vitest **4.1.11**.
+
+| Exact command | Actual result / exit code |
+| --- | --- |
+| `pnpm test tests/ingestion/presentation.test.ts tests/ingestion/handoff.test.ts` | **2 files passed; 27 tests passed**; exit 0 (B1 checkpoint) |
+| `pnpm install --frozen-lockfile` | `Already up to date`; `Done in 227ms using pnpm v11.19.0`; exit 0 |
+| `pnpm test` | **9 files passed, 1 skipped (10); 112 tests passed, 1 skipped (113)**; exit 0. Only the optional supplied-workbook case skipped. |
+| `FINSIGHT_WORKBOOK_PATH='../04 Modules/01 Group Assignment/SAIC_HF_Augmented_Bank_Transactions_v2.xlsx' pnpm test` | **10 files passed; 113 tests passed (113)**; exit 0 |
+| `pnpm lint` | `$ eslint`, no diagnostics; exit 0. An earlier new JSX apostrophe diagnostic was corrected before this successful rerun. |
+| `pnpm exec next typegen` | `Generating route types...` / `✓ Types generated successfully`; exit 0 |
+| `pnpm exec tsc --noEmit --incremental false` | No diagnostics; exit 0, after type generation |
+| `pnpm build` | Next.js 16.3.6; compiled successfully, type checking completed, **11/11 static pages generated**; exit 0 |
+| `pnpm audit --json` | **0 critical, 2 high, 1 moderate, 0 low, 0 informational**; exit 1. Matches known A3 development-tooling baseline; no dependency edits. |
+| `git diff --check` | No whitespace errors; exit 0 |
+| `pnpm start --hostname 127.0.0.1 --port 3180` | Production server started locally; Data-page interaction verified below. No deployment. |
+
+The full audit still reports only `brace-expansion@5.0.9` through ESLint/TypeScript-eslint/minimatch development paths: moderate `GHSA-q2hr-2g5m-vwhr`, high `GHSA-qhr7-859c-m2p7`, high `GHSA-6j4f-fj2g-mc7p`. It is **not a clean audit**. Its known remediation remains a separate technical increment. Dependencies, dependency policy and lockfile were not changed for B1/B2.
+
+### Manual browser and downloaded-report verification
+
+The local production Data page was exercised at **1440 × 900**, **768 × 844**, **390 × 844**, and **320 × 844**. At narrow widths, results/combined records use cards and the original preview remains locally scrollable. The 320 px mapping controls fit the content width; page-wide horizontal overflow was not observed. Source examples, visible financial choices and row-review actions remain accessible without sideways result-table scrolling.
+
+Verified empty/reset state, CSV ingestion, explicit XLSX worksheet selection, Details → Reference correction, approval gating and review-confirmed versus checked states; all five result filters; warnings and rejected-row inspection; expandable original/staging/candidate/mapping/rule evidence; source lineage and combined pagination; quality definitions; duplicate reuse; only-affected-dataset invalidation and rechecking; processed worksheet restoration and unchecked-choice reset; an unsupported-file failure that clearly identifies the earlier active file; and a checked dataset with all rows rejected and zero accepted output.
+
+Keyboard checks covered native column/select controls, financial choices, review checkbox, filters, disclosure activation, pagination, row-review Escape and focus return, plus Tab/Shift+Tab wrapping to/from the last technical disclosure. These are practical checks, not a complete accessibility-conformance assessment. No browser console errors were observed in the exercised sessions.
+
+The public fixture flow produced **26 processed, 20 Ready, 3 Included — needs attention, 3 Cannot include; 23 included**. Rates remain **88.46% success, 76.92% clean validity, 96.15% required-value completeness**. The latter is presence, not accuracy. Duplicate ledger loading retained 23 rows. Editing a ledger mapping removed its ten rows, leaving 13; confirmation cleared and Needs checking again persisted when switching away and back. Selecting the checked bank Transactions worksheet restored Details → Reference. Rechecking ledger returned the session to 23 accepted rows without duplication.
+
+All three download buttons produced real local files, independently parsed after download:
+
+| Download | Parsed result |
+| --- | --- |
+| Included-records CSV | **23 data rows, 31 columns**; only `VALID` and `WARNING` |
+| Excluded-row-problems CSV | **4 data rows, 13 columns**; `REJECTED` only, for three rejected records |
+| Full check-report JSON | **26 processed, 23 normalized**; 20 VALID, 3 WARNING, 3 REJECTED; schema/ruleset 0.1 |
+
+The in-app browser's download event did not return a path, but its native download handling created the files in Downloads; verification used those actual files. Additional isolated synthetic CSV uploads confirmed both differing source dates, Posting-date selection, large exact decimal strings and leading-zero IDs in row review; a blank source currency explicitly defaulted to MYR and blank credit explicitly treated as zero were shown with their source/default/approved-rule explanations. Those synthetic check files remain outside the repository.
+
+### Review scope and package
+
+The final source review covered correctness, readability, architecture, security and rendering cost. The presentation helper consumes existing outcomes and does not implement eligibility. Responsive results render only the current 20-row page per layout; financial values are React text, not HTML. The Data page's only fetch is the existing same-origin synthetic-sample read. No external record transmission, local/session storage, record logging or new credentials were introduced in this increment; existing filename/content guards and CSV escaping remain unchanged.
+
+The independent-review package is `finsight-b12-review.zip`, outside the repository. It includes current application/ingestion source, tests/example/docs/config/public fixtures, fresh REVIEW_GIT_* snapshots, the synthetic workbook under `_review_inputs/`, and synthetic browser screenshots/reports under `_review_evidence/`. The four Git metadata files are review-only and must not be committed. Normal `git diff` omits the two untracked source/test additions; their complete contents are in the ZIP.
+
+For independent verification after extraction:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm test
+FINSIGHT_WORKBOOK_PATH='./_review_inputs/SAIC_HF_Augmented_Bank_Transactions_v2.xlsx' pnpm test
+pnpm lint
+pnpm exec next typegen
+pnpm exec tsc --noEmit --incremental false
+pnpm build
+pnpm audit --json
+```
+
+Clean-extraction command results and ZIP integrity/exclusion/size checks are reported with the delivered package after it is created and verified. No commit, push, upload, deployment, contract freeze or shared-repository modification is part of this increment. B1/B2 awaits the requested independent-review gate; finance-staff usability feedback remains future work.
