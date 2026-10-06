@@ -6,11 +6,13 @@ The **Data** page now runs a real, local **Data Ingestion PoC v0.1**: read CSV/X
 
 Overview, Transactions, Reconciliation, Analytics, Forecasting, Anomalies and Reports remain the existing mock UI prototype. They do not consume uploaded data. There is no trained model, reconciliation engine, backend, database, authentication or production integration.
 
-## Ingestion handoff — unreleased A1/A2 increment
+## Ingestion handoff and accepted-data contract
 
 Start with the [teammate handoff](docs/handoff/TEAM_HANDOFF.md) or [AI context](docs/handoff/AI_CONTEXT.md), then the [tested consumer recipe](examples/ingestion/consume.ts). Default downstream input is `consolidate(results).normalized` or JSON `datasets[].normalized`: VALID/WARNING records, with warnings and lineage retained. `datasets[].records` also contains quarantine/evidence and is not the default analysis input.
 
-**SYNTHETIC EXAMPLE · NOT CLIENT DATA · NOT A PRODUCTION API CONTRACT:** [engine-generated evidence JSON](docs/handoff/examples/ingestion-evidence.json). [Handoff tests](tests/ingestion/handoff.test.ts) verify it against the exporter and independent fixture expectations. This increment changes orientation/example material; schema/ruleset remain 0.1 and the UI is unchanged. Availability was checked in the uncommitted local working tree on 2 October 2026; inspect your checkout rather than assuming the shared branch contains it.
+**SYNTHETIC EXAMPLE · NOT CLIENT DATA · NOT A PRODUCTION API CONTRACT:** [engine-generated evidence JSON](docs/handoff/examples/ingestion-evidence.json). [Handoff tests](tests/ingestion/handoff.test.ts) verify it against the exporter and independent fixture expectations. It remains the full evidence export, not the future backend payload.
+
+**C1 — IMPLEMENTED / INDEPENDENTLY REVIEWED — 5 October 2026:** [accepted-data contract](docs/ingestion/accepted-data-contract.md), [public adapter](lib/ingestion/accepted-data.ts), [usage example](examples/ingestion/accepted-data.ts) and [tests](tests/ingestion/accepted-data.test.ts). `createAcceptedDataPayload(results)` groups accepted records under `datasets[].normalized`, with shared source/batch context and a small dataset quality summary. It pins schema/ruleset compatibility to `0.1`, changes no existing exports or UI, and adds no backend/network/persistence. It preserves caller batch IDs; the current UI still reuses one session ID on reprocessing. Fresh batch generation remains a later orchestration task. Inspect your checkout for availability; the checkpoint preceding C1 is `ingestion-ux-v0.1` (`59a4d30`).
 
 ## Run locally
 

@@ -368,3 +368,87 @@ pnpm audit --json
 ```
 
 Clean-extraction command results and ZIP integrity/exclusion/size checks are reported with the delivered package after it is created and verified. No commit, push, upload, deployment, contract freeze or shared-repository modification is part of this increment. B1/B2 awaits the requested independent-review gate; finance-staff usability feedback remains future work.
+
+## C1 accepted-data integration contract — 5 October 2026
+
+**IMPLEMENTED IN THE CURRENT WORKING TREE; AWAITING INDEPENDENT REVIEW.** Work began from a clean `feature/ingestion-integration-contract` checkout at `ingestion-ux-v0.1` (`59a4d30c6e4a4a9d0e8c4fa8e848f777cc244b36`). Both checkpoint tags already existed. No branch/tag/commit/push or shared-repository operation was necessary. Earlier verification entries above remain historical evidence, unchanged.
+
+### Implemented boundary and review
+
+The new [accepted-data adapter](../../lib/ingestion/accepted-data.ts) and [contract](accepted-data-contract.md) project only accepted `normalized` transactions, with explicit schema/ruleset compatibility pinned independently to `0.1`. Existing `consolidate()` already exposes retained per-dataset results, so selection/order/replacement are delegated to that boundary without another last-result-wins implementation. Shared dataset/source/batch context and seven existing quality values accompany projected records. Nullable keys, monetary/identifier strings, independent dates, internal status codes, every warning and approved currency/blank-side provenance remain intact.
+
+No full raw/staging/candidate/mapping/options/rejected object, derived ledger net, backend ID, model eligibility flag, network/persistence/security implementation, dependency change or finance UI change is added. Warning/transformation original scalar values remain narrowly scoped and sensitive. Filenames and caller batch IDs are copied exactly; C1 applies no filename normalization or ID generation. **REQUIRES TECHNICAL REVIEW:** current UI reprocessing still reuses one session batch ID, so C1 does not satisfy fresh batch generation. Changed-file replacement association, backend batch scope, external transport versioning and evidence retention/retrieval remain future decisions. Client field/convention confirmations and production limitations remain unresolved.
+
+Five-axis source review covered membership/version preflight, explicit field selection and detached scalar copies, public imports/no circular React dependency, sensitive-value exclusions/no record logging, and linear projection without monetary arithmetic. The new API/example and all affected relative documentation links were checked. Assertions are trusted-producer consistency checks, not external JSON validation or backend authorization.
+
+SHA-256 comparison confirms **72 protected tracked files unchanged**, including engine logic/models/versions/exporters, all ten original test files, the existing consumer, UI/styles, fixtures/evidence and dependencies/configuration. Only the additive public barrel export is changed in an existing engine file. The checked evidence JSON retains SHA-256 `2d3b2dfdbf2b8a215bb42d774e31ac813ec606f4ce164510ff2879400efa5cf6`. Existing CSV/JSON export bytes are independently compared before/after adaptation in the new tests. This section is appended; the earlier verification document prefix remains byte-identical to the checkpoint.
+
+### New contract regressions
+
+[accepted-data.test.ts](../../tests/ingestion/accepted-data.test.ts) adds **41 cases**. The initial seven cases were run before implementation and failed because the public adapter did not yet exist; after implementation they passed. The complete suite independently checks:
+
+- 26 processed source rows; exactly 23 accepted IDs, 20 VALID and 3 WARNING; every one of the three rejected IDs excluded, while rejected counts remain in dataset summaries.
+- All-input schema/ruleset preflight before accepted-record access, including replaced inputs; full warning fields and unfamiliar rule strings; reconstructed source lineage.
+- Exact filenames and mixed/reused/caller-fresh batch contexts, with no invented global batch or supersession. Replacement/order match the existing public consolidation result.
+- Huge signed decimal strings, zeros and leading-zero source/account/entity identifiers; both different source dates under each canonical-date choice; invalid optional-date original values.
+- Separate monetary representations, retained extra mapped monetary fields, and excluded ledger-derived net; source/default/missing currency origins; approved blank/null/whitespace-to-zero transformations and actual source zero without a fabricated change.
+- The exact transport field boundary, seven unchanged summary values, all-rejected dataset context and empty input; detached typed scalar objects/arrays/metadata/summaries; deterministic processing of deeply frozen inputs and unchanged export bytes.
+- Failure without repair/reclassification for impossible rejected normalized status, rejection issues or any of six shared provenance mismatches; accepted-only public usage example with warning lineage and no financial totals.
+
+No existing engine/handoff/export/presentation tests or evidence fixtures were rewritten. Ordinary verification explicitly unsets `FINSIGHT_REGENERATE_HANDOFF_EXAMPLE` to avoid an inherited authoring flag.
+
+### Working-repository commands and actual results
+
+Environment: Node **v25.8.1**, pnpm **11.19.0**, Next.js **16.3.6**, Vitest **4.1.11**.
+
+| Command | Actual result / exit code |
+| --- | --- |
+| `pnpm test tests/ingestion/accepted-data.test.ts` (initial test-first run) | **7 failed**; exit 1, expected missing public function |
+| `pnpm test tests/ingestion/accepted-data.test.ts tests/ingestion/handoff.test.ts` (first adapter slice) | **2 files passed; 20 tests passed**; exit 0 |
+| `pnpm test tests/ingestion/accepted-data.test.ts tests/ingestion/handoff.test.ts tests/ingestion/exports.test.ts` | **3 files passed; 57 tests passed**; exit 0, including all 41 new cases |
+| `pnpm install --frozen-lockfile` | `Already up to date`; `Done in 268ms using pnpm v11.19.0`; exit 0 |
+| `pnpm test` | **10 files passed, 1 skipped (11); 153 tests passed, 1 skipped (154)**; exit 0 |
+| `FINSIGHT_WORKBOOK_PATH='../04 Modules/MO01 Group Assignment/SAIC_HF_Augmented_Bank_Transactions_v2.xlsx' pnpm test` | **11 files passed; 154 tests passed (154)**; exit 0 |
+| `pnpm lint` | `$ eslint`, no diagnostics; exit 0 |
+| `pnpm exec next typegen` | `Generating route types...` / `✓ Types generated successfully`; exit 0 |
+| `pnpm exec tsc --noEmit --incremental false` | No diagnostics; exit 0 after clearing conflicting generated cache declarations |
+| `pnpm build` | Next.js 16.3.6; compiled successfully, TypeScript completed, **11/11 static pages generated**; exit 0 |
+| `pnpm audit --json` | **0 critical, 3 high, 1 moderate, 0 low, 0 info**; exit 1, unchanged from the fresh pre-C1 audit |
+| `git diff --check` | No diagnostics; exit 0 |
+| `pnpm start --hostname 127.0.0.1 --port 3097` plus local HTTP request to `/data` | Ready; **HTTP 200**, existing finance workflow headings present. Server stopped intentionally afterward. |
+
+The supplied workbook moved from the older documented `01 Group Assignment` path to `MO01 Group Assignment`; its embedded synthetic-test-only label was confirmed before use. Only its Transactions worksheet is ingested. The unchanged integration test verifies 6,000 accepted positive source amounts, 4,148 DEBIT and 1,852 CREDIT labels, separate monetary fields and row lineage. No accuracy/generalization claim is made.
+
+An early type check failed on pre-existing duplicate generated files such as `routes.d 2.ts` and `cache-life.d 2.ts`. The conflicting build-cache declarations were removed and fresh type generation/type checking/build succeeded. No tracked Next.js/configuration files were changed. The startup HTTP check was repeated after server readiness; this is a route smoke check, not a new finance-user interaction study.
+
+### Actual dependency audit limitation
+
+The current pre/post-C1 audit agrees, but differs from the older B1/B2 report by one additional high development-tooling finding. Manifest, lockfile and installed dependency versions were not changed. `pnpm why braces brace-expansion` confirms these paths are development lint tooling:
+
+| Package/version | Severity | Advisory |
+| --- | --- | --- |
+| `brace-expansion@5.0.9` | Moderate | [GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr) |
+| `brace-expansion@5.0.9` | High | [GHSA-qhr7-859c-m2p7](https://github.com/advisories/GHSA-qhr7-859c-m2p7) |
+| `brace-expansion@5.0.9` | High | [GHSA-6j4f-fj2g-mc7p](https://github.com/advisories/GHSA-6j4f-fj2g-mc7p) |
+| `braces@3.0.3` | High | [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) |
+
+Brace-expansion enters through `eslint-config-next → typescript-eslint → typescript-estree → minimatch`; braces enters through `eslint-config-next → @next/eslint-plugin-next → fast-glob → micromatch`. Audit includes development dependencies and exits nonzero. C1 is a verified functional review snapshot with a disclosed audit limitation, not a clean-audit release. No forced resolution, suppression, override or patch was attempted.
+
+### Independent-review package protocol
+
+The new local archive is `finsight-c1-review.zip`, outside the repository, with a single `finsight-prototype/` root. It contains current source/configuration, all tests/examples, controlled public fixtures/evidence, ingestion/handoff documentation, four fresh review-only `REVIEW_GIT_*` snapshots, a portable review guide and the confirmed synthetic workbook under `_review_inputs/`. No earlier review ZIP is overwritten or included. No client data, formal/course documents, local absolute paths, secrets, Git internals, dependencies, environment files, CodeGraph output, caches, logs or deployment metadata belong in the package. Normal Git diff omits untracked additions; their full source files are included.
+
+After clean extraction, independently rerun:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm test
+FINSIGHT_WORKBOOK_PATH='./_review_inputs/SAIC_HF_Augmented_Bank_Transactions_v2.xlsx' pnpm test
+pnpm lint
+pnpm exec next typegen
+pnpm exec tsc --noEmit --incremental false
+pnpm build
+pnpm audit --json
+```
+
+Executed clean-extraction results, exact archive size/hash and integrity/exclusion checks are reported with the delivered package after those steps complete. No commit, push, upload, deployment, shared-repository change, backend implementation or production contract freeze is authorized in this increment.

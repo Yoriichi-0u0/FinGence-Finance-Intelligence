@@ -6,15 +6,18 @@ Implementation types/defaults/versions in [models.ts](../../lib/ingestion/models
 
 Earlier academic planning documents may describe proposed signed-cash conventions, VALID-only publishing or persistence that predate this implementation. Preserve those formal submissions as historical project documentation; do not interpret them as implemented behavior. This PoC preserves source monetary representations, includes VALID/WARNING canonical records and has no backend persistence.
 
-Default downstream input is `consolidate(results).normalized` or JSON `datasets[].normalized`. `datasets[].records` contains evidence/quarantine and is not the default analysis input. Keep envelope versions: isolated rows do not carry schema/ruleset context. Check all supplied result versions before consolidation or consumption, and JSON envelope/dataset versions before visiting rows. The [consumer recipe](../../examples/ingestion/consume.ts) demonstrates compatibility gating for trusted engine-produced results; it is not arbitrary JSON validation or a production API. The eventual smaller accepted-data transport and JSON Schema remain deferred pending Frederick/Celester agreement.
+Default downstream input is `consolidate(results).normalized` or JSON `datasets[].normalized`. `datasets[].records` contains evidence/quarantine and is not the default analysis input. Keep envelope versions: isolated rows do not carry schema/ruleset context. Check all supplied result versions before consolidation or consumption, and evidence-JSON envelope/dataset versions before visiting rows. The [consumer recipe](../../examples/ingestion/consume.ts) demonstrates compatibility gating for trusted engine-produced results; it is not arbitrary JSON validation or a production API. C1 adds the [accepted-data projection](accepted-data-contract.md), exported through the public entry point, with separate shared dataset/batch context, selected accepted fields and quality counts. It delegates consolidation to the existing boundary, pins supported versions independently to `0.1`, changes no evidence/CSV export, and adds no backend or external-input validator. External transport versioning and JSON Schema remain deferred.
 
-The UI generates session batch IDs; reusable-engine callers supply context. Backend batch/record ID ownership, transport and persistence require team confirmation. Source row IDs remain lineage coordinates, not economic uniqueness or database IDs.
+The UI generates session batch IDs; reusable-engine callers supply context. Confirmed C1 ownership: Chia owns ingestion batch identity; Celester preserves it and owns persistence, permanent database IDs, backend lifecycle/supersession, reconciliation and dashboard summaries. Frederick owns analysis-specific interpretation/aggregation/warning eligibility; Jason owns production trust-boundary/security requirements; Izzat consumes backend/API data for dashboard visualization. Source row IDs remain lineage coordinates, not economic uniqueness or database IDs. Consolidation is not reconciliation.
+
+**REQUIRES TECHNICAL REVIEW:** the current UI reuses a session batch ID on reprocessing. C1 preserves the supplied ID and does not satisfy the confirmed fresh-batch requirement; new-run orchestration requires a separate authorized change. Batch scope, changed-file replacement association, evidence retention/retrieval and external transport compatibility still need definition. Client field/convention confirmations and production-security limitations remain unresolved.
 
 Contract changes require a visible note naming affected fields/rules, reviewed examples and regression fixtures, and coordination with affected consumers before adoption:
 
 - Removing/renaming fields or changing their meaning requires a schema-version change and consumer review.
 - Changing parsing, validation or eligibility behavior requires a ruleset-version change; both versions may need to change.
 - Presentation/documentation changes alone do not change contract versions.
+- Changes only to the accepted projection/envelope require transport review; agree a separate transport version before external API publication rather than automatically changing canonical versions. C1 creates no such version.
 - Consumers declare supported versions explicitly; do not silently auto-adopt changed semantics. This policy does not implement production migration or backward-compatibility machinery.
 
 ## Repository assessment and gap analysis
@@ -86,7 +89,7 @@ Contract/envelope versions are `schema_version: "0.1"` and `ruleset_version: "0.
 | `source_row_number` | integer | Required; CSV logical record number or Excel worksheet row, header included |
 | `source_row_id` | string | Required; SHA-256 + worksheet index + original row |
 | `file_sha256` | 64-character hex string | Required; exact original byte-content fingerprint |
-| `ingestion_batch_id` | string | Required; generated session batch ID |
+| `ingestion_batch_id` | string | Required; engine preserves caller context; current UI generates one per session and reuses it on reprocessing |
 | `ingested_at` | UTC ISO timestamp string | Required; strict known-offset input normalized to `YYYY-MM-DDTHH:mm:ss.sssZ` |
 | `transaction_date` | `YYYY-MM-DD` string or null | Original normalized source transaction date, independent of selected basis |
 | `posting_date` | `YYYY-MM-DD` string or null | Original normalized source posting date, independent of selected basis |
