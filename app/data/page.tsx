@@ -9,7 +9,7 @@ import { CanonicalView, QualityView, RecordInspector, ResultsView } from "@/comp
 import { reviewState } from "@/components/ingestion/presentation";
 import {
   DEFAULT_OPTIONS, IngestionError, READER_LIMITS, approveMapping, canonicalCSV, consolidate,
-  createDataset, evidenceJSON, ingestDataset, inspectFile, isDuplicateFile, mappingErrors,
+  createDataset, evidenceJSON, ingestDatasetRun, inspectFile, isDuplicateFile, mappingErrors,
   overrideMapping, profileDataset, rejectedCSV, suggestMapping,
   type CanonicalField, type ColumnMapping, type Dataset, type IngestionOptions, type IngestionResult, type LoadedFile, type ProcessedRow,
 } from "@/lib/ingestion";
@@ -52,7 +52,6 @@ export default function DataPage() {
   const [needsRecheck, setNeedsRecheck] = useState<Set<string>>(new Set());
   const [inspected, setInspected] = useState<{ row: ProcessedRow; result: IngestionResult } | null>(null);
   const working = useRef(false);
-  const batchId = useRef<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const closeInspector = useCallback(() => setInspected(null), []);
   const combined = useMemo(() => consolidate(results), [results]);
@@ -134,8 +133,7 @@ export default function DataPage() {
     if (working.current || !dataset || !reviewed) return;
     try {
       const approved = approveMapping(mapping);
-      batchId.current ??= crypto.randomUUID();
-      const completed = ingestDataset(dataset, approved, options, { batchId: batchId.current, ingestedAt: new Date().toISOString() });
+      const completed = ingestDatasetRun(dataset, approved, options);
       setMapping(approved);
       setResults(current => [...current.filter(r => r.dataset.id !== dataset.id), completed]);
       setNeedsRecheck(current => { const next = new Set(current); next.delete(dataset.id); return next; });
@@ -152,7 +150,7 @@ export default function DataPage() {
   function reset() {
     setFiles([]); setActive(null); setDataset(null); setMapping([]); setResults([]); setFailures([]); setLastFailure(null); setNeedsRecheck(new Set());
     setSheetIndex(null); setHeaderRow(1); setOptions({ ...DEFAULT_OPTIONS }); setReviewed(false);
-    setNotice("Session cleared."); setSelectionError(""); setInspected(null); batchId.current = null;
+    setNotice("Session cleared."); setSelectionError(""); setInspected(null);
     if (fileInput.current) fileInput.current.value = "";
   }
   return <>
@@ -243,7 +241,7 @@ export default function DataPage() {
       <MappingEditor mapping={mapping} profile={profile} options={options} errors={errors} reviewed={reviewed} checked={Boolean(result)} disabled={busy} onReviewed={setReviewed}
         onMapping={(index: number, target: CanonicalField | null) => { invalidate(); setMapping(overrideMapping(mapping, index, target)); }}
         onOptions={changed => { invalidate(); setOptions(changed); }} onRun={run} />
-      {result && <ResultsView key={dataset.id + ":" + result.context.ingestedAt} result={result} onInspect={inspect} />}
+      {result && <ResultsView key={dataset.id + ":" + result.context.batchId} result={result} onInspect={inspect} />}
     </>}
     <section aria-label="Combined records and downloads" className="mt-5">
       <h2 className="text-lg font-semibold">6. Combined records and downloads</h2>

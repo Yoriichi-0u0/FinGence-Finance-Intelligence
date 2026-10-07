@@ -80,7 +80,7 @@ function projectTransaction(row: CanonicalTransaction, shared: SharedProvenance)
 
 /**
  * Pure projection of trusted engine results, not an external JSON/security validator.
- * Preserves caller batch IDs; the current UI still reuses a session ID on reprocessing.
+ * Preserves caller batch IDs without creating ingestion executions or their context.
  * This snapshot neither publishes data nor implements backend supersession.
  */
 export function createAcceptedDataPayload(results: readonly IngestionResult[]): AcceptedDataPayload {

@@ -148,9 +148,11 @@ Small producer-invariant assertions refuse a rejected normalized status, a rejec
 
 Before external API publication, agree a separate transport version so envelope/projection changes need not imply changed canonical meanings. Canonical field meaning/type changes require schema review; parsing/validation/eligibility changes require ruleset review; presentation/documentation alone require neither. See the [change policy](architecture.md#integration-authority-and-change-policy).
 
-## Batch/reprocessing gap and future decisions
+## Batch/reprocessing lifecycle and future decisions
 
-**REQUIRES TECHNICAL REVIEW — fresh batch generation.** The current Data page creates one session batch ID and reuses it when a dataset is reprocessed. The engine accepts caller context; C1 copies that context exactly. C1 does **not** satisfy Celester's requirement that a new processing run creates batch B. Fresh ingestion-run orchestration needs a separate authorized change; backend supersession remains Celester's work.
+**C2 — IMPLEMENTED / INDEPENDENTLY REVIEWED — 7 October 2026:** the Data page now calls [`ingestDatasetRun`](../../lib/ingestion/run.ts) for each attempted execution. Its production defaults request a fresh UUID and a UTC timestamp before calling the unchanged engine. A successful return, even with every row rejected, preserves that context; the UI stores only returned results. A failed attempt may consume unused context and a retry requests a new pair. Reopening, projecting, inspecting or downloading an existing result creates no new batch. This resolves the Data page's former session-ID reuse; it does not implement backend persistence or supersession.
+
+The low-level engine still accepts caller context. C1 copies that context exactly and generates no IDs/timestamps. Callers using the low-level API remain responsible for fresh execution context; the projection must not substitute IDs to compensate for a caller reusing them.
 
 If a caller already supplies batch B for the same dataset, the existing consolidation boundary retains that latest supplied result and C1 preserves B. It does not infer chronology from timestamps or expose a fabricated supersession pointer. The caller's batch ID is not documentation text and must never be repurposed.
 

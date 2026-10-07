@@ -452,3 +452,99 @@ pnpm audit --json
 ```
 
 Executed clean-extraction results, exact archive size/hash and integrity/exclusion checks are reported with the delivered package after those steps complete. No commit, push, upload, deployment, shared-repository change, backend implementation or production contract freeze is authorized in this increment.
+
+## C2 fresh ingestion execution context — 7 October 2026
+
+**IMPLEMENTED IN THE CURRENT WORKING TREE; AWAITING INDEPENDENT REVIEW.** Work started from clean C1 checkpoint `ingestion-c1-v0.1` (`1bc07b64116106411e7a30ca494eae36dd9ba3e4`) and created the personal `feature/ingestion-batch-lifecycle` branch. HEAD remains at that checkpoint. The earlier verification entries above are historical evidence and remain byte-identical.
+
+### Execution boundary and scope
+
+The public [`ingestDatasetRun`](../../lib/ingestion/run.ts) wrapper requests a new ID/time pair before delegating to the existing engine. Production defaults use `crypto.randomUUID()` and `new Date().toISOString()`; optional `idFactory` and `now` providers support reproducible tests. The Data page calls it only at its existing approved check action and stores only successful returns, including all-rejected completed results. A throwing attempt may consume unused context, stores no new result, and a retry requests another pair. Reopening, inspection, duplicate-file reuse, consolidation, C1 projection and exports reuse existing context.
+
+The session-level batch cache was removed. Results are keyed by dataset identity plus batch identity rather than timestamp; two executions may share a millisecond. Approval, selection, invalidation, result replacement, session reset and finance-facing wording remain unchanged. The C1 adapter received only a lifecycle-comment correction; its executable code, fields and pinned compatibility are unchanged. No backend supersession/persistence, logical-source replacement, network/API, security architecture, AI, dashboard or dependency changes were implemented.
+
+Source review covered execution/failure boundaries, provider calls and same-time runs, input immutability, approved-result storage and existing consolidation, preserved financial/source identities, public imports, sensitive-value handling and the unchanged C1/export boundary. SHA-256 comparison protects **73 unchanged tracked files**, including models/rules, parsing/mapping/validation/normalization/consolidation/serializers, finance presentation components, all eleven earlier test files, existing examples/fixtures/evidence, dependencies and configuration. The previous C1 review archive remains unchanged. Historical evidence JSON is not regenerated.
+
+### New lifecycle regressions
+
+[ingestion-run.test.ts](../../tests/ingestion/ingestion-run.test.ts) adds **11 cases**. The first four tests ran before the wrapper existed and failed with the missing public function; they passed after implementation. A temporary cached-ID mutation then failed the fresh-run regression with `expected ... to be called 2 times, but got 1 time`; the correct wrapper was restored byte-for-byte.
+
+- One ID/time request per attempted execution reaching the wrapper, including attempts that throw in the existing engine; only returned results are stored and retries receive fresh pairs.
+- Fresh production UUID/UTC defaults, independently injected providers, unchanged context validation and failure without invented fallback for an invalid clock.
+- Separate and same-millisecond executions; all-rejected completed results retain their context without forwarding rejected rows.
+- Ledger A, bank B and ledger reprocessing C preserve source IDs/file hashes and existing latest-supplied-result ordering; controlled fixtures still yield **26 received, 23 accepted, 20 VALID, 3 WARNING, 3 REJECTED** and **0 rejected forwarded** through C1.
+- C1 preserves new context; inspecting/consolidating/projecting/exporting existing results generates nothing. No supersession fields are introduced.
+- Frozen-input purity, exact financial/identifier strings and byte-for-byte identical evidence/canonical/rejected serializers for identical engine context.
+
+### Working-repository commands and actual results
+
+Environment: Node **v25.8.1**, pnpm **11.19.0**, Next.js **16.3.6**, Vitest **4.1.11**. Verification unsets the authoring-only `FINSIGHT_REGENERATE_HANDOFF_EXAMPLE` flag.
+
+| Command | Actual result / exit code |
+| --- | --- |
+| `pnpm test tests/ingestion/ingestion-run.test.ts` (initial test-first slice) | **4 failed**; exit 1, expected missing public function |
+| `pnpm test tests/ingestion/ingestion-run.test.ts tests/ingestion/accepted-data.test.ts tests/ingestion/contract-regressions.test.ts` (first wrapper slice) | **3 files passed; 77 tests passed**; exit 0 |
+| `pnpm test tests/ingestion/ingestion-run.test.ts tests/ingestion/pipeline.test.ts tests/ingestion/accepted-data.test.ts` | **3 files passed; 69 tests passed**, including all 11 new cases; exit 0 |
+| Temporary cached-ID mutation; focused fresh-run regression | **1 failed, 10 skipped**; exit 1, expected detection; correct source restored |
+| `pnpm install --frozen-lockfile` | `Already up to date`; `Done in 212ms using pnpm v11.19.0`; exit 0 |
+| `pnpm test` | **11 files passed, 1 skipped (12); 164 tests passed, 1 skipped (165)**; exit 0 |
+| `FINSIGHT_WORKBOOK_PATH='../04 Modules/MO01 Group Assignment/SAIC_HF_Augmented_Bank_Transactions_v2.xlsx' pnpm test` | **12 files passed; 165 tests passed (165)**; exit 0 |
+| `pnpm lint` | `$ eslint`, no diagnostics; exit 0 |
+| `pnpm exec next typegen` | `Generating route types...` / `✓ Types generated successfully`; exit 0 |
+| `pnpm exec tsc --noEmit --incremental false` | No diagnostics; exit 0 |
+| `pnpm build` | Next.js 16.3.6; compiled successfully, TypeScript completed, **11/11 static pages generated**; exit 0 |
+| `pnpm audit --json` | **0 critical, 5 high, 1 moderate, 0 low, 0 info**; exit 1, same advisories as fresh pre-C2 audit |
+| `git diff --check` | No diagnostics; exit 0 |
+| `pnpm start --hostname 127.0.0.1 --port 3098` and local browser workflow | Production server ready; interactive checks below; server stopped after verification |
+
+The requested `../04 Modules/01 Group Assignment/...` path is absent in this checkout. The already-supplied file exists under `MO01 Group Assignment`; its README worksheet still explicitly labels it synthetic test data only. No course folder/file was moved or changed. Its SHA-256 is `13c0d038845941abb8e974bc55832f0b1f157bac343c4f4ab5189ba0b0a30bfb`. The unchanged optional integration test checks the 6,000-row Transactions worksheet, 4,148 DEBIT / 1,852 CREDIT labels and source lineage. The review archive uses the portable `_review_inputs/` path below.
+
+### Manual browser checks and limits
+
+The local production-build Data page was exercised with controlled synthetic files. Approval remained mandatory; the bank worksheet was selected explicitly and Details was changed to Reference before checking.
+
+- Ledger and bank executions received different batch IDs/timestamps.
+- Reopening ledger preserved its original pair. Rechecking it created a new pair with the same source-row ID and file fingerprint.
+- Changing ledger mapping removed only ledger's results, leaving bank's eight included rows. Restoring/reapproving/rechecking created another fresh pair; reopening bank confirmed its pair was unchanged.
+- Edge cases remained **2 Ready, 3 Included — needs attention, 3 Cannot include**. Rejected source row 7 and its original invalid date remained inspectable with the execution context.
+- Combined totals remained **3 files / datasets, 26 checked, 20 Ready, 3 needing attention, 3 excluded, 23 included**.
+- All three download controls were triggered; inspection and duplicate-file reuse preserved the existing context. The in-app browser's download-event API timed out, so downloaded file bytes were **not** independently retrieved through that API. Automated serializer byte-equality tests passed; this is not a claim of captured browser-download bytes.
+- Clearing the session removed results. Checking ledger afterward created a sixth distinct execution ID with the same source-row identity. The captured browser console contained **0 errors**.
+
+The synthetic browser summary screenshot and bounded ID/count report are included in the review package. No client data or complete browser record dump is included. These are local interaction checks, not a production/backend or accounting-accuracy claim.
+
+### Audit limitation at the unchanged dependency boundary
+
+The fresh pre/post-C2 advisories agree. They differ from the older C1 report by two additional high findings. Manifest, lockfile and installed dependency versions are unchanged; dependencies were not updated, overridden or suppressed.
+
+| Locked package | Severity | Advisory / actual dependency category |
+| --- | --- | --- |
+| `brace-expansion@5.0.9` | Moderate | [GHSA-q2hr-2g5m-vwhr](https://github.com/advisories/GHSA-q2hr-2g5m-vwhr); development ESLint/TypeScript tooling |
+| `brace-expansion@5.0.9` | High | [GHSA-qhr7-859c-m2p7](https://github.com/advisories/GHSA-qhr7-859c-m2p7); same development path |
+| `brace-expansion@5.0.9` | High | [GHSA-6j4f-fj2g-mc7p](https://github.com/advisories/GHSA-6j4f-fj2g-mc7p); same development path |
+| `braces@3.0.3` | High | [GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm); development `eslint-config-next → @next/eslint-plugin-next → fast-glob → micromatch` |
+| `source-map-js@1.2.1` | High | [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q); `next → postcss`, also Tailwind/Vitest development paths |
+| `sharp@0.35.4` | High | [GHSA-wq5f-xc86-pv6w](https://github.com/advisories/GHSA-wq5f-xc86-pv6w); optional `next → sharp` dependency |
+
+These are not all development-only paths. This increment has a disclosed nonzero dependency audit; it is not a clean-audit release or an exploitability assessment. Remediation requires a separate authorized dependency task.
+
+### Separate C2 independent-review package
+
+`finsight-c2-review.zip` is created outside the repository with one `finsight-prototype/` root, current source/docs/tests/configuration, controlled fixtures, four fresh review-only `REVIEW_GIT_*` snapshots, a portable review guide and the synthetic workbook under `_review_inputs/`. Previous review ZIPs are not regenerated or included. Exclusions cover client data, unrelated course/personal material, local absolute paths, Git internals, dependencies/caches/build output, environment files/secrets, CodeGraph output, logs and deployment metadata.
+
+The complete contents of the two new untracked source/test files are included; ordinary Git diff/stat omits them. Review metadata is not a project artifact to commit. Clean-extraction results, archive size/hash/integrity and exclusion checks are reported after packaging.
+
+Independent verification from the extracted repository:
+
+```bash
+pnpm install --frozen-lockfile
+pnpm test
+FINSIGHT_WORKBOOK_PATH='./_review_inputs/SAIC_HF_Augmented_Bank_Transactions_v2.xlsx' pnpm test
+pnpm lint
+pnpm exec next typegen
+pnpm exec tsc --noEmit --incremental false
+pnpm build
+pnpm audit --json
+```
+
+Stop at the independent-review gate. No commit, push, upload, deployment, shared-repository modification or backend implementation is part of C2.

@@ -8,9 +8,11 @@ Earlier academic planning documents may describe proposed signed-cash convention
 
 Default downstream input is `consolidate(results).normalized` or JSON `datasets[].normalized`. `datasets[].records` contains evidence/quarantine and is not the default analysis input. Keep envelope versions: isolated rows do not carry schema/ruleset context. Check all supplied result versions before consolidation or consumption, and evidence-JSON envelope/dataset versions before visiting rows. The [consumer recipe](../../examples/ingestion/consume.ts) demonstrates compatibility gating for trusted engine-produced results; it is not arbitrary JSON validation or a production API. C1 adds the [accepted-data projection](accepted-data-contract.md), exported through the public entry point, with separate shared dataset/batch context, selected accepted fields and quality counts. It delegates consolidation to the existing boundary, pins supported versions independently to `0.1`, changes no evidence/CSV export, and adds no backend or external-input validator. External transport versioning and JSON Schema remain deferred.
 
-The UI generates session batch IDs; reusable-engine callers supply context. Confirmed C1 ownership: Chia owns ingestion batch identity; Celester preserves it and owns persistence, permanent database IDs, backend lifecycle/supersession, reconciliation and dashboard summaries. Frederick owns analysis-specific interpretation/aggregation/warning eligibility; Jason owns production trust-boundary/security requirements; Izzat consumes backend/API data for dashboard visualization. Source row IDs remain lineage coordinates, not economic uniqueness or database IDs. Consolidation is not reconciliation.
+The Data page uses the React-independent [`ingestDatasetRun`](../../lib/ingestion/run.ts) wrapper for each attempted ingestion execution. It requests one new UUID/time pair and delegates to the unchanged `ingestDataset`; only a returned result is stored. Direct reusable-engine callers can still supply their own context. Confirmed C1 ownership: Chia owns ingestion batch identity; Celester preserves it and owns persistence, permanent database IDs, backend lifecycle/supersession, reconciliation and dashboard summaries. Frederick owns analysis-specific interpretation/aggregation/warning eligibility; Jason owns production trust-boundary/security requirements; Izzat consumes backend/API data for dashboard visualization. Source row IDs remain lineage coordinates, not economic uniqueness or database IDs. Consolidation is not reconciliation.
 
-**REQUIRES TECHNICAL REVIEW:** the current UI reuses a session batch ID on reprocessing. C1 preserves the supplied ID and does not satisfy the confirmed fresh-batch requirement; new-run orchestration requires a separate authorized change. Batch scope, changed-file replacement association, evidence retention/retrieval and external transport compatibility still need definition. Client field/convention confirmations and production-security limitations remain unresolved.
+**C2 — IMPLEMENTED / INDEPENDENTLY REVIEWED — 7 October 2026:** checking another dataset or rechecking the same dataset creates a new batch ID. A completed result with no accepted rows still has its own context. A throwing execution may consume an unused ID/time pair; it returns no result, and a retry requests fresh context. Reopening, inspecting, exporting, consolidating or projecting existing results generates neither IDs nor timestamps. The wrapper accepts optional `idFactory: () => string` and `now: () => Date` providers for reproducible tests; injected ID providers are responsible for returning fresh values. C1 continues to copy existing context without generating it. The [lifecycle tests](../../tests/ingestion/ingestion-run.test.ts) cover failure/retry, replacement and unchanged export bytes.
+
+Backend supersession is not implemented. Backend batch scope, changed-file replacement association, evidence retention/retrieval and external transport compatibility still need definition. Client field/convention confirmations and production-security limitations remain unresolved.
 
 Contract changes require a visible note naming affected fields/rules, reviewed examples and regression fixtures, and coordination with affected consumers before adoption:
 
@@ -70,6 +72,7 @@ Raw, staging, validated, normalized and consolidated are conceptual stages. Sepa
 | `summary.ts` | Defined quality counts and denominators |
 | `exports.ts` | Canonical CSV, rejected-issue CSV and versioned JSON evidence |
 | `index.ts` | Reusable public entry point |
+| `run.ts` | Fresh UUID/UTC context per attempted execution; unchanged engine delegation with injectable providers |
 | `components/ingestion/*.tsx` | Profile, mapping/convention review, result tables and source inspector |
 | `app/data/page.tsx` | Session orchestration, native upload, samples, invalidation and downloads |
 
@@ -89,7 +92,7 @@ Contract/envelope versions are `schema_version: "0.1"` and `ruleset_version: "0.
 | `source_row_number` | integer | Required; CSV logical record number or Excel worksheet row, header included |
 | `source_row_id` | string | Required; SHA-256 + worksheet index + original row |
 | `file_sha256` | 64-character hex string | Required; exact original byte-content fingerprint |
-| `ingestion_batch_id` | string | Required; engine preserves caller context; current UI generates one per session and reuses it on reprocessing |
+| `ingestion_batch_id` | string | Required; engine preserves caller context; Data-page execution wrapper generates one per attempted run, including rechecking |
 | `ingested_at` | UTC ISO timestamp string | Required; strict known-offset input normalized to `YYYY-MM-DDTHH:mm:ss.sssZ` |
 | `transaction_date` | `YYYY-MM-DD` string or null | Original normalized source transaction date, independent of selected basis |
 | `posting_date` | `YYYY-MM-DD` string or null | Original normalized source posting date, independent of selected basis |

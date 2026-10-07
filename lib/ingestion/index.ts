@@ -3,6 +3,8 @@ export { inspectFile, createDataset, isDuplicateFile, sanitizeFilename, READER_L
 export { profileDataset } from "./profiler";
 export { suggestMapping, overrideMapping, approveMapping, mappingErrors } from "./mapper";
 export { ingestDataset, consolidate } from "./pipeline";
+export { ingestDatasetRun } from "./run";
+export type { IngestionRunProviders } from "./run";
 export { canonicalCSV, rejectedCSV, evidenceJSON } from "./exports";
 export { createAcceptedDataPayload } from "./accepted-data";
 export type { AcceptedDataPayload, AcceptedDataset, AcceptedDatasetSummary, AcceptedTransaction, AcceptedWarning } from "./accepted-data";
