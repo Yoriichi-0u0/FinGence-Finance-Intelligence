@@ -160,7 +160,7 @@ Dataset identity is currently exact file hash plus worksheet index; source-row i
 
 **REQUIRES CLIENT CONFIRMATION:** actual source conventions, mandatory accounting fields/keys, selected date and text-number/date conventions, currencies/defaults, ledger exceptions and retention requirements. Confirmed team ownership does not invent client feedback.
 
-Production backend validation, upload/view/evidence/download access controls, RBAC and action/ID-based audit logging remain future requirements, not implemented controls. Uploaded files and reports are sensitive; raw files should be temporary. Malware scanning is optional for the current FYP scope. Do not log full payloads/transactions. Other FinSight pages remain mock-driven, and C1 adds no persistence or API.
+Production backend validation, upload/view/evidence/download access controls, RBAC and action/ID-based audit logging remain future requirements, not implemented controls. Uploaded files and reports are sensitive; raw files should be temporary. Malware scanning is optional for the current FYP scope. Do not log full payloads/transactions. Other FinGence pages remain mock-driven, and C1 adds no persistence or API.
 
 ## Executable evidence
 

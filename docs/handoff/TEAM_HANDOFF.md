@@ -1,4 +1,4 @@
-# FinSight ingestion — teammate handoff
+# FinGence ingestion — teammate handoff
 
 **Default downstream input: accepted canonical records.**
 
@@ -13,6 +13,12 @@
 
 ## What is available
 
+**CURRENT PRODUCT IDENTITY:** FinGence (Finance + Intelligence), for the Sarawak Artificial Intelligence Centre (SAIC). The personal repository is `Yoriichi-0u0/FinGence-Finance-Intelligence`, and the local directory is `FinGence`. Earlier FinSight names below identify historical milestones.
+
+**FinGence Branding — IMPLEMENTED / INDEPENDENTLY REVIEWED — 12 October 2026**
+
+The local branding implementation has passed review. Branding has not been deployed to production; the existing Vercel deployment remains on C2 until an authorized release. C1/C2 contracts and historical verification remain unchanged. The three modified synthetic files remain protected in the external backup and unapplied stash. No further Git-worktree or directory changes are required.
+
 **IMPLEMENTED / AVAILABLE IN CURRENT WORKING TREE — checked 2 October 2026:** Chia's CSV/XLSX ingestion, profiling, deterministic column mapping, explicit review/approval, validation, normalization, quarantine, consolidation, quality metrics and exports. A1/A2 adds these handoffs and a tested consumption recipe; it does not change the engine or UI.
 
 At this check, the PoC is an uncommitted local working tree on `feature/data-ingestion`. A branch name alone does not make these files available to another member. Inspect your actual checkout for `lib/ingestion/`, its tests and this example; publication/sharing needs a separate authorized step. This dated availability statement remains a historical snapshot after sharing.
@@ -21,7 +27,7 @@ At this check, the PoC is an uncommitted local working tree on `feature/data-ing
 
 **C2 — IMPLEMENTED / INDEPENDENTLY REVIEWED — 7 October 2026:** a small public execution wrapper now gives each Data-page check fresh batch/time context. The C1 projection, provisional financial rules and serializers are unchanged.
 
-**PROVISIONAL:** canonical schema/ruleset versions `0.1`, client-dependent source conventions and the C1 transport projection. **FUTURE:** backend/database/API, AI/forecasting, reconciliation and dashboard integration. Other FinSight pages remain mock-driven. The Data page processes records in browser memory; refreshing/resetting/leaving discards the session. Downloads deliberately persist selected evidence locally.
+**PROVISIONAL:** canonical schema/ruleset versions `0.1`, client-dependent source conventions and the C1 transport projection. **FUTURE:** backend/database/API, AI/forecasting, reconciliation and dashboard integration. Other FinGence pages remain mock-driven. The Data page processes records in browser memory; refreshing/resetting/leaving discards the session. Downloads deliberately persist selected evidence locally.
 
 ## Start here
 

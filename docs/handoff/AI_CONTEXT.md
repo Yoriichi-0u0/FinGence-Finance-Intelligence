@@ -1,4 +1,4 @@
-# FinSight ingestion — AI context
+# FinGence ingestion — AI context
 
 Read this before modifying or consuming Chia's ingestion layer. It is an orientation map: follow the linked source/architecture/tests for authoritative definitions rather than treating this as a second schema.
 
@@ -18,7 +18,13 @@ Do NOT use by default: datasets[].records (or IngestionResult.records)
 
 ## Identity, state and ownership
 
-Topic 21 — Finance Intelligence; COS40005 Project A/Sprint 1; repository `finsight-prototype`; Chia owns ingestion/consolidation.
+Topic 21 — Finance Intelligence; COS40005 Project A/Sprint 1; product **FinGence** (Finance + Intelligence); client **Sarawak Artificial Intelligence Centre (SAIC)**; personal repository `Yoriichi-0u0/FinGence-Finance-Intelligence`; local directory `FinGence`; Chia owns ingestion/consolidation. The official academic title remains **Finance Intelligence: AI-Driven Financial Analysis and Automated Reporting**.
+
+**FinGence Branding — IMPLEMENTED / INDEPENDENTLY REVIEWED — 12 October 2026**
+
+Current product-facing names and logo use FinGence. Earlier FinSight/directory names in dated evidence remain historical. Preserve package names, `FINSIGHT_*` test variables, checkpoint tags and ingestion identifiers.
+
+The local branding implementation has passed review. Branding has not been deployed to production; the existing Vercel deployment remains on C2 until an authorized release. C1/C2 contracts and historical verification remain unchanged. The three modified synthetic files remain protected in the external backup and unapplied stash. No further Git-worktree or directory changes are required.
 
 **IMPLEMENTED / AVAILABLE IN CURRENT WORKING TREE — checked 2 October 2026:** reusable TypeScript engine plus browser-memory Data-page PoC; A1/A2 handoffs and consumption example. At verification it remains an uncommitted local working tree on `feature/data-ingestion`. Check Git status, actual files and tests; do not infer shared availability from a branch name. This is a dated snapshot, not a permanent assertion that the project is uncommitted.
 
@@ -82,4 +88,4 @@ Do not change other feature pages, shared mock finance modules, production/confi
 
 **REQUIRES TEAM CONFIRMATION:** external transport versioning, backend batch scope, changed-file replacement association and separate evidence retention/retrieval details. C1 remains a provisional local boundary, not a finished backend integration. **REQUIRES CLIENT CONFIRMATION:** actual source conventions, required fields/date basis/currencies, exception policies and retention. Preserve source meaning and flag unknowns rather than inventing answers. Security/privacy guarantees remain limited to architecture's PoC controls. Future externally received payloads require independent backend validation and access control; audit actions/relevant IDs, not complete transaction contents. Do not claim TypeScript types implement runtime validation or RBAC.
 
-Suggested cross-tool instruction: “Read `docs/handoff/AI_CONTEXT.md`, inspect the current checkout and linked contract/tests, then identify the integration boundary owned by this task before changing FinSight ingestion.”
+Suggested cross-tool instruction: “Read `docs/handoff/AI_CONTEXT.md`, inspect the current checkout and linked contract/tests, then identify the integration boundary owned by this task before changing FinGence ingestion.”

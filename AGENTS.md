@@ -10,4 +10,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Ingestion handoff
 
-Before modifying or consuming FinSight ingestion, read [docs/handoff/AI_CONTEXT.md](docs/handoff/AI_CONTEXT.md). It links the authoritative implementation, architecture, tests and consumer example. Inspect the actual checkout and requested scope.
+Before modifying or consuming FinGence ingestion, read [docs/handoff/AI_CONTEXT.md](docs/handoff/AI_CONTEXT.md). It links the authoritative implementation, architecture, tests and consumer example. Inspect the actual checkout and requested scope.

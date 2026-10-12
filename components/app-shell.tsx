@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   AlertTriangle,
-  BarChart3,
   Building2,
   ChartNoAxesCombined,
   ChevronDown,
@@ -15,7 +15,6 @@ import {
   Menu,
   ReceiptText,
   RefreshCw,
-  Sparkles,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -36,13 +35,11 @@ function Brand() {
     <Link
       href="/"
       className="flex items-center gap-3 rounded-lg text-white focus-visible:outline-white"
-      aria-label="FinSight overview"
+      aria-label="FinGence overview"
     >
-      <span className="grid size-9 place-items-center rounded-lg bg-teal-400/12 text-teal-300">
-        <BarChart3 aria-hidden="true" size={23} strokeWidth={2.2} />
-      </span>
+      <Image src="/branding/FinGence_Logo_96.png" width={36} height={36} alt="" unoptimized className="size-9 shrink-0 rounded-lg" />
       <span className="min-w-0">
-        <span className="block text-[21px] font-semibold tracking-[-0.03em]">FinSight</span>
+        <span className="block text-[21px] font-semibold tracking-[-0.03em]">FinGence</span>
         <span className="block truncate text-[11px] text-slate-300">
           AI-Driven Financial Intelligence
         </span>
@@ -130,9 +127,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Menu aria-hidden="true" size={23} />
             </button>
-            <Link href="/" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
-              <Sparkles aria-hidden="true" size={20} className="text-[var(--teal)]" />
-              FinSight
+            <Link href="/" aria-label="FinGence overview" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
+              <Image src="/branding/FinGence_Logo_96.png" width={28} height={28} alt="" unoptimized className="size-7 shrink-0 rounded-md" />
+              FinGence
             </Link>
           </div>
           <span

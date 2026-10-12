@@ -548,3 +548,35 @@ pnpm audit --json
 ```
 
 Stop at the independent-review gate. No commit, push, upload, deployment, shared-repository modification or backend implementation is part of C2.
+
+
+## FinGence local directory and branding migration — 12 October 2026
+
+Local review candidate on `feature/fingence-branding`, based on `ingestion-c2-v0.1` (`88f2e23`). No commit, push, merge, deployment, domain change or production-setting change was performed.
+
+The primary directory is now `FinGence`. `git worktree repair` exited 0 and repaired the linked team worktree's administrative pointer. Its branch (`feature/data-ingestion-chia`), HEAD (`161b489`) and all 76 checked tracked files remained unchanged. Existing branches/tags, Git remotes and local Vercel project linkage were preserved. CodeGraph CLI sync/status work at the relocated path; the stopped MCP connection needs reconnection in Codex.
+
+The three pre-existing modified samples were copied outside the repository, verified against their SHA-256 hashes, and preserved in a path-scoped stash. The checkout and review package use the committed C2 fixtures. Neither fixtures nor checked evidence were regenerated. The external original logo is retained; its in-repository copy is byte-identical, SHA-256 `81a704a60091e1af1b6016be3018828d2652a487cab068fa84217d00e5100e7a`.
+
+Runtime: Node `25.8.1`, pnpm `11.19.0`, Next.js `16.3.6`; dependency manifests/lockfile unchanged.
+
+| Executed command | Result | Exit |
+| --- | --- | --- |
+| `pnpm install --frozen-lockfile` | Lockfile up to date; installation succeeded | 0 |
+| `pnpm test` | 11 test files passed, 1 skipped; 164 tests passed, 1 skipped (165 total) | 0 |
+| `pnpm lint` | No lint findings | 0 |
+| `pnpm exec next typegen` | Route types generated successfully | 0 |
+| `pnpm exec tsc --noEmit --incremental false` | No TypeScript diagnostics | 0 |
+| `pnpm build` | Production build passed; 13/13 static pages generated | 0 |
+| `pnpm audit --json` | 0 critical, 6 high, 5 moderate, 1 low | 1 |
+| `git diff --check` | No whitespace errors | 0 |
+
+The first build rejected RGB PNG entries in the ICO file. Regenerating the derived favicon with opaque RGBA entries resolved this; the original artwork/PNG was unchanged. The subsequent build passed. Audit findings remain a separate security/dependency backlog, including runtime paths; no package updates or audit suppression were performed.
+
+Manual checks used the local production build (`pnpm start --hostname 127.0.0.1 --port 3100`) and Codex's in-app browser. Desktop 1440 × 900, mobile 390 × 844 and narrow 320 × 844 layouts showed FinGence branding without page-wide horizontal overflow. The report masthead retained its mock-data notice. Browser title/description and favicon, PNG icon and Apple touch-icon links were correct; all five branding assets returned HTTP 200 with bytes matching the files. No application console errors/warnings were recorded in the final ingestion test tab.
+
+The original built-in CSV/XLSX samples were read and checked: ledger 10 Ready; bank Transactions worksheet 8 Ready after Details → Reference correction; edge cases 2 Ready, 3 Included — needs attention, 3 Cannot include. Combined output: 26 received, 20 VALID, 3 WARNING, 3 REJECTED, 23 accepted. Rechecking the ledger produced a different batch UUID with the same source-row identity. A rejected invalid-date row remained inspectable.
+
+All three browser downloads were retrieved and independently parsed: included CSV 23 accepted rows; rejected report 4 issues across 3 source rows; evidence JSON 26 processed/23 normalized, with schema/ruleset `0.1` and the reprocessed ledger batch retained. Existing C1/C2, exact-value, lineage and serializer regressions passed, and 47 protected source/test/fixture/configuration files were byte-checked against the C2 baseline. The Data page changed only two product-name strings.
+
+The direct file-picker automation timed out, so picker-based upload was not marked verified; sample-file loading and unchanged reader tests cover CSV/XLSX ingestion. The optional supplied 6,000-row workbook was unavailable under `04 Modules`; its integration test remained skipped. Screenshots and command/export verification artifacts were saved outside the repository for independent review. The old website URL and live C2 deployment were retained.

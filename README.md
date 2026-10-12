@@ -1,6 +1,16 @@
-# FinSight Prototype
+# FinGence — Finance Intelligence Prototype
+
+![FinGence logo](public/branding/FinGence_Logo_96.png)
 
 COS40005 Project A, Sprint 1 — Topic 21: **Finance Intelligence: AI-Driven Financial Analysis and Automated Reporting**.
+
+**FinGence** combines **Finance + Intelligence**. The client is the **Sarawak Artificial Intelligence Centre (SAIC)**. The official academic project title above is unchanged.
+
+The personal repository is [Yoriichi-0u0/FinGence-Finance-Intelligence](https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence). The existing [website](https://finsight-financeintelligence.vercel.app/) retains its assigned URL.
+
+**FinGence Branding — IMPLEMENTED / INDEPENDENTLY REVIEWED — 12 October 2026**
+
+The local branding implementation has passed review. Branding has not been deployed to production; the existing Vercel deployment remains on C2 until an authorized release. C1/C2 contracts and historical verification remain unchanged. The three modified synthetic files remain protected in the external backup and unapplied stash. No further Git-worktree or directory changes are required.
 
 The **Data** page now runs a real, local **Data Ingestion PoC v0.1**: read CSV/XLSX, profile source values, review column mappings and conventions, validate rows, inspect warnings/rejections, normalize accepted records, consolidate compatible representations, and export evidence. The canonical schema is provisional and awaits client feedback.
 
@@ -21,12 +31,12 @@ Start with the [teammate handoff](docs/handoff/TEAM_HANDOFF.md) or [AI context](
 Use the repository's pnpm package manager. Verification used **Node 25.8.1** and **pnpm 11.19.0**; a different Node version has not been verified for this increment. No Python environment or secrets are required.
 
 ```bash
-cd finsight-prototype
+cd FinGence
 pnpm install --frozen-lockfile
 pnpm dev --hostname 127.0.0.1
 ```
 
-If already inside this repository, omit `cd finsight-prototype`. Open [the ingestion demo](http://127.0.0.1:3000/data). A modern browser with Web Crypto is required; localhost is supported. For a local production-build demonstration:
+If already inside this repository, omit `cd FinGence`. The local directory was previously named `finsight-prototype`; dated milestones, package/test identifiers and historical evidence retain their original names. Open [the ingestion demo](http://127.0.0.1:3000/data). A modern browser with Web Crypto is required; localhost is supported. For a local production-build demonstration:
 
 ```bash
 pnpm build

@@ -158,7 +158,7 @@ export default function DataPage() {
       actions={<button type="button" onClick={reset} disabled={busy} className={buttonStyle}><RotateCcw size={16} aria-hidden="true" />Clear this session</button>} />
     <div className="rounded-lg border border-teal-200 bg-[var(--teal-soft)] p-4 text-sm text-[var(--teal-dark)]">
       Files are processed in this browser tab&apos;s memory. Refreshing or clearing the session removes this work; download your records and check report before leaving.
-      The data format and accounting conventions are provisional. Other FinSight pages still use example data.
+      The data format and accounting conventions are provisional. Other FinGence pages still use example data.
     </div>
     <Panel title="1. Add financial file" className="mt-5" action={<span className="text-xs text-[var(--muted)]">{files.length} files loaded</span>}>
       <div className="space-y-4 p-4 sm:p-5">
@@ -245,7 +245,7 @@ export default function DataPage() {
     </>}
     <section aria-label="Combined records and downloads" className="mt-5">
       <h2 className="text-lg font-semibold">6. Combined records and downloads</h2>
-      <p className="mt-1 text-sm text-[var(--muted-strong)]">Only current checked results are combined here. This session does not populate other FinSight pages.</p>
+      <p className="mt-1 text-sm text-[var(--muted-strong)]">Only current checked results are combined here. This session does not populate other FinGence pages.</p>
       {results.length ? <>
         <ul className="mt-4 space-y-2" aria-label="Checked datasets">{results.map(completed => <li key={completed.dataset.id} className="rounded-lg border border-[var(--border)] bg-white p-3">
           <button type="button" disabled={busy} onClick={() => prepare(completed.dataset.file, completed.dataset.sheet.index)} className="min-h-11 break-words text-left text-sm font-semibold text-[var(--teal-dark)] underline underline-offset-2">
