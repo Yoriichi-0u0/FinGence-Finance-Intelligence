@@ -20,6 +20,7 @@ export function prepareAcceptedDataExample(results: readonly IngestionResult[]) 
   // Decimal and identifier strings remain unchanged inside payload.datasets[].normalized.
   // Rejected rows never enter this loop; only their counts appear in dataset summaries.
   // Source IDs remain lineage. Backend IDs/supersession and analysis eligibility are downstream.
-  // Caller batch IDs are preserved; the current UI still reuses its session ID on reprocessing.
+  // C1 preserves caller-provided ingestion context and generates no execution IDs.
+  // C2's ingestDatasetRun() creates fresh context for each attempted execution.
   return { payload, lineage };
 }
