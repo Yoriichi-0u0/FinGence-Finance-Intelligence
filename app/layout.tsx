@@ -15,11 +15,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "FinSight · Financial Intelligence",
-    template: "%s · FinSight",
+    default: "FinGence · Financial Intelligence",
+    template: "%s · FinGence",
   },
   description:
-    "Interactive proof-of-concept for AI-assisted financial analysis and automated reporting.",
+    "FinGence — Finance + Intelligence. An interactive proof-of-concept for AI-assisted financial analysis and automated reporting for the Sarawak Artificial Intelligence Centre (SAIC).",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

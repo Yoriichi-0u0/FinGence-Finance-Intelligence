@@ -1,11 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   AlertTriangle,
-  BarChart3,
   Building2,
   ChartNoAxesCombined,
   ChevronDown,
@@ -15,7 +15,6 @@ import {
   Menu,
   ReceiptText,
   RefreshCw,
-  Sparkles,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -36,13 +35,11 @@ function Brand() {
     <Link
       href="/"
       className="flex items-center gap-3 rounded-lg text-white focus-visible:outline-white"
-      aria-label="FinSight overview"
+      aria-label="FinGence overview"
     >
-      <span className="grid size-9 place-items-center rounded-lg bg-teal-400/12 text-teal-300">
-        <BarChart3 aria-hidden="true" size={23} strokeWidth={2.2} />
-      </span>
+      <Image src="/branding/FinGence_Logo_96.png" width={36} height={36} alt="" unoptimized className="size-9 shrink-0 rounded-lg" />
       <span className="min-w-0">
-        <span className="block text-[21px] font-semibold tracking-[-0.03em]">FinSight</span>
+        <span className="block text-[21px] font-semibold tracking-[-0.03em]">FinGence</span>
         <span className="block truncate text-[11px] text-slate-300">
           AI-Driven Financial Intelligence
         </span>
@@ -111,6 +108,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
@@ -130,20 +128,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               <Menu aria-hidden="true" size={23} />
             </button>
-            <Link href="/" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
-              <Sparkles aria-hidden="true" size={20} className="text-[var(--teal)]" />
-              FinSight
+            <Link href="/" aria-label="FinGence overview" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
+              <Image src="/branding/FinGence_Logo_96.png" width={28} height={28} alt="" unoptimized className="size-7 shrink-0 rounded-md" />
+              FinGence
             </Link>
           </div>
           <span
             className="grid size-9 place-items-center rounded-full bg-[var(--teal-soft)] text-sm font-semibold text-[var(--teal-dark)]"
-            aria-label="Signed in as A M"
+            aria-label="Demonstration avatar — authentication not implemented"
           >
             AM
           </span>
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
+          {pathname !== "/data" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
+            <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
+          </aside>}
           {children}
         </main>
       </div>

@@ -1,0 +1,29 @@
+name: FinGence integration verification
+on:
+  pull_request:
+  push:
+    branches: [main, integration/saic-demo-2026-10-16, release/saic-demo-2026-10-16]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - run: npm install --global pnpm@11.19.0
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm check:server-boundary
+      - run: node supabase/tests/verify-local.mjs
+      - run: node supabase/tests/verify-upgraded.mjs
+      - run: node tests/persistence/schema-compatibility.mjs
+      - run: pnpm build
+      - name: Dependency audit report — tracked security backlog, no suppression
+        run: pnpm audit --json
+        continue-on-error: true

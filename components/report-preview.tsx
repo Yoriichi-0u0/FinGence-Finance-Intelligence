@@ -1,8 +1,8 @@
+import Image from "next/image";
 import {
   AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
-  BarChart3,
   CheckCircle2,
   TrendingUp,
 } from "lucide-react";
@@ -21,8 +21,8 @@ export function ReportPreview() {
         <div className="flex items-start justify-between gap-5">
           <div>
             <div className="flex items-center gap-2 text-[var(--teal)]">
-              <BarChart3 aria-hidden="true" size={24} />
-              <span className="text-lg font-semibold tracking-[-0.03em]">FinSight</span>
+              <Image src="/branding/FinGence_Logo_96.png" width={32} height={32} alt="" unoptimized className="size-8 shrink-0 rounded-md" />
+              <span className="text-lg font-semibold tracking-[-0.03em]">FinGence</span>
             </div>
             <h2 className="mt-8 text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">Monthly Management Report</h2>
             <p className="mt-2 text-sm text-[var(--muted)]">August 2026 · SAIC Finance Workspace</p>
