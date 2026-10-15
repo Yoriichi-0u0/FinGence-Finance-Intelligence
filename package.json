@@ -8,21 +8,33 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "next typegen && tsc --noEmit --incremental false",
+    "check:server-boundary": "node scripts/verify-server-boundary.mjs",
+    "test:ingestion": "vitest run tests/ingestion",
+    "test:analytics": "vitest run tests/analytics.test.ts tests/analytics-adapter.test.ts tests/integration/ingestion-analytics.test.ts",
+    "test:persistence": "vitest run tests/persistence tests/integration/grouped-consultation.test.ts",
+    "test:security": "vitest run tests/security",
+    "demo:persistence": "vitest run tests/integration/grouped-consultation.test.ts --reporter=verbose"
   },
   "dependencies": {
     "fflate": "0.8.3",
     "lucide-react": "^1.38.0",
     "next": "16.3.6",
     "papaparse": "5.7.0",
+    "pg": "8.23.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "read-excel-file": "9.3.10"
+    "read-excel-file": "9.3.10",
+    "server-only": "0.0.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
+    "@electric-sql/pglite-socket": "0.2.11",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/papaparse": "5.5.2",
+    "@types/pg": "8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
@@ -31,5 +43,8 @@
     "typescript": "^5",
     "vitest": "4.1.11"
   },
-  "packageManager": "pnpm@11.19.0"
+  "packageManager": "pnpm@11.19.0",
+  "engines": {
+    "node": "24.x"
+  }
 }

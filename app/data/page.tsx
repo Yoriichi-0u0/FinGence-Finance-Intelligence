@@ -7,6 +7,7 @@ import { ProfileView } from "@/components/ingestion/profile-view";
 import { MappingEditor } from "@/components/ingestion/mapping-editor";
 import { CanonicalView, QualityView, RecordInspector, ResultsView } from "@/components/ingestion/results-view";
 import { reviewState } from "@/components/ingestion/presentation";
+import { LiveAnalytics } from "@/components/ingestion/live-analytics";
 import {
   DEFAULT_OPTIONS, IngestionError, READER_LIMITS, approveMapping, canonicalCSV, consolidate,
   createDataset, evidenceJSON, ingestDatasetRun, inspectFile, isDuplicateFile, mappingErrors,
@@ -265,6 +266,7 @@ export default function DataPage() {
         </div>
       </> : <p className="mt-4 rounded-lg border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted-strong)]">Combined records will appear after you review and check a file. Only current checked results are included.</p>}
     </section>
+    {results.length > 0 && <LiveAnalytics results={results} onInspect={inspect} />}
     {inspected && <RecordInspector row={inspected.row} result={inspected.result} onClose={closeInspector} />}
   </>;
 }

@@ -1,3 +1,7 @@
+# FinGence — SAIC integration candidate, 15 October 2026
+
+The verified application candidate mirrors shared integration commit `b2b1f3b` without replacing personal Git history. See [current integration status, ownership and verification](../releases/saic-2026-10-16/README.md). Shared-main release remains gated on non-author team approval and passing checks; no production deployment is implied by this candidate. Historical ingestion verification and all C1/C2 checkpoints remain intact.
+
 # FinGence ingestion — AI context
 
 Read this before modifying or consuming Chia's ingestion layer. It is an orientation map: follow the linked source/architecture/tests for authoritative definitions rather than treating this as a second schema.
