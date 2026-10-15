@@ -15,6 +15,7 @@
     "test:analytics": "vitest run tests/analytics.test.ts tests/analytics-adapter.test.ts tests/integration/ingestion-analytics.test.ts",
     "test:persistence": "vitest run tests/persistence tests/integration/grouped-consultation.test.ts",
     "test:security": "vitest run tests/security",
+    "phase2:ingest": "node --conditions=react-server scripts/phase2.mjs",
     "demo:persistence": "vitest run tests/integration/grouped-consultation.test.ts --reporter=verbose"
   },
   "dependencies": {
