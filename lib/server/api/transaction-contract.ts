@@ -131,6 +131,7 @@ export interface TransactionListItem {
   readonly debit: string | null;
   readonly credit: string | null;
   readonly source_amount: string | null;
+  readonly entry_side: "DEBIT" | "CREDIT" | null;
   readonly derived_ledger_net: string | null;
   readonly balance: string | null;
   readonly currency: string | null;
@@ -150,7 +151,8 @@ export function projectTransactionRow(input: unknown): TransactionListItem {
     || typeof row.source_row_id !== "string" || row.source_row_id.length === 0
     || (row.canonical_date_basis !== "TRANSACTION_DATE" && row.canonical_date_basis !== "POSTING_DATE")
     || (row.ingestion_status !== "VALID" && row.ingestion_status !== "WARNING")
-    || !monetaryBasisValues.has(String(row.monetary_basis))
+    || typeof row.monetary_basis !== "string" || !monetaryBasisValues.has(row.monetary_basis)
+    || (row.entry_side !== null && row.entry_side !== "DEBIT" && row.entry_side !== "CREDIT")
     || (row.currency_basis !== null && row.currency_basis !== "SOURCE" && row.currency_basis !== "DATASET_DEFAULT")) {
     throw new InvalidTransactionContractError();
   }
@@ -172,7 +174,8 @@ export function projectTransactionRow(input: unknown): TransactionListItem {
     throw new InvalidTransactionContractError();
   }
   if (row.monetary_basis === "source_amount_with_direction"
-    && ((row.entry_side !== "DEBIT" && row.entry_side !== "CREDIT") || sourceAmount?.startsWith("-") === true)) {
+    && ((row.entry_side !== "DEBIT" && row.entry_side !== "CREDIT")
+      || (sourceAmount?.startsWith("-") === true && !/^-0(?:\.0+)?$/.test(sourceAmount)))) {
     throw new InvalidTransactionContractError();
   }
   return Object.freeze({
@@ -191,6 +194,7 @@ export function projectTransactionRow(input: unknown): TransactionListItem {
     monetary_basis: row.monetary_basis as MonetaryBasis,
     debit, credit,
     source_amount: sourceAmount,
+    entry_side: row.entry_side as "DEBIT" | "CREDIT" | null,
     derived_ledger_net: derivedLedgerNet,
     balance: optionalMoney(row.balance),
     currency,

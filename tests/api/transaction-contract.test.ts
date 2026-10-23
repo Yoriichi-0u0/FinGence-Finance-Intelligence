@@ -40,6 +40,22 @@ describe("Phase 6A transaction request contract", () => {
 });
 
 describe("Phase 6A transaction response projection", () => {
+  it.each(["DEBIT", "CREDIT"])("preserves %s direction without interpreting its sign", entry_side => {
+    expect(projectTransactionRow({ ...row, monetary_basis: "source_amount_with_direction", entry_side }))
+      .toMatchObject({ entry_side, source_amount: row.source_amount });
+  });
+  it.each(["-0", "-0.00"])("preserves accepted directed negative zero %s", source_amount => {
+    expect(projectTransactionRow({ ...row, monetary_basis: "source_amount_with_direction",
+      entry_side: "DEBIT", source_amount })).toMatchObject({ source_amount, entry_side: "DEBIT" });
+  });
+  it.each([
+    { monetary_basis: { toString: () => "source_signed_amount" } },
+    { entry_side: undefined }, { entry_side: "unknown" },
+    { monetary_basis: "source_amount_with_direction", entry_side: null },
+    { monetary_basis: "source_amount_with_direction", entry_side: "DEBIT", source_amount: "-0.01" },
+  ])("rejects malformed basis or direction: %o", changes => {
+    expect(() => projectTransactionRow({ ...row, ...changes })).toThrow(InvalidTransactionContractError);
+  });
   it("preserves money and leading-zero identifiers without leaking internal fields", () => {
     const projected = projectTransactionRow({ ...row,
       source_file: "confidential.csv", context: { raw: true },
