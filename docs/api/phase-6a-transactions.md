@@ -2,6 +2,8 @@
 
 **Status:** Internal contract only. No HTTP endpoint, production query, authentication, audit sink, or deployment.
 
+Follow-on: [Phase 6B internal transaction query service](phase-6b-transaction-query.md) implements injected, locally tested SQL reads. It provides no production security adapters or HTTP endpoint; the activation gates below still apply.
+
 **Repository:** `Yoriichi-0u0/FinGence-Finance-Intelligence`
 **Feature branch:** `feature/backend-api-celester`
 
@@ -18,7 +20,7 @@ This code **does not** grant anyone permission to retrieve records. The cursor i
 1. **Jason:** Verify tokens/sessions and define trusted organization membership source; confirm explicit transaction collection permission, including Analyst-only access. Neither Admin nor Reviewer receives routine raw transaction access.
 2. **Backend + Jason:** Resolve record/batch ownership and organization from a trusted source. The current stored financial tables lack organization scoping, so a mere client-provided `batch_id` or role is insufficient.
 3. **Backend + Jason:** Implement a protected durable security audit sink. Required audit persistence must succeed before a sensitive response is returned.
-4. **Backend:** Parameterized PostgreSQL query and stable keyset pagination (`canonical_date DESC, id DESC`) using verified filter-bound cursors. This is not implemented.
+4. **Backend:** The internal query service now implements parameterized SQL and stable keyset pagination (`canonical_date DESC, id DESC`). Production cursor integrity/expiry/binding adapters and security integration remain unimplemented; see Phase 6B.
 5. **Team:** Confirm DTO, data retention and security requirements, and review locally tested changes before merging. Hosted SQL migrations require separate approval.
 
 ## Local verification
