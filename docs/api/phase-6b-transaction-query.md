@@ -4,6 +4,8 @@
 
 ## Scope
 
+Follow-on: [Phase 6C batch API foundation](phase-6c-batch-query.md) adds a separate internal batch contract/query service. It does not grant access to transaction or persistence-attempt operations.
+
 `lib/server/api/transaction-query.ts` exports `createTransactionQueryService(dependencies).list(parameters, context)`. This is an internal server-only service, with no HTTP route, default security implementation, pool construction, environment loading or hosted database access. Jason's authorization/audit modules are unchanged. The service returns an immutable `{ items, nextCursor }` page using the existing explicit DTO.
 
 Database access uses the existing `SqlConnection` interface. The service issues one SELECT per nonempty authorized scope, binds every filter/scope/cursor/limit value as a SQL parameter, explicitly restricts status to VALID/WARNING, and never selects raw evidence, filenames, batch context or arbitrary columns. The three date columns use `to_char(column, 'YYYY-MM-DD')` for deterministic ISO output; NUMERIC columns use `::text`. DTO projection preserves PostgreSQL decimal strings, NULLs, source-row/producer-batch lineage, separate source dates, warning currencies and monetary direction without recomputing amounts or inventing totals. PostgreSQL itself may normalize numeric representations on storage; this service preserves the text returned by PostgreSQL.
