@@ -1,0 +1,3 @@
+# These synthetic fixtures are verified against exact published/exported bytes.
+/public/samples/ingestion/expected.json text eol=lf
+/docs/handoff/examples/ingestion-evidence.json text eol=lf
