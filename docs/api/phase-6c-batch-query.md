@@ -1,5 +1,7 @@
 # Phase 6C — Internal batch API foundation
 
+Forward planning: [Phase 6D-A V2 ingestion readiness](phase-6d-a-v2-ingestion-readiness.md) assesses reuse and schema gaps for Chia's pending replacement contract. This batch foundation remains the existing stored-data boundary; it does not define V2 decisions or ingestion payloads.
+
 25 October 2026. Branch `feature/backend-api-celester`, starting at `86ba45ee025db5736c05af63005a93f60f7d3fee`. Internal only: no route, production security adapter, schema change, hosted access or deployment. Jason's security modules and Chia's ingestion implementation are unchanged.
 
 ## Verified schema and persistence behavior
