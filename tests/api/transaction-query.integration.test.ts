@@ -5,6 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { PGLiteSocketServer } from "@electric-sql/pglite-socket";
 import { Pool } from "pg";
 import { createTransactionQueryService } from "../../lib/server/api/transaction-query";
+import { createTransactionDetailQueryService } from "../../lib/server/api/transaction-detail-query";
 import { access, batchA, batchB, harness } from "./transaction-query.fixtures";
 
 describe("transaction query against disposable PostgreSQL/WASM through pg", () => {
@@ -50,6 +51,44 @@ describe("transaction query against disposable PostgreSQL/WASM through pg", () =
   function setup() {
     const h = harness(); return { ...h, service: createTransactionQueryService({ ...h.dependencies, database: pool }) };
   }
+  function detail() {
+    const h = harness();
+    return { ...h, service: createTransactionDetailQueryService({ database: pool,
+      resolveAccess: h.dependencies.resolveAccess, audit: h.mocks.auditRead }) };
+  }
+  it("detail preserves accepted rows, exact amounts, NULLs and identical list DTOs", async () => {
+    const { service } = detail(); const list = await setup().service.list(new URLSearchParams(), null);
+    for (const expected of list.items) expect(await service.get(expected.transaction_id, null)).toEqual(expected);
+    expect(await service.get(id(1), null)).toMatchObject({ source_amount: "9007199254740993.123456789", source_row_id: "0001", debit: null });
+    expect(await service.get(id(2), null)).toMatchObject({ ingestion_status: "WARNING", currency: "MYRR" });
+    expect(await service.get(id(6), null)).toMatchObject({ currency: null, currency_basis: null });
+    expect(await service.get(id(4), null)).toMatchObject({ entry_side: "DEBIT", source_amount: "125.50" });
+    expect(await service.get(id(5), null)).toMatchObject({ debit: "0.00", credit: "125.50", derived_ledger_net: "-125.50" });
+  });
+  it("detail returns the same audited null for nonexistent and out-of-scope records", async () => {
+    const { service, mocks } = detail();
+    expect(await service.get(id(99), null)).toBeNull(); expect(await service.get(id(7), null)).toBeNull();
+    const receipts = mocks.auditRead.mock.calls as unknown as [{ outcome: string; recordCount: number }][];
+    expect(receipts.map(([receipt]) => [receipt.outcome, receipt.recordCount])).toEqual([["not_found", 0], ["not_found", 0]]);
+  });
+  it("detail refreshes trusted scope and denies revoked access", async () => {
+    const { service, mocks } = detail(); expect(await service.get(id(1), null)).not.toBeNull();
+    mocks.resolveAccess.mockResolvedValue({ ...access, organizationId: "other-org", batchIds: [batchB] });
+    expect(await service.get(id(1), null)).toBeNull();
+    mocks.resolveAccess.mockResolvedValue(null);
+    await expect(service.get(id(1), null)).rejects.toMatchObject({ code: "ACCESS_DENIED" });
+  });
+  it("detail is independent of DateStyle/timezone and preserves nullable source dates", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN"); await client.query("SET DateStyle TO 'SQL, DMY'"); await client.query("SET TIME ZONE 'Asia/Singapore'");
+      await client.query("UPDATE public.financial_records SET posting_date = NULL WHERE id = $1", [id(1)]);
+      await client.query("UPDATE public.financial_records SET transaction_date = NULL, posting_date = canonical_date, canonical_date_basis = 'POSTING_DATE' WHERE id = $1", [id(6)]);
+      const h = harness(); const service = createTransactionDetailQueryService({ database: client, resolveAccess: h.dependencies.resolveAccess, audit: h.mocks.auditRead });
+      expect(await service.get(id(1), null)).toMatchObject({ canonical_date: "2026-09-03", transaction_date: "2026-09-03", posting_date: null });
+      expect(await service.get(id(6), null)).toMatchObject({ canonical_date: "2026-09-02", transaction_date: null, posting_date: "2026-09-02", canonical_date_basis: "POSTING_DATE" });
+    } finally { await client.query("ROLLBACK"); client.release(); }
+  });
   it("preserves ISO dates, NULLs and filtered keyset pages under SQL, DMY DateStyle", async () => {
     const client = await pool.connect();
     try {
@@ -91,6 +130,15 @@ describe("transaction query against disposable PostgreSQL/WASM through pg", () =
       const page = await service.list(query, null); ids.push(...page.items.map(row => row.transaction_id)); cursor = page.nextCursor;
     } while (cursor);
     expect(ids).toEqual([3, 2, 1, 6, 5, 4].map(id)); expect(new Set(ids).size).toBe(6);
+  });
+  it("preserves combined transaction filters and ends an exact-full final page", async () => {
+    const { service, mocks } = setup();
+    const filters = { limit: "1", date_from: "2026-09-03", status: "VALID", currency: "MYR", monetary_basis: "source_signed_amount" };
+    const first = await service.list(new URLSearchParams(filters), null);
+    expect(first.items.map(row => row.transaction_id)).toEqual([id(3)]); expect(first.nextCursor).not.toBeNull();
+    const final = await service.list(new URLSearchParams({ ...filters, cursor: first.nextCursor! }), null);
+    expect(final.items.map(row => row.transaction_id)).toEqual([id(1)]); expect(final.nextCursor).toBeNull();
+    expect(mocks.cursors.issue).toHaveBeenCalledOnce();
   });
   it.each([
     [{ date_from: "2026-09-03" }, [3, 2, 1]],

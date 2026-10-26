@@ -65,3 +65,5 @@ git diff --check
 Final verification: **105 new batch tests passed**; all API tests **205 passed**; full suite **625 passed, 1 skipped** (optional supplied workbook), across 35 passing test files and one skipped file. TypeScript, lint (no warnings), server-boundary verification and Git diff/whitespace checks (including new files) passed. Both new server modules are included in the boundary guard script. Final engineering review found no blocking correctness or security-boundary defects; the user subsequently authorized committing and pushing this internal foundation to the feature branch. Production security integration and route activation remain blocked on the requirements above.
 
 Nonblocking regression-test follow-ups: explicitly test an exact-full final page, combined status/attempt filtering across pages, and keyset pagination under an altered session timezone. These are recorded for later development, not included as code changes in this commit.
+
+Follow-up completed in [Phase 6F](phase-6e-transaction-detail.md): all three pagination cases now have disposable-database regression tests. The statement above records the earlier Phase 6C commit scope.

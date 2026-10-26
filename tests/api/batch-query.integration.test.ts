@@ -99,6 +99,52 @@ describe("batch queries against the actual disposable schema and persistence wri
     expect(ids).toEqual([...manualIds].sort().reverse().concat([acceptedBatch, emptyBatch].sort().reverse()));
     expect(new Set(ids).size).toBe(allowed.length);
   });
+  it("ends an exact-full final page without issuing another cursor", async () => {
+    const { service, mocks } = setup(); mocks.resolveAccess.mockResolvedValue({ ...access, batchIds: manualIds.slice(0, 2) });
+    const first = await service.list(new URLSearchParams({ limit: "1" }), null);
+    expect(first.items.map(item => item.batch_id)).toEqual([manualIds[1]]); expect(first.nextCursor).not.toBeNull();
+    const final = await service.list(new URLSearchParams({ limit: "1", cursor: first.nextCursor! }), null);
+    expect(final.items.map(item => item.batch_id)).toEqual([manualIds[0]]); expect(final.nextCursor).toBeNull();
+    expect(mocks.cursors.issue).toHaveBeenCalledOnce();
+  });
+  it("applies combined status/attempt filters throughout pagination", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      const extraAttempt = "40000000-0000-4000-8000-000000000002";
+      // Populate genuine ACTIVE children using the existing writer inside this rolled-back fixture transaction.
+      const writer = createGroupedPersistenceService({ close: async () => {}, transaction: work => work(client) });
+      const result = await writer.persistGroupedAttempt({ attempt_id: extraAttempt, results: [
+        await syntheticResult(undefined, {}, undefined, "synthetic-filter-a.csv"),
+        await syntheticResult(undefined, {}, undefined, "synthetic-filter-b.csv"),
+      ] });
+      const { dependencies, mocks } = setup();
+      mocks.resolveAccess.mockResolvedValue({ ...access, batchIds: [...allowed, ...result.datasets.map(item => item.batch_id)] });
+      const service = createBatchQueryService({ ...dependencies, database: client });
+      const filters = { limit: "1", status: "ACTIVE", persistence_attempt_id: extraAttempt };
+      const first = await service.list(new URLSearchParams(filters), null);
+      expect(first.items).toHaveLength(1); expect(first.nextCursor).not.toBeNull();
+      const final = await service.list(new URLSearchParams({ ...filters, cursor: first.nextCursor! }), null);
+      expect(final.items).toHaveLength(1); expect(final.nextCursor).toBeNull();
+      const items = [...first.items, ...final.items];
+      expect(items.every(item => item.status === "ACTIVE" && item.persistence_attempt_id === extraAttempt)).toBe(true);
+      expect(items.map(item => item.batch_id).sort()).toEqual(result.datasets.map(item => item.batch_id).sort());
+    } finally { await client.query("ROLLBACK"); client.release(); }
+  });
+  it("keeps keyset anchors stable under non-UTC timezone and non-ISO DateStyle", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN"); await client.query("SET TIME ZONE 'Asia/Singapore'"); await client.query("SET DateStyle TO 'SQL, DMY'");
+      const { dependencies } = setup(); const service = createBatchQueryService({ ...dependencies, database: client });
+      const ids: string[] = []; let cursor: string | null = null;
+      do {
+        const filters = new URLSearchParams({ limit: "2" }); if (cursor) filters.set("cursor", cursor);
+        const page = await service.list(filters, null); ids.push(...page.items.map(item => item.batch_id)); cursor = page.nextCursor;
+      } while (cursor !== null);
+      expect(ids).toEqual([...manualIds].sort().reverse().concat([acceptedBatch, emptyBatch].sort().reverse()));
+      expect(new Set(ids).size).toBe(allowed.length);
+    } finally { await client.query("ROLLBACK"); client.release(); }
+  });
   it("does not leak other batches through attempt filtering, lookup or summaries", async () => {
     const { service, mocks } = setup(); mocks.resolveAccess.mockResolvedValue({ ...access, batchIds: [emptyBatch] });
     expect(await service.get(acceptedBatch, null)).toBeNull(); expect(await service.get(batchB, null)).toBeNull();

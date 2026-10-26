@@ -4,6 +4,16 @@ import { createTransactionQueryService, type TransactionQueryDependencies } from
 import { access, batchA, batchB, harness, row } from "./transaction-query.fixtures";
 
 describe("internal transaction query trust boundary", () => {
+  it.each(["verify", "issue"] as const)("requires the cursor %s dependency even on a first page", async method => {
+    const { dependencies, mocks } = harness();
+    const missing = { ...dependencies, cursors: { ...dependencies.cursors, [method]: undefined } } as unknown as TransactionQueryDependencies<unknown>;
+    await expect(createTransactionQueryService(missing).list(new URLSearchParams(), null)).rejects.toMatchObject({ code: "SECURITY_UNAVAILABLE" });
+    expect(mocks.database.query).not.toHaveBeenCalled();
+  });
+  it.each(["-0", "-0.00"])("does not coerce supplied negative zero %s during query projection", async source_amount => {
+    const { dependencies, mocks } = harness(); mocks.database.query.mockResolvedValue({ rows: [{ ...row, source_amount }], rowCount: 1 });
+    expect((await createTransactionQueryService(dependencies).list(new URLSearchParams(), null)).items[0].source_amount).toBe(source_amount);
+  });
   it.each(["database", "resolveAccess", "cursors", "auditRead"] as const)("fails closed without %s", key => {
     const { dependencies, mocks } = harness();
     const missing = { ...dependencies, [key]: undefined } as unknown as TransactionQueryDependencies<unknown>;

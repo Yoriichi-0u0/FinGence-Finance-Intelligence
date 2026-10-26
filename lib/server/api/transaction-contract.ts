@@ -37,6 +37,11 @@ const acceptedKeys = new Set([
   "limit", "cursor", "date_from", "date_to", "batch_id", "status", "currency", "monetary_basis",
 ]);
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Database UUID selector only; this validation grants no access. */
+export function parseTransactionId(value: unknown): string {
+  if (typeof value !== "string" || !uuidPattern.test(value)) throw new InvalidTransactionContractError();
+  return value.toLowerCase();
+}
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
 const decimalPattern = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/;
 const monetaryBasisValues = new Set<string>([
@@ -139,7 +144,7 @@ export interface TransactionListItem {
   readonly ingestion_status: TransactionStatus;
 }
 
-/** Only map rows from a trusted, organization-scoped query selecting dates/NUMERIC as ::text. */
+/** Only map trusted organization-scoped rows with ISO date text and NUMERIC values as ::text. */
 export function projectTransactionRow(input: unknown): TransactionListItem {
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
     throw new InvalidTransactionContractError();

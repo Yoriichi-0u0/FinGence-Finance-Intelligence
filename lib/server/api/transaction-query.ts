@@ -1,5 +1,6 @@
 import "server-only";
 import type { SqlConnection } from "../db/postgres";
+import { TRANSACTION_ROW_SELECTION as selection } from "./transaction-selection";
 import { parseTransactionListFilters, projectTransactionRow, type TransactionListFilters, type TransactionListItem } from "./transaction-contract";
 
 /** Supplied by trusted server composition, never deserialized from a request. */
@@ -61,18 +62,6 @@ function positionSnapshot(value: TransactionPosition): TransactionPosition {
     return Object.freeze({ canonicalDate: value.canonicalDate, transactionId: value.transactionId.toLowerCase() });
   } catch { throw new TransactionQueryError("INVALID_CURSOR"); }
 }
-const columns = ["id", "batch_id", "ingestion_batch_id", "source_row_id", "canonical_date",
-  "transaction_date", "posting_date", "canonical_date_basis", "reference", "source_transaction_id",
-  "description", "account_code", "monetary_basis", "debit", "credit", "source_amount", "entry_side",
-  "derived_ledger_net", "balance", "currency", "currency_basis", "ingestion_status"] as const;
-const dateColumns = new Set<string>(["canonical_date", "transaction_date", "posting_date"]);
-const textColumns = new Set<string>(["debit", "credit", "source_amount", "derived_ledger_net", "balance"]);
-// Format only the projection: to_char preserves NULL and does not depend on DateStyle.
-// WHERE, ORDER BY and keyset comparisons continue to use native date columns.
-const selection = columns.map(column => `${dateColumns.has(column)
-  ? `to_char(r.${column}, 'YYYY-MM-DD')`
-  : `r.${column}${textColumns.has(column) ? "::text" : ""}`} AS ${column}`).join(", ");
-
 /** Internal only. No credentials, pool construction, policy defaults or HTTP transport. */
 export function createTransactionQueryService<Context>(dependencies?: TransactionQueryDependencies<Context>) {
   return {

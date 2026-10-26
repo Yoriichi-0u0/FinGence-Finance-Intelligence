@@ -4,6 +4,8 @@
 
 ## Scope
 
+Follow-on: [Phase 6E transaction detail and Phase 6F regressions](phase-6e-transaction-detail.md) adds a separate UUID lookup with its own trusted permission/audit dependencies. List/detail share the same explicit SQL projection; existing list security and cursor interfaces remain unchanged.
+
 Follow-on: [Phase 6C batch API foundation](phase-6c-batch-query.md) adds a separate internal batch contract/query service. It does not grant access to transaction or persistence-attempt operations.
 
 `lib/server/api/transaction-query.ts` exports `createTransactionQueryService(dependencies).list(parameters, context)`. This is an internal server-only service, with no HTTP route, default security implementation, pool construction, environment loading or hosted database access. Jason's authorization/audit modules are unchanged. The service returns an immutable `{ items, nextCursor }` page using the existing explicit DTO.
