@@ -19,3 +19,7 @@ Use `FINSIGHT_WORKBOOK_PATH='../../datasets/originals/Datasets.xlsx' pnpm test -
 For local development without inference authorization, keep `FINGENCE_AI03_GROQ_DISPATCH_AUTHORIZED=0` and `FINGENCE_AI03_OLLAMA_DISPATCH_AUTHORIZED=0`. The `tools/ai-python-offline` executable forces offline Hugging Face settings when passed as the extraction interpreter. The normal Increment 03 launcher selects the recreated interpreter directly; use the central no-inference launcher for the verified offline configuration.
 
 No credential setup, live inference, V2-to-C1 cast, backend integration, production change, commit or publication is authorized by the consolidation. Original directories remain intact until separate deletion approval. Frozen archives and historical reports retain their original paths as evidence; use this document for current operational paths.
+
+## Feature checkpoint publication — 26 October 2026
+
+The owner has now authorized publication of the V2 feature checkpoint and synchronization with S4 main. This supersedes the consolidation-only publication restriction above, while production and inference remain separately controlled. See [current checkpoint and secure inference boundary](publication-2026-10-26.md). Existing local main remains intentionally preserved; remote production main is bb283c1.

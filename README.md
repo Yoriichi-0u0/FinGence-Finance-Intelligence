@@ -100,3 +100,5 @@ This is **NOT the final production system**. Measured fixture outcomes demonstra
 ## Current local development workspace — 26 October 2026
 
 The canonical development root is `~/Documents/FinGence`. Use the preserved V2 worktree at `worktrees/FinGence-2.0-AI-Ingestion` under that root. Read [workspace instructions](docs/ai-ingestion/workspace.md) for the consolidated paths, offline setup and verification record. Historical paths and dated verification below remain execution evidence. No migration implies a production deployment or live LLM result.
+
+Current V2 feature checkpoint, security synchronization, local isolation and the exact secure Groq setup boundary are documented in [V2 publication readiness](docs/ai-ingestion/publication-2026-10-26.md). Genuine LLM inference has not executed.
