@@ -1,0 +1,110 @@
+{
+  "version": "synthetic-inputs-0.2",
+  "notice": "SYNTHETIC TEST DOCUMENTS ONLY - NOT CLIENT DATA",
+  "files": {
+    "ambiguous.csv": {
+      "sha256": "58cfbaf67239366198528be6e5f1e1967108b34c4c9ee67e3cebca525440a342",
+      "bytes": 77
+    },
+    "ambiguous.xlsx": {
+      "sha256": "cbc9bd3447fbee3e5afb59b8f77b8812528655d16b66e4b8cfb9b39da3d9dd8b",
+      "bytes": 4924
+    },
+    "bank-direction.csv": {
+      "sha256": "562016236fc16536c0aaa9dc8fa1532d51a7b16de6fd9a9abf6c84c092936668",
+      "bytes": 157
+    },
+    "bank-direction.xlsx": {
+      "sha256": "76c676a04693e7727710da2b5ccdd789c92d8a0485362c1ce361580fe99779ec",
+      "bytes": 5012
+    },
+    "bank-movements.csv": {
+      "sha256": "0eee2d8476d1bb28c94cb55f4d97d1c5813fca54355a0f1bcc8b571be0798103",
+      "bytes": 109
+    },
+    "bank-movements.pdf": {
+      "sha256": "8720ad6fe7cc7a258899a0d2182aec1cd697125bf417fed14878b59495d0def4",
+      "bytes": 1789
+    },
+    "bank-narrative.csv": {
+      "sha256": "08753cc5a5e02cf8e31091b703523d2139ae67271bf488c527d8513b113d2eb6",
+      "bytes": 288
+    },
+    "bank-narrative.xlsx": {
+      "sha256": "0c5ca4adbe5ae3c226d39bd14dad1a911099871e8670c410f1de3f93213c8460",
+      "bytes": 5098
+    },
+    "corrupt.pdf": {
+      "sha256": "2d519c0f8c20a9360eacefb2034c16de4d255b60f658420cf7e74707686ddd84",
+      "bytes": 38
+    },
+    "invoice.pdf": {
+      "sha256": "e2a442a06c7d2da9c3c4778287e70d8e458f701adf6613d9eb1fb0b2c1733550",
+      "bytes": 1763
+    },
+    "invoice.xlsx": {
+      "sha256": "0066f6c66fbed380ff720bf8af86950b0a45f21c0973bcfe7c60bc6d33f6910f",
+      "bytes": 4949
+    },
+    "ledger-dmy.csv": {
+      "sha256": "35d1618e6be52823ae5461713af476c182e332d053553a792e21c3ebdfe7f3c1",
+      "bytes": 178
+    },
+    "ledger-dmy.xlsx": {
+      "sha256": "0f5dd8e2db26beba321b86f89102f03f68bb991ede2e4eae3b12b585f99f2231",
+      "bytes": 5028
+    },
+    "low-quality.jpg": {
+      "sha256": "d09f5646b0efc322d02b7a5550cbacd5438cbe056fd0b216dbe6c504c0632c46",
+      "bytes": 1489
+    },
+    "low-quality.png": {
+      "sha256": "81132e880bd6e63c029e4274650dad2eed088e5ef4955cf7b1ce5e3b3270178d",
+      "bytes": 5030
+    },
+    "metadata.csv": {
+      "sha256": "bba79ce6a00ccec9286cf8a19f9408ed6b190b990101e921814f5e10a5bb5627",
+      "bytes": 218
+    },
+    "metadata.xlsx": {
+      "sha256": "32571ddbf7620e783e3bf9b2f6a5233f3feb3b0c659ae56008d8ef1b0c4a80a1",
+      "bytes": 5073
+    },
+    "mixed-bank.pdf": {
+      "sha256": "a27daa059f386ba265ab8c73025d6e421c1044174be0f320668498aa9b5e10bf",
+      "bytes": 33744
+    },
+    "precision.csv": {
+      "sha256": "c7f5aa32c9ec5a6ff32f235e9496e556362ed69b9dedbda797a099eaf9a81aac",
+      "bytes": 191
+    },
+    "precision.pdf": {
+      "sha256": "61cbeeeaf92b4951dc1219675edde594b045792e4292999f36f6a760c40a31e6",
+      "bytes": 1866
+    },
+    "receipt-photo.png": {
+      "sha256": "08e1268a3f6f401093eec520755fc44fc95c97d1ae2d22be236507bff65e1132",
+      "bytes": 40466
+    },
+    "receipt.pdf": {
+      "sha256": "74a37026ad0b94a6de1668599a4236eab466ba34adf0db1f73ed127739dfa7d1",
+      "bytes": 1725
+    },
+    "scan-bank.pdf": {
+      "sha256": "7a64af11bc059ecca9c9ff3f5a11cfebd77d8f76b609a1beacb4daa20a23475e",
+      "bytes": 77798
+    },
+    "unknown-fee.csv": {
+      "sha256": "76bacd939a435a0fcb1e14f7354871cf9d889a75b905307bdb3d78b3938928c5",
+      "bytes": 93
+    },
+    "unknown-fee.png": {
+      "sha256": "e1f1352ddadadf2a3900fe907c884a605c743600cb13ebf5562c69a90699b0cd",
+      "bytes": 26477
+    },
+    "validation-errors.csv": {
+      "sha256": "25f664036194cd74e8f4e42a4ce7623d2988ffede99c9997391185c9a9372ef6",
+      "bytes": 183
+    }
+  }
+}

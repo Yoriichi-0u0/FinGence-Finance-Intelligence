@@ -1,3 +1,7 @@
+# FinGence 2.0 — isolated local experiment, 20 October 2026
+
+The `feature/v2-multimodal-ingestion` branch adds a local `/ai-ingestion` prototype, four-format extraction, declarative rule verification and reproducible evaluation. **Live OpenAI inference has not run:** secure destination confirmation was declined; no key was created. Recorded test proposals are explicitly labelled and are never the UI default. Start with the [local demo and implementation status](docs/ai-ingestion/README.md), [technology evaluation](docs/research/open-source-technology-evaluation.md) and [execution evidence](docs/ai-ingestion/verification.md). FinGence 1.0 ingestion, C1/C2 source contracts and production remain unchanged by this experiment. The sections below retain the earlier release documentation; use the dated V2 documents for this branch's experimental status.
+
 # FinGence — SAIC integration candidate, 15 October 2026
 
 The verified application candidate mirrors shared integration commit `b2b1f3b` without replacing personal Git history. See [current integration status, ownership and verification](docs/releases/saic-2026-10-16/README.md). Shared-main release remains gated on non-author team approval and passing checks; no production deployment is implied by this candidate. Historical ingestion verification and all C1/C2 checkpoints remain intact.
@@ -92,3 +96,7 @@ That file is not required for installation/demo and is not copied into this repo
 - Exact duplicate files are blocked within the session; repeated raw rows are warned and retained. Economic duplicates across ledger/bank sources require a future reconciliation layer.
 
 This is **NOT the final production system**. Measured fixture outcomes demonstrate ingestion behavior; they do not establish accounting correctness on client files or model/reconciliation accuracy.
+
+## Current local development workspace — 26 October 2026
+
+The canonical development root is `~/Documents/FinGence`. Use the preserved V2 worktree at `worktrees/FinGence-2.0-AI-Ingestion` under that root. Read [workspace instructions](docs/ai-ingestion/workspace.md) for the consolidated paths, offline setup and verification record. Historical paths and dated verification below remain execution evidence. No migration implies a production deployment or live LLM result.

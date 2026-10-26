@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-20",
+  "cases": [
+    {
+      "width": 768,
+      "overflow": false,
+      "fileInput": true,
+      "download": true
+    },
+    {
+      "width": 390,
+      "overflow": false,
+      "fileInput": true,
+      "download": true
+    },
+    {
+      "width": 320,
+      "overflow": false,
+      "fileInput": true,
+      "download": true
+    }
+  ],
+  "note": "Final local launcher; actual scanned PDF upload and extraction, missing credentials visibly block inference. No horizontal document overflow at these widths. Keyboard Tab exercised; not a complete accessibility audit."
+}

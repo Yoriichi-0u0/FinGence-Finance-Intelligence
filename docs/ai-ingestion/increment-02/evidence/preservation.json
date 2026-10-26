@@ -1,0 +1,50 @@
+{
+  "beforeSnapshot": "increment-02-before-20261020T175250",
+  "snapshotSHA256": "8fac24d4107e6e49df65099cbecfec96b747caa96dd9b7cdc24d70bc5d2612d1",
+  "protectedPreexistingFiles": 212,
+  "changedOrMissing": [],
+  "priorReviewZip": {
+    "bytes": 5635458,
+    "sha256": "545191055342366b7d319e5e9d45caf9c016fa7ffb98fe9aeae44dd120bccd45"
+  },
+  "worktrees": [
+    {
+      "worktree": "original-personal",
+      "branch": "feature/c3-i0-ingestion-readiness",
+      "sha": "c32216e191706d1e4c6f80c57165f160bb70bc77",
+      "clean": true
+    },
+    {
+      "worktree": "original-linked-team",
+      "branch": "feature/data-ingestion-chia",
+      "sha": "161b489d2758160f46d6f8252dc866b595102735",
+      "clean": true
+    },
+    {
+      "worktree": "released-personal-main",
+      "branch": "main",
+      "sha": "da10e2f21add1fec5449ac32ea1affdd8024563b",
+      "clean": true
+    }
+  ],
+  "protectedStash": "1aa97d83500cab7055d1d8dda0b3fe727ae11556",
+  "stashStillPresent": true,
+  "backupSamples": [
+    {
+      "filename": "bank_statement.xlsx",
+      "sha256": "6e0b9d4f4ceef49d3a6d563133159c4ae5a7373429b375fd9a3421ad2a85df2b",
+      "matchesPreservationManifest": true
+    },
+    {
+      "filename": "edge_cases.csv",
+      "sha256": "54ea303a90f631c39439b62387b647c0b71b84f7f72738dac4cccd415dd97dbe",
+      "matchesPreservationManifest": true
+    },
+    {
+      "filename": "ledger.csv",
+      "sha256": "0c9b032274fdde1e72cbf04b19c808e023e4a24c877a5eae8e0e7f11a8c95952",
+      "matchesPreservationManifest": true
+    }
+  ],
+  "tagsUnchangedFromSnapshot": "not captured in source snapshot; no tag operations performed"
+}

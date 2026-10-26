@@ -1,0 +1,89 @@
+{
+  "retrieved": "2026-10-20",
+  "repositories": [
+    {
+      "full_name": "docling-project/docling",
+      "html_url": "https://github.com/docling-project/docling",
+      "stargazers_count": 69142,
+      "pushed_at": "2026-10-19T15:59:04Z",
+      "archived": false,
+      "license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      }
+    },
+    {
+      "full_name": "microsoft/markitdown",
+      "html_url": "https://github.com/microsoft/markitdown",
+      "stargazers_count": 191138,
+      "pushed_at": "2026-10-04T03:59:52Z",
+      "archived": false,
+      "license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      }
+    },
+    {
+      "full_name": "PaddlePaddle/PaddleOCR",
+      "html_url": "https://github.com/PaddlePaddle/PaddleOCR",
+      "stargazers_count": 91391,
+      "pushed_at": "2026-09-16T03:31:50Z",
+      "archived": false,
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      }
+    },
+    {
+      "full_name": "Unstructured-IO/unstructured",
+      "html_url": "https://github.com/Unstructured-IO/unstructured",
+      "stargazers_count": 15578,
+      "pushed_at": "2026-10-19T23:08:14Z",
+      "archived": false,
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      }
+    },
+    {
+      "full_name": "langchain-ai/langgraphjs",
+      "html_url": "https://github.com/langchain-ai/langgraphjs",
+      "stargazers_count": 3366,
+      "pushed_at": "2026-10-20T00:08:33Z",
+      "archived": false,
+      "license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      }
+    },
+    {
+      "full_name": "vercel/ai",
+      "html_url": "https://github.com/vercel/ai",
+      "stargazers_count": 27405,
+      "pushed_at": "2026-10-20T01:26:35Z",
+      "archived": false,
+      "license": {
+        "key": "other",
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "url": null,
+        "node_id": "MDc6TGljZW5zZTA="
+      }
+    }
+  ]
+}

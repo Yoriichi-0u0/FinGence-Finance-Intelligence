@@ -1,0 +1,425 @@
+{
+  "scope": "Increment 02 only, relative to the external pre-edit snapshot",
+  "baseCommit": "da10e2f21add1fec5449ac32ea1affdd8024563b",
+  "branch": "feature/v2-multimodal-ingestion",
+  "preservedPreexistingFiles": 212,
+  "changedPreexistingFiles": 0,
+  "addedFiles": 69,
+  "notice": "Six tracked modifications and other Increment 01 files already existed before this increment. Ordinary git diff does not represent this additive increment; see each path below. No staged files or commits.",
+  "files": [
+    {
+      "path": "app/ai-ingestion/developer/page.tsx",
+      "change": "ADDED",
+      "bytes": 620,
+      "sha256": "31669168c1add89a750111d5d0f3f7ff155c27575bf3125fa93ad691d49eb3ed"
+    },
+    {
+      "path": "app/api/ai-ingestion/developer-replay/route.ts",
+      "change": "ADDED",
+      "bytes": 2892,
+      "sha256": "bc0a2855d9e5740954f067129f2aead42329f14d245b5cf10353f8302b725f8d"
+    },
+    {
+      "path": "components/ai-ingestion-02/developer-replay.tsx",
+      "change": "ADDED",
+      "bytes": 11104,
+      "sha256": "c90756467c3d7ce9827cd202fbf17d6252407807cbf84ddacee8791dec7e5317"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/IMPLEMENTATION.md",
+      "change": "ADDED",
+      "bytes": 2667,
+      "sha256": "6ec3f4c56335381d7d672d6ecc5d07f0b55ee34394667144533ac0db7f195ac7"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/README.md",
+      "change": "ADDED",
+      "bytes": 4121,
+      "sha256": "abcd11dac8a6c4cd8f0de6a9ce26f8f653c35210fd4d2df83d41c1582d409b25"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/changed-files.json",
+      "change": "ADDED",
+      "sha256": null,
+      "note": "Self hash omitted to avoid a recursive manifest."
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/01-recorded-csv-desktop.png",
+      "change": "ADDED",
+      "bytes": 167755,
+      "sha256": "81b941b03e77b007f7c3f198701dadadd4346e2e5544b3efa01071835e5aea60"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/02-partial-validation.png",
+      "change": "ADDED",
+      "bytes": 137388,
+      "sha256": "e0d6c3c2afe3607a53b6715be164547b6211eca1a27dbd1d0497ec1744771053"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/03-bank-movements-held.png",
+      "change": "ADDED",
+      "bytes": 160925,
+      "sha256": "ab3272cbcff99c740e4fcc22b1e4ca7c7680e5067a1f9f2a1dedb59dd490ae90"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/04-reuse-mobile.png",
+      "change": "ADDED",
+      "bytes": 85822,
+      "sha256": "0aa95128553f91d40783bac96f1f7fbda795e0c450496fdada2c2f7f179beea2"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/05-finance-live-blocked.png",
+      "change": "ADDED",
+      "bytes": 159017,
+      "sha256": "6a0077ebb9c71ae3cc598c581dd660d3bd620997022065e7ed4451397506549b"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/audit.json",
+      "change": "ADDED",
+      "bytes": 13917,
+      "sha256": "93e2fd584989201b066be2704633786b0a05c03554e5795e067623573713e755"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/browser.json",
+      "change": "ADDED",
+      "bytes": 1850,
+      "sha256": "e8172bfb8973a97cecdee50b68138ee59fa9feade8c339bcc04027cf060f3400"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/command-results.json",
+      "change": "ADDED",
+      "bytes": 1823,
+      "sha256": "ffb4e3cd50eb2e5a3dfa2927c19889d131937a24a7f729a0eb3804af097fbbab"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/evaluation.json",
+      "change": "ADDED",
+      "bytes": 28440,
+      "sha256": "679a223bee45236d02aef2fc4d4ab240c2b1cbffb4cf2434887f14a7507aa20f"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/preservation.json",
+      "change": "ADDED",
+      "bytes": 1621,
+      "sha256": "4bc39fb3014d8ba03b62e7eaafd748b1c79a3c0b72641220cc1b0b9faebd6e5c"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/evidence/production-guards.json",
+      "change": "ADDED",
+      "bytes": 551,
+      "sha256": "fe24410782bbc3a7aeb7937aacd484bbe321c32c919fc981344600d1bcc944f0"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/semantics.md",
+      "change": "ADDED",
+      "bytes": 6293,
+      "sha256": "01d3f81d8a29561dcca9505a44341150cb5d3aa1444b93a64f48fc3e4f696b3d"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/verification.md",
+      "change": "ADDED",
+      "bytes": 9217,
+      "sha256": "fd66168730632ae54282fc02fb7d21e38e3b78f6c1330774dcfe8672a30ff152"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-02/week-06-contribution.md",
+      "change": "ADDED",
+      "bytes": 2729,
+      "sha256": "f528498a87650138a36050a8dc4f544799fe15ebbffb0f91a83b20771d9e61c6"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/contracts.ts",
+      "change": "ADDED",
+      "bytes": 4678,
+      "sha256": "d680f1092526a62ff8ec86fee9320a33ac4021b46ba60e7729903005a434a119"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/conventions.ts",
+      "change": "ADDED",
+      "bytes": 1229,
+      "sha256": "55b4856c244ed26e3eae6d47e3960a173c860dfbdb5227a49b6c2a568e237550"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/extract.ts",
+      "change": "ADDED",
+      "bytes": 5362,
+      "sha256": "a855a872abf8d86e3d7983fe65418fea85dd94d4c8367da58df8c771be173a22"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/recorded.ts",
+      "change": "ADDED",
+      "bytes": 2378,
+      "sha256": "4976ba6a72e157d24e8b5b5e3a3032e9e5bc676deacd4b94d368c643696bf5a1"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/registry.ts",
+      "change": "ADDED",
+      "bytes": 5879,
+      "sha256": "3892d495bc14baa818dc4f71e9f4b73005a044b4c013fba2318fa48b1140c80f"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/reuse.ts",
+      "change": "ADDED",
+      "bytes": 3555,
+      "sha256": "8c2ca4f5ad24b017583ba987145c4757910b2c3a77febfd9da538186eaba4565"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/verify.ts",
+      "change": "ADDED",
+      "bytes": 12491,
+      "sha256": "a875e70e1da20588284658188c9ffe65c7717e2812f79f4f5a82df4087016d68"
+    },
+    {
+      "path": "lib/server/ai-ingestion/increment-02/cases.ts",
+      "change": "ADDED",
+      "bytes": 1529,
+      "sha256": "8d4a5ce570e15f3a02348eb9518c6be087f4eafd47e666009e01b917d66b0c65"
+    },
+    {
+      "path": "lib/server/ai-ingestion/increment-02/replay.ts",
+      "change": "ADDED",
+      "bytes": 4723,
+      "sha256": "5cdcfcd40e81b09a28bfb349bb19414fbf8a744bb60820d1a1ffb300d75bf965"
+    },
+    {
+      "path": "lib/server/ai-ingestion/increment-02/request.ts",
+      "change": "ADDED",
+      "bytes": 1159,
+      "sha256": "1d8e7bbab23eee0818ee37f9069394a6a15ddc5b7173f536d8f6b434b1283257"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/ambiguous.csv",
+      "change": "ADDED",
+      "bytes": 77,
+      "sha256": "58cfbaf67239366198528be6e5f1e1967108b34c4c9ee67e3cebca525440a342"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/ambiguous.xlsx",
+      "change": "ADDED",
+      "bytes": 4924,
+      "sha256": "cbc9bd3447fbee3e5afb59b8f77b8812528655d16b66e4b8cfb9b39da3d9dd8b"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/bank-direction.csv",
+      "change": "ADDED",
+      "bytes": 157,
+      "sha256": "562016236fc16536c0aaa9dc8fa1532d51a7b16de6fd9a9abf6c84c092936668"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/bank-direction.xlsx",
+      "change": "ADDED",
+      "bytes": 5012,
+      "sha256": "76c676a04693e7727710da2b5ccdd789c92d8a0485362c1ce361580fe99779ec"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/bank-movements.csv",
+      "change": "ADDED",
+      "bytes": 109,
+      "sha256": "0eee2d8476d1bb28c94cb55f4d97d1c5813fca54355a0f1bcc8b571be0798103"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/bank-movements.pdf",
+      "change": "ADDED",
+      "bytes": 1789,
+      "sha256": "8720ad6fe7cc7a258899a0d2182aec1cd697125bf417fed14878b59495d0def4"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/bank-narrative.csv",
+      "change": "ADDED",
+      "bytes": 288,
+      "sha256": "08753cc5a5e02cf8e31091b703523d2139ae67271bf488c527d8513b113d2eb6"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/bank-narrative.xlsx",
+      "change": "ADDED",
+      "bytes": 5098,
+      "sha256": "0c5ca4adbe5ae3c226d39bd14dad1a911099871e8670c410f1de3f93213c8460"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/corrupt.pdf",
+      "change": "ADDED",
+      "bytes": 38,
+      "sha256": "2d519c0f8c20a9360eacefb2034c16de4d255b60f658420cf7e74707686ddd84"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/invoice.pdf",
+      "change": "ADDED",
+      "bytes": 1763,
+      "sha256": "e2a442a06c7d2da9c3c4778287e70d8e458f701adf6613d9eb1fb0b2c1733550"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/invoice.xlsx",
+      "change": "ADDED",
+      "bytes": 4949,
+      "sha256": "0066f6c66fbed380ff720bf8af86950b0a45f21c0973bcfe7c60bc6d33f6910f"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/ledger-dmy.csv",
+      "change": "ADDED",
+      "bytes": 178,
+      "sha256": "35d1618e6be52823ae5461713af476c182e332d053553a792e21c3ebdfe7f3c1"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/ledger-dmy.xlsx",
+      "change": "ADDED",
+      "bytes": 5028,
+      "sha256": "0f5dd8e2db26beba321b86f89102f03f68bb991ede2e4eae3b12b585f99f2231"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/low-quality.jpg",
+      "change": "ADDED",
+      "bytes": 1489,
+      "sha256": "d09f5646b0efc322d02b7a5550cbacd5438cbe056fd0b216dbe6c504c0632c46"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/low-quality.png",
+      "change": "ADDED",
+      "bytes": 5030,
+      "sha256": "81132e880bd6e63c029e4274650dad2eed088e5ef4955cf7b1ce5e3b3270178d"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/manifest.json",
+      "change": "ADDED",
+      "bytes": 3644,
+      "sha256": "16ed7f08abb38911a39ca01640630d1895aa2e23641e56f126d98ef11eb266c0"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/metadata.csv",
+      "change": "ADDED",
+      "bytes": 218,
+      "sha256": "bba79ce6a00ccec9286cf8a19f9408ed6b190b990101e921814f5e10a5bb5627"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/metadata.xlsx",
+      "change": "ADDED",
+      "bytes": 5073,
+      "sha256": "32571ddbf7620e783e3bf9b2f6a5233f3feb3b0c659ae56008d8ef1b0c4a80a1"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/mixed-bank.pdf",
+      "change": "ADDED",
+      "bytes": 33744,
+      "sha256": "a27daa059f386ba265ab8c73025d6e421c1044174be0f320668498aa9b5e10bf"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/precision.csv",
+      "change": "ADDED",
+      "bytes": 191,
+      "sha256": "c7f5aa32c9ec5a6ff32f235e9496e556362ed69b9dedbda797a099eaf9a81aac"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/precision.pdf",
+      "change": "ADDED",
+      "bytes": 1866,
+      "sha256": "61cbeeeaf92b4951dc1219675edde594b045792e4292999f36f6a760c40a31e6"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/receipt-photo.png",
+      "change": "ADDED",
+      "bytes": 40466,
+      "sha256": "08e1268a3f6f401093eec520755fc44fc95c97d1ae2d22be236507bff65e1132"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/receipt.pdf",
+      "change": "ADDED",
+      "bytes": 1725,
+      "sha256": "74a37026ad0b94a6de1668599a4236eab466ba34adf0db1f73ed127739dfa7d1"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/scan-bank.pdf",
+      "change": "ADDED",
+      "bytes": 77798,
+      "sha256": "7a64af11bc059ecca9c9ff3f5a11cfebd77d8f76b609a1beacb4daa20a23475e"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/unknown-fee.csv",
+      "change": "ADDED",
+      "bytes": 93,
+      "sha256": "76bacd939a435a0fcb1e14f7354871cf9d889a75b905307bdb3d78b3938928c5"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/unknown-fee.png",
+      "change": "ADDED",
+      "bytes": 26477,
+      "sha256": "e1f1352ddadadf2a3900fe907c884a605c743600cb13ebf5562c69a90699b0cd"
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-02/validation-errors.csv",
+      "change": "ADDED",
+      "bytes": 183,
+      "sha256": "25f664036194cd74e8f4e42a4ce7623d2988ffede99c9997391185c9a9372ef6"
+    },
+    {
+      "path": "scripts/ai-demo-02.mjs",
+      "change": "ADDED",
+      "bytes": 759,
+      "sha256": "3a44fb5a1a230336a723cd17a954aa585cc75b78ce56d3caa04e1facd02ff224"
+    },
+    {
+      "path": "scripts/ai-extract-02.py",
+      "change": "ADDED",
+      "bytes": 4301,
+      "sha256": "f5ae61220e66573779a916be55f015530964106e50d9c7e97f025e1db3ecbd9e"
+    },
+    {
+      "path": "scripts/ai-fixtures-02.py",
+      "change": "ADDED",
+      "bytes": 6034,
+      "sha256": "761aaafb70943edaea22c43fa066124b8a95b8001de36c6033d330da5c80cb4f"
+    },
+    {
+      "path": "scripts/ai-increment-02.mjs",
+      "change": "ADDED",
+      "bytes": 8251,
+      "sha256": "cdc109cca0004578c638cde90590f4aefcb43dedc95ff769eb364245b3546f5a"
+    },
+    {
+      "path": "tests/ai-ingestion-02/extraction.test.ts",
+      "change": "ADDED",
+      "bytes": 2577,
+      "sha256": "bbb782adb4d9ce7e7199a89e1b29df41b59ffcd58c5818412bdc43f3476e6b17"
+    },
+    {
+      "path": "tests/ai-ingestion-02/extractor-context-probe.py",
+      "change": "ADDED",
+      "bytes": 2689,
+      "sha256": "48d4a2e589ed55b423e07a4f20f545f342e61b7e3abf29c92270413f97a28e9f"
+    },
+    {
+      "path": "tests/ai-ingestion-02/replay.test.ts",
+      "change": "ADDED",
+      "bytes": 3399,
+      "sha256": "5dbf797261e42a1be45249d8531575b53c8078964a7dd4c89d6ecbd1cab0b9af"
+    },
+    {
+      "path": "tests/ai-ingestion-02/reuse.test.ts",
+      "change": "ADDED",
+      "bytes": 3086,
+      "sha256": "2b2a5705c06e6f89b21f888f6d9dbe3aae4cd6a6c0f62ea6b4b661e38e6ba0ad"
+    },
+    {
+      "path": "tests/ai-ingestion-02/route.test.ts",
+      "change": "ADDED",
+      "bytes": 2614,
+      "sha256": "0dd9508d218a5fa4a9f94520dda028af7c78c19d975e146aa04d3a72a2635d59"
+    },
+    {
+      "path": "tests/ai-ingestion-02/semantics.test.ts",
+      "change": "ADDED",
+      "bytes": 8298,
+      "sha256": "43c84f39e7fb0e4e38b2e7005298bfe49df18fcfa88d12f22938393caf76f1e1"
+    },
+    {
+      "path": "tests/fixtures/ai-ingestion-02/field-truth.json",
+      "change": "ADDED",
+      "bytes": 3757,
+      "sha256": "52a189f0843f2b9346c73b62b3e1cebf745abf0fa42e79ba0b79e2dc16ec342a"
+    },
+    {
+      "path": "tests/fixtures/ai-ingestion-02/ground-truth.json",
+      "change": "ADDED",
+      "bytes": 2155,
+      "sha256": "b3f26e42dd66b803be81398d45b07b37eb3460f1f19430f2f3468b457b90390a"
+    }
+  ]
+}

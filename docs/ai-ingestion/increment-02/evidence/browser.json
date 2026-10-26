@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-20",
+  "scope": "local development only; no production deployment",
+  "mode": "RECORDED_TEST",
+  "formats": [
+    {
+      "file": "ledger-dmy.xlsx",
+      "decision": "VERIFIED",
+      "sourceWarning": false
+    },
+    {
+      "file": "precision.pdf",
+      "decision": "VERIFIED",
+      "sourceWarning": false
+    },
+    {
+      "file": "scan-bank.pdf",
+      "decision": "VERIFIED",
+      "sourceWarning": false
+    },
+    {
+      "file": "mixed-bank.pdf",
+      "decision": "VERIFIED",
+      "sourceWarning": false
+    },
+    {
+      "file": "unknown-fee.png",
+      "decision": "NEEDS_REVIEW",
+      "sourceWarning": false
+    },
+    {
+      "file": "low-quality.jpg",
+      "decision": "NEEDS_REVIEW",
+      "sourceWarning": true
+    }
+  ],
+  "adversarialAndDownload": {
+    "rows": [
+      {
+        "variant": "swap",
+        "decision": "NEEDS_REVIEW"
+      },
+      {
+        "variant": "omit",
+        "decision": "NEEDS_REVIEW"
+      },
+      {
+        "variant": "reuse",
+        "decision": "VERIFIED"
+      }
+    ],
+    "download": "fingence-02-RECORDED_TEST-precision.csv.json",
+    "keyboardDisclosure": true
+  },
+  "responsive": [
+    {
+      "screen": 1440,
+      "body": 1440
+    },
+    {
+      "screen": 768,
+      "body": 768
+    },
+    {
+      "screen": 390,
+      "body": 390
+    },
+    {
+      "screen": 320,
+      "body": 320
+    }
+  ],
+  "ordinaryFinance": {
+    "noReplaySelector": true,
+    "liveBlocked": true
+  },
+  "consoleErrors": [],
+  "downloadVerified": {
+    "origin": "RECORDED_TEST",
+    "inference": "NOT_EXECUTED",
+    "source_amount": "9007199254740993.01"
+  },
+  "notes": [
+    "Keyboard Enter opened native disclosure.",
+    "Production developer guards checked separately against actual next start build.",
+    "Controls were exercised by Playwright; no pixel-style assertions."
+  ]
+}
