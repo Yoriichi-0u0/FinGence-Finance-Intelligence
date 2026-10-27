@@ -1,5 +1,17 @@
 # FinGence — current technical guidance
 
+Run the application directly from your Git clone's root:
+
+```sh
+cd FinGence-Finance-Intelligence # or your chosen clone directory
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Use Node 24.x and pnpm 11.19.0; local verification uses Node 24.22.0. See the
+[current workspace instructions](docs/ai-ingestion/workspace.md) for offline OCR,
+verification and private local material. No nested checkout is required.
+
 Start with [the current team and AI technical entrypoint](docs/handoff/CURRENT.md).
 It maps the stable C1/C2 exports, experimental V2 schemas/verifier, runtime requirements,
 ownership, tested reuse examples and the missing V2-to-C1 bridge. It also includes a short
@@ -121,6 +133,6 @@ This is **NOT the final production system**. Measured fixture outcomes demonstra
 
 ## Current local development workspace — 26 October 2026
 
-The canonical development root is `~/Documents/FinGence`. Use the preserved V2 worktree at `worktrees/FinGence-2.0-AI-Ingestion` under that root. Read [workspace instructions](docs/ai-ingestion/workspace.md) for the consolidated paths, offline setup and verification record. Historical paths and dated verification below remain execution evidence. No migration implies a production deployment or live LLM result.
+The development and Git root are the same directory. Stable and experimental source are in this single checkout. Read [workspace instructions](docs/ai-ingestion/workspace.md) for current paths and offline setup. Historical paths and dated verification remain execution evidence. Workspace consolidation does not deploy or authorize live LLM inference.
 
 The 26 October V2 feature checkpoint, security synchronization, local isolation and secure Groq setup boundary are documented in [V2 publication readiness](docs/ai-ingestion/publication-2026-10-26.md). No genuine inference had executed at that checkpoint. The [27 October Increment 03B report](docs/ai-ingestion/increment-03/refinement-03b.md) records the first genuine request's acceptance failure and subsequent credential-free refinement. No additional inference or production release is implied.
