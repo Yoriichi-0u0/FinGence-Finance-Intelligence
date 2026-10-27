@@ -9,6 +9,9 @@ export const SECURITY_AUDIT_ACTIONS = [
   "ingestion.rejected",
   "persistence_attempt.created",
   "persistence_attempt.investigated",
+  "transactions.list",
+  "transaction.read",
+  "batch.read",
   "financial_record.read",
   "financial_record.changed",
   "financial_record.reconciled",
@@ -28,6 +31,7 @@ export type SecurityAuditAction = typeof SECURITY_AUDIT_ACTIONS[number];
 
 export const SECURITY_AUDIT_TARGET_TYPES = [
   "ingestion_batch",
+  "transaction_collection",
   "persistence_attempt",
   "financial_record",
   "rejected_evidence",
