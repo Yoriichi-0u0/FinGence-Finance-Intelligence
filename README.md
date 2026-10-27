@@ -1,4 +1,26 @@
-# FinGence 2.0 — isolated local experiment, 20 October 2026
+# FinGence — current technical guidance
+
+Start with [the current team and AI technical entrypoint](docs/handoff/CURRENT.md).
+It maps the stable C1/C2 exports, experimental V2 schemas/verifier, runtime requirements,
+ownership, tested reuse examples and the missing V2-to-C1 bridge. It also includes a short
+instruction block for coding assistants. [PR #4](https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/4)
+tracks integration/CI; verify the deployed source SHA before claiming production availability.
+
+The hosted Data page retains the verified deterministic ingestion → C1 → analytics path.
+Use [FinGence](https://fingence-financeintelligence.vercel.app/) as the current product URL;
+the former [FinSight-named address](https://finsight-financeintelligence.vercel.app/) remains
+an alias for compatibility. Both belong to the same existing Vercel project.
+V2 Increments 01–03B are source-available but their AI pages/APIs remain disabled in hosted
+production. One genuine Groq proposal failed acceptance; 03B refinement has no new live
+accuracy result. Experimental machine-verified records are not C1 or approved transactions.
+
+## Historical status and release notes
+
+The dated sections below preserve earlier implementation/release statements, including
+superseded branch, review, deployment and integration status. Use CURRENT.md for today's
+entrypoints and boundaries; linked source/contracts remain authoritative for field semantics.
+
+# Historical: FinGence 2.0 — isolated local experiment, 20 October 2026
 
 The `feature/v2-multimodal-ingestion` branch adds a local `/ai-ingestion` prototype, four-format extraction, declarative rule verification and reproducible evaluation. **Live OpenAI inference has not run:** secure destination confirmation was declined; no key was created. Recorded test proposals are explicitly labelled and are never the UI default. Start with the [local demo and implementation status](docs/ai-ingestion/README.md), [technology evaluation](docs/research/open-source-technology-evaluation.md) and [execution evidence](docs/ai-ingestion/verification.md). FinGence 1.0 ingestion, C1/C2 source contracts and production remain unchanged by this experiment. The sections below retain the earlier release documentation; use the dated V2 documents for this branch's experimental status.
 

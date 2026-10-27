@@ -1,5 +1,5 @@
 /**
- * FinSight analytics utilities.
+ * FinGence analytics utilities.
  *
  * This module consumes canonical records only. It deliberately does not parse
  * source files, reconcile records, infer account semantics, convert currencies,

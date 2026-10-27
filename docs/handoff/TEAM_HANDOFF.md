@@ -1,4 +1,12 @@
-# FinGence — SAIC integration candidate, 15 October 2026
+# Current team reuse guidance
+
+Use [CURRENT.md](CURRENT.md) as the single current technical entrypoint, including exact
+exports, examples, teammate responsibilities, AI-assistant instructions and missing bridges.
+The dated status text below is historical: earlier pending-review, production and backend
+statements are not the current integration state. Preserve those records and use actual
+source/tests plus the PR/deployment SHA for present availability. No V2-to-C1 adapter exists.
+
+# Historical: FinGence — SAIC integration candidate, 15 October 2026
 
 The verified application candidate mirrors shared integration commit `b2b1f3b` without replacing personal Git history. See [current integration status, ownership and verification](../releases/saic-2026-10-16/README.md). Shared-main release remains gated on non-author team approval and passing checks; no production deployment is implied by this candidate. Historical ingestion verification and all C1/C2 checkpoints remain intact.
 
