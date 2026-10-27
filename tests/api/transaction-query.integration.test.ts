@@ -194,6 +194,25 @@ describe("transaction query against disposable PostgreSQL/WASM through pg", () =
       await expect(client.query("UPDATE public.financial_records SET ingestion_status = 'REJECTED' WHERE id = $1", [id(1)])).rejects.toMatchObject({ code: "23514" });
     } finally { await client.query("ROLLBACK"); client.release(); }
   });
+  it("retrieves the scoped batch on the same connection after a rejected update and rollback", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("BEGIN");
+      try {
+        await expect(client.query("UPDATE public.financial_records SET ingestion_status = 'REJECTED' WHERE id = $1", [id(1)])).rejects.toMatchObject({ code: "23514" });
+      } finally {
+        await client.query("ROLLBACK");
+      }
+      const h = harness();
+      h.mocks.resolveAccess.mockResolvedValue({ ...access, batchIds: [batchA, batchB] });
+      const service = createTransactionQueryService({ ...h.dependencies, database: client });
+      const page = await service.list(new URLSearchParams({ batch_id: batchB }), null);
+      expect(page.items.map(row => row.transaction_id)).toEqual([id(7)]);
+      expect(page.items[0]).toMatchObject({ batch_id: batchB, source_row_id: "0007", ingestion_status: "VALID" });
+      expect((await client.query("SELECT ingestion_status FROM public.financial_records WHERE id = $1", [id(1)])).rows)
+        .toEqual([{ ingestion_status: "VALID" }]);
+    } finally { client.release(); }
+  });
   it("narrows a trusted multi-batch scope using a batch filter", async () => {
     const { service, mocks } = setup(); mocks.resolveAccess.mockResolvedValue({ ...access, batchIds: [batchA, batchB] });
     const page = await service.list(new URLSearchParams({ batch_id: batchB }), null);
