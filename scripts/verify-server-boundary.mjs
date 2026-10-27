@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
-for (const path of ["cli/database-target.ts", "cli/phase2.ts", "db/postgres.ts", "persistence/repository.ts", "persistence/service.ts", "persistence/grouped.ts", "security/authorization.ts", "security/audit.ts"]) {
+for (const path of ["cli/database-target.ts", "cli/phase2.ts", "db/postgres.ts", "persistence/repository.ts", "persistence/service.ts", "persistence/grouped.ts", "security/authorization.ts", "security/audit.ts",
+  "api/transaction-contract.ts", "api/transaction-selection.ts", "api/transaction-query.ts", "api/transaction-detail-query.ts", "api/batch-contract.ts", "api/batch-query.ts",
+  "security/audit-api.ts", "security/audit-store.ts", "security/secure-cursor.ts", "security/transaction-access.ts", "security/transaction-guard.ts",
+  "integration/query-cursors.ts", "integration/scoped-queries.ts"]) {
   assert.match(readFileSync(new URL(`../lib/server/${path}`, import.meta.url), "utf8"), /^import "server-only";/);
 }
 const execute = (conditions) => spawnSync(process.execPath,

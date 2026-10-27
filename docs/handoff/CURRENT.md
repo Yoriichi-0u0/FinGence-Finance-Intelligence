@@ -14,9 +14,10 @@ statements elsewhere are historical; they do not override this guide or the actu
 - **Experimental local V2:** CSV/XLSX/PDF/PNG/JPEG → evidence → proposed financial rules →
   deterministic materialization → independent verification. Source availability on `main`
   does **not** enable hosted AI. All three experimental pages and their APIs deny production.
-- **Backend/security:** grouped persistence and policy/audit helpers are implemented/tested
-  server modules. This does not establish hosted persistence, complete authentication,
-  protected audit storage or client accounting approval. Do not expose them unauthenticated.
+- **Backend/security:** grouped persistence, scoped read composition and audit storage are
+  server modules verified locally. See [P2 local integration](../integration/p2-backend-security.md).
+  Production identity/membership, tenant ownership, hosted persistence and client accounting
+  approval remain incomplete. Do not expose financial endpoints without those boundaries.
 - One genuine Groq request has been executed. It produced six correct mappings but null
   conventions and incorrect context references: zero accepted, two unresolved rows.
   03B refined instructions offline; improved live accuracy remains unmeasured.
@@ -197,6 +198,9 @@ const decision = authorize(principal, "financial_record.read", resource);
 See [authorization tests](../../tests/security/authorization.test.ts) and
 [`audit.ts`](../../lib/server/security/audit.ts). Log actions/relevant IDs, not full financial
 contents, raw errors or tokens. Do not expose an unauthenticated persistence/inference endpoint.
+The [P2 composition](../integration/p2-backend-security.md) requires caller-supplied trusted
+identity, membership, ownership, audit database and cursor-key dependencies. Its synthetic
+test resolvers do not implement production authentication or authorization.
 
 **Izzat:** consume agreed backend/API reporting DTOs, or the typed in-memory analytics view
 from [the team example](../../examples/integration/team-reuse.ts) when explicitly building a
