@@ -48,3 +48,6 @@ output/playwright/
 *.tsbuildinfo
 next-env.d.ts
 .codegraph/
+
+# Private machine-local workspace, evidence, datasets and tooling
+/.local/

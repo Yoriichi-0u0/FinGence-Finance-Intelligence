@@ -12,7 +12,8 @@ export class QuotaLedger {
   constructor(folder: string, private clock = Date.now) { this.folder = resolve(folder); }
   private safePath() {
     if (existsSync(this.folder) && lstatSync(this.folder).isSymbolicLink()) throw new Error("QUOTA_SYMLINK");
-    for (const name of ["quota.json", "quota.lock"]) if (existsSync(join(this.folder, name)) && lstatSync(join(this.folder, name)).isSymbolicLink()) throw new Error("QUOTA_SYMLINK");
+    if (existsSync(join(this.folder, "quota.json")) && lstatSync(join(this.folder, "quota.json")).isSymbolicLink()) throw new Error("QUOTA_SYMLINK");
+    if (existsSync(join(this.folder, "quota.lock")) && lstatSync(join(this.folder, "quota.lock")).isSymbolicLink()) throw new Error("QUOTA_SYMLINK");
   }
   private read(): State {
     this.safePath(); const file = join(this.folder, "quota.json");

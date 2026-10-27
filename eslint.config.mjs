@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     ".venv-ai/**",
     ".ai-local/**",
+    ".local/**",
     ".playwright-cli/**",
     "output/playwright/**",
   ]),

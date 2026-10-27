@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
+import { lstatSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
@@ -30,5 +30,25 @@ describe("Proactive durable quota reservations", () => {
     const other = directory(); symlinkSync(join(dir, "quota.json"), join(other, "quota.json"));
     expect(() => new QuotaLedger(other).reserve(1)).toThrow(/SYMLINK/);
     expect(readFileSync(join(dir, "quota.json"), "utf8")).toBe("{}");
+  });
+  it.each(["ledger", "lock", "directory"] as const)("rejects a symlink %s before reading or changing its target", kind => {
+    const target = directory(), container = directory();
+    const original = "unchanged synthetic target";
+    const targetFile = join(target, "quota.json");
+    writeFileSync(targetFile, original);
+    const link = kind === "directory" ? join(container, "linked")
+      : join(container, kind === "ledger" ? "quota.json" : "quota.lock");
+    symlinkSync(kind === "directory" ? target : targetFile, link, kind === "directory" ? "dir" : "file");
+    const ledger = new QuotaLedger(kind === "directory" ? link : container);
+    try {
+      expect(() => ledger.summary()).toThrow("QUOTA_SYMLINK");
+      expect(() => ledger.reserve(1)).toThrow("QUOTA_SYMLINK");
+      expect(() => ledger.finish("unused", "FAILED")).toThrow("QUOTA_SYMLINK");
+      expect(readFileSync(targetFile, "utf8")).toBe(original);
+      expect(lstatSync(link).isSymbolicLink()).toBe(true);
+    } finally {
+      rmSync(container, { recursive: true });
+      rmSync(target, { recursive: true });
+    }
   });
 });
