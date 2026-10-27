@@ -1,0 +1,2 @@
+# DB03 evidence hashes cover exact bytes. Do not convert their line endings.
+evidence/** -text

@@ -1,0 +1,845 @@
+{
+  "syntheticOnly": true,
+  "attempts": {
+    "seed": "30000000-0000-4000-8000-000000000001",
+    "rollback": "30000000-0000-4000-8000-000000000002",
+    "before": "30000000-0000-4000-8000-000000000003",
+    "after": "30000000-0000-4000-8000-000000000004"
+  },
+  "measurements": {
+    "logicalBackup": {
+      "durationMs": 326.3716000000022,
+      "bytes": 34974,
+      "sha256": "8939dd42a3d4b0d590e563350a3f1d9a46344b3dd329b54cd50888d0f8db0f0f",
+      "exitCode": 0
+    },
+    "logicalRestore": {
+      "durationMs": 226.99169999999867,
+      "verifiedDurationMs": 282.57440000000133,
+      "exitCode": 0
+    },
+    "physicalBackup": {
+      "durationMs": 10855.1041,
+      "bytes": 27517501,
+      "files": 997,
+      "exitCode": 0,
+      "manifestSHA256": "648f49bb80be73cddfd6d66cb8c58982cdd3a7cf06087e1a4ca0bfb1ecd07917",
+      "verifyExitCode": 0,
+      "verifyDurationMs": 350.88170000000173
+    },
+    "physicalRecovery": {
+      "durationMs": 4144.333900000001,
+      "verifiedDurationMs": 4209.788699999997
+    },
+    "pitrRecovery": {
+      "durationMs": 3464.521200000003,
+      "verifiedDurationMs": 3536.2341000000015
+    }
+  },
+  "tools": {
+    "pg_dump": "pg_dump (PostgreSQL) 18.6",
+    "pg_restore": "pg_restore (PostgreSQL) 18.6",
+    "pg_basebackup": "pg_basebackup (PostgreSQL) 18.6",
+    "pg_verifybackup": "pg_verifybackup (PostgreSQL) 18.6"
+  },
+  "verifications": {
+    "logical": {
+      "tables": {
+        "persistence_attempts": {
+          "count": 1,
+          "sha256": "ab5f95f9346898559db352e7920426ed0364744c5301a78103c46ffdad973a1f"
+        },
+        "ingestion_batches": {
+          "count": 4,
+          "sha256": "d76074fb169137b782ecc9a4285751ae7923919808d32a8b7718ba91855ff12c"
+        },
+        "financial_records": {
+          "count": 4,
+          "sha256": "2819cffc541b29d74b002dbb91c566c2451bbd24776535fde5f35570275336ae"
+        },
+        "validation_issues": {
+          "count": 4,
+          "sha256": "5a977c8adb124f3815c19d3f18396dc97fb8fd19ae08708c2d3dd2f382ad2569"
+        }
+      },
+      "schemaSHA256": "0cabec251952c8f2890e107d43d67606f4e9a032e277e2585cfba2465bf24952",
+      "audit": [
+        {
+          "invariant": "batch_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "accepted_warning_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "attempt_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "record_batch_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "issue_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "rejected_in_accepted_storage",
+          "violations": 0
+        }
+      ],
+      "orphans": {
+        "records": 0,
+        "issues": 0,
+        "batches": 0
+      },
+      "aclStorage": [
+        {
+          "relname": "financial_records",
+          "acl": null
+        },
+        {
+          "relname": "ingestion_batches",
+          "acl": null
+        },
+        {
+          "relname": "persistence_attempts",
+          "acl": null
+        },
+        {
+          "relname": "validation_issues",
+          "acl": null
+        }
+      ]
+    },
+    "physical": {
+      "tables": {
+        "persistence_attempts": {
+          "count": 1,
+          "sha256": "ab5f95f9346898559db352e7920426ed0364744c5301a78103c46ffdad973a1f"
+        },
+        "ingestion_batches": {
+          "count": 4,
+          "sha256": "d76074fb169137b782ecc9a4285751ae7923919808d32a8b7718ba91855ff12c"
+        },
+        "financial_records": {
+          "count": 4,
+          "sha256": "2819cffc541b29d74b002dbb91c566c2451bbd24776535fde5f35570275336ae"
+        },
+        "validation_issues": {
+          "count": 4,
+          "sha256": "5a977c8adb124f3815c19d3f18396dc97fb8fd19ae08708c2d3dd2f382ad2569"
+        }
+      },
+      "schemaSHA256": "0cabec251952c8f2890e107d43d67606f4e9a032e277e2585cfba2465bf24952",
+      "audit": [
+        {
+          "invariant": "batch_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "accepted_warning_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "attempt_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "record_batch_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "issue_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "rejected_in_accepted_storage",
+          "violations": 0
+        }
+      ],
+      "orphans": {
+        "records": 0,
+        "issues": 0,
+        "batches": 0
+      },
+      "aclStorage": [
+        {
+          "relname": "financial_records",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        },
+        {
+          "relname": "ingestion_batches",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        },
+        {
+          "relname": "persistence_attempts",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        },
+        {
+          "relname": "validation_issues",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        }
+      ]
+    },
+    "pitr": {
+      "tables": {
+        "persistence_attempts": {
+          "count": 2,
+          "sha256": "d28c7532c85fd0e98c386fc5e3a6fbae3a5242ee12e109f14109636bf01e2bfc"
+        },
+        "ingestion_batches": {
+          "count": 5,
+          "sha256": "29a1a98341215be1138fc184772229db7ce86e4cd3a087dd4f1774c59af81c00"
+        },
+        "financial_records": {
+          "count": 5,
+          "sha256": "4370f40d479afec1b812c69a7d7f0933378758d52a63bda7e23d82986e5f3567"
+        },
+        "validation_issues": {
+          "count": 4,
+          "sha256": "5a977c8adb124f3815c19d3f18396dc97fb8fd19ae08708c2d3dd2f382ad2569"
+        }
+      },
+      "schemaSHA256": "0cabec251952c8f2890e107d43d67606f4e9a032e277e2585cfba2465bf24952",
+      "audit": [
+        {
+          "invariant": "batch_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "accepted_warning_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "attempt_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "record_batch_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "issue_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "rejected_in_accepted_storage",
+          "violations": 0
+        }
+      ],
+      "orphans": {
+        "records": 0,
+        "issues": 0,
+        "batches": 0
+      },
+      "aclStorage": [
+        {
+          "relname": "financial_records",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        },
+        {
+          "relname": "ingestion_batches",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        },
+        {
+          "relname": "persistence_attempts",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        },
+        {
+          "relname": "validation_issues",
+          "acl": "{db03_owner=arwdDxtm/db03_owner}"
+        }
+      ]
+    }
+  },
+  "environment": {
+    "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+    "settings": [
+      {
+        "name": "archive_library",
+        "setting": "basic_archive",
+        "unit": null
+      },
+      {
+        "name": "archive_mode",
+        "setting": "on",
+        "unit": null
+      },
+      {
+        "name": "fsync",
+        "setting": "on",
+        "unit": null
+      },
+      {
+        "name": "full_page_writes",
+        "setting": "on",
+        "unit": null
+      },
+      {
+        "name": "shared_buffers",
+        "setting": "2048",
+        "unit": "8kB"
+      },
+      {
+        "name": "synchronous_commit",
+        "setting": "on",
+        "unit": null
+      },
+      {
+        "name": "wal_segment_size",
+        "setting": "1048576",
+        "unit": "B"
+      }
+    ]
+  },
+  "source": {
+    "tables": {
+      "persistence_attempts": {
+        "count": 1,
+        "sha256": "ab5f95f9346898559db352e7920426ed0364744c5301a78103c46ffdad973a1f"
+      },
+      "ingestion_batches": {
+        "count": 4,
+        "sha256": "d76074fb169137b782ecc9a4285751ae7923919808d32a8b7718ba91855ff12c"
+      },
+      "financial_records": {
+        "count": 4,
+        "sha256": "2819cffc541b29d74b002dbb91c566c2451bbd24776535fde5f35570275336ae"
+      },
+      "validation_issues": {
+        "count": 4,
+        "sha256": "5a977c8adb124f3815c19d3f18396dc97fb8fd19ae08708c2d3dd2f382ad2569"
+      }
+    },
+    "schemaSHA256": "0cabec251952c8f2890e107d43d67606f4e9a032e277e2585cfba2465bf24952",
+    "audit": [
+      {
+        "invariant": "batch_child_count_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "accepted_warning_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "attempt_child_count_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "record_batch_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "issue_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "rejected_in_accepted_storage",
+        "violations": 0
+      }
+    ],
+    "orphans": {
+      "records": 0,
+      "issues": 0,
+      "batches": 0
+    },
+    "aclStorage": [
+      {
+        "relname": "financial_records",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      },
+      {
+        "relname": "ingestion_batches",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      },
+      {
+        "relname": "persistence_attempts",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      },
+      {
+        "relname": "validation_issues",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      }
+    ]
+  },
+  "pitr": {
+    "restoreName": "db03_verified_boundary",
+    "restoreLSN": "0/B047D0",
+    "afterCommitLSN": "0/B079E8",
+    "replay": {
+      "recovering": false,
+      "replay_lsn": "0/B047D0"
+    },
+    "archiveFiles": 5,
+    "archiveBytes": 4194639,
+    "logEvidence": [
+      "2026-10-27 18:25:07.484 +08 [31956] LOG:  recovery stopping at restore point \"db03_verified_boundary\", time 2026-10-27 10:25:04.208327+00",
+      "2026-10-27 18:25:07.507 +08 [31956] LOG:  selected new timeline ID: 2",
+      "2026-10-27 18:25:07.550 +08 [31956] LOG:  archive recovery complete"
+    ]
+  },
+  "boundary": {
+    "tables": {
+      "persistence_attempts": {
+        "count": 2,
+        "sha256": "d28c7532c85fd0e98c386fc5e3a6fbae3a5242ee12e109f14109636bf01e2bfc"
+      },
+      "ingestion_batches": {
+        "count": 5,
+        "sha256": "29a1a98341215be1138fc184772229db7ce86e4cd3a087dd4f1774c59af81c00"
+      },
+      "financial_records": {
+        "count": 5,
+        "sha256": "4370f40d479afec1b812c69a7d7f0933378758d52a63bda7e23d82986e5f3567"
+      },
+      "validation_issues": {
+        "count": 4,
+        "sha256": "5a977c8adb124f3815c19d3f18396dc97fb8fd19ae08708c2d3dd2f382ad2569"
+      }
+    },
+    "schemaSHA256": "0cabec251952c8f2890e107d43d67606f4e9a032e277e2585cfba2465bf24952",
+    "audit": [
+      {
+        "invariant": "batch_child_count_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "accepted_warning_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "attempt_child_count_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "record_batch_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "issue_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "rejected_in_accepted_storage",
+        "violations": 0
+      }
+    ],
+    "orphans": {
+      "records": 0,
+      "issues": 0,
+      "batches": 0
+    },
+    "aclStorage": [
+      {
+        "relname": "financial_records",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      },
+      {
+        "relname": "ingestion_batches",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      },
+      {
+        "relname": "persistence_attempts",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      },
+      {
+        "relname": "validation_issues",
+        "acl": "{db03_owner=arwdDxtm/db03_owner}"
+      }
+    ]
+  },
+  "cleanup": {
+    "removed": true,
+    "failures": []
+  },
+  "commands": [
+    {
+      "tool": "pg_dump",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 51.704200000000014,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_dump (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_restore",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 48.6327,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_restore (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_basebackup",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 52.08480000000009,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_basebackup (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_verifybackup",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 62.897699999999986,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_verifybackup (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "initdb",
+      "args": [
+        "-D",
+        "$LAB\\source",
+        "-U",
+        "db03_owner",
+        "-A",
+        "trust",
+        "--no-locale",
+        "--encoding=UTF8",
+        "--wal-segsize=1"
+      ],
+      "durationMs": 7520.341799999999,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "The files belonging to this database system will be owned by user \"celes\".\r\nThis user must also own the server process.\r\n\r\nThe database cluster will be initialized with locale \"C\".\r\nThe default text search configuration will be set to \"english\".\r\n\r\nData page checksums are enabled.\r\n\r\ncreating directory C:/Users/celes/AppData/Local/Temp/fingence-db03-run-Ly0c2P/fingence-db03-nX5oPX/source ... ok\r\ncreating subdirectories ... ok\r\nselecting dynamic shared memory implementation ... windows\r\nselecting default \"max_connections\" ... 100\r\nselecting default \"shared_buffers\" ... 128MB\r\nselecting default time zone ... Asia/Kuala_Lumpur\r\ncreating configuration files ... ok\r\nrunning bootstrap script ... ok\r\nperforming post-bootstrap initialization ... ok\r\nsyncing data to disk ... ok\r\n\r\nSuccess. You can now start the database server using:\r\n\r\n    ^\"C^:^\\Program^ Files^\\PostgreSQL^\\18^\\bin^\\pg^_ctl^\" -D ^\"C^:^\\Users^\\celes^\\AppData^\\Local^\\Temp^\\fingence^-db03^-run^-Ly0c2P^\\fingence^-db03^-nX5oPX^\\source^\" -l logfile start\r\n\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\source",
+        "-l",
+        "$LAB\\source.log",
+        "-o",
+        "-h 127.0.0.1 -p 51038",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 369.41809999999896,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "initdb",
+      "args": [
+        "-D",
+        "$LAB\\logical-target",
+        "-U",
+        "db03_owner",
+        "-A",
+        "trust",
+        "--no-locale",
+        "--encoding=UTF8",
+        "--wal-segsize=1"
+      ],
+      "durationMs": 7763.6445,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "The files belonging to this database system will be owned by user \"celes\".\r\nThis user must also own the server process.\r\n\r\nThe database cluster will be initialized with locale \"C\".\r\nThe default text search configuration will be set to \"english\".\r\n\r\nData page checksums are enabled.\r\n\r\ncreating directory C:/Users/celes/AppData/Local/Temp/fingence-db03-run-Ly0c2P/fingence-db03-nX5oPX/logical-target ... ok\r\ncreating subdirectories ... ok\r\nselecting dynamic shared memory implementation ... windows\r\nselecting default \"max_connections\" ... 100\r\nselecting default \"shared_buffers\" ... 128MB\r\nselecting default time zone ... Asia/Kuala_Lumpur\r\ncreating configuration files ... ok\r\nrunning bootstrap script ... ok\r\nperforming post-bootstrap initialization ... ok\r\nsyncing data to disk ... ok\r\n\r\nSuccess. You can now start the database server using:\r\n\r\n    ^\"C^:^\\Program^ Files^\\PostgreSQL^\\18^\\bin^\\pg^_ctl^\" -D ^\"C^:^\\Users^\\celes^\\AppData^\\Local^\\Temp^\\fingence^-db03^-run^-Ly0c2P^\\fingence^-db03^-nX5oPX^\\logical^-target^\" -l logfile start\r\n\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\logical-target",
+        "-l",
+        "$LAB\\logical-target.log",
+        "-o",
+        "-h 127.0.0.1 -p 51041",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 402.11019999999917,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_dump",
+      "args": [
+        "--host=127.0.0.1",
+        "--port=51038",
+        "--username=db03_owner",
+        "--dbname=postgres",
+        "--no-password",
+        "--format=custom",
+        "--file=$LAB\\logical.dump"
+      ],
+      "durationMs": 326.3716000000022,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_restore",
+      "args": [
+        "--host=127.0.0.1",
+        "--port=51041",
+        "--username=db03_owner",
+        "--dbname=db03_logical",
+        "--no-password",
+        "--exit-on-error",
+        "--single-transaction",
+        "$LAB\\logical.dump"
+      ],
+      "durationMs": 226.99169999999867,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_basebackup",
+      "args": [
+        "--host=127.0.0.1",
+        "--port=51038",
+        "--username=db03_owner",
+        "--no-password",
+        "--pgdata=$LAB\\base-backup",
+        "--format=plain",
+        "--wal-method=stream",
+        "--checkpoint=fast",
+        "--manifest-checksums=SHA256"
+      ],
+      "durationMs": 10855.1041,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_verifybackup",
+      "args": [
+        "$LAB\\base-backup"
+      ],
+      "durationMs": 350.88170000000173,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "backup successfully verified\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\physical-target",
+        "-l",
+        "$LAB\\physical-target.log",
+        "-o",
+        "-h 127.0.0.1 -p 56673",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 3552.5204000000012,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\pitr-target",
+        "-l",
+        "$LAB\\pitr-target.log",
+        "-o",
+        "-h 127.0.0.1 -p 56677",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 2760.4037000000026,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_restore",
+      "args": [
+        "--list",
+        "$LAB\\truncated.dump"
+      ],
+      "durationMs": 74.29460000000108,
+      "exitCode": 1,
+      "signal": null,
+      "failureExpected": true,
+      "stdout": "",
+      "stderr": "pg_restore: error: could not read from input file: end of file\r\n"
+    },
+    {
+      "tool": "pg_restore",
+      "args": [
+        "--host=127.0.0.1",
+        "--port=51041",
+        "--username=db03_owner",
+        "--dbname=db03_restore_failure",
+        "--no-password",
+        "--exit-on-error",
+        "--single-transaction",
+        "--role=db03_role_does_not_exist",
+        "$LAB\\logical.dump"
+      ],
+      "durationMs": 57.284499999994296,
+      "exitCode": 1,
+      "signal": null,
+      "failureExpected": true,
+      "stdout": "",
+      "stderr": "pg_restore: error: could not execute query: ERROR:  role \"db03_role_does_not_exist\" does not exist\r\nCommand was: SET ROLE db03_role_does_not_exist;\r\n"
+    },
+    {
+      "tool": "pg_verifybackup",
+      "args": [
+        "$LAB\\corrupt-base"
+      ],
+      "durationMs": 9716.025200000004,
+      "exitCode": 1,
+      "signal": null,
+      "failureExpected": true,
+      "stdout": "",
+      "stderr": "pg_verifybackup: error: checksum mismatch for file \"base/1/112\"\r\n"
+    },
+    {
+      "tool": "pg_verifybackup",
+      "args": [
+        "$LAB\\base-backup"
+      ],
+      "durationMs": 349.31639999999607,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "backup successfully verified\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_verifybackup",
+      "args": [
+        "$LAB\\incomplete-base"
+      ],
+      "durationMs": 91.48300000000017,
+      "exitCode": 1,
+      "signal": null,
+      "failureExpected": true,
+      "stdout": "",
+      "stderr": "pg_verifybackup: error: could not open file \"C:/Users/celes/AppData/Local/Temp/fingence-db03-run-Ly0c2P/fingence-db03-nX5oPX/incomplete-base/backup_manifest\": No such file or directory\r\n"
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\pitr-target",
+        "-m",
+        "fast",
+        "-w",
+        "-t",
+        "20",
+        "stop"
+      ],
+      "durationMs": 162.907100000004,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\physical-target",
+        "-m",
+        "fast",
+        "-w",
+        "-t",
+        "20",
+        "stop"
+      ],
+      "durationMs": 207.70270000000164,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\logical-target",
+        "-m",
+        "fast",
+        "-w",
+        "-t",
+        "20",
+        "stop"
+      ],
+      "durationMs": 2033.7260000000024,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\source",
+        "-m",
+        "fast",
+        "-w",
+        "-t",
+        "20",
+        "stop"
+      ],
+      "durationMs": 274.6716000000015,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

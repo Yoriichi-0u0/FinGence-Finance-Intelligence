@@ -1,0 +1,504 @@
+{
+  "syntheticOnly": true,
+  "attempts": {
+    "seed": "30000000-0000-4000-8000-000000000001",
+    "rollback": "30000000-0000-4000-8000-000000000002",
+    "before": "30000000-0000-4000-8000-000000000003",
+    "after": "30000000-0000-4000-8000-000000000004"
+  },
+  "measurements": {
+    "logicalBackup": {
+      "durationMs": 188.23459999999977,
+      "bytes": 34974,
+      "sha256": "3db888ac824f265ed011d4f5f01ff7161f154e10e555875cc7f653a218521b1b",
+      "exitCode": 0
+    },
+    "logicalRestore": {
+      "durationMs": 153.9858000000022,
+      "exitCode": 0
+    },
+    "physicalBackup": {
+      "durationMs": 10841.9271,
+      "bytes": 26468925,
+      "files": 996,
+      "exitCode": 0,
+      "manifestSHA256": "7a694e73be487b3fa17a1231778275053ccaf13e64f5144281106ca2d9ed1e98",
+      "verifyExitCode": 0,
+      "verifyDurationMs": 424.84969999999885
+    },
+    "physicalRecovery": {
+      "durationMs": 4125.019300000004
+    }
+  },
+  "tools": {
+    "pg_dump": "pg_dump (PostgreSQL) 18.6",
+    "pg_restore": "pg_restore (PostgreSQL) 18.6",
+    "pg_basebackup": "pg_basebackup (PostgreSQL) 18.6",
+    "pg_verifybackup": "pg_verifybackup (PostgreSQL) 18.6"
+  },
+  "verifications": {
+    "logical": {
+      "tables": {
+        "persistence_attempts": {
+          "count": 1,
+          "sha256": "4ebb9699c828c16a5f0252b2c7401ed58fa2b91174b9406bd9df87553ab86e1e"
+        },
+        "ingestion_batches": {
+          "count": 4,
+          "sha256": "e79596a1607daf47ce27c46647fea8ef1ad4d3a8f28e3e860c361b1a09a3e245"
+        },
+        "financial_records": {
+          "count": 4,
+          "sha256": "65a4528528ccf88edea79b025cf57419a9c5230d51acc6f9767fc8080178c4f7"
+        },
+        "validation_issues": {
+          "count": 4,
+          "sha256": "75a02f658fd7066eab84ef165a938d67380fb42d0521567fd2e7094dcdef47cd"
+        }
+      },
+      "schemaSHA256": "d536645ae8e3dc966ca6a35ad3b5d7c1d0f77dcd849e633dd8d9d867da6a53bf",
+      "audit": [
+        {
+          "invariant": "batch_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "accepted_warning_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "attempt_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "record_batch_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "issue_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "rejected_in_accepted_storage",
+          "violations": 0
+        }
+      ],
+      "orphans": {
+        "records": 0,
+        "issues": 0,
+        "batches": 0
+      }
+    },
+    "physical": {
+      "tables": {
+        "persistence_attempts": {
+          "count": 1,
+          "sha256": "4ebb9699c828c16a5f0252b2c7401ed58fa2b91174b9406bd9df87553ab86e1e"
+        },
+        "ingestion_batches": {
+          "count": 4,
+          "sha256": "e79596a1607daf47ce27c46647fea8ef1ad4d3a8f28e3e860c361b1a09a3e245"
+        },
+        "financial_records": {
+          "count": 4,
+          "sha256": "65a4528528ccf88edea79b025cf57419a9c5230d51acc6f9767fc8080178c4f7"
+        },
+        "validation_issues": {
+          "count": 4,
+          "sha256": "75a02f658fd7066eab84ef165a938d67380fb42d0521567fd2e7094dcdef47cd"
+        }
+      },
+      "schemaSHA256": "17d1e7f1e95736afdcf33116facb89f96b5327b2772db06e1008c291f2ddb701",
+      "audit": [
+        {
+          "invariant": "batch_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "accepted_warning_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "attempt_child_count_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "record_batch_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "issue_filename_mismatch",
+          "violations": 0
+        },
+        {
+          "invariant": "rejected_in_accepted_storage",
+          "violations": 0
+        }
+      ],
+      "orphans": {
+        "records": 0,
+        "issues": 0,
+        "batches": 0
+      }
+    }
+  },
+  "source": {
+    "tables": {
+      "persistence_attempts": {
+        "count": 1,
+        "sha256": "4ebb9699c828c16a5f0252b2c7401ed58fa2b91174b9406bd9df87553ab86e1e"
+      },
+      "ingestion_batches": {
+        "count": 4,
+        "sha256": "e79596a1607daf47ce27c46647fea8ef1ad4d3a8f28e3e860c361b1a09a3e245"
+      },
+      "financial_records": {
+        "count": 4,
+        "sha256": "65a4528528ccf88edea79b025cf57419a9c5230d51acc6f9767fc8080178c4f7"
+      },
+      "validation_issues": {
+        "count": 4,
+        "sha256": "75a02f658fd7066eab84ef165a938d67380fb42d0521567fd2e7094dcdef47cd"
+      }
+    },
+    "schemaSHA256": "17d1e7f1e95736afdcf33116facb89f96b5327b2772db06e1008c291f2ddb701",
+    "audit": [
+      {
+        "invariant": "batch_child_count_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "accepted_warning_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "attempt_child_count_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "record_batch_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "issue_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "rejected_in_accepted_storage",
+        "violations": 0
+      }
+    ],
+    "orphans": {
+      "records": 0,
+      "issues": 0,
+      "batches": 0
+    }
+  },
+  "setupFailure": "Error: pg_ctl failed (1); diagnostics: C:\\Users\\celes\\AppData\\Local\\Temp\\fingence-db03-run-XZJMLH\\fingence-db03-MwTEEe",
+  "diagnostics": "C:\\Users\\celes\\AppData\\Local\\Temp\\fingence-db03-run-XZJMLH\\fingence-db03-MwTEEe",
+  "cleanup": {
+    "removed": false,
+    "diagnostics": "C:\\Users\\celes\\AppData\\Local\\Temp\\fingence-db03-run-XZJMLH\\fingence-db03-MwTEEe",
+    "failures": []
+  },
+  "commands": [
+    {
+      "tool": "pg_dump",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 75.27520000000004,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_dump (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_restore",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 59.65560000000005,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_restore (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_basebackup",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 76.39329999999995,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_basebackup (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_verifybackup",
+      "args": [
+        "--version"
+      ],
+      "durationMs": 234.48299999999995,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "pg_verifybackup (PostgreSQL) 18.6\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "initdb",
+      "args": [
+        "-D",
+        "$LAB\\source",
+        "-U",
+        "db03_owner",
+        "-A",
+        "trust",
+        "--no-locale",
+        "--encoding=UTF8",
+        "--wal-segsize=1"
+      ],
+      "durationMs": 10059.338600000001,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "The files belonging to this database system will be owned by user \"celes\".\r\nThis user must also own the server process.\r\n\r\nThe database cluster will be initialized with locale \"C\".\r\nThe default text search configuration will be set to \"english\".\r\n\r\nData page checksums are enabled.\r\n\r\ncreating directory C:/Users/celes/AppData/Local/Temp/fingence-db03-run-XZJMLH/fingence-db03-MwTEEe/source ... ok\r\ncreating subdirectories ... ok\r\nselecting dynamic shared memory implementation ... windows\r\nselecting default \"max_connections\" ... 100\r\nselecting default \"shared_buffers\" ... 128MB\r\nselecting default time zone ... Asia/Kuala_Lumpur\r\ncreating configuration files ... ok\r\nrunning bootstrap script ... ok\r\nperforming post-bootstrap initialization ... ok\r\nsyncing data to disk ... ok\r\n\r\nSuccess. You can now start the database server using:\r\n\r\n    ^\"C^:^\\Program^ Files^\\PostgreSQL^\\18^\\bin^\\pg^_ctl^\" -D ^\"C^:^\\Users^\\celes^\\AppData^\\Local^\\Temp^\\fingence^-db03^-run^-XZJMLH^\\fingence^-db03^-MwTEEe^\\source^\" -l logfile start\r\n\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\source",
+        "-l",
+        "$LAB\\source.log",
+        "-o",
+        "-h 127.0.0.1 -p 53369",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 597.3313999999991,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "initdb",
+      "args": [
+        "-D",
+        "$LAB\\logical-target",
+        "-U",
+        "db03_owner",
+        "-A",
+        "trust",
+        "--no-locale",
+        "--encoding=UTF8",
+        "--wal-segsize=1"
+      ],
+      "durationMs": 7550.595399999998,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "The files belonging to this database system will be owned by user \"celes\".\r\nThis user must also own the server process.\r\n\r\nThe database cluster will be initialized with locale \"C\".\r\nThe default text search configuration will be set to \"english\".\r\n\r\nData page checksums are enabled.\r\n\r\ncreating directory C:/Users/celes/AppData/Local/Temp/fingence-db03-run-XZJMLH/fingence-db03-MwTEEe/logical-target ... ok\r\ncreating subdirectories ... ok\r\nselecting dynamic shared memory implementation ... windows\r\nselecting default \"max_connections\" ... 100\r\nselecting default \"shared_buffers\" ... 128MB\r\nselecting default time zone ... Asia/Kuala_Lumpur\r\ncreating configuration files ... ok\r\nrunning bootstrap script ... ok\r\nperforming post-bootstrap initialization ... ok\r\nsyncing data to disk ... ok\r\n\r\nSuccess. You can now start the database server using:\r\n\r\n    ^\"C^:^\\Program^ Files^\\PostgreSQL^\\18^\\bin^\\pg^_ctl^\" -D ^\"C^:^\\Users^\\celes^\\AppData^\\Local^\\Temp^\\fingence^-db03^-run^-XZJMLH^\\fingence^-db03^-MwTEEe^\\logical^-target^\" -l logfile start\r\n\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\logical-target",
+        "-l",
+        "$LAB\\logical-target.log",
+        "-o",
+        "-h 127.0.0.1 -p 53373",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 342.0478000000003,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_dump",
+      "args": [
+        "--host=127.0.0.1",
+        "--port=53369",
+        "--username=db03_owner",
+        "--dbname=postgres",
+        "--no-password",
+        "--format=custom",
+        "--file=$LAB\\logical.dump"
+      ],
+      "durationMs": 188.23459999999977,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_restore",
+      "args": [
+        "--host=127.0.0.1",
+        "--port=53373",
+        "--username=db03_owner",
+        "--dbname=db03_logical",
+        "--no-password",
+        "--exit-on-error",
+        "--single-transaction",
+        "$LAB\\logical.dump"
+      ],
+      "durationMs": 153.9858000000022,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_basebackup",
+      "args": [
+        "--host=127.0.0.1",
+        "--port=53369",
+        "--username=db03_owner",
+        "--no-password",
+        "--pgdata=$LAB\\base-backup",
+        "--format=plain",
+        "--wal-method=stream",
+        "--checkpoint=fast",
+        "--manifest-checksums=SHA256"
+      ],
+      "durationMs": 10841.9271,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_verifybackup",
+      "args": [
+        "$LAB\\base-backup"
+      ],
+      "durationMs": 424.84969999999885,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "backup successfully verified\r\n",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\physical-target",
+        "-l",
+        "$LAB\\physical-target.log",
+        "-o",
+        "-h 127.0.0.1 -p 63357",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 3505.993899999994,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\pitr-target",
+        "-l",
+        "$LAB\\pitr-target.log",
+        "-o",
+        "-h 127.0.0.1 -p 63360",
+        "-w",
+        "-t",
+        "45",
+        "start"
+      ],
+      "durationMs": 2928.1834000000017,
+      "exitCode": 1,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\physical-target",
+        "-m",
+        "fast",
+        "-w",
+        "-t",
+        "20",
+        "stop"
+      ],
+      "durationMs": 167.54149999999936,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\logical-target",
+        "-m",
+        "fast",
+        "-w",
+        "-t",
+        "20",
+        "stop"
+      ],
+      "durationMs": 1560.7188000000024,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "tool": "pg_ctl",
+      "args": [
+        "-D",
+        "$LAB\\source",
+        "-m",
+        "fast",
+        "-w",
+        "-t",
+        "20",
+        "stop"
+      ],
+      "durationMs": 172.91860000000452,
+      "exitCode": 0,
+      "signal": null,
+      "failureExpected": false,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}
