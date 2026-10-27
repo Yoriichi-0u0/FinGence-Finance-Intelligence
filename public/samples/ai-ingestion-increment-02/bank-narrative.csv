@@ -1,0 +1,5 @@
+BANK STATEMENT
+Transaction Code,Transaction Date,Posting Date,Amount,Currency,Transaction Narrative,Reference
+000001,2026-10-19,2026-10-20,-1250.05,MYR,Supplier payment,000100
+000002,2026-10-20,2026-10-21,20.00,MYR,Adjustment,000101
+000003,2026-10-21,2026-10-22,0.00,USD,Zero value,

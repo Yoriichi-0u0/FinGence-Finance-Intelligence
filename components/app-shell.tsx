@@ -142,7 +142,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
-          {pathname !== "/data" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
+          {pathname !== "/data" && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
           {children}

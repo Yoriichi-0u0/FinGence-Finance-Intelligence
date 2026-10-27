@@ -1,5 +1,5 @@
 {
-  "name": "finsight-prototype",
+  "name": "fingence-finance-intelligence",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -16,18 +16,26 @@
     "test:persistence": "vitest run tests/persistence tests/integration/grouped-consultation.test.ts",
     "test:security": "vitest run tests/security",
     "phase2:ingest": "node --conditions=react-server scripts/phase2.mjs",
-    "demo:persistence": "vitest run tests/integration/grouped-consultation.test.ts --reporter=verbose"
+    "demo:persistence": "vitest run tests/integration/grouped-consultation.test.ts --reporter=verbose",
+    "ai:doctor": "node --conditions=react-server scripts/ai-cli.mjs doctor",
+    "ai:extract": "node --conditions=react-server scripts/ai-cli.mjs extract",
+    "ai:evaluate": "node --conditions=react-server scripts/ai-cli.mjs evaluate",
+    "ai:benchmark": ".venv-ai/bin/python scripts/ai-benchmark.py",
+    "ai:demo": "FINGENCE_AI_LOCAL=1 FINGENCE_EXTRACTOR=docling FINGENCE_AI_PYTHON=.venv-ai/bin/python next dev --hostname 127.0.0.1 --port 3103",
+    "test:ai": "vitest run tests/ai-ingestion"
   },
   "dependencies": {
     "fflate": "0.8.3",
     "lucide-react": "^1.38.0",
     "next": "16.4.1",
+    "openai": "7.39.0",
     "papaparse": "5.7.0",
     "pg": "8.23.1",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "read-excel-file": "9.3.10",
-    "server-only": "0.0.1"
+    "server-only": "0.0.1",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

@@ -1,0 +1,7 @@
+{
+  "notice": "Evaluation-only exposure history, never runtime inference input. Frozen original labels remain unchanged.",
+  "developmentSourceSha256": [
+    "4f53f0289a615687de1c9ac8738c0670c9b2f0cc66f5aea7b7fdf41238b69001"
+  ],
+  "reason": "The first LIVE_GROQ proposal for this source was inspected on 27 October 2026. A retest measures development regression, not independent generalization."
+}

@@ -1,0 +1,9 @@
+{
+  "localProductionBuild": true,
+  "localFlagsSet": true,
+  "httpStatus": {
+    "/ai-ingestion/live": 404,
+    "/api/ai-ingestion/live": 404
+  },
+  "hostedDeploymentAccessed": false
+}

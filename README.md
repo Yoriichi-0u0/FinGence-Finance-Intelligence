@@ -1,3 +1,29 @@
+# FinGence — current technical guidance
+
+Start with [the current team and AI technical entrypoint](docs/handoff/CURRENT.md).
+It maps the stable C1/C2 exports, experimental V2 schemas/verifier, runtime requirements,
+ownership, tested reuse examples and the missing V2-to-C1 bridge. It also includes a short
+instruction block for coding assistants. [PR #4](https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/4)
+tracks integration/CI; verify the deployed source SHA before claiming production availability.
+
+The hosted Data page retains the verified deterministic ingestion → C1 → analytics path.
+Use [FinGence](https://fingence-financeintelligence.vercel.app/) as the current product URL;
+the former [FinSight-named address](https://finsight-financeintelligence.vercel.app/) remains
+an alias for compatibility. Both belong to the same existing Vercel project.
+V2 Increments 01–03B are source-available but their AI pages/APIs remain disabled in hosted
+production. One genuine Groq proposal failed acceptance; 03B refinement has no new live
+accuracy result. Experimental machine-verified records are not C1 or approved transactions.
+
+## Historical status and release notes
+
+The dated sections below preserve earlier implementation/release statements, including
+superseded branch, review, deployment and integration status. Use CURRENT.md for today's
+entrypoints and boundaries; linked source/contracts remain authoritative for field semantics.
+
+# Historical: FinGence 2.0 — isolated local experiment, 20 October 2026
+
+The `feature/v2-multimodal-ingestion` branch adds a local `/ai-ingestion` prototype, four-format extraction, declarative rule verification and reproducible evaluation. **Live OpenAI inference has not run:** secure destination confirmation was declined; no key was created. Recorded test proposals are explicitly labelled and are never the UI default. Start with the [local demo and implementation status](docs/ai-ingestion/README.md), [technology evaluation](docs/research/open-source-technology-evaluation.md) and [execution evidence](docs/ai-ingestion/verification.md). FinGence 1.0 ingestion, C1/C2 source contracts and production remain unchanged by this experiment. The sections below retain the earlier release documentation; use the dated V2 documents for this branch's experimental status.
+
 # FinGence — SAIC integration candidate, 15 October 2026
 
 The verified application candidate mirrors shared integration commit `b2b1f3b` without replacing personal Git history. See [current integration status, ownership and verification](docs/releases/saic-2026-10-16/README.md). Shared-main release remains gated on non-author team approval and passing checks; no production deployment is implied by this candidate. Historical ingestion verification and all C1/C2 checkpoints remain intact.
@@ -92,3 +118,9 @@ That file is not required for installation/demo and is not copied into this repo
 - Exact duplicate files are blocked within the session; repeated raw rows are warned and retained. Economic duplicates across ledger/bank sources require a future reconciliation layer.
 
 This is **NOT the final production system**. Measured fixture outcomes demonstrate ingestion behavior; they do not establish accounting correctness on client files or model/reconciliation accuracy.
+
+## Current local development workspace — 26 October 2026
+
+The canonical development root is `~/Documents/FinGence`. Use the preserved V2 worktree at `worktrees/FinGence-2.0-AI-Ingestion` under that root. Read [workspace instructions](docs/ai-ingestion/workspace.md) for the consolidated paths, offline setup and verification record. Historical paths and dated verification below remain execution evidence. No migration implies a production deployment or live LLM result.
+
+The 26 October V2 feature checkpoint, security synchronization, local isolation and secure Groq setup boundary are documented in [V2 publication readiness](docs/ai-ingestion/publication-2026-10-26.md). No genuine inference had executed at that checkpoint. The [27 October Increment 03B report](docs/ai-ingestion/increment-03/refinement-03b.md) records the first genuine request's acceptance failure and subsequent credential-free refinement. No additional inference or production release is implied.

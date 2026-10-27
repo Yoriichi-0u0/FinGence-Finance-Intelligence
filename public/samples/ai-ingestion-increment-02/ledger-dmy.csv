@@ -1,0 +1,4 @@
+GENERAL LEDGER
+Transaction ID,Transaction Date,DR Value,CR Value,Currency,Account Code,Reference
+0010,19/10/2026,100.05,0,MYR,000400,R1
+0020,20/10/2026,0,25.01,MYR,000500,R2

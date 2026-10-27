@@ -1,0 +1,259 @@
+{
+  "syntheticOnly": true,
+  "inferenceCalls": 0,
+  "method": "3 sequential extractions per process. Global presence is not positional accuracy. Positioned fields use one-to-one exact transaction-ID row matching and named columns. Latency and process peak RSS are measured. NOT LLM interpretation accuracy. Model weights already cached.",
+  "results": [
+    {
+      "file": "statement-digital.pdf",
+      "engine": "pdfplumber",
+      "sha256": "6e91058d4d28d604e79c733483550a1e9cdd82d8014fcf4fadbdff449241c913",
+      "exactValuePresence": 24,
+      "expectedFields": 24,
+      "substringPresence": 24,
+      "positionedExactFields": 24,
+      "exactTableRows": 4,
+      "expectedRows": 4,
+      "regions": 36,
+      "coverage": "TABLE_ROWS",
+      "runsMs": [
+        142.66,
+        9.52,
+        9.6
+      ],
+      "coldMs": 142.66,
+      "warmMedianMs": 9.559999999999999,
+      "peakRssMiB": 53.39
+    },
+    {
+      "file": "statement-digital.pdf",
+      "engine": "docling",
+      "sha256": "6e91058d4d28d604e79c733483550a1e9cdd82d8014fcf4fadbdff449241c913",
+      "exactValuePresence": 24,
+      "expectedFields": 24,
+      "substringPresence": 24,
+      "positionedExactFields": 24,
+      "exactTableRows": 4,
+      "expectedRows": 4,
+      "regions": 36,
+      "coverage": "TABLE_ROWS",
+      "runsMs": [
+        10550.0,
+        3738.01,
+        3803.51
+      ],
+      "coldMs": 10550.0,
+      "warmMedianMs": 3770.76,
+      "peakRssMiB": 2763.8
+    },
+    {
+      "file": "statement-scan.pdf",
+      "engine": "pdfplumber",
+      "sha256": "34cefe6f99d4d72dfc748ddfc2618236b0877046aa45d8cad5087a0f26e6ca4d",
+      "exactValuePresence": 24,
+      "expectedFields": 24,
+      "substringPresence": 24,
+      "positionedExactFields": 0,
+      "exactTableRows": 0,
+      "expectedRows": 4,
+      "regions": 38,
+      "coverage": "REGIONS_ONLY",
+      "runsMs": [
+        1884.19,
+        1492.01,
+        1486.08
+      ],
+      "coldMs": 1884.19,
+      "warmMedianMs": 1489.045,
+      "peakRssMiB": 486.67
+    },
+    {
+      "file": "statement-scan.pdf",
+      "engine": "docling",
+      "sha256": "34cefe6f99d4d72dfc748ddfc2618236b0877046aa45d8cad5087a0f26e6ca4d",
+      "exactValuePresence": 24,
+      "expectedFields": 24,
+      "substringPresence": 24,
+      "positionedExactFields": 24,
+      "exactTableRows": 4,
+      "expectedRows": 4,
+      "regions": 36,
+      "coverage": "TABLE_ROWS",
+      "runsMs": [
+        10191.45,
+        7839.33,
+        5751.96
+      ],
+      "coldMs": 10191.45,
+      "warmMedianMs": 6795.645,
+      "peakRssMiB": 1932.5
+    },
+    {
+      "file": "statement-mixed.pdf",
+      "engine": "pdfplumber",
+      "sha256": "1f41415857d276c4c91efc00b0be5d522a8f1ac96d0274a52a2cbadfa3f57558",
+      "exactValuePresence": 24,
+      "expectedFields": 24,
+      "substringPresence": 24,
+      "positionedExactFields": 12,
+      "exactTableRows": 2,
+      "expectedRows": 4,
+      "regions": 37,
+      "coverage": "REGIONS_ONLY",
+      "runsMs": [
+        1431.43,
+        755.66,
+        789.72
+      ],
+      "coldMs": 1431.43,
+      "warmMedianMs": 772.69,
+      "peakRssMiB": 483.12
+    },
+    {
+      "file": "statement-mixed.pdf",
+      "engine": "docling",
+      "sha256": "1f41415857d276c4c91efc00b0be5d522a8f1ac96d0274a52a2cbadfa3f57558",
+      "exactValuePresence": 24,
+      "expectedFields": 24,
+      "substringPresence": 24,
+      "positionedExactFields": 24,
+      "exactTableRows": 4,
+      "expectedRows": 4,
+      "regions": 36,
+      "coverage": "TABLE_ROWS",
+      "runsMs": [
+        9963.64,
+        5756.7,
+        4629.52
+      ],
+      "coldMs": 9963.64,
+      "warmMedianMs": 5193.110000000001,
+      "peakRssMiB": 2033.45
+    },
+    {
+      "file": "statement.png",
+      "engine": "pdfplumber",
+      "sha256": "98a0c80379de6964f1b8f37e81fee98b5f10445c884c8e5e6119fb3387731f1c",
+      "exactValuePresence": 12,
+      "expectedFields": 12,
+      "substringPresence": 12,
+      "positionedExactFields": 0,
+      "exactTableRows": 0,
+      "expectedRows": 2,
+      "regions": 19,
+      "coverage": "REGIONS_ONLY",
+      "runsMs": [
+        1169.28,
+        702.66,
+        723.01
+      ],
+      "coldMs": 1169.28,
+      "warmMedianMs": 712.835,
+      "peakRssMiB": 474.23
+    },
+    {
+      "file": "statement.png",
+      "engine": "docling",
+      "sha256": "98a0c80379de6964f1b8f37e81fee98b5f10445c884c8e5e6119fb3387731f1c",
+      "exactValuePresence": 12,
+      "expectedFields": 12,
+      "substringPresence": 12,
+      "positionedExactFields": 12,
+      "exactTableRows": 2,
+      "expectedRows": 2,
+      "regions": 18,
+      "coverage": "TABLE_ROWS",
+      "runsMs": [
+        8051.13,
+        3719.06,
+        3413.52
+      ],
+      "coldMs": 8051.13,
+      "warmMedianMs": 3566.29,
+      "peakRssMiB": 2105.48
+    },
+    {
+      "file": "statement.jpg",
+      "engine": "pdfplumber",
+      "sha256": "02f7197008f510039258b40da795d752b1acf03de7c7a184af4d975a1a4195d1",
+      "exactValuePresence": 12,
+      "expectedFields": 12,
+      "substringPresence": 12,
+      "positionedExactFields": 0,
+      "exactTableRows": 0,
+      "expectedRows": 2,
+      "regions": 19,
+      "coverage": "REGIONS_ONLY",
+      "runsMs": [
+        1031.69,
+        735.38,
+        708.89
+      ],
+      "coldMs": 1031.69,
+      "warmMedianMs": 722.135,
+      "peakRssMiB": 469.36
+    },
+    {
+      "file": "statement.jpg",
+      "engine": "docling",
+      "sha256": "02f7197008f510039258b40da795d752b1acf03de7c7a184af4d975a1a4195d1",
+      "exactValuePresence": 12,
+      "expectedFields": 12,
+      "substringPresence": 12,
+      "positionedExactFields": 12,
+      "exactTableRows": 2,
+      "expectedRows": 2,
+      "regions": 18,
+      "coverage": "TABLE_ROWS",
+      "runsMs": [
+        7888.09,
+        3609.37,
+        3513.09
+      ],
+      "coldMs": 7888.09,
+      "warmMedianMs": 3561.23,
+      "peakRssMiB": 2084.67
+    },
+    {
+      "file": "unreadable.png",
+      "engine": "pdfplumber",
+      "sha256": "a75e9883b88d9180cf198ff28cc298424477e5be1d425695123cfbeb788afe7d",
+      "exactValuePresence": 0,
+      "expectedFields": 12,
+      "substringPresence": 0,
+      "positionedExactFields": 0,
+      "exactTableRows": 0,
+      "expectedRows": 2,
+      "regions": 0,
+      "coverage": "REGIONS_ONLY",
+      "runsMs": [
+        728.66,
+        387.25,
+        390.31
+      ],
+      "coldMs": 728.66,
+      "warmMedianMs": 388.78,
+      "peakRssMiB": 476.73
+    },
+    {
+      "file": "unreadable.png",
+      "engine": "docling",
+      "sha256": "a75e9883b88d9180cf198ff28cc298424477e5be1d425695123cfbeb788afe7d",
+      "exactValuePresence": 0,
+      "expectedFields": 12,
+      "substringPresence": 0,
+      "positionedExactFields": 0,
+      "exactTableRows": 0,
+      "expectedRows": 2,
+      "regions": 0,
+      "coverage": "REGIONS_ONLY",
+      "runsMs": [
+        6264.33,
+        1766.15,
+        1717.41
+      ],
+      "coldMs": 6264.33,
+      "warmMedianMs": 1741.7800000000002,
+      "peakRssMiB": 1954.16
+    }
+  ]
+}

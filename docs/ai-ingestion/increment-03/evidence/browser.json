@@ -1,0 +1,24 @@
+{
+  "scope": "LOCAL_ONLY_NO_INFERENCE",
+  "nativeUpload": "h02.xlsx",
+  "sampleProcessing": [
+    "h01.csv",
+    "h04.pdf"
+  ],
+  "extractionCompleted": true,
+  "inference": "NOT_EXECUTED",
+  "financialAcceptance": false,
+  "downloadVerified": "JSON mode NOT_EXECUTED, receipt null",
+  "viewportChecks": [
+    {
+      "width": 390,
+      "documentWidth": 375
+    },
+    {
+      "width": 320,
+      "documentWidth": 305
+    }
+  ],
+  "browserErrors": [],
+  "liveSuccessBrowserTest": "NOT_EXECUTED"
+}

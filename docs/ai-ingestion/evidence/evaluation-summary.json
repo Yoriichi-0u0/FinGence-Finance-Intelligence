@@ -1,0 +1,200 @@
+{
+  "date": "2026-10-20",
+  "liveRequests": 0,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "estimatedUsd": 0,
+  "note": "Repeated representations of four synthetic transactions; test proposals are hand-authored, not LLM output. No V2-to-C1 bridge.",
+  "evaluations": [
+    {
+      "mode": "ACTUAL_EXTRACTION_NO_LIVE_AI",
+      "cases": [
+        {
+          "file": "statement.csv",
+          "evidenceItems": 30,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "statement.xlsx",
+          "evidenceItems": 30,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "statement-digital.pdf",
+          "evidenceItems": 36,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "statement-scan.pdf",
+          "evidenceItems": 36,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "statement-mixed.pdf",
+          "evidenceItems": 36,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "statement.png",
+          "evidenceItems": 18,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "statement.jpg",
+          "evidenceItems": 18,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "ambiguous.csv",
+          "evidenceItems": 12,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "injection.csv",
+          "evidenceItems": 12,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "unreadable.png",
+          "evidenceItems": 0,
+          "inference": "NOT_EXECUTED",
+          "decision": "AI_UNAVAILABLE",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        }
+      ]
+    },
+    {
+      "mode": "RECORDED_TEST_NOT_LLM",
+      "cases": [
+        {
+          "file": "statement.csv",
+          "evidenceItems": 30,
+          "inference": "RECORDED_TEST",
+          "decision": "VERIFIED",
+          "accepted": 4,
+          "valid": 0,
+          "warning": 4
+        },
+        {
+          "file": "statement.xlsx",
+          "evidenceItems": 30,
+          "inference": "RECORDED_TEST",
+          "decision": "VERIFIED",
+          "accepted": 4,
+          "valid": 0,
+          "warning": 4
+        },
+        {
+          "file": "statement-digital.pdf",
+          "evidenceItems": 36,
+          "inference": "RECORDED_TEST",
+          "decision": "VERIFIED",
+          "accepted": 4,
+          "valid": 0,
+          "warning": 4
+        },
+        {
+          "file": "statement-scan.pdf",
+          "evidenceItems": 36,
+          "inference": "RECORDED_TEST",
+          "decision": "VERIFIED",
+          "accepted": 4,
+          "valid": 0,
+          "warning": 4
+        },
+        {
+          "file": "statement-mixed.pdf",
+          "evidenceItems": 36,
+          "inference": "RECORDED_TEST",
+          "decision": "VERIFIED",
+          "accepted": 4,
+          "valid": 0,
+          "warning": 4
+        },
+        {
+          "file": "statement.png",
+          "evidenceItems": 18,
+          "inference": "RECORDED_TEST",
+          "decision": "VERIFIED",
+          "accepted": 2,
+          "valid": 0,
+          "warning": 2
+        },
+        {
+          "file": "statement.jpg",
+          "evidenceItems": 18,
+          "inference": "RECORDED_TEST",
+          "decision": "VERIFIED",
+          "accepted": 2,
+          "valid": 0,
+          "warning": 2
+        },
+        {
+          "file": "ambiguous.csv",
+          "evidenceItems": 12,
+          "inference": "RECORDED_TEST",
+          "decision": "NEEDS_REVIEW",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "injection.csv",
+          "evidenceItems": 12,
+          "inference": "RECORDED_TEST",
+          "decision": "NEEDS_REVIEW",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        },
+        {
+          "file": "unreadable.png",
+          "evidenceItems": 0,
+          "inference": "RECORDED_TEST",
+          "decision": "NEEDS_REVIEW",
+          "accepted": 0,
+          "valid": 0,
+          "warning": 0
+        }
+      ]
+    }
+  ]
+}

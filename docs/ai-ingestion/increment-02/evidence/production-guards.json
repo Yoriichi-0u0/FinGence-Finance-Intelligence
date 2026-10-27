@@ -1,0 +1,32 @@
+[
+  {
+    "path": "/ai-ingestion/developer",
+    "method": "GET",
+    "status": 404,
+    "expected": 404
+  },
+  {
+    "path": "/api/ai-ingestion/developer-replay",
+    "method": "GET",
+    "status": 404,
+    "expected": 404
+  },
+  {
+    "path": "/api/ai-ingestion/developer-replay",
+    "method": "POST",
+    "status": 404,
+    "expected": 404
+  },
+  {
+    "path": "/api/ai-ingestion",
+    "method": "POST",
+    "status": 403,
+    "expected": 403
+  },
+  {
+    "path": "/ai-ingestion",
+    "method": "GET",
+    "status": 200,
+    "expected": 200
+  }
+]

@@ -10,4 +10,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 ## Ingestion handoff
 
-Before modifying or consuming FinGence ingestion, read [docs/handoff/AI_CONTEXT.md](docs/handoff/AI_CONTEXT.md). It links the authoritative implementation, architecture, tests and consumer example. Inspect the actual checkout and requested scope.
+Before editing or consuming FinGence, read the single current technical entrypoint:
+[docs/handoff/CURRENT.md](docs/handoff/CURRENT.md). Inspect its linked exported interfaces,
+tests and owner boundaries in the actual checkout. Older AI_CONTEXT/TEAM_HANDOFF status
+sections are historical. Preserve C1/C2 and independent V2 verification; no V2-to-C1 cast
+or unauthorized provider dispatch/deployment change. Use narrow, tested integration commits.
