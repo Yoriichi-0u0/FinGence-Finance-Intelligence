@@ -1,0 +1,124 @@
+{
+  "sql": "SELECT r.id AS id, r.batch_id AS batch_id, r.ingestion_batch_id AS ingestion_batch_id, r.source_row_id AS source_row_id, to_char(r.canonical_date, 'YYYY-MM-DD') AS canonical_date, to_char(r.transaction_date, 'YYYY-MM-DD') AS transaction_date, to_char(r.posting_date, 'YYYY-MM-DD') AS posting_date, r.canonical_date_basis AS canonical_date_basis, r.reference AS reference, r.source_transaction_id AS source_transaction_id, r.description AS description, r.account_code AS account_code, r.monetary_basis AS monetary_basis, r.debit::text AS debit, r.credit::text AS credit, r.source_amount::text AS source_amount, r.entry_side AS entry_side, r.derived_ledger_net::text AS derived_ledger_net, r.balance::text AS balance, r.currency AS currency, r.currency_basis AS currency_basis, r.ingestion_status AS ingestion_status FROM public.financial_records r\nWHERE r.batch_id = ANY($1::uuid[]) AND r.ingestion_status IN ('VALID', 'WARNING') AND r.canonical_date >= $2::date AND r.canonical_date <= $3::date ORDER BY r.canonical_date DESC, r.id DESC LIMIT $4::integer",
+  "values": [
+    [
+      "10000000-0000-4000-8000-000000000001"
+    ],
+    "2026-06-01",
+    "2026-06-30",
+    51
+  ],
+  "plan": [
+    {
+      "Plan": {
+        "Node Type": "Limit",
+        "Parallel Aware": false,
+        "Async Capable": false,
+        "Startup Cost": 8.35,
+        "Total Cost": 8.36,
+        "Plan Rows": 1,
+        "Plan Width": 509,
+        "Actual Startup Time": 0.013,
+        "Actual Total Time": 0.014,
+        "Actual Rows": 0,
+        "Actual Loops": 1,
+        "Disabled": false,
+        "Shared Hit Blocks": 3,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0,
+        "Plans": [
+          {
+            "Node Type": "Sort",
+            "Parent Relationship": "Outer",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 8.35,
+            "Total Cost": 8.36,
+            "Plan Rows": 1,
+            "Plan Width": 509,
+            "Actual Startup Time": 0.013,
+            "Actual Total Time": 0.013,
+            "Actual Rows": 0,
+            "Actual Loops": 1,
+            "Disabled": false,
+            "Sort Key": [
+              "canonical_date DESC",
+              "id DESC"
+            ],
+            "Sort Method": "quicksort",
+            "Sort Space Used": 25,
+            "Sort Space Type": "Memory",
+            "Shared Hit Blocks": 3,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Index Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Scan Direction": "Forward",
+                "Index Name": "financial_records_batch_idx",
+                "Relation Name": "financial_records",
+                "Alias": "r",
+                "Startup Cost": 0.28,
+                "Total Cost": 8.34,
+                "Plan Rows": 1,
+                "Plan Width": 509,
+                "Actual Startup Time": 0.01,
+                "Actual Total Time": 0.01,
+                "Actual Rows": 0,
+                "Actual Loops": 1,
+                "Disabled": false,
+                "Index Cond": "(batch_id = ANY ('{10000000-0000-4000-8000-000000000001}'::uuid[]))",
+                "Rows Removed by Index Recheck": 0,
+                "Filter": "((ingestion_status = ANY ('{VALID,WARNING}'::text[])) AND (canonical_date >= '2026-06-01'::date) AND (canonical_date <= '2026-06-30'::date))",
+                "Rows Removed by Filter": 1,
+                "Index Searches": 1,
+                "Shared Hit Blocks": 3,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0
+              }
+            ]
+          }
+        ]
+      },
+      "Planning": {
+        "Shared Hit Blocks": 1,
+        "Shared Read Blocks": 0,
+        "Shared Dirtied Blocks": 0,
+        "Shared Written Blocks": 0,
+        "Local Hit Blocks": 0,
+        "Local Read Blocks": 0,
+        "Local Dirtied Blocks": 0,
+        "Local Written Blocks": 0,
+        "Temp Read Blocks": 0,
+        "Temp Written Blocks": 0
+      },
+      "Planning Time": 0.122,
+      "Triggers": [],
+      "Execution Time": 0.038
+    }
+  ]
+}
