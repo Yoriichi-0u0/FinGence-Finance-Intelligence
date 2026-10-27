@@ -1,5 +1,19 @@
 # FinGence 2.0 Increment 03
 
+## Current refinement — 27 October 2026
+
+The first genuine Groq request completed but its proposal failed acceptance: six correct
+header mappings, null conventions, incorrect header/context assignments, and two unresolved
+rows. [Increment 03B](refinement-03b.md) improves source-grounded instructions and ID constraints
+without changing independent financial verification. No further provider request was made.
+See [03B verification](verification-03b.md) and the [unexecuted second-request protocol](second-experiment-03b.md).
+The original h01 case is now a seen development regression, not independent held-out evidence.
+
+## Historical credential-free checkpoint — 25 October 2026
+
+The following implementation/setup statements refer to the original checkpoint on this date.
+They do not negate the separately preserved first genuine experiment on 27 October.
+
 **IMPLEMENTED / INDEPENDENTLY REVIEWED / LIVE INFERENCE NOT EXECUTED.**
 Synthetic documents only. Groq is the primary prepared provider (`openai/gpt-oss-20b`),
 not an OpenAI API request. No credentials were created/read through setup, no key was

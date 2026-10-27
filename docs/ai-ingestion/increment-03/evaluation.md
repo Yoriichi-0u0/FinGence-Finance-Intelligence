@@ -1,5 +1,11 @@
 # Increment 03 measured evidence — 25 October 2026
 
+**Historical record:** the measurements below belong to the credential-free 25 October
+checkpoint and remain unchanged. The first genuine request and the credential-free
+27 October refinement are separately documented in [Increment 03B](refinement-03b.md)
+and [its verification](verification-03b.md). The original h01 is now a seen development
+case; a retest is not independent evidence of generalization.
+
 **No genuine inference was executed. No model accuracy or live-provider speed is claimed.**
 The prepared primary model is Groq `openai/gpt-oss-20b`; the actual model used is **none**.
 Provider requests/tokens/estimated spending are **0 / 0 / US$0**. Mock SDK/HTTP unit tests

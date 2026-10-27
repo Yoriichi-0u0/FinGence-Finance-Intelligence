@@ -6,12 +6,12 @@ import { extractSemanticEvidence } from "../../../ai-ingestion/increment-02/extr
 import { verifySemanticBlueprint } from "../../../ai-ingestion/increment-02/verify";
 import type { SemanticBlueprint, SemanticEvidence, SemanticVerification } from "../../../ai-ingestion/increment-02/contracts";
 import type { Stage } from "../../../ai-ingestion/contracts";
-import { materializePlan, prepareRequest, policyHash, hash } from "../../../ai-ingestion/increment-03/plan";
+import { materializePlan, prepareRequest, policyHash, hash, promptRevision } from "../../../ai-ingestion/increment-03/plan";
 import { localAccessAllowed } from "../service";
 import { GroqProvider03, OllamaProvider03, UncertainDispatchError, type Provider03, type Receipt03 } from "./providers";
 import { QuotaLedger } from "./quota";
 export interface Run03 {
-  version: "v2-run-0.3"; runId: string; mode: "NOT_EXECUTED" | "DISPATCHED_UNKNOWN" | Receipt03["mode"]; policyHash: string;
+  version: "v2-run-0.3"; runId: string; mode: "NOT_EXECUTED" | "DISPATCHED_UNKNOWN" | Receipt03["mode"]; policyHash: string; promptRevision: string;
   dispatch: { provider: "LIVE_GROQ" | "LIVE_OLLAMA"; reservationId: string } | null;
   evidence: SemanticEvidence | null; proposal: unknown; blueprint: SemanticBlueprint | null; verification: SemanticVerification | null;
   receipt: Receipt03 | null; requestTokenBound: number | null; stages: Stage[]; promptHash: string | null; error: string | null; runtimeMs: number;
@@ -37,7 +37,7 @@ export async function processLiveDocument03(bytes: Uint8Array, filename: string,
   if (signal?.aborted) throw new Error("REQUEST_CANCELED");
   if (bytes.length > 10 * 1024 * 1024 || !(await registeredSynthetic03(bytes))) throw new Error("REGISTERED_SYNTHETIC_REQUIRED");
   const start = performance.now(); const stages: Stage[] = ["extraction", "inference", "rule_synthesis", "verification", "financial_records"].map(name => ({ name: name as Stage["name"], state: "PENDING", message: "Not executed" }));
-  const r: Run03 = { version: "v2-run-0.3", runId: randomUUID(), mode: "NOT_EXECUTED", policyHash, dispatch: null, evidence: null, proposal: null, blueprint: null, verification: null, receipt: null, requestTokenBound: null, stages, promptHash: null, error: null, runtimeMs: 0 };
+  const r: Run03 = { version: "v2-run-0.3", runId: randomUUID(), mode: "NOT_EXECUTED", policyHash, promptRevision, dispatch: null, evidence: null, proposal: null, blueprint: null, verification: null, receipt: null, requestTokenBound: null, stages, promptHash: null, error: null, runtimeMs: 0 };
   const stage = (name: Stage["name"], state: Stage["state"], message: string) => { const s = stages.find(x => x.name === name)!; Object.assign(s, { state, message }); emit({ ...s }); };
   try {
     stage("extraction", "RUNNING", "Reading source text, tables and traceable references.");

@@ -1,0 +1,72 @@
+{
+  "version": "v2-plan-0.3",
+  "policyVersion": "experimental-financial-terminology-0.2",
+  "policyHash": "1000812a2aa9f02775646dcbec9035e1c3c2041b727e98f8b37ced2a7364cd91",
+  "documentKind": "BANK_STATEMENT",
+  "assumptions": [],
+  "conventions": null,
+  "fields": [
+    {
+      "headerId": "e1",
+      "ruleId": "identity.transaction",
+      "reason": "Transaction ID header matches rule identity.transaction"
+    },
+    {
+      "headerId": "e2",
+      "ruleId": "date.transaction",
+      "reason": "Transaction Date header matches rule date.transaction"
+    },
+    {
+      "headerId": "e3",
+      "ruleId": "date.posting",
+      "reason": "Posting Date header matches rule date.posting"
+    },
+    {
+      "headerId": "e4",
+      "ruleId": "money.amount",
+      "reason": "Amount header matches rule money.amount"
+    },
+    {
+      "headerId": "e5",
+      "ruleId": "source.currency",
+      "reason": "Currency header matches rule source.currency"
+    },
+    {
+      "headerId": "e6",
+      "ruleId": "identity.reference",
+      "reason": "Reference header matches rule identity.reference"
+    }
+  ],
+  "context": [
+    {
+      "evidenceId": "e1",
+      "ruleId": "identity.transaction",
+      "disposition": "SUPPORTING_METADATA"
+    },
+    {
+      "evidenceId": "e2",
+      "ruleId": "date.transaction",
+      "disposition": "SUPPORTING_METADATA"
+    },
+    {
+      "evidenceId": "e3",
+      "ruleId": "date.posting",
+      "disposition": "SUPPORTING_METADATA"
+    },
+    {
+      "evidenceId": "e4",
+      "ruleId": "money.amount",
+      "disposition": "SUPPORTING_METADATA"
+    },
+    {
+      "evidenceId": "e5",
+      "ruleId": "source.currency",
+      "disposition": "SUPPORTING_METADATA"
+    },
+    {
+      "evidenceId": "e6",
+      "ruleId": "identity.reference",
+      "disposition": "SUPPORTING_METADATA"
+    }
+  ]
+}

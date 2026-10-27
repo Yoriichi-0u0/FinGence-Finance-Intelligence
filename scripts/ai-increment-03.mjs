@@ -2,7 +2,7 @@ import './ai-runtime-03.mjs';
 import { readFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, basename, extname } from 'node:path';
 const { processLiveDocument03, providerStatus03 } = await import('../lib/server/ai-ingestion/increment-03/service.ts');
-const { scoreExtraction, scoreAccepted, pendingCases, resumeArgument, assertSourceDigest } = await import('../lib/ai-ingestion/increment-03/metrics.ts');
+const { scoreExtraction, scoreAccepted, scorePlanMappings, pendingCases, resumeArgument, assertSourceDigest, assertPromptRevision } = await import('../lib/ai-ingestion/increment-03/metrics.ts');
 const { QuotaLedger } = await import('../lib/server/ai-ingestion/increment-03/quota.ts');
 const [command = 'doctor', ...args] = process.argv.slice(2), live = args.includes('--live'), folder = resolve('.ai-local/increment-03');
 // Default CLI operation cannot dispatch, even if activation flags were inherited.
@@ -24,9 +24,11 @@ if (command === 'doctor') {
  const labels = split === 'heldout' ? JSON.parse(readFileSync('tests/fixtures/ai-ingestion-03/ground-truth.json', 'utf8')).cases : null;
  const rawLabels = split === 'heldout' ? JSON.parse(readFileSync('tests/fixtures/ai-ingestion-03/field-truth.json', 'utf8')) : JSON.parse(readFileSync('tests/fixtures/ai-ingestion-02/field-truth.json', 'utf8'));
  const regressionTruth = split === 'regression' ? JSON.parse(readFileSync('tests/fixtures/ai-ingestion-02/ground-truth.json', 'utf8')) : null;
+ const exposure = JSON.parse(readFileSync('tests/fixtures/ai-ingestion-03/exposure.json', 'utf8')).developmentSourceSha256;
  const resumePath = resumeArgument(args);
  const previous = resumePath ? JSON.parse(readFileSync(resumePath, 'utf8')) : null;
- const providerProfile = providerStatus03(); const { policyHash } = await import('../lib/ai-ingestion/increment-03/plan.ts');
+ const providerProfile = providerStatus03(); const { policyHash, promptRevision, planSchema } = await import('../lib/ai-ingestion/increment-03/plan.ts');
+ if (previous) assertPromptRevision(previous.promptRevision, promptRevision);
  if (previous && (!live || previous.inferenceRequested !== true || previous.split !== split || previous.guided !== !args.includes('--unguided') || previous.policyHash !== policyHash || previous.provider?.provider !== providerProfile.provider || previous.provider?.model !== providerProfile.model)) throw new Error('RESUME_PROFILE_MISMATCH');
  const pending = pendingCases(manifest, previous?.reports ?? []);
  const reports = previous ? previous.reports.filter(r => r.inference !== null) : []; mkdirSync(folder, { recursive: true, mode: 0o700 });
@@ -43,14 +45,14 @@ if (command === 'doctor') {
     acceptedTruth = (l.ids ?? []).slice(0, l.accepted).map((id, n) => Object.fromEntries([['source_transaction_id', id], ...Object.entries(pairs).filter(([key]) => l[key]).map(([key, field]) => [field, l[key][n]])]));
   }
   const scores = r.receipt ? scoreAccepted(r.verification?.accepted ?? [], acceptedTruth) : { exactAccepted: null, falseAccepted: null, eligibleWithheld: null };
-  reports.push({ file: name, sha256: manifest[name].sha256, mode: r.mode, runId: r.runId, format: r.evidence?.format ?? null, extractionMs: r.evidence?.durationMs ?? null,
+  reports.push({ file: name, sha256: manifest[name].sha256, evaluationRole: exposure.includes(manifest[name].sha256) ? 'DEVELOPMENT_SEEN' : split === 'heldout' ? 'FROZEN_ORIGINAL_HOLDOUT' : 'REGRESSION', promptRevision: r.promptRevision, promptHash: r.promptHash, mode: r.mode, runId: r.runId, format: r.evidence?.format ?? null, extractionMs: r.evidence?.durationMs ?? null,
    observedRows: r.evidence ? new Set(r.evidence.items.filter(i => i.table !== null && !i.header && i.row !== null && i.text.trim()).map(i => `${i.table}:${i.row}`)).size : null, requestTokenBound: r.requestTokenBound, coverageEstablished: r.evidence?.coverage === 'TABLE_ROWS', evidenceItems: r.evidence?.items.length ?? 0,
-   inference: r.receipt, dispatch: r.dispatch, error: r.error, proposalSchemaVerified: r.blueprint !== null, counts: r.verification?.coverage ?? null,
-   ...scores, mapping: r.receipt && raw?.roles ? { correctFields: raw.headers.filter((h, n) => r.blueprint?.fields.some(f => f.column.toLowerCase().replace(/[^a-z0-9]/g, '') === h.toLowerCase().replace(/[^a-z0-9]/g, '') && f.role === raw.roles[n])).length, expectedFields: raw.headers.length } : null, extraction: raw ? scoreExtraction(r.evidence, raw) : null, expectedUnresolvedIds: expected?.unresolvedIds ?? null, runtimeMs: r.runtimeMs });
+   inference: r.receipt, dispatch: r.dispatch, error: r.error, planSchemaValid: r.receipt ? planSchema.safeParse(r.proposal).success : null, materializationCompleted: r.receipt ? r.blueprint !== null : null, proposalSchemaVerified: r.blueprint !== null, counts: r.verification?.coverage ?? null,
+   ...scores, mapping: r.receipt && raw?.roles ? scorePlanMappings(r.evidence, r.proposal, raw) : null, extraction: raw ? scoreExtraction(r.evidence, raw) : null, expectedUnresolvedIds: expected?.unresolvedIds ?? null, runtimeMs: r.runtimeMs });
   console.log(JSON.stringify(reports.at(-1)));
   if (r.error?.startsWith('QUOTA_') || r.mode === 'DISPATCHED_UNKNOWN') break;
  }
- const result = { version: 'evaluation-0.3', policyHash, provider: providerProfile, resumedFrom: resumePath ? basename(resumePath) : null, split, inferenceRequested: live, guided: !args.includes('--unguided'), genuineInferenceRuns: reports.filter(r => r.mode === 'LIVE_GROQ' || r.mode === 'LIVE_OLLAMA').length,
+ const result = { version: 'evaluation-0.3', policyHash, promptRevision, provider: providerProfile, resumedFrom: resumePath ? basename(resumePath) : null, split, inferenceRequested: live, guided: !args.includes('--unguided'), genuineInferenceRuns: reports.filter(r => r.mode === 'LIVE_GROQ' || r.mode === 'LIVE_OLLAMA').length,
   expectedDocuments: Object.keys(manifest).length, processedDocuments: reports.length, evaluationComplete: reports.length === Object.keys(manifest).length,
   unknownDispatches: reports.filter(r => r.mode === 'DISPATCHED_UNKNOWN').length,
   modelAccuracy: reports.some(r => r.inference) ? 'SEE_PER_RECORD_SCORES' : 'NOT_MEASURED', note: 'Recorded controls, extraction quality, schema compliance and live model accuracy are separate. Repeated document formats are not independent financial populations.', reports };

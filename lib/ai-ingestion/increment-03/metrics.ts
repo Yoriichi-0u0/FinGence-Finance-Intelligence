@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
 import type { SemanticEvidence } from "../increment-02/contracts";
+import { terminologyRegistry } from "../increment-02/registry";
+import { planSchema } from "./plan";
 const heading = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 /** Evaluation-only utilities; inference and verification never import labels or this module. */
 export function scoreExtraction(bundle: SemanticEvidence | null, truth: { headers: string[]; rows: string[][] }) {
@@ -23,6 +25,20 @@ export function scoreAccepted(rows: { financial: object }[], expected: Record<st
   }
   return { exactAccepted, falseAccepted: rows.length - exactAccepted, eligibleWithheld: remaining.length };
 }
+/** Score the proposed header rules even if conventions/context prevent materialization. */
+export function scorePlanMappings(bundle: SemanticEvidence | null, proposal: unknown, truth: { headers: string[]; roles: string[] }) {
+  const parsed = planSchema.safeParse(proposal);
+  const headers = new Set(bundle?.tables.flatMap(t => t.headerIds) ?? []);
+  let correctFields = 0;
+  if (bundle && parsed.success) for (const [n, column] of truth.headers.entries()) {
+    const sourceHeaders = bundle.items.filter(i => headers.has(i.id) && heading(i.text) === heading(column));
+    if (sourceHeaders.length !== 1) continue;
+    const id = sourceHeaders[0].id;
+    const matches = parsed.data.fields.filter(f => (/^e(?:0|[1-9]\d*)$/.test(f.headerId) ? bundle.items[Number(f.headerId.slice(1))]?.id : f.headerId) === id);
+    if (matches.length === 1 && terminologyRegistry.rules.find(r => r.id === matches[0].ruleId)?.role === truth.roles[n]) correctFields++;
+  }
+  return { correctFields, expectedFields: truth.headers.length };
+}
 export function pendingCases(manifest: Record<string, { sha256: string }>, reports: { file: string; sha256: string; mode: string; inference: unknown }[]) {
   if (reports.some(r => r.mode === "DISPATCHED_UNKNOWN")) throw new Error("UNKNOWN_DISPATCH_REQUIRES_INVESTIGATION");
   if (reports.some(r => manifest[r.file]?.sha256 !== r.sha256)) throw new Error("RESUME_SOURCE_MISMATCH");
@@ -37,4 +53,8 @@ export function resumeArgument(args: string[]): string | null {
 
 export function assertSourceDigest(bytes: Uint8Array, expected: string) {
   if (createHash("sha256").update(bytes).digest("hex") !== expected) throw new Error("EVALUATION_SOURCE_MISMATCH");
+}
+
+export function assertPromptRevision(actual: unknown, expected: string) {
+  if (actual !== expected) throw new Error("RESUME_PROMPT_MISMATCH");
 }

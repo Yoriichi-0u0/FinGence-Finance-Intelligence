@@ -32,3 +32,23 @@ it("rejects incomplete resume arguments and changed fixture bytes before process
   expect(resumeArgument(["--resume", "previous.json"])).toBe("previous.json");
   expect(() => assertSourceDigest(Buffer.from("changed"), "0".repeat(64))).toThrow(/SOURCE/);
 });
+
+it("refuses to combine results from missing or different prompt revisions", async () => {
+  const { assertPromptRevision } = await import("../../lib/ai-ingestion/increment-03/metrics");
+  expect(() => assertPromptRevision(undefined, "rule-guidance-0.3b")).toThrow("RESUME_PROMPT_MISMATCH");
+  expect(() => assertPromptRevision("old", "rule-guidance-0.3b")).toThrow("RESUME_PROMPT_MISMATCH");
+  expect(() => assertPromptRevision("rule-guidance-0.3b", "rule-guidance-0.3b")).not.toThrow();
+});
+
+it("scores proposed mappings independently of convention/materialization success", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { extractSemanticEvidence } = await import("../../lib/ai-ingestion/increment-02/extract");
+  const { scorePlanMappings } = await import("../../lib/ai-ingestion/increment-03/metrics");
+  const b = await extractSemanticEvidence(readFileSync("public/samples/ai-ingestion-increment-03/h01.csv"), "opaque.csv");
+  const p = JSON.parse(readFileSync("tests/fixtures/ai-ingestion-03/first-live-failed-proposal.json", "utf8"));
+  const truth = { headers: ["Transaction ID", "Transaction Date", "Posting Date", "Amount", "Currency", "Reference"], roles: ["transaction_id", "transaction_date", "posting_date", "amount", "currency", "reference"] };
+  expect(scorePlanMappings(b, p, truth)).toEqual({ correctFields: 6, expectedFields: 6 });
+  p.fields.push(p.fields[0]);
+  expect(scorePlanMappings(b, p, truth)).toEqual({ correctFields: 5, expectedFields: 6 });
+  expect(scorePlanMappings(b, { transactions: [] }, truth)).toEqual({ correctFields: 0, expectedFields: 6 });
+});
