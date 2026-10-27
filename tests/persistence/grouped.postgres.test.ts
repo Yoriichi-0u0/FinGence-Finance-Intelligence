@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve, relative } from "node:path";
@@ -12,6 +12,7 @@ import { createGroupedPersistenceService } from "../../lib/server/persistence/gr
 import { createPersistenceService } from "../../lib/server/persistence/service";
 import { createPersistenceRepository } from "../../lib/server/persistence/repository";
 import { syntheticResult, header } from "./fixtures";
+import { registerDb02NativeCases } from "./db02-native-cases";
 
 // Never uses developer credentials or the running PostgreSQL service/data directory.
 const binaries = process.env.FINGENCE_TEST_PG_BIN ?? "C:\\Program Files\\PostgreSQL\\18\\bin";
@@ -56,12 +57,24 @@ suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", 
     for (const path of ["../../supabase/sql/phase1-clean-setup.sql", "../../supabase/sql/c3b1-grouped-persistence-upgrade.sql"]) {
       await pool.query(readFileSync(new URL(path, import.meta.url), "utf8"));
     }
+    if (process.env.DB02_BASELINE !== "1") {
+      const migration = new URL("../../supabase/sql/db02-001-warning-mutation-fence.sql", import.meta.url);
+      if (existsSync(migration)) await pool.query(readFileSync(migration, "utf8"));
+    }
     expect((await pool.query("SELECT version() version")).rows[0].version).toContain("PostgreSQL");
   }, 60000);
   beforeEach(async () => {
     await pool.query("TRUNCATE public.validation_issues, public.financial_records, public.ingestion_batches, public.persistence_attempts;");
   });
   afterAll(async () => {
+    if (pool && process.env.DB02_EVIDENCE) {
+      writeFileSync(join(process.env.DB02_EVIDENCE, "native-environment.json"), JSON.stringify({
+        version: (await pool.query("SELECT version() version")).rows[0],
+        baseline: process.env.DB02_BASELINE === "1",
+        constraints: (await pool.query("SELECT conrelid::regclass::text relation, conname, pg_get_constraintdef(oid) definition FROM pg_constraint WHERE connamespace='public'::regnamespace ORDER BY relation,conname")).rows,
+        triggers: (await pool.query("SELECT tgrelid::regclass::text relation,tgname,pg_get_triggerdef(oid) definition FROM pg_trigger WHERE NOT tgisinternal AND tgrelid IN ('public.financial_records'::regclass,'public.validation_issues'::regclass) ORDER BY relation,tgname")).rows,
+      }, null, 2));
+    }
     await Promise.all(pools.map(value => value.end()));
     if (started && existsSync(join(directory, "postmaster.pid"))) execFileSync(join(binaries, "pg_ctl.exe"), ["-D", directory, "-m", "fast", "-w", "-t", "20", "stop"], { windowsHide: true, timeout: 25000, stdio: "ignore" });
     // Only remove the exact fresh temporary cluster created by this suite.
@@ -183,4 +196,5 @@ suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", 
     expect(row).toEqual({ status: "ACTIVE", persistence_attempt_id: null, warning_count: 1 });
     expect((await pool.query("SELECT count(*)::int count FROM public.validation_issues i JOIN public.financial_records r ON r.id=i.financial_record_id WHERE r.batch_id=$1", [receipt.batch_id])).rows[0].count).toBeGreaterThan(0);
   });
+  registerDb02NativeCases(() => pool, adapter);
 });

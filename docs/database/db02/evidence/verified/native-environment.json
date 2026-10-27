@@ -1,0 +1,485 @@
+{
+  "version": {
+    "version": "PostgreSQL 18.6 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit"
+  },
+  "baseline": false,
+  "constraints": [
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_balance_check",
+      "definition": "CHECK (((balance IS NULL) OR ((balance)::text <> ALL (ARRAY['NaN'::text, 'Infinity'::text, '-Infinity'::text]))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_batch_id_ingestion_batch_id_fkey",
+      "definition": "FOREIGN KEY (batch_id, ingestion_batch_id) REFERENCES ingestion_batches(id, ingestion_batch_id) ON DELETE RESTRICT"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_batch_id_not_null",
+      "definition": "NOT NULL batch_id"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_canonical_date_basis_check",
+      "definition": "CHECK ((canonical_date_basis = ANY (ARRAY['TRANSACTION_DATE'::text, 'POSTING_DATE'::text])))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_canonical_date_basis_not_null",
+      "definition": "NOT NULL canonical_date_basis"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_canonical_date_not_null",
+      "definition": "NOT NULL canonical_date"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_check",
+      "definition": "CHECK ((((canonical_date_basis = 'TRANSACTION_DATE'::text) AND (transaction_date IS NOT NULL) AND (canonical_date = transaction_date)) OR ((canonical_date_basis = 'POSTING_DATE'::text) AND (posting_date IS NOT NULL) AND (canonical_date = posting_date))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_check1",
+      "definition": "CHECK ((((monetary_basis = 'debit_credit'::text) AND (debit IS NOT NULL) AND (credit IS NOT NULL) AND (derived_ledger_net IS NOT NULL) AND (derived_ledger_net = (debit - credit))) OR ((monetary_basis = ANY (ARRAY['source_signed_amount'::text, 'source_amount_with_direction'::text])) AND (source_amount IS NOT NULL) AND (derived_ledger_net IS NULL))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_check2",
+      "definition": "CHECK (((monetary_basis <> 'source_amount_with_direction'::text) OR ((entry_side IS NOT NULL) AND (source_amount >= (0)::numeric))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_check3",
+      "definition": "CHECK ((((currency IS NULL) AND (currency_basis IS NULL)) OR ((currency IS NOT NULL) AND (currency_basis IS NOT NULL))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_created_at_not_null",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_credit_check",
+      "definition": "CHECK (((credit IS NULL) OR ((credit)::text <> ALL (ARRAY['NaN'::text, 'Infinity'::text, '-Infinity'::text]))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_currency_basis_check",
+      "definition": "CHECK ((currency_basis = ANY (ARRAY['SOURCE'::text, 'DATASET_DEFAULT'::text])))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_debit_check",
+      "definition": "CHECK (((debit IS NULL) OR ((debit)::text <> ALL (ARRAY['NaN'::text, 'Infinity'::text, '-Infinity'::text]))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_derived_ledger_net_check",
+      "definition": "CHECK (((derived_ledger_net IS NULL) OR ((derived_ledger_net)::text <> ALL (ARRAY['NaN'::text, 'Infinity'::text, '-Infinity'::text]))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_entry_side_check",
+      "definition": "CHECK ((entry_side = ANY (ARRAY['DEBIT'::text, 'CREDIT'::text])))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_file_sha256_check",
+      "definition": "CHECK ((file_sha256 ~ '^[0-9a-f]{64}$'::text))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_file_sha256_not_null",
+      "definition": "NOT NULL file_sha256"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_id_not_null",
+      "definition": "NOT NULL id"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_ingested_at_not_null",
+      "definition": "NOT NULL ingested_at"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_ingestion_batch_id_not_null",
+      "definition": "NOT NULL ingestion_batch_id"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_ingestion_status_check",
+      "definition": "CHECK ((ingestion_status = ANY (ARRAY['VALID'::text, 'WARNING'::text])))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_ingestion_status_not_null",
+      "definition": "NOT NULL ingestion_status"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_monetary_basis_check",
+      "definition": "CHECK ((monetary_basis = ANY (ARRAY['source_signed_amount'::text, 'source_amount_with_direction'::text, 'debit_credit'::text])))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_monetary_basis_not_null",
+      "definition": "NOT NULL monetary_basis"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_source_amount_check",
+      "definition": "CHECK (((source_amount IS NULL) OR ((source_amount)::text <> ALL (ARRAY['NaN'::text, 'Infinity'::text, '-Infinity'::text]))))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_source_file_not_null",
+      "definition": "NOT NULL source_file"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_source_file_safe",
+      "definition": "CHECK (is_safe_source_file(source_file)) NOT VALID"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_source_row_id_not_null",
+      "definition": "NOT NULL source_row_id"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_source_row_number_check",
+      "definition": "CHECK ((source_row_number > 0))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_source_row_number_not_null",
+      "definition": "NOT NULL source_row_number"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_source_system_not_null",
+      "definition": "NOT NULL source_system"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_transformations_check",
+      "definition": "CHECK ((jsonb_typeof(transformations) = 'array'::text))"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "financial_records_transformations_not_null",
+      "definition": "NOT NULL transformations"
+    },
+    {
+      "relation": "financial_records",
+      "conname": "record_warning_consistency",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "completed_empty_counts",
+      "definition": "CHECK (((status <> 'COMPLETED_EMPTY'::text) OR ((valid_count = 0) AND (warning_count = 0) AND (completed_at IS NOT NULL))))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "grouped_dataset_identity",
+      "definition": "CHECK ((((persistence_attempt_id IS NULL) AND (dataset_id IS NULL)) OR ((persistence_attempt_id IS NOT NULL) AND (dataset_id IS NOT NULL) AND (length(btrim(dataset_id)) > 0))))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "grouped_dataset_unique",
+      "definition": "UNIQUE (persistence_attempt_id, ingestion_batch_id, dataset_id, source_file)"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_check",
+      "definition": "CHECK ((rows_received = ((valid_count + warning_count) + rejected_count)))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_check1",
+      "definition": "CHECK (((supersedes_batch_id IS NULL) OR (supersedes_batch_id <> id)))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_check2",
+      "definition": "CHECK (((completed_at IS NULL) OR (completed_at >= created_at)))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_context_check",
+      "definition": "CHECK ((jsonb_typeof(context) = 'object'::text))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_context_not_null",
+      "definition": "NOT NULL context"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_created_at_not_null",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_id_ingestion_batch_id_key",
+      "definition": "UNIQUE (id, ingestion_batch_id)"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_id_not_null",
+      "definition": "NOT NULL id"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_ingestion_batch_id_check",
+      "definition": "CHECK ((length(btrim(ingestion_batch_id)) > 0))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_ingestion_batch_id_not_null",
+      "definition": "NOT NULL ingestion_batch_id"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_persistence_attempt_id_fkey",
+      "definition": "FOREIGN KEY (persistence_attempt_id) REFERENCES persistence_attempts(id) ON DELETE RESTRICT"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_rejected_count_check",
+      "definition": "CHECK ((rejected_count >= 0))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_rejected_count_not_null",
+      "definition": "NOT NULL rejected_count"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_rows_received_check",
+      "definition": "CHECK ((rows_received >= 0))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_rows_received_not_null",
+      "definition": "NOT NULL rows_received"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_ruleset_version_check",
+      "definition": "CHECK ((ruleset_version = '0.1'::text))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_ruleset_version_not_null",
+      "definition": "NOT NULL ruleset_version"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_schema_version_check",
+      "definition": "CHECK ((schema_version = '0.1'::text))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_schema_version_not_null",
+      "definition": "NOT NULL schema_version"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_source_file_safe",
+      "definition": "CHECK (((source_file IS NULL) OR is_safe_source_file(source_file)))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_status_check",
+      "definition": "CHECK ((status = ANY (ARRAY['PROCESSING'::text, 'ACTIVE'::text, 'SUPERSEDED'::text, 'FAILED'::text, 'COMPLETED_EMPTY'::text])))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_status_not_null",
+      "definition": "NOT NULL status"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_supersedes_batch_id_fkey",
+      "definition": "FOREIGN KEY (supersedes_batch_id) REFERENCES ingestion_batches(id) ON DELETE RESTRICT"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_valid_count_check",
+      "definition": "CHECK ((valid_count >= 0))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_valid_count_not_null",
+      "definition": "NOT NULL valid_count"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_warning_count_check",
+      "definition": "CHECK ((warning_count >= 0))"
+    },
+    {
+      "relation": "ingestion_batches",
+      "conname": "ingestion_batches_warning_count_not_null",
+      "definition": "NOT NULL warning_count"
+    },
+    {
+      "relation": "persistence_attempts",
+      "conname": "persistence_attempts_created_at_not_null",
+      "definition": "NOT NULL created_at"
+    },
+    {
+      "relation": "persistence_attempts",
+      "conname": "persistence_attempts_dataset_count_check",
+      "definition": "CHECK ((dataset_count > 0))"
+    },
+    {
+      "relation": "persistence_attempts",
+      "conname": "persistence_attempts_dataset_count_not_null",
+      "definition": "NOT NULL dataset_count"
+    },
+    {
+      "relation": "persistence_attempts",
+      "conname": "persistence_attempts_id_not_null",
+      "definition": "NOT NULL id"
+    },
+    {
+      "relation": "persistence_attempts",
+      "conname": "persistence_attempts_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "issue_warning_consistency",
+      "definition": "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_category_check",
+      "definition": "CHECK ((category = ANY (ARRAY['technical'::text, 'business'::text])))"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_category_not_null",
+      "definition": "NOT NULL category"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_field_not_null",
+      "definition": "NOT NULL field"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_financial_record_id_fkey",
+      "definition": "FOREIGN KEY (financial_record_id) REFERENCES financial_records(id) ON DELETE RESTRICT"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_financial_record_id_issue_ordinal_key",
+      "definition": "UNIQUE (financial_record_id, issue_ordinal)"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_financial_record_id_not_null",
+      "definition": "NOT NULL financial_record_id"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_id_not_null",
+      "definition": "NOT NULL id"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_issue_ordinal_check",
+      "definition": "CHECK ((issue_ordinal >= 0))"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_issue_ordinal_not_null",
+      "definition": "NOT NULL issue_ordinal"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_message_not_null",
+      "definition": "NOT NULL message"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_original_value_check",
+      "definition": "CHECK (COALESCE(((jsonb_typeof(original_value) = ANY (ARRAY['string'::text, 'boolean'::text, 'null'::text])) OR ((jsonb_typeof(original_value) = 'object'::text) AND ((original_value ->> 'kind'::text) = ANY (ARRAY['excel_date'::text, 'excel_number'::text])) AND (original_value ? 'value'::text) AND (jsonb_typeof((original_value -> 'value'::text)) = 'string'::text))), false))"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_original_value_not_null",
+      "definition": "NOT NULL original_value"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_pkey",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_rule_not_null",
+      "definition": "NOT NULL rule"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_severity_check",
+      "definition": "CHECK ((severity = 'WARNING'::text))"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_severity_not_null",
+      "definition": "NOT NULL severity"
+    },
+    {
+      "relation": "validation_issues",
+      "conname": "validation_issues_source_file_safe",
+      "definition": "CHECK (((source_file IS NULL) OR is_safe_source_file(source_file)))"
+    }
+  ],
+  "triggers": [
+    {
+      "relation": "financial_records",
+      "tgname": "record_source_file_consistency",
+      "definition": "CREATE TRIGGER record_source_file_consistency BEFORE INSERT OR UPDATE OF source_file, batch_id ON public.financial_records FOR EACH ROW EXECUTE FUNCTION enforce_source_file_consistency()"
+    },
+    {
+      "relation": "financial_records",
+      "tgname": "record_warning_consistency",
+      "definition": "CREATE CONSTRAINT TRIGGER record_warning_consistency AFTER INSERT OR UPDATE ON public.financial_records DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_record_warning_consistency()"
+    },
+    {
+      "relation": "validation_issues",
+      "tgname": "issue_00_warning_mutation_fence",
+      "definition": "CREATE TRIGGER issue_00_warning_mutation_fence BEFORE INSERT OR DELETE OR UPDATE ON public.validation_issues FOR EACH ROW EXECUTE FUNCTION serialize_warning_issue_mutation()"
+    },
+    {
+      "relation": "validation_issues",
+      "tgname": "issue_source_file_consistency",
+      "definition": "CREATE TRIGGER issue_source_file_consistency BEFORE INSERT OR UPDATE OF source_file, financial_record_id ON public.validation_issues FOR EACH ROW EXECUTE FUNCTION enforce_source_file_consistency()"
+    },
+    {
+      "relation": "validation_issues",
+      "tgname": "issue_warning_consistency",
+      "definition": "CREATE CONSTRAINT TRIGGER issue_warning_consistency AFTER INSERT OR DELETE OR UPDATE ON public.validation_issues DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION check_record_warning_consistency()"
+    }
+  ]
+}

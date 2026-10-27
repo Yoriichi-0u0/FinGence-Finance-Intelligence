@@ -1,0 +1,8 @@
+[
+  {
+    "case": "competing-warning-deletions",
+    "isolation": "READ COMMITTED",
+    "baseline": true,
+    "remaining": 0
+  }
+]

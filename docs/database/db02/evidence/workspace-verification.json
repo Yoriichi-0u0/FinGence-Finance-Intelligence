@@ -1,0 +1,38 @@
+{
+  "HEAD": "91b20ea0087951eee147eb0d9f0c4665f7d94fb5",
+  "branch": "feature/backend-api-celester",
+  "upstream": "origin/feature/backend-api-celester",
+  "trackedChanges": [
+    "tests/persistence/grouped.postgres.test.ts"
+  ],
+  "newFiles": [
+    "docs/database/db02/README.md",
+    "docs/database/db02/evidence/baseline-warning-race/native-environment.json",
+    "docs/database/db02/evidence/baseline-warning-race/native-observations.json",
+    "docs/database/db02/evidence/baseline-warning-race/vitest.json",
+    "docs/database/db02/evidence/checks.json",
+    "docs/database/db02/evidence/first-verification.json",
+    "docs/database/db02/evidence/verified/native-environment.json",
+    "docs/database/db02/evidence/verified/native-observations.json",
+    "docs/database/db02/evidence/verified/vitest.json",
+    "docs/database/db02/integrity-audit.md",
+    "docs/database/db02/integrity-audit.sql",
+    "docs/database/db02/lifecycle.md",
+    "docs/database/db02/migration-review.md",
+    "docs/database/db02/risks-and-decisions.md",
+    "supabase/sql/db02-001-warning-mutation-fence.sql",
+    "tests/persistence/db02-native-cases.ts",
+    "tests/persistence/db02.integrity.test.ts"
+  ],
+  "stagedChanges": 0,
+  "preliminaryFilesPreserved": 258,
+  "preliminaryDigest": "07e0f87bf3d62da0c53ceaa5ade28b0d1a5b97c970825f555e9a096d944127c7",
+  "excludeRulePreserved": true,
+  "architectureAssessmentPresent": false,
+  "db01CommittedArtifactHashes": 389,
+  "db01WorkingByteExact": 0,
+  "db01WorkingCRLFOnly": 389,
+  "db01TrackedChanges": 0,
+  "whitespace": "passed",
+  "documentLinks": 17
+}

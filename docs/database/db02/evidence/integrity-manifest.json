@@ -1,0 +1,30 @@
+{
+  "hashConvention": {
+    "algorithm": "SHA-256",
+    "artifacts": "byte-exact",
+    "sources": "crlf-to-lf-v1"
+  },
+  "artifacts": {
+    "baseline-warning-race/native-environment.json": "35a0777c7a71e78115ba592027b958bd53e25f62083b32f954608be6e3cca3c9",
+    "baseline-warning-race/native-observations.json": "10e514c182e025fd237bc1ab7dacfc40a323c4450505d1ab5f2108682012a43a",
+    "baseline-warning-race/vitest.json": "d131cc9315a6e5e5d0ae00befd931875223203c54a4d101ed3d90e5d3cd5214c",
+    "checks.json": "07e0978ddcf340823281c639e7ff9535f7caaa4b09998f22f9f267d018e4d52a",
+    "first-verification.json": "272d818ca3abbbcceda318485fac7eb4dca30a9782e8310181398ed5e8f2102d",
+    "verified/native-environment.json": "c5bece3f2e250da58a8e71559dc902830aaca17617f3fb6d8bad44bcc94d3f24",
+    "verified/native-observations.json": "a8933526e7e10ce01c2663af4af98191f4faf1b39e8ad61af39d7279975724ce",
+    "verified/vitest.json": "2976323b2142433c41a5db16bc9d2198ff9ef94fea05df1ade91584d7568dfc0",
+    "workspace-verification.json": "aa75b2fa25256be38b87586059c250a9ea7c441a7737ef58a978828cfec17e9d"
+  },
+  "sources": {
+    "supabase/sql/db02-001-warning-mutation-fence.sql": "8a991309f2f4d4192ac9a782cc369348c93c0f098ce31c370424940897a33089",
+    "tests/persistence/grouped.postgres.test.ts": "cfc09008fb3e9dd7f108d720c6c3d590516fe5f5b32c87138db9a69798ee70fd",
+    "tests/persistence/db02-native-cases.ts": "aded26f99abf1ba16fd5dfa18712ff9454f92ad0c20b2d9bf7cd244cee8b46c2",
+    "tests/persistence/db02.integrity.test.ts": "30fb9250d828b832ad4b44e2f51c0a1361aaea8d730e8f2737c2c00a7f5cc3de",
+    "docs/database/db02/integrity-audit.md": "b4bf6b8d3a0f5718467a6211b35c944ed04f9189bf396d2260d56f91c519951d",
+    "docs/database/db02/integrity-audit.sql": "683ca8a88bba94c34f71a5f0aff5913dd8d18f006ceb483930c7f866453ea5b6",
+    "docs/database/db02/lifecycle.md": "1806f815b0ec9d7636ca3ce0df24b2af9cc03b13871955e5cd69c4024fd2e7b8",
+    "docs/database/db02/migration-review.md": "3ad6cd3e8ac9af19425a8a023e97b82d7e01c26e33868ddb13ec077e3fe0b5f8",
+    "docs/database/db02/README.md": "73ee804ae47547e4265ac34c22692924f4515809954f0ccdeaa4801f1806b6e5",
+    "docs/database/db02/risks-and-decisions.md": "b655bc6844df0b4a3a1ee4ddfec649e49f53484ca553db6f3fb6b432725e0e17"
+  }
+}

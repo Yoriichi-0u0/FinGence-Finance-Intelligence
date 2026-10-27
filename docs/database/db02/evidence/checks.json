@@ -1,0 +1,37 @@
+[
+  {
+    "name": "route-types",
+    "command": "node node_modules/next/dist/bin/next typegen",
+    "exitCode": 0,
+    "stdout": "Generating route types...\n✓ Types generated successfully\n",
+    "stderr": ""
+  },
+  {
+    "name": "typescript",
+    "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "targeted-lint",
+    "command": "node node_modules/eslint/bin/eslint.js tests/persistence/grouped.postgres.test.ts tests/persistence/db02-native-cases.ts tests/persistence/db02.integrity.test.ts",
+    "exitCode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "existing-schema-compatibility",
+    "command": "node tests/persistence/schema-compatibility.mjs",
+    "exitCode": 0,
+    "stdout": "PASS original Phase 1 schema compatibility\nPASS upgraded Phase 1/2 schema compatibility\n{\n  \"table_count\": 3,\n  \"column_count\": 58,\n  \"source_file_column_count\": 3,\n  \"index_count\": 11,\n  \"trigger_count\": 5,\n  \"rls_enabled\": true,\n  \"policy_count\": 0,\n  \"client_privileges_denied\": true,\n  \"columns_md5\": \"6025221c9dd095cb66e6aa9cd51f4859\",\n  \"column_semantics_md5\": \"ac81bf4e0e81e95085c1efe88324b409\",\n  \"constraints_md5\": \"62825be1f2d61f8fdb7435b2c9ab1455\",\n  \"indexes_md5\": \"4296f4ae5fe679a7f0fdcb17c6fbff0b\",\n  \"triggers_md5\": \"fe65299ebf90ab305875fc52bf1e48b2\",\n  \"warning_function_md5\": \"278578fe6c2657c8ab742384536be0ed\"\n}\nPASS clean schema compatibility: identical semantics, intentional physical column ordering\n",
+    "stderr": ""
+  },
+  {
+    "name": "db01-committed-integrity",
+    "command": "node scripts/db01/verify.mjs docs/database/db01/2026-10-27T05-45-05-445Z --staged",
+    "exitCode": 0,
+    "stdout": "{\"mode\":\"--staged\",\"artifacts\":389,\"sources\":14}\n",
+    "stderr": ""
+  }
+]

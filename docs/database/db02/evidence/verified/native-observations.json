@@ -1,0 +1,194 @@
+[
+  {
+    "case": "competing-warning-deletions",
+    "isolation": "READ COMMITTED",
+    "baseline": false,
+    "remaining": 1
+  },
+  {
+    "case": "competing-warning-deletions",
+    "isolation": "REPEATABLE READ",
+    "baseline": false,
+    "remaining": 1
+  },
+  {
+    "case": "competing-warning-deletions",
+    "isolation": "SERIALIZABLE",
+    "baseline": false,
+    "remaining": 1
+  },
+  {
+    "case": "atomic-mixed-and-empty",
+    "counts": {
+      "attempts": 1,
+      "batches": 2,
+      "records": 2,
+      "issues": 1
+    }
+  },
+  {
+    "case": "rollback-records",
+    "counts": {
+      "attempts": 0,
+      "batches": 0,
+      "records": 0,
+      "issues": 0
+    }
+  },
+  {
+    "case": "rollback-issues",
+    "counts": {
+      "attempts": 0,
+      "batches": 0,
+      "records": 0,
+      "issues": 0
+    }
+  },
+  {
+    "case": "deferred-commit-rejection",
+    "commits": 1,
+    "counts": {
+      "attempts": 0,
+      "batches": 0,
+      "records": 0,
+      "issues": 0
+    }
+  },
+  {
+    "case": "independent-attempts",
+    "counts": {
+      "attempts": 2,
+      "batches": 2,
+      "records": 2,
+      "issues": 0
+    }
+  },
+  {
+    "case": "unknown-before-commit",
+    "commits": 1,
+    "investigation": "CONFIRMED_NOT_COMMITTED"
+  },
+  {
+    "case": "backend-termination",
+    "investigation": "CONFIRMED_NOT_COMMITTED",
+    "healthySubsequentWrite": true
+  },
+  {
+    "case": "completion-CAS",
+    "winners": 1,
+    "losingRowCount": 0
+  },
+  {
+    "case": "alternate-migration-and-existing-data",
+    "unchangedRows": 1,
+    "rlsTables": 4,
+    "anonFunctionExecute": false
+  },
+  {
+    "case": "focused-warning-write-overhead",
+    "measurements": [
+      {
+        "fenceEnabled": false,
+        "records": 100,
+        "warnings": 20,
+        "medianMs": 69.5020999999997,
+        "p95Ms": 91.32220000000052,
+        "samplesMs": [
+          77.42280000000028,
+          91.32220000000052,
+          75.27649999999994,
+          178.52369999999974,
+          87.50200000000041,
+          69.40539999999964,
+          66.94729999999981,
+          69.59879999999976,
+          71.91399999999885,
+          78.01839999999902,
+          73.45730000000003,
+          63.6208000000006,
+          65.7390000000014,
+          63.8788999999997,
+          65.3109999999997,
+          68.79820000000109,
+          64.6789000000008,
+          66.79249999999956,
+          65.46249999999964,
+          72.98309999999947
+        ]
+      },
+      {
+        "fenceEnabled": true,
+        "records": 100,
+        "warnings": 20,
+        "medianMs": 73.90060000000085,
+        "p95Ms": 104.31880000000092,
+        "samplesMs": [
+          70.93760000000111,
+          80.01450000000114,
+          86.3679000000011,
+          84.73140000000058,
+          74.42499999999927,
+          70.50660000000062,
+          72.45080000000053,
+          73.0101999999988,
+          68.71990000000005,
+          69.3814999999995,
+          76.1319999999996,
+          71.94579999999951,
+          70.8765999999996,
+          71.56930000000102,
+          134.1384999999973,
+          104.31880000000092,
+          80.1906999999992,
+          74.58240000000296,
+          73.76280000000042,
+          74.03840000000127
+        ]
+      }
+    ],
+    "note": "One local fixed-order comparison, not a capacity forecast or causal overhead estimate"
+  },
+  {
+    "case": "lifecycle-and-count-contract",
+    "permittedSqlTransitions": 25,
+    "warning": "SQL permission is not an approved business transition",
+    "audit": [
+      {
+        "invariant": "batch_child_count_mismatch",
+        "violations": 1
+      },
+      {
+        "invariant": "accepted_warning_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "attempt_child_count_mismatch",
+        "violations": 1
+      },
+      {
+        "invariant": "record_batch_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "issue_filename_mismatch",
+        "violations": 0
+      },
+      {
+        "invariant": "rejected_in_accepted_storage",
+        "violations": 0
+      }
+    ]
+  },
+  {
+    "case": "native-financial-checks-and-reassignment",
+    "rejectedMutations": 9,
+    "coherentReassignment": true
+  },
+  {
+    "case": "record-status-versus-issue-insert",
+    "blocked": true,
+    "competingCommit": "23514",
+    "finalStatus": "VALID",
+    "issues": 0
+  }
+]
