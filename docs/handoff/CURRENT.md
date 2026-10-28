@@ -13,11 +13,14 @@ statements elsewhere are historical; they do not override this guide or the actu
   Reprocessing uses C2 fresh execution context and replaces that dataset's previous result.
 - **Experimental local V2:** CSV/XLSX/PDF/PNG/JPEG → evidence → proposed financial rules →
   deterministic materialization → independent verification. Source availability on `main`
-  does **not** enable hosted AI. All three experimental pages and their APIs deny production.
+  does **not** enable hosted AI. The experimental pages and their APIs deny production.
 - **Backend/security:** grouped persistence, scoped read composition and audit storage are
   server modules verified locally. See [P2 local integration](../integration/p2-backend-security.md).
   Production identity/membership, tenant ownership, hosted persistence and client accounting
   approval remain incomplete. Do not expose financial endpoints without those boundaries.
+- **V2-I1 local integration:** [experimental automated processing and persistence](../integration/v2-i1-local.md)
+  joins V2 verification to a disposable local database. It does not make results eligible
+  for production financial publication or provide real application authentication.
 - One genuine Groq request has been executed. It produced six correct mappings but null
   conventions and incorrect context references: zero accepted, two unresolved rows.
   03B refined instructions offline; improved live accuracy remains unmeasured.
