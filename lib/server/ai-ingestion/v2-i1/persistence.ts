@@ -23,6 +23,13 @@ export interface VerifiedDocumentBatchV1 {
   origin: SemanticOrigin | null; receipt: unknown | null;
   processing: { mode: "VERIFIED_BLUEPRINT_REUSE" | "NOT_EXECUTED" | "DISPATCHED_UNKNOWN" | "LIVE_GROQ" | "LIVE_OLLAMA" | "RECORDED_TEST"; stages: { name: string; state: "PENDING" | "RUNNING" | "COMPLETED" | "BLOCKED" | "FAILED" }[]; reasonCodes?: string[]; dispatch?: { provider: "LIVE_GROQ" | "LIVE_OLLAMA"; reservationId: string } | null } | null;
 }
+/** A document-level disposition is not an observed financial record. */
+export interface StoredDocumentQuarantine {
+  kind: "DOCUMENT_QUARANTINE";
+  reasons: string[];
+  evidenceIds: string[];
+  rowCountEstablished: boolean;
+}
 type BatchInput = Pick<VerifiedDocumentBatchV1, "attemptId" | "jobId" | "executionId" | "tenantId" | "blueprint" | "origin" | "receipt"> & { sourceBytes: Uint8Array; evidence: SemanticEvidence; processing?: VerifiedDocumentBatchV1["processing"] };
 type Identity = Pick<VerifiedDocumentBatchV1, "attemptId" | "jobId" | "executionId" | "tenantId">;
 const trusted = new WeakMap<VerifiedDocumentBatchV1, VerifiedDocumentBatchV1>();
@@ -77,11 +84,17 @@ export function createV2Persistence(database: TransactionDatabase) {
         ...verification.accepted.map(data => ({ outcome: data.status, data })),
         ...verification.rejected.map(data => ({ outcome: "REJECTED", data })),
         ...verification.unresolved.map(data => ({ outcome: "UNRESOLVED", data })),
-        ...(batch.documentQuarantine ? [{ outcome: "UNRESOLVED", data: batch.documentQuarantine }] : []),
-      ] : [{ outcome: "UNRESOLVED", data: batch.documentFailure }];
+      ] : [];
+      if (verification && (outcomes.length !== verification.coverage.sourceRows
+        || verification.accepted.length !== verification.coverage.accepted
+        || verification.rejected.length !== verification.coverage.rejected
+        || verification.unresolved.length !== verification.coverage.unresolved)) throw new Error("INCONSISTENT_COVERAGE");
+      const documentQuarantine: StoredDocumentQuarantine | null = batch.documentQuarantine
+        ? { kind: "DOCUMENT_QUARANTINE", ...batch.documentQuarantine, rowCountEstablished: verification?.coverage.rowCountEstablished ?? false }
+        : batch.documentFailure ? { kind: "DOCUMENT_QUARANTINE", reasons: [batch.documentFailure.code], evidenceIds: [], rowCountEstablished: false } : null;
       await database.transaction(async connection => {
         await connection.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [batch.attemptId]);
-        const inserted = await connection.query("INSERT INTO fingence_v2_local.attempts(id,tenant_id,job_id,execution_id,source_sha256,batch,outcome_count) VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7) ON CONFLICT DO NOTHING RETURNING id", [batch.attemptId, batch.tenantId, batch.jobId, batch.executionId, batch.source.sha256, JSON.stringify(batch), outcomes.length]);
+        const inserted = await connection.query("INSERT INTO fingence_v2_local.attempts(id,tenant_id,job_id,execution_id,source_sha256,batch,outcome_count,document_quarantine) VALUES ($1,$2,$3,$4,$5,$6::jsonb,$7,$8::jsonb) ON CONFLICT DO NOTHING RETURNING id", [batch.attemptId, batch.tenantId, batch.jobId, batch.executionId, batch.source.sha256, JSON.stringify(batch), outcomes.length, documentQuarantine ? JSON.stringify(documentQuarantine) : null]);
         if (inserted.rowCount !== 1) throw new PersistenceError("IDEMPOTENCY_UNSUPPORTED");
         for (const [ordinal, row] of outcomes.entries()) await connection.query("INSERT INTO fingence_v2_local.outcomes(attempt_id,ordinal,outcome,data) VALUES ($1,$2,$3,$4::jsonb)", [batch.attemptId, ordinal, row.outcome, JSON.stringify(row.data)]);
       }, { isolationLevel: "READ COMMITTED" });

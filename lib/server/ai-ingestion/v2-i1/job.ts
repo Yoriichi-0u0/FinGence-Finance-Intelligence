@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { rebindSemanticTemplate, type SemanticTemplate } from "../../../ai-ingestion/increment-02/reuse";
 import { liveEnabled03, processLiveDocument03, providerStatus03, registeredSynthetic03 } from "../increment-03/service";
 import type { TransactionDatabase } from "../../db/postgres";
-import { PersistenceError } from "../../persistence/contracts";
+import { PersistenceError, type PersistenceErrorCode } from "../../persistence/contracts";
 import { createExperimentalBatch, createExtractionFailureBatch, createV2Persistence, extractTrustedEvidence, type VerifiedDocumentBatchV1 } from "./persistence";
 
 export interface SyntheticJobResult {
@@ -12,8 +12,12 @@ export interface SyntheticJobResult {
   stages: { name: string; state: "COMPLETED" | "BLOCKED" | "FAILED" }[];
   batch: VerifiedDocumentBatchV1;
 }
+export type JobPersistenceErrorCode = PersistenceErrorCode | "UNCLASSIFIED_FAILURE";
 export class JobPersistenceError extends Error {
-  constructor(readonly attemptId: string, readonly code: "COMMIT_OUTCOME_UNKNOWN" | "ROLLBACK_UNCONFIRMED" | "PERSISTENCE_FAILED" | "IDEMPOTENCY_UNSUPPORTED") { super(code); }
+  constructor(readonly attemptId: string, readonly code: JobPersistenceErrorCode) { super(code); }
+}
+function classifyPersistenceFailure(attemptId: string, error: unknown): JobPersistenceError {
+  return new JobPersistenceError(attemptId, error instanceof PersistenceError ? error.code : "UNCLASSIFIED_FAILURE");
 }
 /** Local registered synthetic files only; no model dispatch or recorded substitution. */
 export async function runSyntheticJob(input: { bytes: Uint8Array; filename: string; tenantId: string;
@@ -44,8 +48,7 @@ export async function runSyntheticJob(input: { bytes: Uint8Array; filename: stri
     : createExtractionFailureBatch({ ...identity, bytes: input.bytes, filename: input.filename, processing });
   try { await createV2Persistence(input.database).persist(batch); }
   catch (error) {
-    const code = error instanceof PersistenceError && (error.code === "COMMIT_OUTCOME_UNKNOWN" || error.code === "ROLLBACK_UNCONFIRMED" || error.code === "PERSISTENCE_FAILED" || error.code === "IDEMPOTENCY_UNSUPPORTED") ? error.code : "COMMIT_OUTCOME_UNKNOWN";
-    throw new JobPersistenceError(identity.attemptId, code);
+    throw classifyPersistenceFailure(identity.attemptId, error);
   }
   return { mode: usable ? "VERIFIED_BLUEPRINT_REUSE" : "NOT_EXECUTED", stages: processing.stages as SyntheticJobResult["stages"], origin, batch };
 }
@@ -64,8 +67,7 @@ export async function runAuthorizedModelJob(input: { bytes: Uint8Array; filename
     : createExtractionFailureBatch({ ...identity, bytes: input.bytes, filename: input.filename, processing, origin, receipt: run.receipt });
   try { await createV2Persistence(input.database).persist(batch); }
   catch (error) {
-    const code = error instanceof PersistenceError && (error.code === "COMMIT_OUTCOME_UNKNOWN" || error.code === "ROLLBACK_UNCONFIRMED" || error.code === "PERSISTENCE_FAILED" || error.code === "IDEMPOTENCY_UNSUPPORTED") ? error.code : "COMMIT_OUTCOME_UNKNOWN";
-    throw new JobPersistenceError(identity.attemptId, code);
+    throw classifyPersistenceFailure(identity.attemptId, error);
   }
   return { mode: run.mode, origin, stages: run.stages, batch };
 }

@@ -132,8 +132,33 @@ it("retains document-level quarantine when source row coverage is unknown", asyn
   expect(batch.verification?.coverage.rowCountEstablished).toBe(false);
   expect(batch.verification?.accepted).toHaveLength(0);
   await createV2Persistence(database).persist(batch);
-  const outcome = await db.query<{ outcome: string; data: { reasons: string[] } }>("SELECT outcome,data FROM fingence_v2_local.outcomes WHERE attempt_id=$1", [ids.attemptId]);
-  expect(outcome.rows.some(row => row.outcome === "UNRESOLVED" && row.data.reasons.includes("SOURCE_ROW_COUNT_UNESTABLISHED"))).toBe(true);
+  const outcome = await db.query<{ outcome: string }>("SELECT outcome FROM fingence_v2_local.outcomes WHERE attempt_id=$1", [ids.attemptId]);
+  const document = await db.query<{ document_quarantine: { kind: string; reasons: string[] } }>("SELECT document_quarantine FROM fingence_v2_local.attempts WHERE id=$1", [ids.attemptId]);
+  expect(batch.verification!.unresolved.length).toBeGreaterThan(0);
+  expect(outcome.rows).toHaveLength(batch.verification!.coverage.unresolved);
+  expect(outcome.rows.every(row => row.outcome === "UNRESOLVED")).toBe(true);
+  expect(document.rows[0].document_quarantine.kind).toBe("DOCUMENT_QUARANTINE");
+  expect(document.rows[0].document_quarantine.reasons).toContain("SOURCE_ROW_COUNT_UNESTABLISHED");
+  expect(await createV2Persistence(database).investigate(ids.attemptId, ids.tenantId)).toBe("CONFIRMED_COMMITTED");
+  await expect(db.query("UPDATE fingence_v2_local.attempts SET outcome_count=outcome_count+1 WHERE id=$1", [ids.attemptId])).rejects.toMatchObject({ code: "23514" });
+});
+it("stores extraction failure as document quarantine, never as a source record", async () => {
+  const { createExtractionFailureBatch } = await import("../../lib/server/ai-ingestion/v2-i1/persistence");
+  const ids = identity();
+  const batch = createExtractionFailureBatch({ ...ids, bytes: Buffer.from("bad"), filename: "bad.pdf" });
+  await createV2Persistence(database).persist(batch);
+  const rows = await db.query<{ outcome_count: number; document_quarantine: { kind: string; reasons: string[] } }>("SELECT outcome_count,document_quarantine FROM fingence_v2_local.attempts WHERE id=$1", [ids.attemptId]);
+  expect(rows.rows[0].outcome_count).toBe(0);
+  expect(rows.rows[0].document_quarantine).toMatchObject({ kind: "DOCUMENT_QUARANTINE", reasons: ["EXTRACTION_FAILED"] });
+  expect((await db.query("SELECT * FROM fingence_v2_local.outcomes WHERE attempt_id=$1", [ids.attemptId])).rows).toHaveLength(0);
+  expect(await createV2Persistence(database).investigate(ids.attemptId, ids.tenantId)).toBe("CONFIRMED_COMMITTED");
+});
+it("rejects a malformed or omitted stored document quarantine", async () => {
+  const { createExtractionFailureBatch } = await import("../../lib/server/ai-ingestion/v2-i1/persistence");
+  const ids = identity(), batch = createExtractionFailureBatch({ ...ids, bytes: Buffer.from("bad"), filename: "bad.pdf" });
+  await createV2Persistence(database).persist(batch);
+  await expect(db.query("UPDATE fingence_v2_local.attempts SET document_quarantine=$1::jsonb WHERE id=$2", ["{}", ids.attemptId])).rejects.toMatchObject({ code: "23514" });
+  await expect(db.query("UPDATE fingence_v2_local.attempts SET document_quarantine=NULL WHERE id=$1", [ids.attemptId])).rejects.toMatchObject({ code: "23514" });
 });
 it("preserves accepted, rejected and unresolved outcomes separately for a partial document", async () => {
   const sourceBytes = Buffer.from("Transaction Date,Amount,Currency\n2026-10-19,12,MYR\n2026-10-19,wrong,MYR\n2026-10-19,,MYR\n");

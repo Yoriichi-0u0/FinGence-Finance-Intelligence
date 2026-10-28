@@ -5,7 +5,7 @@ import { PGlite } from "@electric-sql/pglite";
 import type { TransactionDatabase } from "../../db/postgres";
 
 const markerName = ".fingence-v2-i1-local";
-const markerValue = "fingence-v2-i1-local-schema-2\n";
+const markerValue = "fingence-v2-i1-local-schema-4\n";
 
 /** Local, synthetic-only PGlite database. No path comes from a browser request. */
 export async function openLocalDatabase(directory: string): Promise<TransactionDatabase> {
@@ -52,7 +52,7 @@ export async function openLocalDatabase(directory: string): Promise<TransactionD
 let instance: Promise<TransactionDatabase> | undefined;
 export function localDatabase(): Promise<TransactionDatabase> {
   if (process.env.NODE_ENV !== "development" || process.env.VERCEL || process.env.FINGENCE_AI_LOCAL !== "1" || process.env.FINGENCE_V2_I1_LOCAL !== "1") throw new Error("LOCAL_ONLY");
-  instance ??= openLocalDatabase(resolve(".local/v2-i1-database-v2"));
+  instance ??= openLocalDatabase(resolve(".local/v2-i1-database-v4"));
   return instance;
 }
 

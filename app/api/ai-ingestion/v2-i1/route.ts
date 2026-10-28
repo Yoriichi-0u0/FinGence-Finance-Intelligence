@@ -50,8 +50,12 @@ export async function POST(request: Request) {
     return Response.json(result, { headers: noStore });
   } catch (error) {
     if (error instanceof JobPersistenceError) {
-      uncertainAttempts.set(error.attemptId, tenant);
-      return Response.json({ error: "Persistence did not complete. Do not retry; investigate the attempt.", code: error.code, attemptId: error.attemptId }, { status: 503, headers: noStore });
+      const investigate = error.code === "COMMIT_OUTCOME_UNKNOWN" || error.code === "ROLLBACK_UNCONFIRMED" || error.code === "UNCLASSIFIED_FAILURE";
+      if (investigate) {
+        uncertainAttempts.set(error.attemptId, tenant);
+        return Response.json({ error: "Persistence outcome could not be confirmed. Do not retry; investigate the attempt.", code: error.code, attemptId: error.attemptId }, { status: 503, headers: noStore });
+      }
+      return Response.json({ error: "Persistence did not complete. No automatic retry was attempted.", code: error.code }, { status: error.code === "IDEMPOTENCY_UNSUPPORTED" ? 409 : 503, headers: noStore });
     }
     return Response.json({ error: "Processing did not complete. No automatic retry was attempted." }, { status: 422, headers: noStore });
   } finally { busy = false; }
