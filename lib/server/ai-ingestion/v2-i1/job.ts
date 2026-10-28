@@ -12,6 +12,7 @@ export interface SyntheticJobResult {
   stages: { name: string; state: "COMPLETED" | "BLOCKED" | "FAILED" }[];
   batch: VerifiedDocumentBatchV1;
 }
+export class JobPrecommitError extends Error {}
 export type JobPersistenceErrorCode = PersistenceErrorCode | "UNCLASSIFIED_FAILURE";
 export class JobPersistenceError extends Error {
   constructor(readonly attemptId: string, readonly code: JobPersistenceErrorCode) { super(code); }
@@ -21,9 +22,9 @@ function classifyPersistenceFailure(attemptId: string, error: unknown): JobPersi
 }
 /** Local registered synthetic files only; no model dispatch or recorded substitution. */
 export async function runSyntheticJob(input: { bytes: Uint8Array; filename: string; tenantId: string;
-  template: SemanticTemplate | null; database: TransactionDatabase }): Promise<SyntheticJobResult> {
-  if (input.bytes.length > 10 * 1024 * 1024 || !(await registeredSynthetic03(input.bytes))) throw new Error("REGISTERED_SYNTHETIC_REQUIRED");
-  const identity = { jobId: randomUUID(), executionId: randomUUID(), attemptId: randomUUID(), tenantId: input.tenantId };
+  template: SemanticTemplate | null; database: TransactionDatabase; attemptId?: string }): Promise<SyntheticJobResult> {
+  if (input.bytes.length > 10 * 1024 * 1024 || !(await registeredSynthetic03(input.bytes))) throw new JobPrecommitError("REGISTERED_SYNTHETIC_REQUIRED");
+  const identity = { jobId: randomUUID(), executionId: randomUUID(), attemptId: input.attemptId ?? randomUUID(), tenantId: input.tenantId };
   let evidence;
   try { evidence = await extractTrustedEvidence(input.bytes, input.filename); } catch { evidence = null; }
   let reuse: ReturnType<typeof rebindSemanticTemplate> | null = null;

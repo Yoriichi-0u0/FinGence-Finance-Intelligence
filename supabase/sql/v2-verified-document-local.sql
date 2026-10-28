@@ -1,6 +1,12 @@
 -- Disposable local databases only. Experimental V2, not a production migration.
 CREATE SCHEMA fingence_v2_local;
 REVOKE ALL ON SCHEMA fingence_v2_local FROM PUBLIC, anon, authenticated;
+CREATE TABLE fingence_v2_local.operations (
+  id uuid PRIMARY KEY, tenant_id uuid NOT NULL,
+  state text NOT NULL CHECK (state IN ('PROCESSING','FAILED','CANCELLED','UNCERTAIN')),
+  failure_code text,
+  CHECK ((state IN ('FAILED','UNCERTAIN')) = (failure_code IS NOT NULL))
+);
 CREATE TABLE fingence_v2_local.attempts (
   id uuid PRIMARY KEY, tenant_id uuid NOT NULL, job_id uuid NOT NULL, execution_id uuid NOT NULL,
   source_sha256 text NOT NULL CHECK (source_sha256 ~ '^[0-9a-f]{64}$'),
@@ -37,6 +43,7 @@ CREATE TABLE fingence_v2_local.outcomes (
   data jsonb NOT NULL CHECK (jsonb_typeof(data) = 'object'),
   PRIMARY KEY (attempt_id, ordinal)
 );
+ALTER TABLE fingence_v2_local.operations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fingence_v2_local.attempts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fingence_v2_local.outcomes ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON ALL TABLES IN SCHEMA fingence_v2_local FROM PUBLIC, anon, authenticated;

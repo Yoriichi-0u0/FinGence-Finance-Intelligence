@@ -10,7 +10,7 @@ The trusted `verified-document-batch-v1` server contract is built from a server-
 
 Local attempts and outcomes are inserted in one transaction. Record outcomes and document quarantine are distinct: the document quarantine is stored on the attempt, never counted as an observed financial record. Attempt IDs are allocated before persistence, duplicate IDs are refused, uncertain results are not automatically retried, and investigation uses the authoritative database and an advisory-lock fence. Confirmed failures and duplicate attempts are not eligible for uncertain-outcome investigation; unknown commit, unconfirmed rollback and unclassified errors retain the attempt ID and require conservative investigation. Synthetic tenant isolation is tied to the local capability. This does not implement membership, real tenant authorization or production audit controls.
 
-The corrected demonstration uses a new file-backed PGlite database under the ignored `.local/v2-i1-database-v4` directory. Prior experimental databases are left untouched; their previously stored outcomes are not automatically migrated. A clean close and reopen retains committed synthetic outcomes; crash recovery and concurrent multi-process use are not established. This is not a crash-recoverable job queue or a native PostgreSQL concurrency proof. Statuses represent completed stages and are returned after the job; they are not streamed progress. The HTTP investigation allowlist is in memory, so it cannot investigate an uncertain attempt after a server restart.
+The corrected demonstration uses a new file-backed PGlite database under the ignored `.local/v2-i1-database-v5` directory. Prior experimental databases are left untouched; their previously stored outcomes are not automatically migrated. A clean close and reopen retains committed synthetic outcomes; crash recovery and concurrent multi-process use are not established. This is not a crash-recoverable job queue or a native PostgreSQL concurrency proof. Statuses represent completed stages and are returned after the job; they are not streamed progress. The original attempt-only investigation allowlist remains in memory. The newer operation lookup is durable across restart; a claimed operation without a recorded outcome remains unresolved.
 
 ## Run locally
 
@@ -37,3 +37,22 @@ Open `http://127.0.0.1:3103/ai-ingestion/v2-i1`, enter the local capability priv
 - Chia and Celester: a reviewed production persistence contract, native PostgreSQL tests, actual crash recovery and policy/financial-publication eligibility. V2 outcomes must not be cast into C1/C2.
 
 No hosted migration, financial endpoint, real data, model download or provider dispatch is authorized by this document.
+
+## Lost-response recovery (local experimental only)
+
+The browser stores a random operation ID before submission, without storing the local
+capability. Web Locks coordinate tabs; processing is disabled if browser storage or
+Web Locks are unavailable. The server claims that ID in the tenant-scoped local database
+before extraction. Duplicate IDs cannot run again. A committed batch is recovered by
+the same ID; failures retain their classification. An unknown transaction is investigated
+with the existing primary/advisory-lock fence and is never automatically retried.
+
+An absent operation remains unresolved because a delayed request might still arrive.
+The explicit close-if-not-started action atomically creates a cancellation tombstone,
+so a late request with that ID cannot execute. A claimed operation interrupted before
+completion remains unresolved after restart unless a committed batch can be found; this
+prototype has no crash-recovery worker and intentionally fails closed. Clearing browser
+storage or switching browser profiles loses the local marker; this is not production
+identity or durable workflow management. The operation ID is correlation, not authority.
+The schema-5 database is separate from the preserved schema-4 database. No existing data
+is migrated or deleted.
