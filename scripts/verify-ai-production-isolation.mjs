@@ -21,7 +21,7 @@ if (!artifactsOnly) {
       results.push({ path, method, status: response.status, blocked });
     }
   }
-  for (const [path, method] of [["/api/ai-ingestion/v2-i1?operation=11111111-1111-4111-8111-111111111111", "GET"], ["/api/ai-ingestion/v2-i1?cancel=1", "POST"]]) {
+  for (const [path, method] of [["/api/ai-ingestion/v2-i1?operation=11111111-1111-4111-8111-111111111111", "GET"], ["/api/ai-ingestion/v2-i1?cancel=1", "POST"], ["/api/ai-ingestion/synthetic-financial?action=session", "GET"], ["/api/ai-ingestion/synthetic-financial?action=events", "GET"], ["/api/ai-ingestion/synthetic-financial?action=login", "POST"], ["/api/ai-ingestion/synthetic-financial?action=logout", "POST"]]) {
     const response = await fetch(new URL(path, origin), { method, redirect: "error", headers: { "X-FinGence-Operation": "11111111-1111-4111-8111-111111111111" } });
     await response.arrayBuffer();
     results.push({ path, method, status: response.status, blocked: [403, 404].includes(response.status) });
@@ -82,7 +82,7 @@ const requiredPath = resolve(".next/required-server-files.json");
 for (const file of JSON.parse(readFileSync(requiredPath, "utf8")).files) checkPath(requiredPath, file, process.cwd());
 console.log(JSON.stringify({ mode: artifactsOnly ? "PRODUCTION_ARTIFACTS_ONLY" : "LOCAL_PRODUCTION_NO_INFERENCE", results,
   tracesInspected, additionalRootsInspected, artifactsInspected, sentinelsChecked: sentinels.length, privateTraceFiles, artifactLeaks }, null, 2));
-assert.ok(artifactsOnly || results.length === 17 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
+assert.ok(artifactsOnly || results.length === 21 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
 assert.ok(tracesInspected > 0 && artifactsInspected > 0, "A production build is required");
 assert.equal(privateTraceFiles.length, 0, "Production traces must exclude private AI state, environments and evaluation labels");
 assert.equal(artifactLeaks.length, 0, "Private build canaries must not enter deployable artifacts");

@@ -2,37 +2,44 @@ import {readFileSync} from 'node:fs';
 import {randomUUID} from 'node:crypto';
 import {afterAll,describe,expect,it,vi} from 'vitest';
 vi.mock('server-only',()=>({}));
-const auditFailure=vi.hoisted(()=>({enabled:false}));
-vi.mock('../../lib/server/security/audit-store',async importOriginal=>{
- const original=await importOriginal<typeof import('../../lib/server/security/audit-store')>();
- return {...original,persistSecurityAuditEvent:async (...args:Parameters<typeof original.persistSecurityAuditEvent>)=>{if(auditFailure.enabled)throw new Error('audit unavailable');return original.persistSecurityAuditEvent(...args);}};
-});
+const auditFailure=vi.hoisted(()=>({enabled:false,calls:0}));
+vi.mock('../../lib/server/security/audit-store',async importOriginal=>{const original=await importOriginal<typeof import('../../lib/server/security/audit-store')>();return {...original,persistSecurityAuditEvent:async (...args:Parameters<typeof original.persistSecurityAuditEvent>)=>{if(auditFailure.enabled)throw new Error('audit unavailable');auditFailure.calls++;return original.persistSecurityAuditEvent(...args);}};});
 import {GET,POST} from '../../app/api/ai-ingestion/synthetic-financial/route';
-const token='a'.repeat(64), origin='http://localhost:3150';
-vi.stubEnv('NODE_ENV','development');vi.stubEnv('FINGENCE_AI_LOCAL','1');vi.stubEnv('FINGENCE_V2_I1_LOCAL','1');vi.stubEnv('FINGENCE_V2_I1_TOKEN',token);vi.stubEnv('VERCEL','');
-afterAll(()=>vi.unstubAllEnvs());
-function request(path:string,auth=token){return new Request(origin+path,{headers:{authorization:`Bearer ${auth}`,origin}});}
-function upload(bytes:Uint8Array,id:string,auth=token){const form=new FormData();form.append('file',new File([Uint8Array.from(bytes)],'sample.csv'));return new Request(origin+'/api/ai-ingestion/synthetic-financial',{method:'POST',headers:{authorization:`Bearer ${auth}`,origin,'x-fingence-operation':id},body:form});}
-describe('local synthetic browser path',()=>{
- it('processes real source bytes, stores accepted rows, calculates and returns matching report and answer',async()=>{
-  const id=randomUUID(),bytes=readFileSync('public/samples/ingestion/edge_cases.csv');
-  const posted=await POST(upload(bytes,id));expect(posted.status).toBe(200);const created=await posted.json();
-  const replay=await POST(upload(bytes,id));expect(replay.status).not.toBe(200);
-  const lookup=await GET(request(`/api/ai-ingestion/synthetic-financial?operation=${id}`));expect(await lookup.json()).toEqual({state:'COMMITTED',batchId:created.batchId,sourceFile:'edge_cases.csv'});
-  const response=await GET(request(`/api/ai-ingestion/synthetic-financial?batch=${created.batchId}`));expect(response.status).toBe(200);const data=await response.json();
+import {syntheticBrowserRuntime} from '../../lib/server/integration/synthetic-browser';
+import {localTenant} from '../../lib/server/ai-ingestion/v2-i1/local-auth';
+const bootstrap='a'.repeat(64),origin='http://localhost:3150',base='/api/ai-ingestion/synthetic-financial';
+vi.stubEnv('NODE_ENV','development');vi.stubEnv('FINGENCE_AI_LOCAL','1');vi.stubEnv('FINGENCE_V2_I1_LOCAL','1');vi.stubEnv('FINGENCE_V2_I1_TOKEN',bootstrap);vi.stubEnv('VERCEL','');
+function req(path:string,cookie='',method='GET'){return new Request(origin+base+path,{method,headers:{cookie,origin}});}
+function upload(file:string,id:string,cookie:string){const form=new FormData();form.append('file',new File([readFileSync('public/samples/ingestion/'+file)],file));return new Request(origin+base,{method:'POST',headers:{cookie,origin,'x-fingence-operation':id},body:form});}
+async function login(){const r=await POST(new Request(origin+base+'?action=login',{method:'POST',headers:{origin,authorization:`Bearer ${bootstrap}`}}));expect(r.status).toBe(200);expect(r.headers.get('set-cookie')).toContain('HttpOnly');expect(r.headers.get('set-cookie')).toContain('SameSite=Strict');return r.headers.get('set-cookie')!.split(';')[0];}
+const tenant=localTenant(new Request(origin,{headers:{origin,authorization:`Bearer ${bootstrap}`}}))!;
+afterAll(async()=>{await (await syntheticBrowserRuntime(tenant)).close();vi.unstubAllEnvs();});
+describe('session-backed local synthetic browser',()=>{
+ it('requires a session, preserves CSV/report/answer values and audits before delivery',async()=>{
+  expect((await GET(req('?batch='+randomUUID()))).status).toBe(404);
+  const cookie=await login(),id=randomUUID();const posted=await POST(upload('edge_cases.csv',id,cookie));expect(posted.status).toBe(200);const created=await posted.json();
+  expect((await POST(upload('edge_cases.csv',id,cookie))).status).not.toBe(200);
+  expect(await (await GET(req('?operation='+id,cookie))).json()).toEqual({state:'COMMITTED',batchId:created.batchId,sourceFile:'edge_cases.csv'});
+  const before=auditFailure.calls;const result=await GET(req('?batch='+created.batchId,cookie));expect(result.status).toBe(200);const data=await result.json();expect(auditFailure.calls-before).toBe(1);
   expect(data.batch).toMatchObject({rows_received:8,valid_count:2,warning_count:3,rejected_count:3});expect(data.records).toHaveLength(5);
-  const report=JSON.parse(data.report);expect(report).toMatchObject({total:'105.5',currency:'MYR',includedCount:2,excludedWarnings:3,publicationEligible:false});expect(data.calculation.value).toBe(report.total);expect(data.answer.value).toBe(report.total);expect(data.answer.sources).toEqual(report.sources);
-  expect((await GET(request(`/api/ai-ingestion/synthetic-financial?batch=${created.batchId}`,'b'.repeat(64)))).status).toBe(404);
-  auditFailure.enabled=true;expect((await GET(request(`/api/ai-ingestion/synthetic-financial?batch=${created.batchId}`))).status).toBe(404);auditFailure.enabled=false;
-  const failedId=randomUUID();auditFailure.enabled=true;expect((await POST(upload(bytes,failedId))).status).toBe(503);auditFailure.enabled=false;
-  const failedLookup=await GET(request(`/api/ai-ingestion/synthetic-financial?operation=${failedId}`));expect(await failedLookup.json()).toEqual({state:'UNKNOWN'});
-  vi.stubEnv('FINGENCE_V2_I1_TOKEN','b'.repeat(64));expect((await GET(request(`/api/ai-ingestion/synthetic-financial?batch=${created.batchId}`,'b'.repeat(64)))).status).toBe(404);vi.stubEnv('FINGENCE_V2_I1_TOKEN',token);
-  const reprocessed=await POST(upload(bytes,randomUUID()));expect(reprocessed.status).toBe(200);const next=await reprocessed.json();expect(next.batchId).not.toBe(created.batchId);
-  const updated=await GET(request(`/api/ai-ingestion/synthetic-financial?batch=${next.batchId}`));const updatedData=await updated.json();expect(updatedData.calculation.value).toBe('105.5');expect(updatedData.batch.id).toBe(next.batchId);
+  const report=JSON.parse(data.report);expect(report).toMatchObject({total:'105.5',currency:'MYR',includedCount:2,excludedWarnings:3,publicationEligible:false});expect(data.answer.value).toBe(report.total);expect(data.answer.sources).toEqual(report.sources);
+  auditFailure.enabled=true;expect((await GET(req('?batch='+created.batchId,cookie))).status).toBe(404);const failedId=randomUUID();expect((await POST(upload('edge_cases.csv',failedId,cookie))).status).toBe(503);auditFailure.enabled=false;
+  expect(await (await GET(req('?operation='+failedId,cookie))).json()).toEqual({state:'UNKNOWN'});
+  const next=await (await POST(upload('edge_cases.csv',randomUUID(),cookie))).json();expect(next.batchId).not.toBe(created.batchId);
+  const bank=await (await POST(upload('bank_statement.xlsx',randomUUID(),cookie))).json();const bankData=await (await GET(req('?batch='+bank.batchId,cookie))).json();expect(bankData.batch.valid_count).toBe(8);expect(bankData.report).toBeNull();
+  expect((await GET(req('?batch='+created.batchId,'fingence_demo_session='+'b'.repeat(43)))).status).toBe(404);
  },30000);
- it('rejects unsupported sample bytes and is unavailable in hosted mode',async()=>{
-  expect((await POST(upload(Buffer.from('not a registered sample'),randomUUID()))).status).not.toBe(200);
-  const cross=new Request(origin+'/api/ai-ingestion/synthetic-financial?batch='+randomUUID(),{headers:{authorization:`Bearer ${token}`,origin:'http://malicious.example'}});expect((await GET(cross)).status).toBe(404);
-  vi.stubEnv('VERCEL','1');expect((await GET(request('/api/ai-ingestion/synthetic-financial?batch='+randomUUID()))).status).toBe(404);vi.stubEnv('VERCEL','');
+ it('denies expired and revoked sessions and pushes acknowledged revocation',async()=>{
+  const runtime=await syntheticBrowserRuntime(tenant),cookie=await login(),token=cookie.split('=')[1];
+  const events=await GET(req('?action=events',cookie));expect(events.status).toBe(200);const reader=events.body!.getReader();expect(new TextDecoder().decode((await reader.read()).value)).toContain('event: active');
+  await runtime.revoke(token);expect(new TextDecoder().decode((await reader.read()).value)).toContain('event: revoked');await reader.cancel();
+  expect((await GET(req('?batch='+randomUUID(),cookie))).status).toBe(404);
+  const expired=await runtime.createSession(1);await new Promise(resolve=>setTimeout(resolve,15));expect((await GET(req('?batch='+randomUUID(),'fingence_demo_session='+expired.token))).status).toBe(404);
+  await expect(syntheticBrowserRuntime(randomUUID())).rejects.toThrow('DENIED');
+ });
+ it('rejects cross-origin mutations, invalid bootstrap and hosted access',async()=>{
+  expect((await POST(new Request(origin+base+'?action=login',{method:'POST',headers:{origin:'http://malicious.example',authorization:`Bearer ${bootstrap}`}}))).status).toBe(404);
+  expect((await POST(new Request(origin+base+'?action=login',{method:'POST',headers:{origin,authorization:'Bearer '+'b'.repeat(64)}}))).status).toBe(404);
+  vi.stubEnv('VERCEL','1');expect((await GET(req('?action=session'))).status).toBe(404);vi.stubEnv('VERCEL','');
  });
 });
