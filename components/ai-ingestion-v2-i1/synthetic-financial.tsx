@@ -1,0 +1,45 @@
+'use client';
+import {useEffect,useRef,useState} from 'react';
+import {PageHeader,Panel} from '@/components/ui';
+
+type Batch={id:string;source_file:string;rows_received:number;valid_count:number;warning_count:number;rejected_count:number};
+type Result={batch:Batch;records:{id:string;source_row_id:string;source_amount:string|null;currency:string|null;ingestion_status:string;reference:string|null}[];calculation:{status?:string;kind?:string;value?:string;currency?:string};report:string|null;answer:{status:string;value?:string;currency?:string}|null};
+const key='fingence-synthetic-financial-pending-v1';
+export function SyntheticFinancialDemo(){
+ const [token,setToken]=useState(''),[file,setFile]=useState<File|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[pending,setPending]=useState<string|null>(null),[ready,setReady]=useState(false),[batches,setBatches]=useState<{id:string;name:string}[]>([]),[selected,setSelected]=useState(''),[result,setResult]=useState<Result|null>(null),[question,setQuestion]=useState(''),[answer,setAnswer]=useState('');
+ const generation=useRef(0);
+ useEffect(()=>{const sync=()=>{try{setPending(localStorage.getItem(key));setReady(true);}catch{setMessage('Browser storage is unavailable. Processing is disabled.');}};sync();window.addEventListener('storage',sync);return()=>window.removeEventListener('storage',sync);},[]);
+ useEffect(()=>{if(!result)return;const clear=()=>{generation.current++;setResult(null);setAnswer('');setMessage('Access must be checked again. Reselect the batch to continue.');};const timeout=window.setTimeout(clear,15000);window.addEventListener('blur',clear);return()=>{window.clearTimeout(timeout);window.removeEventListener('blur',clear);};},[result]);
+ async function retrieve(batch:string){
+  const current=++generation.current;setResult(null);setAnswer('');setSelected(batch);setMessage('');
+  if(!batch||!token)return;
+  try{const response=await fetch(`/api/ai-ingestion/synthetic-financial?batch=${encodeURIComponent(batch)}`,{headers:{Authorization:`Bearer ${token}`},cache:'no-store'});if(!response.ok)throw new Error();const data=await response.json() as Result;if(current!==generation.current)return;setResult(data);return data;}
+  catch{if(current===generation.current){setResult(null);setMessage('This batch is unavailable or access was denied.');}}
+ }
+ async function process(){
+  if(!file||!token||busy||pending||!ready)return;
+  if(!navigator.locks){setMessage('This browser cannot coordinate processing safely.');return;}
+  await navigator.locks.request('fingence-synthetic-c1-demo',{ifAvailable:true},async lock=>{
+   if(!lock){setMessage('Another tab is processing a sample.');return;}
+   let id:string;
+   try{if(localStorage.getItem(key)){setPending(localStorage.getItem(key));return;}id=crypto.randomUUID();localStorage.setItem(key,id);}catch{setMessage('Browser storage is unavailable. Processing was not started.');return;}
+   setPending(id);generation.current++;setResult(null);setAnswer('');setBusy(true);setMessage('Validating the synthetic file and persisting accepted records…');
+   try{const form=new FormData();form.append('file',file);const response=await fetch('/api/ai-ingestion/synthetic-financial',{method:'POST',headers:{Authorization:`Bearer ${token}`,'X-FinGence-Operation':id},body:form});const data=await response.json();if(response.status===422&&data.code==='SYNTHETIC_SAMPLE_REQUIRED'){localStorage.removeItem(key);setPending(null);setMessage('Only the approved synthetic sample files are supported.');return;}if(!response.ok||data.operationId!==id||typeof data.batchId!=='string'||typeof data.sourceFile!=='string')throw new Error();
+    localStorage.removeItem(key);setPending(null);setBatches(previous=>[...previous.filter(batch=>batch.name!==data.sourceFile),{id:data.batchId,name:data.sourceFile}]);await retrieve(data.batchId);
+   }catch{setMessage('Processing could not be confirmed. Check the original operation before starting another.');}finally{setBusy(false);}
+  });
+ }
+ async function investigate(){
+  if(!pending||!token)return;setBusy(true);setResult(null);setAnswer('');
+  try{const response=await fetch(`/api/ai-ingestion/synthetic-financial?operation=${encodeURIComponent(pending)}`,{headers:{Authorization:`Bearer ${token}`},cache:'no-store'});const data=await response.json();if(!response.ok)throw new Error();if(data.state==='COMMITTED'&&typeof data.batchId==='string'&&typeof data.sourceFile==='string'){localStorage.removeItem(key);setPending(null);setBatches(previous=>[...previous.filter(batch=>batch.name!==data.sourceFile),{id:data.batchId,name:data.sourceFile}]);await retrieve(data.batchId);}else setMessage('The operation is unresolved. Do not submit it again.');}
+  catch{setMessage('Operation status is unavailable. Do not submit it again.');}finally{setBusy(false);}
+ }
+ async function download(){const fresh=await retrieve(selected);if(!fresh?.report)return;const url=URL.createObjectURL(new Blob([fresh.report],{type:'application/json'}));const link=document.createElement('a');link.href=url;link.download='fingence-synthetic-report.json';link.click();URL.revokeObjectURL(url);}
+ async function ask(){if(question.trim().toLowerCase()!=='what is the sum of signed source amounts?'){setAnswer('Unsupported question. Revenue, expense, cash flow and forecasts are unavailable.');return;}const fresh=await retrieve(selected);if(!fresh?.answer)return;setAnswer(`Deterministic source sum: ${fresh.answer.value} ${fresh.answer.currency}. See the same source references in the report.`);}
+ return <div className="space-y-5"><PageHeader title="Synthetic financial intelligence" description="Local, deterministic demonstration · no live AI"/>
+ <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">Only the three registered synthetic CSV/XLSX samples are accepted. This is a local C1 demonstration, not autonomous AI, production authentication or an accounting conclusion. The temporary database is lost on server restart.</div>
+ <Panel title="1. Process a synthetic file"><div className="space-y-3 p-5"><label className="block text-sm">Local demonstration access code<input type="password" autoComplete="off" className="mt-2 block w-full rounded-lg border p-2" value={token} onChange={e=>{generation.current++;setToken(e.target.value);setResult(null);setAnswer('');}}/></label><label className="block text-sm">Sample file<input type="file" accept=".csv,.xlsx" className="mt-2 block w-full" onChange={e=>{generation.current++;setFile(e.target.files?.[0]??null);setResult(null);setAnswer('');}}/></label><button className="min-h-11 rounded-lg bg-teal-800 px-4 text-white disabled:opacity-50" disabled={!file||!token||busy||!ready||!!pending} onClick={process}>{busy?'Processing…':'Process sample'}</button>{pending&&<button className="ml-2 min-h-11 rounded-lg border px-4" disabled={busy||!token} onClick={investigate}>Check operation</button>}{message&&<p role="status" className="text-sm">{message}</p>}</div></Panel>
+ <Panel title="2. Select a processed batch"><div className="space-y-3 p-5"><label className="block text-sm">Batch<select value={selected} className="mt-2 block w-full rounded border p-2" onChange={e=>retrieve(e.target.value)}><option value="">Select a batch</option>{batches.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>{!result&&<p className="text-sm">No accessible result selected.</p>}{result&&<><p>{result.batch.rows_received} checked · {result.batch.valid_count} valid · {result.batch.warning_count} warning · {result.batch.rejected_count} rejected · {result.records.length} accepted</p><p className="text-sm">Source: {result.batch.source_file}. Rejected records are excluded; unresolved is not a C1 record status.</p>{result.records.map(r=><p key={r.id} className="break-all text-sm">{r.reference??'No reference'} · {r.source_amount??'Amount unavailable'} {r.currency??''} · {r.ingestion_status} · {r.source_row_id}</p>)}</>}</div></Panel>
+ <Panel title="3. Financial intelligence"><div className="space-y-3 p-5">{result?.report?<><p>Source-signed sum: {result.calculation.value} {result.calculation.currency}</p><p className="text-sm">VALID rows only; WARNING rows are excluded. Exact source arithmetic only; not revenue, expenses, net income or cash flow.</p><button className="min-h-11 rounded-lg border px-4" onClick={download}>Download JSON report</button><label className="block text-sm">Deterministic question<input className="mt-2 block w-full rounded border p-2" value={question} onChange={e=>{setQuestion(e.target.value);setAnswer('');}} placeholder="What is the sum of signed source amounts?"/></label><button className="min-h-11 rounded-lg border px-4" onClick={ask}>Ask</button>{answer&&<p role="status">{answer}</p>}</>:<p className="text-sm">Calculation and report are unavailable for this batch or until access is verified.</p>}<p className="text-sm text-slate-600">Live AI, forecasting and accounting interpretations are unavailable.</p></div></Panel>
+ </div>;
+}

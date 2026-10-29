@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PageHeader, Panel } from "@/components/ui";
 import { beginOperation, pendingOperationKey, submitOperation } from "@/lib/ai-ingestion/v2-i1-client";
 import type { SyntheticJobResult } from "@/lib/server/ai-ingestion/v2-i1/job";
@@ -70,6 +71,7 @@ export function LocalExperiment() {
   return <div className="space-y-5">
     <PageHeader title="Process a financial document" description="Local experimental demonstration · approved synthetic documents only" />
     <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><p className="font-semibold">Experimental results only</p><p className="mt-1">This demonstration reuses a verified recorded test blueprint. It does not run a live AI model or publish financial results. Synthetic results are stored locally.</p></div>
+    <Link className="inline-block text-sm font-semibold text-teal-800 underline" href="/ai-ingestion/synthetic-financial">Open the separate deterministic synthetic financial demonstration</Link>
     <Panel title="Financial intelligence and questions"><div className="space-y-2 p-5 text-sm text-slate-700">
       <p><strong>Financial intelligence: unavailable.</strong> Secure sign-in and tenant-owned retrieval are not connected to this experimental page.</p>
       <p><strong>Ask AI: unavailable.</strong> This page does not run a live model or generate financial answers.</p>
