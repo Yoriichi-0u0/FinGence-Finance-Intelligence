@@ -19,7 +19,9 @@ const sha=(bytes:Uint8Array)=>createHash('sha256').update(bytes).digest('hex');
 function localOnly() { if(process.env.NODE_ENV!=='development'||process.env.VERCEL||process.env.FINGENCE_AI_LOCAL!=='1'||process.env.FINGENCE_V2_I1_LOCAL!=='1') throw new Error('LOCAL_ONLY'); }
 let instance:Promise<ReturnType<typeof createRuntime>>|undefined;
 function createRuntime(db:PGlite, database:TransactionDatabase, tenant:string, subject:string) {
- const operations=new Map<string, {state:'PROCESSING'|'COMMITTED'|'UNKNOWN';batchId?:string;sourceFile?:string}>();
+ const generation=randomUUID(); // Exactly this disposable database, not a durable commit verdict.
+ const operationIdValid=(id:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+ const operations=new Map<string, {state:'PROCESSING'|'COMMITTED'|'UNKNOWN'|'RETIRED';batchId?:string;sourceFile?:string}>();
  const watchers=new Map<string,Set<()=>void>>();
  const timers=new Map<string,ReturnType<typeof setTimeout>>();
  const notify=(token:string)=>{for(const listener of watchers.get(token)??[])listener();};
@@ -37,7 +39,7 @@ function createRuntime(db:PGlite, database:TransactionDatabase, tenant:string, s
    return {batch:batch.rows[0],records:records.rows};
  }
  return {
-  tenant,
+  tenant,generation,
   async createSession(ttlMs=30*60*1000) {
    localOnly();const token=randomBytes(32).toString('base64url');const expiresAt=new Date(Date.now()+Math.min(Math.max(ttlMs,1),30*60*1000));
    await db.query('INSERT INTO fingence_local_security_v1.sessions VALUES($1,$2,$3,$4,false)',[sha(Buffer.from(token)),subject,tenant,expiresAt.toISOString()]);
@@ -48,8 +50,10 @@ function createRuntime(db:PGlite, database:TransactionDatabase, tenant:string, s
   async listBatches(token:string) {localOnly();return database.transaction(async tx=>{await authorize(tx,token);const rows=await tx.query<{id:string;name:string}>(`SELECT DISTINCT ON (b.source_file) b.id::text,b.source_file AS name FROM public.ingestion_batches b JOIN fingence_local_security_v1.batch_owners o ON o.batch_id=b.id WHERE o.organization_id=$1 ORDER BY b.source_file,b.created_at DESC,b.id DESC`,[tenant]);await audit(tx);return rows.rows;});},
   async revoke(token:string) {localOnly();await db.query('UPDATE fingence_local_security_v1.sessions SET revoked=true WHERE token_hash=$1',[sha(Buffer.from(token))]);clearTimeout(timers.get(token));timers.delete(token);notify(token);},
   watch(token:string,listener:()=>void) {const listeners=watchers.get(token)??new Set<()=>void>();listeners.add(listener);watchers.set(token,listeners);return()=>{listeners.delete(listener);if(!listeners.size)watchers.delete(token);};},
-  async upload(bytes:Uint8Array, operationId:string,token:string) {
-   localOnly(); if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(operationId)||operations.has(operationId)||operations.size>=100)throw new Error('OPERATION_UNAVAILABLE');
+  async upload(bytes:Uint8Array, operationId:string,token:string,expectedGeneration:string) {
+   localOnly();if(expectedGeneration!==generation||!operationIdValid(operationId))throw new Error('OPERATION_UNAVAILABLE');
+   await database.transaction(tx=>authorize(tx,token));
+   if(operations.has(operationId)||operations.size>=100)throw new Error('OPERATION_UNAVAILABLE');
    const sample=samples[sha(bytes) as keyof typeof samples]; if(!sample)throw new Error('SYNTHETIC_SAMPLE_REQUIRED');
    operations.set(operationId,{state:'PROCESSING'});
    try {
@@ -70,7 +74,31 @@ function createRuntime(db:PGlite, database:TransactionDatabase, tenant:string, s
     return {operationId,batchId,sourceFile:sample.file};
    } catch { operations.set(operationId,{state:'UNKNOWN'}); throw new Error('OPERATION_UNCONFIRMED'); }
   },
-  async lookup(operationId:string,token:string) { localOnly();return database.transaction(async tx=>{await authorize(tx,token);await audit(tx);return operations.get(operationId)??{state:'UNKNOWN' as const};}); },
+  async lookup(operationId:string,token:string,originalGeneration:string|null=null) {
+   localOnly();if(!operationIdValid(operationId)||(originalGeneration!==null&&!operationIdValid(originalGeneration)))throw new Error('DENIED');
+   return database.transaction(async tx=>{await authorize(tx,token);await audit(tx);
+    if(originalGeneration!==null&&originalGeneration!==generation)return {state:'RETIRED_GENERATION' as const,operationId,generation:originalGeneration,currentGeneration:generation};
+    return operations.get(operationId)??{state:'NOT_REGISTERED' as const,operationId,generation:originalGeneration,currentGeneration:generation};
+   });
+  },
+  async retire(operationId:string,token:string,originalGeneration:string|null,expectedGeneration:string) {
+   localOnly();if(expectedGeneration!==generation||!operationIdValid(operationId)||(originalGeneration!==null&&!operationIdValid(originalGeneration)))throw new Error('DENIED');
+   return database.transaction(async tx=>{await authorize(tx,token);
+    if(originalGeneration!==null&&originalGeneration!==generation){await audit(tx);return {state:'RETIRED_GENERATION' as const,operationId,generation:originalGeneration,currentGeneration:generation};}
+    const existing=operations.get(operationId);
+    if(existing&&existing.state!=='RETIRED'){await audit(tx);return existing;}
+    if(!existing){
+     if(operations.size>=100)throw new Error('DENIED');
+     // Synchronous reservation fences an upload whose body has not yet arrived.
+     // Never retire PROCESSING/UNKNOWN. Retain the fence even if audit/DB fails.
+     operations.set(operationId,{state:'UNKNOWN'});
+     const found=await tx.query('SELECT id FROM public.persistence_attempts WHERE id=$1',[operationId]);
+     if(found.rows.length){await audit(tx);return {state:'UNKNOWN' as const};}
+    }
+    await audit(tx);operations.set(operationId,{state:'RETIRED'});
+    return {state:'RETIRED' as const,operationId,generation:originalGeneration,currentGeneration:generation};
+   });
+  },
   async result(batchId:string,token:string) {
    localOnly(); if(!/^[0-9a-f-]{36}$/i.test(batchId))throw new Error('DENIED');
    return database.transaction(async tx=>{

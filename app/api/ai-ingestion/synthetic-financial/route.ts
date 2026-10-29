@@ -20,7 +20,7 @@ export async function GET(request:Request) {
  if(!token)return new URL(request.url).searchParams.get('action')==='session'?Response.json({active:false},{headers}):unavailable();
  try {
   const url=new URL(request.url), db=await syntheticBrowserRuntime(tenant);await db.checkSession(token);
-  if(url.searchParams.get('action')==='session')return Response.json({active:true,batches:await db.listBatches(token)},{headers});
+  if(url.searchParams.get('action')==='session')return Response.json({active:true,generation:db.generation,batches:await db.listBatches(token)},{headers});
   if(url.searchParams.get('action')==='events') {
    let cleanup=()=>{};
    const stream=new ReadableStream({start(controller){
@@ -33,7 +33,7 @@ export async function GET(request:Request) {
    },cancel(){cleanup();}});
    return new Response(stream,{headers:{...headers,'Content-Type':'text/event-stream','X-Accel-Buffering':'no'}});
   }
-  const operation=url.searchParams.get('operation');if(operation)return Response.json(await db.lookup(operation,token),{headers});
+  const operation=url.searchParams.get('operation');if(operation)return Response.json(await db.lookup(operation,token,url.searchParams.get('generation')),{headers});
   const batch=url.searchParams.get('batch');if(!batch)return unavailable();return Response.json(await db.result(batch,token),{headers});
  }catch{return new URL(request.url).searchParams.get('action')==='session'?Response.json({active:false},{headers}):unavailable();}
 }
@@ -47,17 +47,19 @@ export async function POST(request:Request) {
   const db=await syntheticBrowserRuntime(tenant);
   if(action==='login'){
    if(localTenant(request)!==tenant)return unavailable();const created=await db.createSession();
-   return Response.json({active:true,expiresAt:created.expiresAt,batches:await db.listBatches(created.token)},{headers:{...headers,'Set-Cookie':sessionCookie(created.token,1800)}});
+   return Response.json({active:true,generation:db.generation,expiresAt:created.expiresAt,batches:await db.listBatches(created.token)},{headers:{...headers,'Set-Cookie':sessionCookie(created.token,1800)}});
   }
   const token=session(request);if(!token)return unavailable();
   if(action==='logout'){await db.revoke(token);return Response.json({active:false},{headers:{...headers,'Set-Cookie':sessionCookie('',0)}});}
-  await db.checkSession(token);
+  try{await db.checkSession(token);}catch{return unavailable();}
   const id=request.headers.get('x-fingence-operation');if(!id)return unavailable();
+  const generation=request.headers.get('x-fingence-generation');if(generation!==db.generation)return unavailable();
+  if(action==='retire')return Response.json(await db.retire(id,token,request.headers.get('x-fingence-operation-generation'),generation),{headers});
   const reader=request.body?.getReader();if(!reader)return unavailable();const parts:Uint8Array[]=[];let size=0;
   while(true){const next=await reader.read();if(next.done)break;size+=next.value.byteLength;if(size>200000){await reader.cancel();return unavailable();}parts.push(next.value);}
   const form=await new Response(Buffer.concat(parts),{headers:{'Content-Type':request.headers.get('content-type')??''}}).formData(), file=form.get('file');
   if(!(file instanceof File)||file.size>100000||form.getAll('file').length!==1||[...form.keys()].some(key=>key!=='file'))return unavailable();
-  return Response.json(await db.upload(new Uint8Array(await file.arrayBuffer()),id,token),{headers});
+  return Response.json(await db.upload(new Uint8Array(await file.arrayBuffer()),id,token,generation),{headers});
  }catch(error){
   if(error instanceof Error&&error.message==='SYNTHETIC_SAMPLE_REQUIRED')return Response.json({code:'SYNTHETIC_SAMPLE_REQUIRED'},{status:422,headers});
   return Response.json({error:'Processing was not confirmed. Check the operation before another attempt.'},{status:503,headers});
