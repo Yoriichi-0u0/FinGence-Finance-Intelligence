@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only',()=>({}));
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { processLiveDocument03 } from '../../lib/server/ai-ingestion/increment-03/service';
-import { UncertainDispatchError } from '../../lib/server/ai-ingestion/increment-03/providers';
-import { prepareRequest } from '../../lib/ai-ingestion/increment-03/plan';
+import { GroqProvider03, UncertainDispatchError } from '../../lib/server/ai-ingestion/increment-03/providers';
+import { QuotaLedger } from '../../lib/server/ai-ingestion/increment-03/quota';
+import { hash, prepareRequest } from '../../lib/ai-ingestion/increment-03/plan';
 import { scoreLiveRun, type GoldCase } from '../../lib/server/ai-ingestion/increment-i2/evaluation';
 import { RecordedControlI2 } from '../support/i2-recorded-control';
 const bytes=readFileSync('synthetic/ai-ingestion-i2/i01.csv');
@@ -26,6 +30,28 @@ describe('offline I2 pipeline and provider boundary',()=>{
  it('keeps a lost provider response unknown and never retries',async()=>{
   const propose=vi.fn().mockRejectedValue(new UncertainDispatchError('GROQ_REQUEST_FAILED','LIVE_GROQ','synthetic-reservation'));
   const run=await processLiveDocument03(bytes,'source.csv',()=>{},{propose});expect(run.mode).toBe('DISPATCHED_UNKNOWN');expect(run.dispatch?.reservationId).toBe('synthetic-reservation');expect(propose).toHaveBeenCalledTimes(1);expect(run.receipt).toBeNull();
+ });
+ it('scores a simulated completed response even when financial conventions are unresolved',async()=>{
+  const control=new RecordedControlI2();
+  const run=await processLiveDocument03(bytes,'source.csv',()=>{},{propose:async request=>{
+   const x=await control.propose(request); const plan={...x.plan,conventions:null};
+   return {plan,receipt:{...x.receipt,mode:'LIVE_GROQ',model:'openai/gpt-oss-20b',requestId:'simulated-only',finishReason:'stop',outputHash:hash(plan)}};
+  }});
+  expect(run.error).toBe('UNRESOLVED_CONVENTIONS');
+  expect(run.verification?.unresolved.length).toBeGreaterThan(0);
+  const score=scoreLiveRun(run,gold);expect(score.modelAccuracy?.mappings?.expected).toBe(5);
+  expect(score.acceptance?.accepted).toBe(0);
+ });
+ it('dispatches at most once with the same local authorization using an injected transport',async()=>{
+  vi.stubEnv('GROQ_API_KEY','synthetic-test-only');vi.stubEnv('FINGENCE_AI03_GROQ_DISPATCH_AUTHORIZED','1');vi.stubEnv('FINGENCE_AI03_FREE_PLAN_CONFIRMED','1');
+  const baseline=await processLiveDocument03(bytes,'source.csv',()=>{},new RecordedControlI2());
+  const folder=mkdtempSync(join(tmpdir(),'fg-i2-provider-')), approvals=join(folder,'i2-authorizations'),id=randomUUID();mkdirSync(approvals,{mode:0o700});
+  let now=Date.now();writeFileSync(join(approvals,`${id}.json`),JSON.stringify({version:'v2-i2-authorization-0.1',id,sourceSha256:manifest.files['i01.csv'].sha256,provider:'LIVE_GROQ',model:'openai/gpt-oss-20b',expiresAt:now+180000}),{mode:0o600});
+  const transport=vi.fn().mockResolvedValue({id:'synthetic',model:'openai/gpt-oss-20b',usage:{prompt_tokens:10,completion_tokens:10},choices:[{finish_reason:'stop',message:{content:JSON.stringify(baseline.proposal)}}]});
+  const provider=new GroqProvider03(new QuotaLedger(folder,()=>now),transport,{authorizationId:id,sourceSha256:manifest.files['i01.csv'].sha256});
+  const request=prepareRequest(baseline.evidence!);await provider.propose(request);
+  now+=60001;
+  await expect(provider.propose(request)).rejects.toThrow('ONE_SHOT_CONSUMED');expect(transport).toHaveBeenCalledTimes(1);
  });
 });
 

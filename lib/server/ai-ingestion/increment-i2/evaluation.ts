@@ -55,7 +55,7 @@ export function scoreEvaluation(evidence: SemanticEvidence, proposal: unknown, v
 /** Only a completed trusted provider run with a matching receipt can be labeled live. */
 export function scoreLiveRun(run: Run03, gold: GoldCase) {
   const receipt=run.receipt;
-  if (!run.evidence || !receipt || run.mode!=='LIVE_GROQ' || receipt.mode!=='LIVE_GROQ' || receipt.model!=='openai/gpt-oss-20b' || run.error !== null || receipt.finishReason!=='stop' || !receipt.requestId || receipt.outputHash!==hash(run.proposal) || run.policyHash!==policyHash || run.promptRevision!==promptRevision || !run.promptHash) throw new Error('UNVERIFIED_LIVE_RECEIPT');
+  if (!run.evidence || !receipt || run.mode!=='LIVE_GROQ' || receipt.mode!=='LIVE_GROQ' || receipt.model!=='openai/gpt-oss-20b' || receipt.finishReason!=='stop' || !receipt.requestId || receipt.outputHash!==hash(run.proposal) || run.policyHash!==policyHash || run.promptRevision!==promptRevision || !run.promptHash) throw new Error('UNVERIFIED_LIVE_RECEIPT');
   const result=scoreEvaluation(run.evidence,run.proposal,run.verification,gold,'LIVE_GROQ');
   return {...result,modelAccuracy:{mappings:result.mappings,documentKindCorrect:result.documentKindCorrect,conventionsCorrect:result.conventionsCorrect,context:result.context}};
 }

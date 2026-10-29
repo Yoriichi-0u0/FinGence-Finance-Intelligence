@@ -28,4 +28,13 @@ describe('private evaluation reports', () => {
       expect(result.stderr).toContain('UNSAFE_REPORT_DIRECTORY');
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
+  it('preflights and rejects an unsafe directory before any dispatch is attempted', () => {
+    const root = mkdtempSync(join(tmpdir(), 'fingence-i2-report-'));
+    try {
+      symlinkSync(tmpdir(), join(root, '.ai-local'));
+      const script = `import {prepareI2ReportDestination} from ${JSON.stringify(new URL(`file://${modulePath}`).href)}; prepareI2ReportDestination(); console.log('DISPATCH_MAY_START')`;
+      const result = spawnSync(process.execPath,['--input-type=module','-e',script],{cwd:root,encoding:'utf8'});
+      expect(result.status).not.toBe(0); expect(result.stderr).toContain('UNSAFE_REPORT_DIRECTORY'); expect(result.stdout).not.toContain('DISPATCH_MAY_START');
+    } finally { rmSync(root, { recursive:true, force:true }); }
+  });
 });
