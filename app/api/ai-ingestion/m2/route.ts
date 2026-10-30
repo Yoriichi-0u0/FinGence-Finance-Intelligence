@@ -1,10 +1,11 @@
+import {m4Runtime,m4LocalEnabled} from '../../../../lib/server/ai-ingestion/m4/runtime';
 import { m2Runtime, m2LocalEnabled } from '../../../../lib/server/ai-ingestion/m2/runtime';
 import { localAccessAllowed } from '../../../../lib/server/ai-ingestion/service';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
-const cookieName = process.env.FINGENCE_M3_LOCAL==='1'?'fingence_m3_session':'fingence_m2_session';
+const cookieName = process.env.FINGENCE_M4_LOCAL==='1'?'fingence_m4_session':process.env.FINGENCE_M3_LOCAL==='1'?'fingence_m3_session':'fingence_m2_session';
 const cookie = (value: string, age: number) => `${cookieName}=${value}; HttpOnly; SameSite=Strict; Path=/api/ai-ingestion/m2; Max-Age=${age}`;
 const token = (r: Request) => r.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith(cookieName + '='))?.slice(cookieName.length + 1) ?? '';
 const deny = () => Response.json({ error: 'Unavailable or access denied.' }, { status: 404, headers });
@@ -24,10 +25,10 @@ export async function GET(request: Request) {
     if (!m2LocalEnabled() || !localAccessAllowed(request))
         return deny();
     try {
-        const db = await m2Runtime(), url = new URL(request.url), session = token(request);
+        const db = await (m4LocalEnabled()?m4Runtime():m2Runtime()), url = new URL(request.url), session = token(request);
         if (url.searchParams.get('action') === 'session') {
             try {
-                return Response.json({ active: true, ...await db.identity.session(session), mode: 'SIMULATED', liveProviderAvailable: false }, { headers });
+                return Response.json({ active: true, ...await db.identity.session(session), mode: m4LocalEnabled()?'RECORDED_TEST':'SIMULATED', liveProviderAvailable: false }, { headers });
             }
             catch {
                 return Response.json({ active: false }, { headers });
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
     if (request.headers.get('origin') !== `${url.protocol}//${request.headers.get('host') ?? url.host}`)
         return deny();
     try {
-        const db = await m2Runtime(), session = token(request), action = url.searchParams.get('action');
+        const db = await (m4LocalEnabled()?m4Runtime():m2Runtime()), session = token(request), action = url.searchParams.get('action');
         if (action === 'login') {
             if (Date.now() - lastSignIn < 1000)
                 return Response.json({ error: 'Please wait before signing in again.' }, { status: 429, headers });

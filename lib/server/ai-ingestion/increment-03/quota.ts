@@ -9,6 +9,7 @@ type State = z.infer<typeof schema>;
 export type OneShotAuthorization = { authorizationId: string; sourceSha256: string };
 const authorization = z.strictObject({ version:z.literal('v2-i2-authorization-0.1'), id:z.string().uuid(), sourceSha256:z.string().regex(/^[a-f0-9]{64}$/), provider:z.literal('LIVE_GROQ'), model:z.literal('openai/gpt-oss-20b'), expiresAt:z.number().int().positive() });
 export const QUOTA = Object.freeze({ rpm: 30, rpd: 1000, tpm: 8000, tpd: 160000, attempts: 64 });
+export type QuotaCaps = { [K in keyof typeof QUOTA]: number };
 export class QuotaLedger {
   readonly folder: string;
   constructor(folder: string, private clock = Date.now) { this.folder = resolve(folder); }
@@ -60,19 +61,20 @@ export class QuotaLedger {
     try { writeFileSync(fd,JSON.stringify({id:record.id,sourceSha256:record.sourceSha256})); fsyncSync(fd); } finally { closeSync(fd); }
     if(process.platform!=='win32') { const dir=openSync(folder,'r'); try { fsyncSync(dir); } finally { closeSync(dir); } }
   }
-  reserve(tokens: number, approval?: OneShotAuthorization): string {
-    if (!Number.isSafeInteger(tokens) || tokens < 1 || tokens > QUOTA.tpm) throw new Error("QUOTA_REQUEST_BOUND");
+  reserve(tokens: number, approval?: OneShotAuthorization, caps: QuotaCaps = QUOTA): string {
+    for(const key of Object.keys(QUOTA) as (keyof typeof QUOTA)[])if(!Number.isSafeInteger(caps[key])||caps[key]<1||caps[key]>QUOTA[key])throw new Error('QUOTA_CAPS_INVALID');
+    if (!Number.isSafeInteger(tokens) || tokens < 1 || tokens > caps.tpm) throw new Error("QUOTA_REQUEST_BOUND");
     return this.transaction(state => {
       const now = this.clock(), day = new Date(now).toISOString().slice(0, 10);
       const today = state.entries.filter(e => new Date(e.at).toISOString().slice(0, 10) === day), minute = state.entries.filter(e => now - e.at < 60000);
       if (state.entries.some(e => e.state === "RESERVED")) throw new Error("QUOTA_IN_FLIGHT");
       if (approval && state.entries.some(e => e.state === "UNKNOWN")) throw new Error("QUOTA_UNKNOWN");
       if (state.entries.some(e => e.usage && e.usage.inputTokens + e.usage.outputTokens > e.tokens)) throw new Error("QUOTA_BOUND_VIOLATION");
-      if (state.entries.length >= QUOTA.attempts) throw new Error("QUOTA_EXPERIMENT");
-      if (today.length >= QUOTA.rpd) throw new Error("QUOTA_RPD");
-      if (minute.length >= QUOTA.rpm) throw new Error("QUOTA_RPM");
-      if (minute.reduce((s, e) => s + e.tokens, 0) + tokens > QUOTA.tpm) throw new Error("QUOTA_TPM");
-      if (today.reduce((s, e) => s + e.tokens, 0) + tokens > QUOTA.tpd) throw new Error("QUOTA_TPD");
+      if (state.entries.length >= caps.attempts) throw new Error("QUOTA_EXPERIMENT");
+      if (today.length >= caps.rpd) throw new Error("QUOTA_RPD");
+      if (minute.length >= caps.rpm) throw new Error("QUOTA_RPM");
+      if (minute.reduce((s, e) => s + e.tokens, 0) + tokens > caps.tpm) throw new Error("QUOTA_TPM");
+      if (today.reduce((s, e) => s + e.tokens, 0) + tokens > caps.tpd) throw new Error("QUOTA_TPD");
       if (approval) this.consumeOneShot(approval);
       const id = randomUUID(); state.entries.push({ id, at: now, tokens, state: "RESERVED", usage: null }); return id;
     });
@@ -85,7 +87,7 @@ export class QuotaLedger {
   }
   summary() {
     const s = this.read(), day = new Date(this.clock()).toISOString().slice(0, 10);
-    return { limits: QUOTA, attempts: s.entries.length, inFlight: s.entries.some(e => e.state === "RESERVED"),
+    return { unknownCount:s.entries.filter(e=>e.state==='UNKNOWN').length, requestsMinute:s.entries.filter(e=>this.clock()-e.at<60000).length, tokensMinute:s.entries.filter(e=>this.clock()-e.at<60000).reduce((n,e)=>n+e.tokens,0), limits: QUOTA, attempts: s.entries.length, inFlight: s.entries.some(e => e.state === "RESERVED"),
       reservedTokensToday: s.entries.filter(e => new Date(e.at).toISOString().slice(0, 10) === day).reduce((n, e) => n + e.tokens, 0),
       actualInputTokens: s.entries.reduce((n, e) => n + (e.usage?.inputTokens ?? 0), 0), actualOutputTokens: s.entries.reduce((n, e) => n + (e.usage?.outputTokens ?? 0), 0) };
   }

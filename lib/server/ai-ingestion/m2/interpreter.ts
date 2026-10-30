@@ -6,10 +6,11 @@ import { datesUnambiguous, numbersUnambiguous } from '../../../ai-ingestion/incr
 import { policyHash, prepareRequest, hash, type InterpretationPlan03 } from '../../../ai-ingestion/increment-03/plan';
 import type { Provider03, Receipt03 } from '../increment-03/providers';
 export interface M2Interpreter {
-    mode: 'SIMULATED' | 'LIVE_GROQ';
-    propose(evidence: SemanticEvidence): Promise<{
+    mode: 'SIMULATED' | 'RECORDED_TEST' | 'LIVE_GROQ';
+    propose(evidence: SemanticEvidence, context?: M2InferenceContext): Promise<{
         plan: unknown;
         receipt: Receipt03;
+        verificationAllowed?: boolean;
     }>;
 }
 /** Dynamic offline semantic TEST DOUBLE. Reads evidence/rules only, never gold labels or fixture names. */
@@ -33,4 +34,13 @@ export function groqReadyBoundary(provider: Provider03, authorized: () => boolea
     return { mode: 'LIVE_GROQ', async propose(evidence) { if (!authorized())
             throw new Error('LIVE_DISPATCH_NOT_AUTHORIZED'); const result = await provider.propose(prepareRequest(evidence)); if (result.receipt.mode !== 'LIVE_GROQ' || result.receipt.finishReason !== 'stop')
             throw new Error('UNSUPPORTED_PROVIDER_RECEIPT'); return result; } };
+}
+
+/** Server-created context only; session token is never sent to a provider or persisted. */
+export interface M2InferenceContext {
+ operationId:string; executionId:string; sourceSha256:string; token:string;
+ principal:import('./identity').M2Principal;
+}
+export class InterpretationFailure extends Error {
+ constructor(readonly code:string,readonly uncertain:boolean){super(code);}
 }

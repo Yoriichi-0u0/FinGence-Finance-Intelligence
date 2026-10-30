@@ -6,6 +6,14 @@ including Increments 01–03B. Check that PR and the actual checkout for merge/C
 check the Vercel deployment's source SHA before claiming a hosted release. Dated status
 statements elsewhere are historical; they do not override this guide or the actual code.
 
+## M4 development checkpoint (30 October 2026)
+
+[The M4 provider boundary and evaluation](../integration/v2-m4-model-boundary.md) connect
+recorded controls and a separately authorized one-shot Groq CLI to the same M2 verification,
+V2 persistence and M3 consumers. The browser remains RECORDED_TEST; no M4 live inference
+has run. Durable dispatch uncertainty, shared quotas and source/tenant-bound authorization
+remain fail closed. This is a stacked development checkpoint, not a hosted activation.
+
 ## M3 development checkpoint (30 October 2026)
 
 [The connected M3 consumers](../integration/v2-m3-financial-consumers.md) now present

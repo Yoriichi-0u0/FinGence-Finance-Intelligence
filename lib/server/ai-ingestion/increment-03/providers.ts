@@ -2,7 +2,7 @@ import "server-only";
 import OpenAI from "openai";
 import { z } from "zod";
 import { resolve } from "node:path";
-import { QuotaLedger, type OneShotAuthorization } from "./quota";
+import { QuotaLedger, type OneShotAuthorization, type QuotaCaps } from "./quota";
 import { hash, type prepareRequest } from "../../../ai-ingestion/increment-03/plan";
 export class UncertainDispatchError extends Error {
   constructor(code: string, readonly provider: "LIVE_GROQ" | "LIVE_OLLAMA", readonly reservationId: string) { super(code); }
@@ -19,13 +19,13 @@ const usageSchema = z.object({ prompt_tokens: z.number().int().nonnegative(), co
 // The injectable transport exists for offline tests, never HTTP/CLI request data.
 type GroqTransport = (body: Record<string, unknown>, signal?: AbortSignal) => Promise<unknown>;
 export class GroqProvider03 implements Provider03 {
-  constructor(private ledger: QuotaLedger, private transport?: GroqTransport, private approval?: OneShotAuthorization) {}
+  constructor(private ledger: QuotaLedger, private transport?: GroqTransport, private approval?: OneShotAuthorization, private caps?: QuotaCaps) {}
   async propose(request: InferenceRequest03, signal?: AbortSignal) {
     if (!process.env.GROQ_API_KEY || process.env.FINGENCE_AI03_GROQ_DISPATCH_AUTHORIZED !== "1" || process.env.FINGENCE_AI03_FREE_PLAN_CONFIRMED !== "1") throw new Error("LIVE_GROQ_UNAVAILABLE");
     if (signal?.aborted) throw new Error("REQUEST_CANCELED");
     const body = { model: "openai/gpt-oss-20b", messages: request.messages, reasoning_effort: "low", temperature: 0,
       max_completion_tokens: 1600, response_format: { type: "json_schema", json_schema: { name: "financial_plan_03", strict: true, schema: request.schema } } };
-    const reservation = this.ledger.reserve(request.inputTokenBound + body.max_completion_tokens, this.approval);
+    const reservation = this.ledger.reserve(request.inputTokenBound + body.max_completion_tokens, this.approval, this.caps);
     try {
     const start = performance.now(); let response: unknown;
     try {

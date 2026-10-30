@@ -4,7 +4,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 const denied = () => Response.json({ error: 'Unavailable or access denied.' }, { status: 404, headers });
-const token = (request: Request) => request.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith('fingence_m3_session='))?.slice('fingence_m3_session='.length) ?? '';
+const cookieName=process.env.FINGENCE_M4_LOCAL==='1'?'fingence_m4_session':'fingence_m3_session';
+const token = (request: Request) => request.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith(cookieName+'='))?.slice(cookieName.length+1) ?? '';
 async function input(request: Request) { const reader = request.body?.getReader(); if (!reader)
     throw new Error(); let bytes = 0; const parts: Uint8Array[] = []; while (true) {
     const r = await reader.read();
