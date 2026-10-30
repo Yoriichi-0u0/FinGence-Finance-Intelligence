@@ -53,7 +53,7 @@ export default function AdministrationWorkspace() {
   const [principal, setPrincipal] = useState<M2ClientPrincipal | null>(null);
   const [overview, setOverview] = useState<AdministrationOverview | null>(null);
   const [events, setEvents] = useState<AdministrationAuditEntry[] | null>(null);
-  const [loading, setLoading] = useState(false), [checked, setChecked] = useState(false);
+  const [loading, setLoading] = useState(false), [checked, setChecked] = useState(false), [generation, setGeneration] = useState(0);
   const [notice, setNotice] = useState<Notice>(null), [busy, setBusy] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation>(null), [issued, setIssued] = useState<Issued>(null);
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
@@ -77,6 +77,8 @@ export default function AdministrationWorkspace() {
       if (scopeKey({ ...data.scope }) !== scopeKey(p)) throw new Error();
       setOverview(data);
       setEvents(audit);
+      // Remount member rows so an unsaved or refused edit never outlives an authorized refresh.
+      setGeneration(g => g + 1);
     } catch {
       if (epoch === fence.current.epoch) setNotice({ tone: "error", text: "Administration data could not be authorized or audited. Sign in again or refresh." });
     } finally {
@@ -208,6 +210,8 @@ export default function AdministrationWorkspace() {
         <strong>Local experimental administration.</strong> OS-local accounts only. Hosted identity, Production users and browser organization creation are not available; organizations are created and recovered with the OS-owner command.
       </div>
 
+      {notice && <p role="status" className={`rounded-lg border p-4 text-sm ${notice.tone === "success" ? "border-green-200 bg-[var(--green-soft)] text-[var(--green)]" : "border-amber-300 bg-amber-50 text-amber-950"}`}>{notice.text}</p>}
+
       {!checked ? (
         <Panel><p className="p-5 text-sm text-[var(--muted)]" role="status">Checking your local session…</p></Panel>
       ) : !principal ? (
@@ -234,8 +238,6 @@ export default function AdministrationWorkspace() {
               <button className={secondary} onClick={signOut}><LogOut aria-hidden="true" size={16} />Sign out</button>
             </div>
           </div>
-
-          {notice && <p role="status" className={`rounded-lg border p-4 text-sm ${notice.tone === "success" ? "border-green-200 bg-[var(--green-soft)] text-[var(--green)]" : "border-amber-300 bg-amber-50 text-amber-950"}`}>{notice.text}</p>}
 
           {principal.role === "Finance" ? (
             <Panel title="Administration requires the Admin role">
@@ -276,12 +278,12 @@ export default function AdministrationWorkspace() {
                               <tr><th scope="col" className="px-4 py-3 font-semibold">Member</th><th scope="col" className="px-4 py-3 font-semibold">Role</th><th scope="col" className="px-4 py-3 font-semibold">Membership</th><th scope="col" className="px-4 py-3 font-semibold">Account</th><th scope="col" className="px-4 py-3 font-semibold">Sessions</th><th scope="col" className="px-4 py-3 font-semibold">Actions</th></tr>
                             </thead>
                             <tbody className="divide-y divide-[var(--border)]">
-                              {members.map(m => <MemberRow key={`${m.userId}:${m.version}:${m.accountActive}`} member={m} self={self(m)} busy={busy} actions={actions} layout="row" />)}
+                              {members.map(m => <MemberRow key={`${m.userId}:${generation}`} member={m} self={self(m)} busy={busy} actions={actions} layout="row" />)}
                             </tbody>
                           </table>
                         </div>
                         <ul className="divide-y divide-[var(--border)] md:hidden">
-                          {members.map(m => <MemberRow key={`${m.userId}:${m.version}:${m.accountActive}`} member={m} self={self(m)} busy={busy} actions={actions} layout="card" />)}
+                          {members.map(m => <MemberRow key={`${m.userId}:${generation}`} member={m} self={self(m)} busy={busy} actions={actions} layout="card" />)}
                         </ul>
                       </>
                     )}
@@ -388,7 +390,7 @@ type Actions = {
 function MemberRow({ member: m, self, busy, actions, layout }: { member: AdministrationMember; self: boolean; busy: string | null; actions: Actions; layout: "row" | "card" }) {
   const [role, setRole] = useState<Role>(m.role);
   const disabled = busy !== null;
-  const identity = <><p className="truncate font-medium">{m.email}{self && <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">You</span>}</p><p className="text-xs text-[var(--muted)]">Membership version {m.version}</p></>;
+  const identity = <><p className="flex min-w-0 items-center gap-2 font-medium"><span className="truncate" title={m.email}>{m.email}</span>{self && <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">You</span>}</p><p className="text-xs text-[var(--muted)]">Membership version {m.version}</p></>;
   const roleControl = (
     <div className="flex items-center gap-2">
       <select aria-label={`Role for ${m.email}`} className="min-h-11 rounded-lg border border-[var(--border-strong)] bg-white px-2 text-sm" value={role} disabled={disabled} onChange={e => setRole(e.target.value as Role)}>
@@ -408,7 +410,7 @@ function MemberRow({ member: m, self, busy, actions, layout }: { member: Adminis
   if (layout === "card") return (
     <li className="space-y-3 px-4 py-4">
       <div className="min-w-0">{identity}</div>
-      <div className="flex flex-wrap items-center gap-2"><StatusBadge status={membershipStatus(m)} /><StatusBadge status={m.accountActive ? "Account active" : "Suspended"} /><span className="text-xs text-[var(--muted)]">Sessions: {sessions}</span></div>
+      <div className="flex flex-wrap items-center gap-2"><StatusBadge status={membershipStatus(m)} /><StatusBadge status={m.accountActive ? "Enabled" : "Suspended"} /><span className="text-xs text-[var(--muted)]">Sessions: {sessions}</span></div>
       {roleControl}
       {buttons}
     </li>
@@ -418,7 +420,7 @@ function MemberRow({ member: m, self, busy, actions, layout }: { member: Adminis
       <td className="max-w-[16rem] px-4 py-3">{identity}</td>
       <td className="px-4 py-3">{roleControl}</td>
       <td className="px-4 py-3"><StatusBadge status={membershipStatus(m)} /></td>
-      <td className="px-4 py-3"><StatusBadge status={m.accountActive ? "Account active" : "Suspended"} /></td>
+      <td className="px-4 py-3"><StatusBadge status={m.accountActive ? "Enabled" : "Suspended"} /></td>
       <td className="whitespace-nowrap px-4 py-3">{sessions}</td>
       <td className="px-4 py-3">{buttons}</td>
     </tr>

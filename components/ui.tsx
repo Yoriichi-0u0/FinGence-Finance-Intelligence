@@ -124,7 +124,7 @@ const statusStyles: Record<string, string> = {
   Processed: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
   Complete: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
   Active: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
-  "Account active": "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  Enabled: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
   "Pending activation": "bg-[var(--amber-soft)] text-[var(--amber)] ring-amber-200",
   Inactive: "bg-slate-100 text-slate-600 ring-slate-200",
   Suspended: "bg-[var(--red-soft)] text-[var(--red)] ring-red-200",
