@@ -34,6 +34,7 @@ export async function GET(request: Request) {
             }
         }
         const id = url.searchParams.get('id');
+        if(id&&url.searchParams.get('action')==='reference')return Response.json(await db.pipeline.reference(session,id),{headers});
         if (id) {
             const policy = url.searchParams.get('warnings') ?? 'exclude';
             if (policy !== 'include' && policy !== 'exclude')
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
             if (typeof input.email !== 'string' || typeof input.password !== 'string')
                 return deny();
             const result = await db.identity.login(input.email, input.password);
-            return Response.json({ active: true, role: result.principal.role }, { headers: { ...headers, 'Set-Cookie': cookie(result.token, 1800) } });
+            return Response.json({ active: true, role: result.principal.role, userId: result.principal.user_id, organizationId: result.principal.organization_id, membershipVersion: result.principal.version }, { headers: { ...headers, 'Set-Cookie': cookie(result.token, 1800) } });
         }
         if (action === 'logout') {
             await db.identity.logout(session);

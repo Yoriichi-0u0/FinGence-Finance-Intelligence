@@ -109,6 +109,10 @@ export function createM2Pipeline(database: TransactionDatabase, interpreter: M2I
                 return { job, batch, report };
             });
         },
+        async reference(token:string,id:string){
+            if(!validOperationId(id))throw new Error('ACCESS_DENIED');
+            return database.transaction(async tx=>{const p=await resolveM2Principal(tx,token);const row=await tx.query('SELECT id FROM fingence_m2.jobs WHERE id=$1 AND organization_id=$2 AND user_id=$3',[id,p.organization_id,p.user_id]);await auditM2(tx,p,'batch.read',id);return {owned:row.rows.length===1,ownerUserId:row.rows.length===1?p.user_id:null};});
+        },
         async investigate(token: string, id: string) { if (!validOperationId(id))
             throw new Error('ACCESS_DENIED'); return database.transaction(async (tx) => { const p = await resolveM2Principal(tx, token); const job = await tx.query('SELECT state FROM fingence_m2.jobs WHERE id=$1 AND organization_id=$2 FOR UPDATE', [id, p.organization_id]); if (!job.rows.length)
             throw new Error('ACCESS_DENIED'); const result = await operations(locked(tx)).lookup(id, p.organization_id); if (result.outcome === 'CONFIRMED_NOT_COMMITTED' && job.rows[0].state === 'UNCERTAIN')

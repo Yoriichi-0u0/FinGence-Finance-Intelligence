@@ -29,8 +29,8 @@ if (!artifactsOnly) {
 }
 if (!artifactsOnly) {
   const origin = new URL(process.argv[2] ?? "http://127.0.0.1:3118");
-  for (const action of ["session", "login", "logout", "reserve", "process", "cancel", "investigate", "question"]) {
-    const method = action === "session" ? "GET" : "POST";
+  for (const action of ["session", "reference", "login", "logout", "reserve", "process", "cancel", "investigate", "question"]) {
+    const method = ["session", "reference"].includes(action) ? "GET" : "POST";
     const path = `/api/ai-ingestion/m2?action=${action}`;
     const response = await fetch(new URL(path, origin), {method});
     await response.arrayBuffer();
@@ -92,7 +92,7 @@ const requiredPath = resolve(".next/required-server-files.json");
 for (const file of JSON.parse(readFileSync(requiredPath, "utf8")).files) checkPath(requiredPath, file, process.cwd());
 console.log(JSON.stringify({ mode: artifactsOnly ? "PRODUCTION_ARTIFACTS_ONLY" : "LOCAL_PRODUCTION_NO_INFERENCE", results,
   tracesInspected, additionalRootsInspected, artifactsInspected, sentinelsChecked: sentinels.length, privateTraceFiles, artifactLeaks }, null, 2));
-assert.ok(artifactsOnly || results.length === 32 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
+assert.ok(artifactsOnly || results.length === 33 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
 assert.ok(tracesInspected > 0 && artifactsInspected > 0, "A production build is required");
 assert.equal(privateTraceFiles.length, 0, "Production traces must exclude private AI state, environments and evaluation labels");
 assert.equal(artifactLeaks.length, 0, "Private build canaries must not enter deployable artifacts");

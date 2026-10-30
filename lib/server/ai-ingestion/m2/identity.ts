@@ -65,7 +65,7 @@ export function createM2Identity(db: TransactionDatabase) {
                 return { token, principal };
             });
         },
-        session: (token: string) => db.transaction(async (tx) => { const p = await resolveM2Principal(tx, token, false); return { role: p.role, organizationId: p.organization_id, userId: p.user_id }; }),
+        session: (token: string) => db.transaction(async (tx) => { const p = await resolveM2Principal(tx, token, false); return { role: p.role, organizationId: p.organization_id, userId: p.user_id, membershipVersion: p.version }; }),
         logout: (token: string) => db.transaction(async (tx) => { const p = await resolveM2Principal(tx, token, false); await tx.query('UPDATE fingence_m2.sessions SET revoked=true WHERE token_hash=$1', [tokenHash(token)]); await auditM2(tx, p, 'admin.configuration_changed', 'session-revoked'); }),
     };
 }

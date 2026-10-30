@@ -36,7 +36,7 @@ servers against one directory. Server restarts preserve accounts, jobs and commi
 
 1. Sign in, select a registered synthetic document, and click **Process document**.
 2. The server reserves the operation identity before upload. The browser retains it in
-   per-tab sessionStorage before dispatch; reload recovery does not create another identity.
+   per-tab, user-and-organization-scoped sessionStorage before dispatch; reload recovery does not create another identity. Active user, organization, role or membership-version changes invalidate cached financial state and outstanding replies. Older unscoped references migrate only after a durable audited server ownership lookup; another account cannot claim or erase them.
 3. `extractTrustedEvidence()` performs real CSV/XLSX/PDF/image extraction.
 4. `offlineSemanticAdapter` dynamically proposes mappings from source evidence and the
    existing terminology registry. It is explicitly **SIMULATED**, not genuine inference,

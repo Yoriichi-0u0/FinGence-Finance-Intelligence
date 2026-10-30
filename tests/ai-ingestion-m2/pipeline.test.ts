@@ -191,3 +191,10 @@ it('stores extraction failure as document quarantine without inventing source ro
   expect(saved.rows[0]).toMatchObject({outcome_count:0,document_quarantine:{kind:'DOCUMENT_QUARANTINE'}});
  }finally{if(original===undefined)delete process.env.FINGENCE_AI_PYTHON;else process.env.FINGENCE_AI_PYTHON=original;}
 });
+
+it('classifies a retained reference only for its creating principal without enumerating another tenant',async()=>{
+ const {id}=await pipeline.reserve(token);
+ expect(await pipeline.reference(token,id)).toEqual({owned:true,ownerUserId:user});
+ expect(await pipeline.reference(otherToken,id)).toEqual({owned:false,ownerUserId:null});
+ expect(await pipeline.reference(otherToken,'77777777-7777-4777-8777-777777777777')).toEqual({owned:false,ownerUserId:null});
+});
