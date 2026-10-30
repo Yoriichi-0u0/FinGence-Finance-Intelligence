@@ -37,6 +37,11 @@ describe('source-specific synthetic bank / GL reconciliation', () => {
         const labels = (r: ReturnType<typeof run>) => r.results.map(({ status, bankRecordId, ledgerRecordIds }) => ({ status, bankRecordId, ledgerRecordIds }));
         expect(labels(run([...b].reverse(), [...l].reverse()))).toEqual(labels(run(b, l)));
     });
+    it('keeps ambiguous evidence links stable under reversed traversal of the same evidence', () => {
+        const b = normalizeCashSource(csv([bank]), 'bank', 'bank.csv');
+        const l = normalizeCashSource(csv([ledger, { ...ledger, LedgerEntryID: 'DUPLICATE-2' }]), 'ledger', 'ledger.csv');
+        expect(reconcileCashSources('test-organization', b, { ...l, rows: [...l.rows].reverse() }).results).toEqual(reconcileCashSources('test-organization', b, l).results);
+    });
     it.each([
         { ...bank, ValueDate: '2026-02-30' }, { ...bank, ValueDate: '03/01/2026' },
         { ...bank, SignedCashMovementMYR: '6380.54' }, { ...bank, Currency: 'USD' },

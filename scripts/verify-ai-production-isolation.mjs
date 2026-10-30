@@ -39,6 +39,13 @@ if (!artifactsOnly) {
 }
 if (!artifactsOnly) {
  const origin = new URL(process.argv[2] ?? "http://127.0.0.1:3118");
+ for(const method of ["GET","POST"]){
+  const path="/api/ai-ingestion/m2/reconciliation";
+  const response=await fetch(new URL(path,origin),{method});await response.arrayBuffer();
+  results.push({path,method,status:response.status,blocked:[403,404].includes(response.status)});
+ }
+ const reconciliationHtml=await (await fetch(new URL('/reconciliation',origin))).text();
+ assert.ok(!reconciliationHtml.includes('Supplied March 2026 synthetic')&&!reconciliationHtml.includes('Bank statement CSV'),'Local PoC workspace leaked into production');
  for (const [action,method] of [["","GET"],["","POST"],["management","GET"],["export","GET"],["question","POST"],["membership","POST"],["revoke","POST"]]) {
   const path="/api/ai-ingestion/m2/consumers"+(action?"?action="+action:"");
   const response=await fetch(new URL(path,origin),{method});await response.arrayBuffer();

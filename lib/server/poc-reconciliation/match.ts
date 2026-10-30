@@ -16,7 +16,7 @@ export function reconcileCashSources(organizationId: string, bank: CashSource, l
     const coveredBank = new Set<string>(), coveredLedger = new Set<string>();
     function add(status: ReconciliationStatus, b: CashSourceRow | null, ls: CashSourceRow[], reason: string) {
         result.counts[status]++;
-        result.results.push({ status, bankRecordId: b?.recordId ?? null, ledgerRecordIds: ls.map(l => l.recordId).sort(), reason, bankEvidenceIds: b?.evidenceIds ?? [], ledgerEvidenceIds: ls.flatMap(l => l.evidenceIds) });
+        result.results.push({ status, bankRecordId: b?.recordId ?? null, ledgerRecordIds: ls.map(l => l.recordId).sort(), reason, bankEvidenceIds: b?.evidenceIds ?? [], ledgerEvidenceIds: ls.flatMap(l => l.evidenceIds).sort() });
         if (b) coveredBank.add(b.recordId); ls.forEach(l => coveredLedger.add(l.recordId));
     }
     // Evaluate whole reference groups before consuming anything: order cannot create a false unique match.
