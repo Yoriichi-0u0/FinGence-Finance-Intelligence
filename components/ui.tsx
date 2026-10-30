@@ -123,6 +123,21 @@ const statusStyles: Record<string, string> = {
   Dismissed: "bg-slate-100 text-slate-600 ring-slate-200",
   Processed: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
   Complete: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  Active: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  Enabled: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  "Pending activation": "bg-[var(--amber-soft)] text-[var(--amber)] ring-amber-200",
+  Inactive: "bg-slate-100 text-slate-600 ring-slate-200",
+  Suspended: "bg-[var(--red-soft)] text-[var(--red)] ring-red-200",
+  Pending: "bg-blue-50 text-blue-700 ring-blue-200",
+  Accepted: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  Revoked: "bg-slate-100 text-slate-600 ring-slate-200",
+  Expired: "bg-slate-100 text-slate-600 ring-slate-200",
+  Success: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  Denied: "bg-[var(--red-soft)] text-[var(--red)] ring-red-200",
+  Refused: "bg-[var(--amber-soft)] text-[var(--amber)] ring-amber-200",
+  Admin: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+  Finance: "bg-[var(--teal-soft)] text-[var(--teal-dark)] ring-teal-200",
+  "Technical (Management)": "bg-blue-50 text-blue-700 ring-blue-200",
 };
 
 export function StatusBadge({ status }: { status: string }) {

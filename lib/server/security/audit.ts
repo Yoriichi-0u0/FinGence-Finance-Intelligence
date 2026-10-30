@@ -1,5 +1,21 @@
 import "server-only";
 
+/**
+ * Local M5 account-administration events. The local installer widens the database
+ * CHECK from SECURITY_AUDIT_ACTIONS; hosted Phase 3 storage has not been migrated
+ * and therefore rejects them (fail closed) until a separately reviewed migration.
+ */
+export const LOCAL_ADMINISTRATION_AUDIT_ACTIONS = [
+  "membership.invited",
+  "membership.invitation_revoked",
+  "membership.enrolled",
+  "membership.activated",
+  "membership.deactivated",
+  "account.deactivated",
+  "account.reactivated",
+  "session.revoked",
+] as const;
+
 export const SECURITY_AUDIT_ACTIONS = [
   "auth.sign_in",
   "auth.sign_in_failed",
@@ -26,6 +42,7 @@ export const SECURITY_AUDIT_ACTIONS = [
   "admin.exceptional_access",
   "admin.configuration_changed",
   "request.rate_limited",
+  ...LOCAL_ADMINISTRATION_AUDIT_ACTIONS,
 ] as const;
 export type SecurityAuditAction = typeof SECURITY_AUDIT_ACTIONS[number];
 

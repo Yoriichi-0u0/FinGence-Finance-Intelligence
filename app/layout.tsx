@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 import {m3LocalEnabled} from "@/lib/server/financial-m3/runtime";
+import {m5LocalEnabled} from "@/lib/server/tenant-admin-m5/flags";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <AppShell localFinancialConsumers={m3LocalEnabled()}>{children}</AppShell>
+        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()}>{children}</AppShell>
       </body>
     </html>
   );

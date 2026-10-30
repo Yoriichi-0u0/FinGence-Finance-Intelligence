@@ -6,6 +6,15 @@ including Increments 01–03B. Check that PR and the actual checkout for merge/C
 check the Vercel deployment's source SHA before claiming a hosted release. Dated status
 statements elsewhere are historical; they do not override this guide or the actual code.
 
+## M5 development checkpoint (31 October 2026)
+
+[Local tenant administration](../integration/v2-m5-tenant-administration.md) adds `/admin`
+and `/enroll` (`pnpm m5:dev`): OS-owner organization bootstrap with a one-time Admin code,
+Admin-issued single-use enrollment into inactive memberships, role/activation changes,
+session revocation, account suspension separate from membership, and an organization audit.
+Suspension is enforced by the shared session resolver; legacy M3 management delegates to M5.
+Local only; no hosted identity, Production users or audit migration.
+
 ## M4 development checkpoint (30 October 2026)
 
 [The M4 provider boundary and evaluation](../integration/v2-m4-model-boundary.md) connect

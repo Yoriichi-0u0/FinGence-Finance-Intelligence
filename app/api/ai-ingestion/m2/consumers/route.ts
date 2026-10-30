@@ -1,10 +1,16 @@
 import { m3RequestAllowed, m3Runtime } from '../../../../../lib/server/financial-m3/runtime';
 import type { M2Role } from '../../../../../lib/server/ai-ingestion/m2/identity';
+import { localSessionCookieName } from '../../../../../lib/server/ai-ingestion/m2/session-cookie';
+import { m5LocalEnabled } from '../../../../../lib/server/tenant-admin-m5/flags';
+import { m5Runtime } from '../../../../../lib/server/tenant-admin-m5/runtime';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
 const denied = () => Response.json({ error: 'Unavailable or access denied.' }, { status: 404, headers });
-const cookieName=process.env.FINGENCE_M4_LOCAL==='1'?'fingence_m4_session':'fingence_m3_session';
+const cookieName = localSessionCookieName(true);
+/** When M5 is active, legacy membership management delegates to M5 enforcement and keeps this route's generic failure contract. */
+const administration = async () => m5LocalEnabled() ? (await m5Runtime()).administration : null;
+const legacy = (result: { status: string }) => result.status === 'REFUSED' ? denied() : Response.json(result, { headers });
 const token = (request: Request) => request.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith(cookieName+'='))?.slice(cookieName.length+1) ?? '';
 async function input(request: Request) { const reader = request.body?.getReader(); if (!reader)
     throw new Error(); let bytes = 0; const parts: Uint8Array[] = []; while (true) {
@@ -23,8 +29,10 @@ export async function GET(request: Request) {
         return denied();
     try {
         const context = await m3Runtime(), url = new URL(request.url), session = token(request), action = url.searchParams.get('action');
-        if (action === 'management')
-            return Response.json(await context.management.overview(session), { headers });
+        if (action === 'management') {
+            const m5 = await administration();
+            return m5 ? legacy(await m5.overview(session)) : Response.json(await context.management.overview(session), { headers });
+        }
         if (!url.searchParams.has('batch'))
             return Response.json({ jobs: await context.consumers.list(session) }, { headers });
         const id = url.searchParams.get('batch')!, warnings = url.searchParams.get('warnings') ?? 'exclude';
@@ -51,6 +59,9 @@ export async function POST(request: Request) {
         if (action === 'membership') {
             if (Object.keys(body).some(k => !['userId', 'role', 'active', 'expectedVersion'].includes(k)) || typeof body.userId !== 'string' || typeof body.role !== 'string' || typeof body.active !== 'boolean' || typeof body.expectedVersion !== 'number')
                 return denied();
+            const m5 = await administration();
+            if (m5)
+                return legacy(await m5.changeMembership(session, { userId: body.userId, role: body.role, active: body.active, expectedVersion: body.expectedVersion }));
             return Response.json(await context.management.membership(session, body as {
                 userId: string;
                 role: M2Role;
@@ -61,7 +72,8 @@ export async function POST(request: Request) {
         if (action === 'revoke') {
             if (typeof body.userId !== 'string' || Object.keys(body).some(k => k !== 'userId'))
                 return denied();
-            return Response.json(await context.management.revoke(session, body.userId), { headers });
+            const m5 = await administration();
+            return m5 ? legacy(await m5.revokeSessions(session, body.userId)) : Response.json(await context.management.revoke(session, body.userId), { headers });
         }
         if (action !== 'question' || Object.keys(body).some(k => k !== 'question') || typeof body.question !== 'string')
             return denied();

@@ -15,6 +15,7 @@ import {
   Menu,
   ReceiptText,
   RefreshCw,
+  ShieldCheck,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -28,7 +29,9 @@ const navigation = [
   { href: "/forecasting", label: "Forecasting", icon: TrendingUp },
   { href: "/anomalies", label: "Anomalies", icon: AlertTriangle },
   { href: "/reports", label: "Reports", icon: FileBarChart },
-] as const;
+];
+// Local M5 only; the page itself enforces role-scoped access on the server.
+const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
 
 function Brand() {
   return (
@@ -48,7 +51,7 @@ function Brand() {
   );
 }
 
-function Sidebar({ onNavigate, localFinancialConsumers = false }: { onNavigate?: () => void; localFinancialConsumers?: boolean }) {
+function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false }: { onNavigate?: () => void; localFinancialConsumers?: boolean; localAdministration?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -58,7 +61,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false }: { onNavigate?:
       </div>
 
       <nav aria-label="Primary navigation" className="space-y-1">
-        {navigation.map((item) => {
+        {(localAdministration ? [...navigation, administration] : navigation).map((item) => {
           const Icon = item.icon;
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
@@ -106,14 +109,14 @@ function Sidebar({ onNavigate, localFinancialConsumers = false }: { onNavigate?:
   );
 }
 
-export function AppShell({ children, localFinancialConsumers = false }: { children: React.ReactNode; localFinancialConsumers?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
   return (
     <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
       <aside className="sticky top-0 hidden h-dvh lg:block">
-        <Sidebar localFinancialConsumers={localFinancialConsumers} />
+        <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} />
       </aside>
 
       <div className="min-w-0">
@@ -142,7 +145,7 @@ export function AppShell({ children, localFinancialConsumers = false }: { childr
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
-          {!(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && pathname !== "/data" && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
+          {!(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll"].includes(pathname)) && pathname !== "/data" && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
           {children}
@@ -166,7 +169,7 @@ export function AppShell({ children, localFinancialConsumers = false }: { childr
             >
               <X aria-hidden="true" size={21} />
             </button>
-            <Sidebar localFinancialConsumers={localFinancialConsumers} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       ) : null}

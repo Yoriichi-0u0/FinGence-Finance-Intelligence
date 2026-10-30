@@ -2,7 +2,7 @@ import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import type { TransactionDatabase, SqlConnection } from '../db/postgres';
-import { resolveM2Principal, hashLocalPassword, type M2Role } from '../ai-ingestion/m2/identity';
+import { resolveM2Principal, hashLocalPassword, accountSuspended, type M2Role, type PrincipalLock } from '../ai-ingestion/m2/identity';
 import { persistSecurityAuditEvent } from '../security/audit-store';
 import type { SecurityAuditAction } from '../security/audit';
 import type { M2Principal } from '../ai-ingestion/m2/identity';
@@ -16,8 +16,8 @@ export async function installM3Schema(db: TransactionDatabase) {
     await db.transaction(async (tx) => { for (const statement of sql.replace(/--[^\n]*/g, '').split(';').filter(s => s.trim()))
         await tx.query(statement); });
 }
-export async function resolveM3Principal(tx: SqlConnection, token: string, finance = true) {
-    const p = await resolveM2Principal(tx, token, finance);
+export async function resolveM3Principal(tx: SqlConnection, token: string, finance = true, lock: PrincipalLock = 'SHARE') {
+    const p = await resolveM2Principal(tx, token, finance, lock);
     const state = await tx.query('SELECT organization_id FROM fingence_m3.organization_states WHERE organization_id=$1 AND active FOR SHARE', [p.organization_id]);
     if (!state.rows.length)
         throw new Error('ACCESS_DENIED');
@@ -50,8 +50,49 @@ export async function provisionM3Account(db: TransactionDatabase, input: {
     });
     return { userId, organizationId: org, active: !input.organizationId };
 }
-/** Local OS owner lifecycle operation. No financial HTTP route exposes this function. */
-export async function setLocalOrganizationActive(db: TransactionDatabase, organizationId: string, active: boolean) {
+/** Active Admin memberships whose account can still sign in. Caller holds the organization's advisory lock. */
+export async function signableAdmins(tx: SqlConnection, organizationId: string) {
+    const admins = (await tx.query<{ user_id: string }>("SELECT user_id::text FROM fingence_m2.memberships WHERE organization_id=$1 AND active AND role='Admin'", [organizationId])).rows;
+    const signable: string[] = [];
+    for (const { user_id } of admins)
+        if (!(await accountSuspended(tx, user_id)))
+            signable.push(user_id);
+    return signable;
+}
+export type MembershipChange = { userId: string; role?: M2Role; active?: boolean; expectedVersion?: number };
+export type MembershipOutcome = { status: 'UPDATED'; previous: { role: M2Role; active: boolean }; next: { role: M2Role; active: boolean } } | { status: 'REFUSED'; code: 'ACCESS_DENIED' | 'STALE_MEMBERSHIP' | 'LAST_ADMIN_PROTECTED' | 'MULTI_ORG_SELECTION_UNSUPPORTED' };
+/**
+ * Shared M3/M5 membership mutation. The caller holds the organization's advisory lock and has
+ * resolved an active Admin actor in that organization. Every check precedes the first write.
+ * Lock order matches identity reads: target sessions, then target membership.
+ */
+export async function applyMembershipChange(tx: SqlConnection, actor: M2Principal, input: MembershipChange, revokeOnly: boolean): Promise<MembershipOutcome> {
+    await tx.query('SELECT token_hash FROM fingence_m2.sessions WHERE user_id=$1 AND organization_id=$2 FOR UPDATE', [input.userId, actor.organization_id]);
+    const target = (await tx.query<{
+        role: M2Role;
+        active: boolean;
+        version: number;
+    }>('SELECT role,active,version FROM fingence_m2.memberships WHERE user_id=$1 AND organization_id=$2 FOR UPDATE', [input.userId, actor.organization_id])).rows[0];
+    if (!target)
+        return { status: 'REFUSED', code: 'ACCESS_DENIED' };
+    const next = revokeOnly ? { role: target.role, active: target.active } : { role: input.role!, active: input.active! };
+    if (!revokeOnly) {
+        if (target.version !== input.expectedVersion)
+            return { status: 'REFUSED', code: 'STALE_MEMBERSHIP' };
+        if (target.role === 'Admin' && target.active && (!next.active || next.role !== 'Admin')) {
+            const admins = await signableAdmins(tx, actor.organization_id);
+            if (admins.includes(input.userId) && admins.length <= 1)
+                return { status: 'REFUSED', code: 'LAST_ADMIN_PROTECTED' };
+        }
+        if (next.active && (await tx.query('SELECT organization_id FROM fingence_m2.memberships WHERE user_id=$1 AND organization_id<>$2 AND active', [input.userId, actor.organization_id])).rows.length)
+            return { status: 'REFUSED', code: 'MULTI_ORG_SELECTION_UNSUPPORTED' };
+        await tx.query('UPDATE fingence_m2.memberships SET role=$3,active=$4,version=version+1 WHERE user_id=$1 AND organization_id=$2', [input.userId, actor.organization_id, next.role, next.active]);
+    }
+    await tx.query('UPDATE fingence_m2.sessions SET revoked=true WHERE user_id=$1 AND organization_id=$2', [input.userId, actor.organization_id]);
+    return { status: 'UPDATED', previous: { role: target.role, active: target.active }, next };
+}
+/** Local OS owner lifecycle operation. No financial HTTP route exposes this function. `within` runs in the same transaction. */
+export async function setLocalOrganizationActive(db: TransactionDatabase, organizationId: string, active: boolean, within?: (tx: SqlConnection) => Promise<void>) {
     if (!uuid.test(organizationId) || typeof active !== 'boolean')
         throw new Error('INVALID_ORGANIZATION');
     await db.transaction(async (tx) => {
@@ -67,6 +108,7 @@ export async function setLocalOrganizationActive(db: TransactionDatabase, organi
             await tx.query('UPDATE fingence_m2.memberships SET active=false,version=version+1 WHERE organization_id=$1', [organizationId]);
             await tx.query('UPDATE fingence_m2.sessions SET revoked=true WHERE organization_id=$1', [organizationId]);
         }
+        await within?.(tx);
         await auditManagement(tx, null, 'admin.configuration_changed', 'local-organization-lifecycle');
     });
 }
@@ -83,29 +125,13 @@ export function createManagementService(db: TransactionDatabase) {
         const scope = await db.transaction(tx => resolveM3Principal(tx, token, false));
         return db.transaction(async (tx) => {
             await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [scope.organization_id]);
-            const p = await resolveM3Principal(tx, token, false);
+            // Exclusive actor locks: a self-targeted change never upgrades a share lock held alongside logout.
+            const p = await resolveM3Principal(tx, token, false, 'NO KEY UPDATE');
             if (p.role !== 'Admin' || p.organization_id !== scope.organization_id)
                 throw new Error('ACCESS_DENIED');
-            const target = (await tx.query<{
-                role: M2Role;
-                active: boolean;
-                version: number;
-            }>('SELECT role,active,version FROM fingence_m2.memberships WHERE user_id=$1 AND organization_id=$2 FOR UPDATE', [input.userId, p.organization_id])).rows[0];
-            if (!target)
-                throw new Error('ACCESS_DENIED');
-            if (!revokeOnly) {
-                if (target.version !== input.expectedVersion)
-                    throw new Error('STALE_MEMBERSHIP');
-                if (target.role === 'Admin' && target.active && (!input.active || input.role !== 'Admin')) {
-                    const admins = await tx.query('SELECT user_id FROM fingence_m2.memberships WHERE organization_id=$1 AND active AND role=\'Admin\'', [p.organization_id]);
-                    if (admins.rows.length <= 1)
-                        throw new Error('LAST_ADMIN_PROTECTED');
-                }
-                if (input.active && (await tx.query('SELECT organization_id FROM fingence_m2.memberships WHERE user_id=$1 AND organization_id<>$2 AND active', [input.userId, p.organization_id])).rows.length)
-                    throw new Error('MULTI_ORG_SELECTION_UNSUPPORTED');
-                await tx.query('UPDATE fingence_m2.memberships SET role=$3,active=$4,version=version+1 WHERE user_id=$1 AND organization_id=$2', [input.userId, p.organization_id, input.role, input.active]);
-            }
-            await tx.query('UPDATE fingence_m2.sessions SET revoked=true WHERE user_id=$1 AND organization_id=$2', [input.userId, p.organization_id]);
+            const outcome = await applyMembershipChange(tx, p, input, revokeOnly);
+            if (outcome.status === 'REFUSED')
+                throw new Error(outcome.code);
             await auditManagement(tx, p, revokeOnly ? 'admin.configuration_changed' : 'authorization.role_changed', input.userId, 'organization_user');
             return { status: 'UPDATED' as const, sessionsRevoked: true };
         });
