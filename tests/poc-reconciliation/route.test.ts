@@ -31,3 +31,9 @@ it('returns scoped server results and the real report with no-store, and hides f
     expect(service.get).toHaveBeenCalledWith('test-token', 'original', true); expect(r.headers.get('content-disposition')).toContain('attachment'); expect(r.headers.get('cache-control')).toBe('no-store');
     service.get.mockRejectedValue(Error('private database detail')); const denied = await GET(new Request(base + '?id=missing', { headers })); expect(denied.status).toBe(404); expect(await denied.text()).not.toContain('private');
 });
+it('rejects over-limit bodies and denied sessions before financial ingestion', async () => {
+    expect((await POST(new Request(base, { method: 'POST', headers, body: 'x'.repeat(1100001) }))).status).toBe(404);
+    identity.session.mockRejectedValue(Error('ACCESS_DENIED'));
+    expect((await POST(new Request(base, { method: 'POST', headers, body: '{}' }))).status).toBe(404);
+    expect(service.ingest).not.toHaveBeenCalled();
+});

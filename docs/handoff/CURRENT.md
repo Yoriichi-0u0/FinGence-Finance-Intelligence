@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Issue #30 local PoC addition — 31 October 2026
+
+The additive bank/GL source contract, authenticated local API and demonstration instructions
+are in [poc-reconciliation.md](../integration/poc-reconciliation.md). The authoritative shared
+type is `FinancePoCReconciliationV1` in `lib/poc-reconciliation/contracts.ts`. This deterministic
+synthetic source-pair path does not replace C1/V2 records or enable hosted financial APIs.
+All older dated status statements below retain their historical meaning.
+
 Updated 27 October 2026. Start here before editing or consuming this repository.
 This guide describes the source introduced by [PR #4](https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/4),
 including Increments 01–03B. Check that PR and the actual checkout for merge/CI state;
