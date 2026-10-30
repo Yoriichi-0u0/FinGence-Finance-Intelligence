@@ -7,7 +7,7 @@ for (const path of ["cli/database-target.ts", "cli/phase2.ts", "db/postgres.ts",
   "api/transaction-contract.ts", "api/transaction-selection.ts", "api/transaction-query.ts", "api/transaction-detail-query.ts", "api/batch-contract.ts", "api/batch-query.ts",
   "security/audit-api.ts", "security/audit-store.ts", "security/secure-cursor.ts", "security/transaction-access.ts", "security/transaction-guard.ts",
   "integration/query-cursors.ts", "integration/scoped-queries.ts", "ai-ingestion/m2/identity.ts", "ai-ingestion/m2/interpreter.ts", "ai-ingestion/m2/pipeline.ts", "ai-ingestion/m2/runtime.ts", "financial-m3/management.ts", "financial-m3/consumers.ts", "financial-m3/runtime.ts", "ai-ingestion/m4/adapter.ts", "ai-ingestion/m4/authorization.ts", "ai-ingestion/m4/evaluation.ts", "ai-ingestion/m4/runtime.ts",
-  "ai-ingestion/m2/session-cookie.ts", "tenant-admin-m5/flags.ts", "tenant-admin-m5/runtime.ts", "tenant-admin-m5/schema.ts", "tenant-admin-m5/service.ts"]) {
+  "ai-ingestion/m2/session-cookie.ts", "tenant-admin-m5/flags.ts", "tenant-admin-m5/runtime.ts", "tenant-admin-m5/schema.ts", "tenant-admin-m5/service.ts", "poc-anomalies/pdf.ts", "poc-anomalies/runtime.ts", "poc-anomalies/schema.ts", "poc-anomalies/service.ts"]) {
   assert.match(readFileSync(new URL(`../lib/server/${path}`, import.meta.url), "utf8"), /^import ["']server-only["'];/);
 }
 const execute = (conditions) => spawnSync(process.execPath,
