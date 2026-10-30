@@ -1,7 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {PageHeader,Panel} from '@/components/ui';
-import {archiveRetiredOperation,clearResolvedOperation,createPendingOperation,pendingOperation,pendingOperationKey as key} from '@/lib/ai-ingestion/local-demo-operation';
+import {archiveRetiredOperation,clearResolvedOperation,createPendingOperation,pendingOperation,pendingOperationKey as key,recoverCommittedOperation,syntheticOperationLock} from '@/lib/ai-ingestion/local-demo-operation';
 
 type Batch={id:string;source_file:string;rows_received:number;valid_count:number;warning_count:number;rejected_count:number};
 type Result={batch:Batch;records:{id:string;source_row_id:string;source_amount:string|null;currency:string|null;ingestion_status:string;reference:string|null}[];calculation:{value?:string;currency?:string};report:string|null;answer:{status:string;value?:string;currency?:string}|null};
@@ -36,7 +36,7 @@ export function SyntheticFinancialDemo(){
   if(!file||!connected||busy||pending||!ready)return;
   if(!navigator.locks){setMessage('This browser cannot coordinate processing safely.');return;}
   const epoch=accessEpoch.current;
-  await navigator.locks.request('fingence-synthetic-c1-demo',{ifAvailable:true},async lock=>{
+  await navigator.locks.request(syntheticOperationLock,{ifAvailable:true},async lock=>{
    if(!lock){setMessage('Another tab is processing a sample.');return;}
    let id:string,raw:string;try{if(localStorage.getItem(key)){setPending(localStorage.getItem(key));return;}id=crypto.randomUUID();raw=createPendingOperation(id,runtimeGeneration);localStorage.setItem(key,raw);}catch{setMessage('Browser storage is unavailable. Processing was not started.');return;}
    setPending(raw);setRetirementAvailable(false);generation.current++;setResult(null);setAnswer('');setBusy(true);setMessage('Validating the synthetic file and persisting accepted records…');
@@ -51,7 +51,11 @@ export function SyntheticFinancialDemo(){
   if(!pending||!connected)return;const epoch=accessEpoch.current,raw=pending;setBusy(true);setResult(null);setAnswer('');setRetirementAvailable(false);
   try{const reference=pendingOperation(raw);const query=new URLSearchParams({operation:reference.operationId});if(reference.generation)query.set('generation',reference.generation);
    const response=await fetch(`${endpoint}?${query}`,{cache:'no-store'});const data=await response.json();if(epoch!==accessEpoch.current)return;if(!response.ok)throw new Error();
-   if(data.state==='COMMITTED'&&typeof data.batchId==='string'&&typeof data.sourceFile==='string'){clearResolvedOperation(localStorage,raw);setPending(null);setBatches(previous=>[...previous.filter(batch=>batch.name!==data.sourceFile),{id:data.batchId,name:data.sourceFile}]);await retrieve(data.batchId);}
+   if(data.state==='COMMITTED'&&typeof data.batchId==='string'&&typeof data.sourceFile==='string'){
+    const recovered=await recoverCommittedOperation({locks:navigator.locks,storage:localStorage,raw,response:data,isActive:()=>epoch===accessEpoch.current,onRecovered:()=>{setPending(null);setBatches(previous=>[...previous.filter(batch=>batch.name!==data.sourceFile),{id:data.batchId,name:data.sourceFile}]);}});
+    if(!recovered){if(epoch===accessEpoch.current)setMessage('Recovery could not acquire the operation lock or access changed. The pending reference is preserved.');return;}
+    if(epoch===accessEpoch.current)await retrieve(data.batchId);
+   }
    else if(['RETIRED_GENERATION','NOT_REGISTERED','RETIRED'].includes(data.state)){setRetirementAvailable(true);setMessage(data.state==='RETIRED_GENERATION'?'The previous temporary database was discarded. Its original commit outcome is not recoverable. You may explicitly archive this reference; this does not retry processing.':'No completed result is confirmed. Explicit retirement fences delayed uploads before releasing this reference.');}
    else setMessage('The operation is unresolved. Do not submit it again.');
   }catch{if(epoch===accessEpoch.current)setMessage('Operation status is unavailable. Preserve the reference; do not submit it again.');}finally{setBusy(false);}
@@ -59,7 +63,7 @@ export function SyntheticFinancialDemo(){
  async function retire(){
   if(!pending||!connected||busy||!navigator.locks)return;
   const raw=pending,epoch=accessEpoch.current,currentGeneration=runtimeGeneration;
-  await navigator.locks.request('fingence-synthetic-c1-demo',{ifAvailable:true},async lock=>{
+  await navigator.locks.request(syntheticOperationLock,{ifAvailable:true},async lock=>{
    if(!lock){setMessage('Another tab is using this operation.');return;}
    setBusy(true);setResult(null);setAnswer('');
    try{if(localStorage.getItem(key)!==raw)throw new Error();const reference=pendingOperation(raw);
