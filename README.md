@@ -1,5 +1,9 @@
 # FinGence — current technical guidance
 
+For the combined university PoC (reconciliation, anomaly candidates and management PDF),
+run `pnpm poc:dev` and follow the [one-server runbook](docs/integration/poc-combined-financial-intelligence.md).
+This source-derived synthetic workflow is local only; older dated prototype status is historical.
+
 For the local V2 Milestone 2 upload → verification → tenant-owned results/report workflow,
 use the [M2 runbook](docs/integration/v2-m2-tenant-financial-pipeline.md) and `pnpm m2:dev`.
 Interpretation is SIMULATED; hosted APIs and live provider dispatch remain disabled.

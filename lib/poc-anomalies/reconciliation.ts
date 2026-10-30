@@ -27,17 +27,19 @@ export type FinancePoCReconciliationV1 = Omit<z.infer<typeof snapshot>, 'items' 
 export type ReconciliationView =
     | { status: 'AVAILABLE'; snapshot: FinancePoCReconciliationV1 }
     | { status: 'UNAVAILABLE'; reason: string };
-export type ReconciliationScope = { organizationId: string; businessId: string; period: string; currency: string };
+export type ReconciliationScope = { organizationId: string; businessId: string; period: string; currency: string; bankSha256: string };
 
 /** Unavailable unless the snapshot is well formed, internally consistent and exactly in scope. */
 export function readReconciliation(value: unknown, scope: ReconciliationScope): ReconciliationView {
-    if (value === null || value === undefined) return { status: 'UNAVAILABLE', reason: 'No FinancePoCReconciliationV1 snapshot is available for this business and period.' };
+    if (value === null || value === undefined) return { status: 'UNAVAILABLE', reason: 'No unique reconciliation snapshot matches this uploaded bank source, organization, business, period and currency.' };
     const parsed = snapshot.safeParse(value);
     if (!parsed.success || (parsed.data.results && parsed.data.items)) return { status: 'UNAVAILABLE', reason: 'The reconciliation snapshot does not match the FinancePoCReconciliationV1 contract.' };
     const { items, results: listed, ...rest } = parsed.data, results = listed ?? items ?? [];
     const s = rest.scope;
     if (s.organizationId !== scope.organizationId || s.businessId !== scope.businessId || s.period !== scope.period || s.currency !== scope.currency)
         return { status: 'UNAVAILABLE', reason: 'The reconciliation snapshot belongs to a different organization, business, period or currency.' };
+    if (rest.sources.bank.sha256 !== scope.bankSha256)
+        return { status: 'UNAVAILABLE', reason: 'The reconciliation snapshot belongs to a different uploaded bank source (SHA-256 mismatch).' };
     const tally = Object.fromEntries(RECONCILIATION_STATUSES.map(k => [k, 0])) as Record<ReconciliationStatus, number>;
     for (const r of results) tally[r.status]++;
     if (RECONCILIATION_STATUSES.some(k => (rest.counts[k] ?? 0) !== tally[k]))

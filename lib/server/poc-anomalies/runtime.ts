@@ -3,6 +3,7 @@ import { m5LocalEnabled } from '../tenant-admin-m5/flags';
 import { m5Runtime } from '../tenant-admin-m5/runtime';
 import { installPocAnomalySchema } from './schema';
 import { createPocAnomalies } from './service';
+import { installReconciliationSchema, readScopedReconciliation } from '../poc-reconciliation/service';
 const initialized = new WeakMap<object, Promise<void>>();
 /** The PoC anomaly review rides on the local M5 stack; it has no flag of its own and never runs hosted. */
 export async function pocRuntime() {
@@ -11,10 +12,12 @@ export async function pocRuntime() {
     const base = await m5Runtime();
     let ready = initialized.get(base.database);
     if (!ready) {
-        ready = installPocAnomalySchema(base.database);
+        ready = (async () => {
+            await installReconciliationSchema(base.database);
+            await installPocAnomalySchema(base.database);
+        })();
         initialized.set(base.database, ready);
     }
     await ready;
-    // No reconciliation reader is wired until Codex's FinancePoCReconciliationV1 producer lands (issue #30).
-    return { ...base, anomalies: createPocAnomalies(base.database) };
+    return { ...base, anomalies: createPocAnomalies(base.database, { reconciliation: readScopedReconciliation }) };
 }

@@ -91,7 +91,7 @@ describe('PoC anomaly rules', () => {
 });
 
 describe('FinancePoCReconciliationV1 consumer', () => {
-    const scope = { organizationId: 'org-1', businessId: 'BUS-T01', period: '2026-03', currency: 'MYR' };
+    const scope = { organizationId: 'org-1', businessId: 'BUS-T01', period: '2026-03', currency: 'MYR', bankSha256: 'a'.repeat(64) };
     const result = (status: string, bank: string | null, ledger: string[]) => ({ status, bankRecordId: bank, ledgerRecordIds: ledger, reason: 'synthetic', bankEvidenceIds: bank ? [bank] : [], ledgerEvidenceIds: ledger });
     const valid = () => ({ version: 'finance-poc-reconciliation-v1', origin: 'DETERMINISTIC_RULES', scope, sources: { bank: { sourceId: 'bank-1', sha256: 'a'.repeat(64) }, ledger: { sourceId: 'gl-1', sha256: 'b'.repeat(64) } },
         cashMovement: { bank: '150.00', ledger: '100.00', signedDifference: '50.00' }, counts: { MATCH_EXACT: 1, BANK_ONLY: 1 }, results: [result('MATCH_EXACT', 'B1', ['L1']), result('BANK_ONLY', 'B2', [])], limitations: ['synthetic'] });
@@ -109,6 +109,7 @@ describe('FinancePoCReconciliationV1 consumer', () => {
     it('refuses snapshots from another scope, with inconsistent counts or difference, or another contract', () => {
         expect(readReconciliation(valid(), { ...scope, organizationId: 'org-2' }).status).toBe('UNAVAILABLE');
         expect(readReconciliation(valid(), { ...scope, period: '2026-04' }).status).toBe('UNAVAILABLE');
+        expect(readReconciliation(valid(), { ...scope, bankSha256: 'c'.repeat(64) }).status).toBe('UNAVAILABLE');
         expect(readReconciliation({ ...valid(), counts: { MATCH_EXACT: 2 } }, scope).status).toBe('UNAVAILABLE');
         expect(readReconciliation({ ...valid(), cashMovement: { bank: '150.00', ledger: '100.00', signedDifference: '-50.00' } }, scope).status).toBe('UNAVAILABLE');
         expect(readReconciliation({ ...valid(), version: 'v2' }, scope).status).toBe('UNAVAILABLE');

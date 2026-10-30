@@ -1,7 +1,9 @@
 import 'server-only';
 import { randomUUID, createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import type { TransactionDatabase } from '../db/postgres';
+import type { SqlConnection, TransactionDatabase } from '../db/postgres';
+import type { M2Principal } from '../ai-ingestion/m2/identity';
+import type { ReconciliationScope } from '../../poc-anomalies/reconciliation';
 import { resolveM3Principal } from '../financial-m3/management';
 import { auditM2 } from '../ai-ingestion/m2/identity';
 import type { FinancePoCReconciliationV1 } from '../../poc-reconciliation/contracts';
@@ -14,6 +16,23 @@ export async function installReconciliationSchema(db: TransactionDatabase) {
     await db.transaction(async tx => { for (const s of sql.replace(/--[^\n]*/g, '').split(';').filter(s => s.trim())) await tx.query(s); });
 }
 export type ReconciliationSelection = { id: string; businessId: string; period: string; currency: string };
+/** Read-only report bridge, called inside the caller's authorized/audited transaction.
+ * Never select by month alone: another upload may contain the same month's rows.
+ * Multiple ledger pairs are ambiguous until there is an explicit pair-selection contract.
+ */
+export async function readScopedReconciliation(tx: SqlConnection, principal: M2Principal, scope: ReconciliationScope): Promise<FinancePoCReconciliationV1 | null> {
+    if (principal.role !== 'Finance' || principal.organization_id !== scope.organizationId || !/^[0-9a-f]{64}$/.test(scope.bankSha256)) return null;
+    const rows = (await tx.query<{ snapshot: FinancePoCReconciliationV1 }>(
+        `SELECT snapshot FROM fingence_poc.reconciliations
+         WHERE organization_id=$1 AND bank_sha256=$2
+           AND snapshot #>> '{scope,businessId}'=$3
+           AND snapshot #>> '{scope,period}'=$4
+           AND snapshot #>> '{scope,currency}'=$5
+         LIMIT 2 FOR SHARE`,
+        [principal.organization_id, scope.bankSha256, scope.businessId, scope.period, scope.currency],
+    )).rows;
+    return rows.length === 1 ? rows[0].snapshot : null;
+}
 /** Internal composition only. Alternate registered hashes are for isolated test fixtures, never browser input. */
 export function createReconciliationService(db: TransactionDatabase, registered: Readonly<{ bank: string; ledger: string }> = approvedPoCSourceHashes) {
     return {

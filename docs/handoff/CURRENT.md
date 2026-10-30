@@ -1,5 +1,14 @@
 # FinGence — current technical entrypoint
 
+## Issue #34 combined local PoC — 31 October 2026
+
+[Combined financial intelligence runbook](../integration/poc-combined-financial-intelligence.md)
+is the current entrypoint for reconciliation → anomalies → combined PDF/JSON on one local
+server/database/Finance session. The optional report reader is now wired with exact bank SHA
+and tenant/business/period/currency matching. Older branch-specific "not wired" statements
+below are historical. March-only input yields 14 anomaly candidates; 9 applies to the March
+selection from the full 6,000-row input. Production remains isolated.
+
 ## Issue #30 local PoC addition — 31 October 2026
 
 The additive bank/GL source contract, authenticated local API and demonstration instructions

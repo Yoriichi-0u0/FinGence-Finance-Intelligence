@@ -176,7 +176,7 @@ export function createPocAnomalies(db: TransactionDatabase, options: { reconcili
         report: (token: string, input: SelectionInput, format: 'pdf' | 'json') => finance(token, ['report', 'poc-management-report'], async (tx, p) => {
             const analysis = await build(tx, p, input);
             if (!analysis) { await audit(tx, p, 'report.downloaded', 'failure', 'report', 'poc-management-report'); return refused('UNAVAILABLE'); }
-            const s = analysis.selection, scope = { organizationId: p.organization_id, businessId: s.businessId, period: s.period, currency: s.currency };
+            const s = analysis.selection, scope = { organizationId: p.organization_id, businessId: s.businessId, period: s.period, currency: s.currency, bankSha256: analysis.source.sha256 };
             const reconciliation = readReconciliation(options.reconciliation ? await options.reconciliation(tx, p, scope) : null, scope);
             const unsigned = { ...analysis, reportVersion: 'poc-management-report-v1' as const, generatedAt: new Date().toISOString(), reconciliation };
             const report: PocReport = { ...unsigned, reportHash: createHash('sha256').update(JSON.stringify(canonical(unsigned))).digest('hex') };

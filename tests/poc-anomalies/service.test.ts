@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import type { PGlite } from '@electric-sql/pglite';
 import { PDFDocument } from 'pdf-lib';
+import { createHash } from 'node:crypto';
 import type { TransactionDatabase } from '../../lib/server/db/postgres';
 import { createM2Identity } from '../../lib/server/ai-ingestion/m2/identity';
 import { bootstrapOrganization, createTenantAdministration } from '../../lib/server/tenant-admin-m5/service';
@@ -121,7 +122,7 @@ describe('PoC management report', () => {
     });
     it('quotes an in-scope FinancePoCReconciliationV1 snapshot read-only and refuses one from another tenant', async () => {
         const snapshot = (organizationId: string) => ({ version: 'finance-poc-reconciliation-v1', origin: 'DETERMINISTIC_RULES', scope: { organizationId, businessId: 'BUS-T01', period: '2026-03', currency: 'MYR' },
-            sources: { bank: { sourceId: 'bank-src', sha256: 'a'.repeat(64) }, ledger: { sourceId: 'gl-src', sha256: 'b'.repeat(64) } }, cashMovement: { bank: '-6240.00', ledger: '-6200.00', signedDifference: '-40.00' },
+            sources: { bank: { sourceId: 'bank-src', sha256: createHash('sha256').update(source).digest('hex') }, ledger: { sourceId: 'gl-src', sha256: 'b'.repeat(64) } }, cashMovement: { bank: '-6240.00', ledger: '-6200.00', signedDifference: '-40.00' },
             counts: { MATCH_EXACT: 1, AMOUNT_MISMATCH_REVIEW: 1 }, results: [{ status: 'MATCH_EXACT', bankRecordId: 'A-1', ledgerRecordIds: ['GL-1'], reason: 'r', bankEvidenceIds: [], ledgerEvidenceIds: [] }, { status: 'AMOUNT_MISMATCH_REVIEW', bankRecordId: 'O1', ledgerRecordIds: ['GL-2'], reason: 'r', bankEvidenceIds: [], ledgerEvidenceIds: [] }], limitations: ['Synthetic constructed case.'] });
         const seen: string[] = [];
         const available = ok(await service(async (_tx, p, scope) => { seen.push(scope.organizationId); return snapshot(p.organization_id); }).report(a.finance, { sourceId }, 'pdf'));
