@@ -1,5 +1,10 @@
 # FinGence — current technical guidance
 
+For the local V2 Milestone 2 upload → verification → tenant-owned results/report workflow,
+use the [M2 runbook](docs/integration/v2-m2-tenant-financial-pipeline.md) and `pnpm m2:dev`.
+Interpretation is SIMULATED; hosted APIs and live provider dispatch remain disabled.
+
+
 Run the application directly from your Git clone's root:
 
 ```sh

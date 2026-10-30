@@ -1,0 +1,6 @@
+BANK STATEMENT
+Transaction ID,Transaction Date,Amount,Currency,Description,Reference
+0001,2026-10-01,125.50,MYR,Synthetic sale,R-001
+0002,2026-10-02,-20.00,MYR,Synthetic movement,R-002
+0002,2026-10-02,-20.00,MYR,Synthetic movement,R-002
+0004,invalid,5.00,MYR,Invalid source date,R-004

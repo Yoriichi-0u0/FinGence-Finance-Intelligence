@@ -23,7 +23,9 @@
     "ai:benchmark": ".venv-ai/bin/python scripts/ai-benchmark.py",
     "ai:demo": "FINGENCE_AI_LOCAL=1 FINGENCE_EXTRACTOR=docling FINGENCE_AI_PYTHON=.venv-ai/bin/python next dev --hostname 127.0.0.1 --port 3103",
     "test:ai": "vitest run tests/ai-ingestion",
-    "demo:financial:local": "node scripts/local-financial-demo.mjs"
+    "demo:financial:local": "node scripts/local-financial-demo.mjs",
+    "m2:account": "node --conditions=react-server scripts/m2.mjs account",
+    "m2:dev": "node scripts/m2.mjs serve"
   },
   "dependencies": {
     "fflate": "0.8.3",

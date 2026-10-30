@@ -13,7 +13,7 @@ if (!artifactsOnly) {
   assert.equal(origin.protocol, "http:");
   assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(origin.hostname), "Local verification only");
   assert.equal(origin.pathname, "/");
-  for (const path of ["/ai-ingestion", "/ai-ingestion/live", "/ai-ingestion/developer", "/ai-ingestion/v2-i1", "/ai-ingestion/synthetic-financial", "/api/ai-ingestion", "/api/ai-ingestion/live", "/api/ai-ingestion/developer-replay", "/api/ai-ingestion/v2-i1", "/api/ai-ingestion/synthetic-financial"]) {
+  for (const path of ["/ai-ingestion", "/ai-ingestion/live", "/ai-ingestion/developer", "/ai-ingestion/v2-i1", "/ai-ingestion/synthetic-financial", "/api/ai-ingestion", "/api/ai-ingestion/live", "/api/ai-ingestion/developer-replay", "/api/ai-ingestion/v2-i1", "/api/ai-ingestion/synthetic-financial", "/api/ai-ingestion/m2"]) {
     for (const method of path.startsWith("/api/") ? ["GET", "POST"] : ["GET"]) {
       const response = await fetch(new URL(path, origin), { method, redirect: "error", ...(method === "POST" ? { headers: { "Content-Type": "application/json" }, body: "{}" } : {}) });
       await response.arrayBuffer();
@@ -25,6 +25,16 @@ if (!artifactsOnly) {
     const response = await fetch(new URL(path, origin), { method, redirect: "error", headers: { "X-FinGence-Operation": "11111111-1111-4111-8111-111111111111" } });
     await response.arrayBuffer();
     results.push({ path, method, status: response.status, blocked: [403, 404].includes(response.status) });
+  }
+}
+if (!artifactsOnly) {
+  const origin = new URL(process.argv[2] ?? "http://127.0.0.1:3118");
+  for (const action of ["session", "login", "logout", "reserve", "process", "cancel", "investigate", "question"]) {
+    const method = action === "session" ? "GET" : "POST";
+    const path = `/api/ai-ingestion/m2?action=${action}`;
+    const response = await fetch(new URL(path, origin), {method});
+    await response.arrayBuffer();
+    results.push({path, method, status: response.status, blocked: [403,404].includes(response.status)});
   }
 }
 const sentinels = JSON.parse(process.env.FINGENCE_ISOLATION_SENTINELS ?? "[]");
@@ -82,7 +92,7 @@ const requiredPath = resolve(".next/required-server-files.json");
 for (const file of JSON.parse(readFileSync(requiredPath, "utf8")).files) checkPath(requiredPath, file, process.cwd());
 console.log(JSON.stringify({ mode: artifactsOnly ? "PRODUCTION_ARTIFACTS_ONLY" : "LOCAL_PRODUCTION_NO_INFERENCE", results,
   tracesInspected, additionalRootsInspected, artifactsInspected, sentinelsChecked: sentinels.length, privateTraceFiles, artifactLeaks }, null, 2));
-assert.ok(artifactsOnly || results.length === 22 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
+assert.ok(artifactsOnly || results.length === 32 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
 assert.ok(tracesInspected > 0 && artifactsInspected > 0, "A production build is required");
 assert.equal(privateTraceFiles.length, 0, "Production traces must exclude private AI state, environments and evaluation labels");
 assert.equal(artifactLeaks.length, 0, "Private build canaries must not enter deployable artifacts");
