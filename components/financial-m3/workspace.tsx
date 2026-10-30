@@ -187,7 +187,7 @@ export default function FinancialWorkspace({ view }: {
             setTimeout(() => URL.revokeObjectURL(url), 1000);
         }
         catch {
-            if (epoch === fence.current.epoch) {
+            if (epoch === fence.current.epoch && sequence === request.current) {
                 setSnapshot(null);
                 questionRequests.current.invalidate(); setAnswer('');
                 setError('Export was not authorized or its source changed. Refresh before downloading.');
