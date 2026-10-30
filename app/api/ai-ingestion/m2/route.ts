@@ -1,11 +1,12 @@
 import {m4Runtime,m4LocalEnabled} from '../../../../lib/server/ai-ingestion/m4/runtime';
 import { m2Runtime, m2LocalEnabled } from '../../../../lib/server/ai-ingestion/m2/runtime';
 import { localAccessAllowed } from '../../../../lib/server/ai-ingestion/service';
+import { localSessionCookieName } from '../../../../lib/server/ai-ingestion/m2/session-cookie';
 export const runtime = 'nodejs';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
-const cookieName = process.env.FINGENCE_M4_LOCAL==='1'?'fingence_m4_session':process.env.FINGENCE_M3_LOCAL==='1'?'fingence_m3_session':'fingence_m2_session';
+const cookieName = localSessionCookieName();
 const cookie = (value: string, age: number) => `${cookieName}=${value}; HttpOnly; SameSite=Strict; Path=/api/ai-ingestion/m2; Max-Age=${age}`;
 const token = (r: Request) => r.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith(cookieName + '='))?.slice(cookieName.length + 1) ?? '';
 const deny = () => Response.json({ error: 'Unavailable or access denied.' }, { status: 404, headers });
