@@ -22,7 +22,20 @@
     "ai:evaluate": "node --conditions=react-server scripts/ai-cli.mjs evaluate",
     "ai:benchmark": ".venv-ai/bin/python scripts/ai-benchmark.py",
     "ai:demo": "FINGENCE_AI_LOCAL=1 FINGENCE_EXTRACTOR=docling FINGENCE_AI_PYTHON=.venv-ai/bin/python next dev --hostname 127.0.0.1 --port 3103",
-    "test:ai": "vitest run tests/ai-ingestion"
+    "test:ai": "vitest run tests/ai-ingestion",
+    "demo:financial:local": "node scripts/local-financial-demo.mjs",
+    "m2:account": "node --conditions=react-server scripts/m2.mjs account",
+    "m2:dev": "node scripts/m2.mjs serve",
+    "m3:dev": "node scripts/m3.mjs serve",
+    "m3:account": "node --conditions=react-server scripts/m3.mjs account",
+    "m3:organization": "node --conditions=react-server scripts/m3.mjs organization",
+    "m4:dev": "node scripts/m4.mjs serve",
+    "m4:account": "node --conditions=react-server scripts/m4.mjs account",
+    "m4:prepare": "node --conditions=react-server scripts/m4.mjs prepare",
+    "m4:dispatch": "node --conditions=react-server scripts/m4.mjs dispatch-one",
+    "m4:evaluate": "node --conditions=react-server scripts/m4-evaluate.mjs",
+    "m5:dev": "node scripts/m5.mjs serve",
+    "m5:organization": "node --conditions=react-server scripts/m5.mjs organization"
   },
   "dependencies": {
     "fflate": "0.8.3",
@@ -50,7 +63,7 @@
     "eslint-config-next": "16.4.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "packageManager": "pnpm@11.19.0",
   "engines": {
