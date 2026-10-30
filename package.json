@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "poc:dev": "node scripts/poc-reconciliation.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
