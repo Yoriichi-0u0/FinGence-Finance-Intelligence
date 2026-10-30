@@ -1,0 +1,30 @@
+{
+  "version": "m4-synthetic-inputs-v1",
+  "notice": "SYNTHETIC; opaque IDs; no labels in runtime manifest",
+  "files": {
+    "m401.csv": {
+      "sha256": "5fb29d9e5a4a423d10d24821011676249b28116b4938592011b314c9c6b54721",
+      "bytes": 100
+    },
+    "m402.xlsx": {
+      "sha256": "dc4e8ded578d62b6422da27e419aba345c6423542e4d0057214e3a5a9370b2e3",
+      "bytes": 4980
+    },
+    "m403.pdf": {
+      "sha256": "cac29d5986eade063dd4e2e2bbb564dc44a54e250d330b9e374c0d1ced44e99e",
+      "bytes": 1832
+    },
+    "m404.pdf": {
+      "sha256": "be00f4915377f86befbee49b512423964e15e62c209f550e1973c1bde1f8a0f8",
+      "bytes": 41618
+    },
+    "m405.png": {
+      "sha256": "667dc1404ed4036d6da990fa8fbb5e65478064ceca10069511ac535a759e5442",
+      "bytes": 32112
+    },
+    "m406.jpg": {
+      "sha256": "6bba8347990d4749512955dc9043b5e63801e49cb36c08b7c2b21f5964e44def",
+      "bytes": 73837
+    }
+  }
+}

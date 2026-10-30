@@ -7,7 +7,7 @@ import { extractTrustedEvidence, createExperimentalBatch, createExtractionFailur
 import { operations, validOperationId } from '../v2-i1/operations';
 import { materializePlan } from '../../../ai-ingestion/increment-03/plan';
 import { subtractDecimalStrings } from '../../../analytics/index';
-import { offlineSemanticAdapter, type M2Interpreter } from './interpreter';
+import { offlineSemanticAdapter, InterpretationFailure, type M2Interpreter } from './interpreter';
 import { resolveM2Principal, auditM2 } from './identity';
 export type M2Stage = {
     name: string;
@@ -41,6 +41,7 @@ export async function registeredM2Source(bytes: Uint8Array) {
         readFile('synthetic/ai-ingestion-i2/manifest.json', 'utf8'),
         readFile('synthetic/m2/manifest.json', 'utf8'),
         readFile('synthetic/m3/manifest.json', 'utf8'),
+        readFile('synthetic/m4/manifest.json', 'utf8'),
     ]);
     for (const text of manifests) {
         const manifest = JSON.parse(text);
@@ -89,17 +90,17 @@ export function calculateM2Batch(batch: VerifiedDocumentBatchV1, warningPolicy: 
     }
     return { version: 'm2-financial-report-v1' as const, publicationEligible: false, kind: 'SOURCE_SIGNED_AMOUNT_SUM' as const, attemptId: batch.attemptId, source: batch.source, policyVersion: batch.policyVersion, policyHash: batch.policyHash, conventions: batch.blueprint?.conventions ?? null, origin: batch.processing?.mode ?? 'NOT_EXECUTED', adapter: batch.receipt, warningPolicy, excludedWarnings: (v?.accepted.length ?? 0) - selected.length, coverage: v?.coverage ?? null, records: selected.map(row => ({ id: row.id, status: row.status, financial: row.financial, issues: row.issues, evidence: row.evidenceIds.map(id => batch.evidence?.items.find(item => item.id === id) ?? null) })), quarantine: { document: batch.documentQuarantine, rejected: v?.rejected ?? [], unresolved: v?.unresolved ?? [] }, groups: [...groups.values()], limitations: ['Experimental machine verification; not client-approved accounting conclusions.', 'Source-signed amounts are not revenue, expenses, profit or cash flow.'], answerOrigin: 'DETERMINISTIC_ONLY' as const };
 }
-export function createM2Pipeline(database: TransactionDatabase, interpreter: M2Interpreter = offlineSemanticAdapter) {
+export function createM2Pipeline(database: TransactionDatabase, interpreter: M2Interpreter = offlineSemanticAdapter, resolvePrincipal: typeof resolveM2Principal = resolveM2Principal) {
     const locked = (tx: SqlConnection): TransactionDatabase => ({ transaction: work => work(tx), close: async () => { } });
-    const auth = (token: string) => database.transaction(tx => resolveM2Principal(tx, token));
+    const auth = (token: string) => database.transaction(tx => resolvePrincipal(tx, token));
     return {
-        async reserve(token: string) { return database.transaction(async (tx) => { const p = await resolveM2Principal(tx, token), id = randomUUID(); await tx.query("INSERT INTO fingence_m2.jobs(id,organization_id,user_id,state) VALUES($1,$2,$3,'RESERVED')", [id, p.organization_id, p.user_id]); await auditM2(tx, p, 'persistence_attempt.created', id); return { id }; }); },
-        async list(token: string) { return database.transaction(async (tx) => { const p = await resolveM2Principal(tx, token); const r = await tx.query('SELECT id::text,state,stages,created_at FROM fingence_m2.jobs WHERE organization_id=$1 ORDER BY created_at DESC LIMIT 100', [p.organization_id]); await auditM2(tx, p, 'batch.read', 'jobs'); return r.rows; }); },
+        async reserve(token: string) { return database.transaction(async (tx) => { const p = await resolvePrincipal(tx, token), id = randomUUID(); await tx.query("INSERT INTO fingence_m2.jobs(id,organization_id,user_id,state) VALUES($1,$2,$3,'RESERVED')", [id, p.organization_id, p.user_id]); await auditM2(tx, p, 'persistence_attempt.created', id); return { id }; }); },
+        async list(token: string) { return database.transaction(async (tx) => { const p = await resolvePrincipal(tx, token); const r = await tx.query('SELECT id::text,state,stages,created_at FROM fingence_m2.jobs WHERE organization_id=$1 ORDER BY created_at DESC LIMIT 100', [p.organization_id]); await auditM2(tx, p, 'batch.read', 'jobs'); return r.rows; }); },
         async get(token: string, id: string, warningPolicy: 'include' | 'exclude' = 'exclude') {
             if (!validOperationId(id) || !['include', 'exclude'].includes(warningPolicy))
                 throw new Error('ACCESS_DENIED');
             return database.transaction(async (tx) => {
-                const p = await resolveM2Principal(tx, token);
+                const p = await resolvePrincipal(tx, token);
                 const job = (await tx.query('SELECT id::text,state,stages,failure_code FROM fingence_m2.jobs WHERE id=$1 AND organization_id=$2 FOR SHARE', [id, p.organization_id])).rows[0];
                 if (!job)
                     throw new Error('ACCESS_DENIED');
@@ -112,22 +113,23 @@ export function createM2Pipeline(database: TransactionDatabase, interpreter: M2I
         },
         async reference(token:string,id:string){
             if(!validOperationId(id))throw new Error('ACCESS_DENIED');
-            return database.transaction(async tx=>{const p=await resolveM2Principal(tx,token);const row=await tx.query('SELECT id FROM fingence_m2.jobs WHERE id=$1 AND organization_id=$2 AND user_id=$3',[id,p.organization_id,p.user_id]);await auditM2(tx,p,'batch.read',id);return {owned:row.rows.length===1,ownerUserId:row.rows.length===1?p.user_id:null};});
+            return database.transaction(async tx=>{const p=await resolvePrincipal(tx,token);const row=await tx.query('SELECT id FROM fingence_m2.jobs WHERE id=$1 AND organization_id=$2 AND user_id=$3',[id,p.organization_id,p.user_id]);await auditM2(tx,p,'batch.read',id);return {owned:row.rows.length===1,ownerUserId:row.rows.length===1?p.user_id:null};});
         },
         async investigate(token: string, id: string) { if (!validOperationId(id))
-            throw new Error('ACCESS_DENIED'); return database.transaction(async (tx) => { const p = await resolveM2Principal(tx, token); const job = await tx.query('SELECT state FROM fingence_m2.jobs WHERE id=$1 AND organization_id=$2 FOR UPDATE', [id, p.organization_id]); if (!job.rows.length)
+            throw new Error('ACCESS_DENIED'); return database.transaction(async (tx) => { const p = await resolvePrincipal(tx, token); const job = await tx.query('SELECT state FROM fingence_m2.jobs WHERE id=$1 AND organization_id=$2 FOR UPDATE', [id, p.organization_id]); if (!job.rows.length)
             throw new Error('ACCESS_DENIED'); const result = await operations(locked(tx)).lookup(id, p.organization_id); if (result.outcome === 'CONFIRMED_NOT_COMMITTED' && job.rows[0].state === 'UNCERTAIN')
             await tx.query("UPDATE fingence_m2.jobs SET state='FAILED' WHERE id=$1 AND organization_id=$2", [id, p.organization_id]); await auditM2(tx, p, 'batch.read', id); return { outcome: result.outcome }; }); },
         async cancel(token: string, id: string) { if (!validOperationId(id))
-            throw new Error('ACCESS_DENIED'); return database.transaction(async (tx) => { const p = await resolveM2Principal(tx, token); const row = await tx.query("UPDATE fingence_m2.jobs SET state='CANCELLED' WHERE id=$1 AND organization_id=$2 AND user_id=$3 AND state='RESERVED' RETURNING id", [id, p.organization_id, p.user_id]); if (row.rowCount !== 1)
+            throw new Error('ACCESS_DENIED'); return database.transaction(async (tx) => { const p = await resolvePrincipal(tx, token); const row = await tx.query("UPDATE fingence_m2.jobs SET state='CANCELLED' WHERE id=$1 AND organization_id=$2 AND user_id=$3 AND state='RESERVED' RETURNING id", [id, p.organization_id, p.user_id]); if (row.rowCount !== 1)
             throw new Error('OPERATION_UNRESOLVED'); await operations(locked(tx)).cancelUnclaimed(id, p.organization_id); await auditM2(tx, p, 'ingestion.rejected', id); return { state: 'CANCELLED' }; }); },
         async process(token: string, id: string, bytes: Uint8Array, filename: string, emit: (stage: M2Stage) => void = () => { }) {
             if (!validOperationId(id) || !bytes.length || bytes.length > 10 * 1024 * 1024 || !await registeredM2Source(bytes))
                 throw new Error('REGISTERED_SYNTHETIC_REQUIRED');
             const principal = await auth(token);
-            await database.transaction(async (tx) => { const p = await resolveM2Principal(tx, token); const result = await tx.query("UPDATE fingence_m2.jobs SET state='PROCESSING' WHERE id=$1 AND organization_id=$2 AND user_id=$3 AND state='RESERVED' RETURNING id", [id, p.organization_id, p.user_id]); if (result.rowCount !== 1)
+            await database.transaction(async (tx) => { const p = await resolvePrincipal(tx, token); const result = await tx.query("UPDATE fingence_m2.jobs SET state='PROCESSING' WHERE id=$1 AND organization_id=$2 AND user_id=$3 AND state='RESERVED' RETURNING id", [id, p.organization_id, p.user_id]); if (result.rowCount !== 1)
                 throw new Error('ATTEMPT_ALREADY_CLAIMED'); if (!await operations(locked(tx)).claim(id, p.organization_id))
                 throw new Error('ATTEMPT_ALREADY_CLAIMED'); await auditM2(tx, p, 'ingestion.upload_attempt', id); });
+            const executionId = randomUUID();
             const stages: M2Stage[] = [];
             const stage = async (name: string, state: M2Stage['state']) => { const next = { name, state }; const found = stages.findIndex(s => s.name === name); if (found < 0)
                 stages.push(next);
@@ -144,24 +146,26 @@ export function createM2Pipeline(database: TransactionDatabase, interpreter: M2I
                 let blueprint = null, receipt = null;
                 await stage('interpretation', 'RUNNING');
                 if (evidence) {
-                    const proposed = await interpreter.propose(evidence);
-                    if (proposed.receipt.mode !== (interpreter.mode === 'SIMULATED' ? 'RECORDED_TEST' : 'LIVE_GROQ'))
+                    if(interpreter.mode!=='SIMULATED')await stage('inference','RUNNING');
+                    const proposed = await interpreter.propose(evidence,{operationId:id,executionId,sourceSha256:createHash('sha256').update(bytes).digest('hex'),token,principal});
+                    if(interpreter.mode!=='SIMULATED')await stage('inference','COMPLETED');
+                    if (proposed.receipt.mode !== (interpreter.mode === 'LIVE_GROQ' ? 'LIVE_GROQ' : 'RECORDED_TEST'))
                         throw new PersistenceError('UNSUPPORTED_VERSION');
                     receipt = proposed.receipt;
                     try {
-                        blueprint = materializePlan(evidence, proposed.plan);
+                        if(proposed.verificationAllowed!==false)blueprint = materializePlan(evidence, proposed.plan);
                     }
                     catch { /* Abstain. Verifier records every observable row as unresolved. */ }
                 }
                 await stage('interpretation', evidence ? 'COMPLETED' : 'BLOCKED');
                 await stage('verification', 'RUNNING');
-                const identity = { attemptId: id, jobId: id, executionId: randomUUID(), tenantId: principal.organization_id };
-                const processing = { mode: interpreter.mode === 'SIMULATED' ? 'RECORDED_TEST' as const : 'LIVE_GROQ' as const, stages: [...stages.filter(stage => !['verification', 'persistence'].includes(stage.name)), { name: 'verification', state: 'COMPLETED' as const }, { name: 'persistence', state: 'COMPLETED' as const }] };
+                const identity = { attemptId: id, jobId: id, executionId, tenantId: principal.organization_id };
+                const processing = { mode: receipt?.mode ?? 'NOT_EXECUTED' as const, stages: [...stages.filter(stage => !['verification', 'persistence'].includes(stage.name)), { name: 'verification', state: 'COMPLETED' as const }, { name: 'persistence', state: 'COMPLETED' as const }] };
                 const batch = evidence ? createExperimentalBatch({ ...identity, sourceBytes: bytes, evidence, blueprint, origin: receipt?.mode ?? null, receipt, processing }) : createExtractionFailureBatch({ ...identity, bytes, filename, processing });
                 await stage('verification', 'COMPLETED');
                 await stage('persistence', 'RUNNING');
                 const owned: TransactionDatabase = { close: async () => { }, transaction: work => database.transaction(async (tx) => {
-                        const p = await resolveM2Principal(tx, token);
+                        const p = await resolvePrincipal(tx, token);
                         if (p.organization_id !== batch.tenantId)
                             throw new Error('ACCESS_DENIED');
                         const value = await work(tx);
@@ -176,8 +180,8 @@ export function createM2Pipeline(database: TransactionDatabase, interpreter: M2I
                 return { id };
             }
             catch (error) {
-                const code = error instanceof PersistenceError ? error.code : 'UNCLASSIFIED_FAILURE';
-                const uncertain = ['COMMIT_OUTCOME_UNKNOWN', 'ROLLBACK_UNCONFIRMED', 'UNCLASSIFIED_FAILURE'].includes(code);
+                const code = error instanceof InterpretationFailure ? error.code : error instanceof PersistenceError ? error.code : 'UNCLASSIFIED_FAILURE';
+                const uncertain = error instanceof InterpretationFailure ? error.uncertain : ['COMMIT_OUTCOME_UNKNOWN', 'ROLLBACK_UNCONFIRMED', 'UNCLASSIFIED_FAILURE'].includes(code);
                 await database.transaction(async (tx) => { await tx.query("UPDATE fingence_m2.jobs SET state=$3,failure_code=$4 WHERE id=$1 AND organization_id=$2 AND state='PROCESSING'", [id, principal.organization_id, uncertain ? 'UNCERTAIN' : 'FAILED', code]); });
                 await operations(database).fail(id, principal.organization_id, code, uncertain);
                 throw new Error('OPERATION_NOT_CONFIRMED');

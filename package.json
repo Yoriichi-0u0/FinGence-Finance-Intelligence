@@ -28,7 +28,12 @@
     "m2:dev": "node scripts/m2.mjs serve",
     "m3:dev": "node scripts/m3.mjs serve",
     "m3:account": "node --conditions=react-server scripts/m3.mjs account",
-    "m3:organization": "node --conditions=react-server scripts/m3.mjs organization"
+    "m3:organization": "node --conditions=react-server scripts/m3.mjs organization",
+    "m4:dev": "node scripts/m4.mjs serve",
+    "m4:account": "node --conditions=react-server scripts/m4.mjs account",
+    "m4:prepare": "node --conditions=react-server scripts/m4.mjs prepare",
+    "m4:dispatch": "node --conditions=react-server scripts/m4.mjs dispatch-one",
+    "m4:evaluate": "node --conditions=react-server scripts/m4-evaluate.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",
