@@ -37,6 +37,19 @@ if (!artifactsOnly) {
     results.push({path, method, status: response.status, blocked: [403,404].includes(response.status)});
   }
 }
+if (!artifactsOnly) {
+ const origin = new URL(process.argv[2] ?? "http://127.0.0.1:3118");
+ for (const [action,method] of [["","GET"],["","POST"],["management","GET"],["export","GET"],["question","POST"],["membership","POST"],["revoke","POST"]]) {
+  const path="/api/ai-ingestion/m2/consumers"+(action?"?action="+action:"");
+  const response=await fetch(new URL(path,origin),{method});await response.arrayBuffer();
+  results.push({path,method,status:response.status,blocked:[403,404].includes(response.status)});
+ }
+ // Hosted public views retain their explicit illustrative fallback, never local financial data.
+ for(const path of ["/transactions","/analytics","/reports"]){
+  const response=await fetch(new URL(path,origin));const html=await response.text();
+  assert.equal(response.status,200);assert.ok(!html.includes("Selection proof:")&&!html.includes("One authorized V2 dataset"),"Local consumer UI leaked into production");
+ }
+}
 const sentinels = JSON.parse(process.env.FINGENCE_ISOLATION_SENTINELS ?? "[]");
 assert.ok(Array.isArray(sentinels) && sentinels.every(value => typeof value === "string" && value.length >= 16), "Use only nonsecret canary strings of at least 16 characters");
 const privateTraceFiles = [], artifactLeaks = [];
@@ -92,7 +105,7 @@ const requiredPath = resolve(".next/required-server-files.json");
 for (const file of JSON.parse(readFileSync(requiredPath, "utf8")).files) checkPath(requiredPath, file, process.cwd());
 console.log(JSON.stringify({ mode: artifactsOnly ? "PRODUCTION_ARTIFACTS_ONLY" : "LOCAL_PRODUCTION_NO_INFERENCE", results,
   tracesInspected, additionalRootsInspected, artifactsInspected, sentinelsChecked: sentinels.length, privateTraceFiles, artifactLeaks }, null, 2));
-assert.ok(artifactsOnly || results.length === 33 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
+assert.ok(artifactsOnly || results.length === 40 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
 assert.ok(tracesInspected > 0 && artifactsInspected > 0, "A production build is required");
 assert.equal(privateTraceFiles.length, 0, "Production traces must exclude private AI state, environments and evaluation labels");
 assert.equal(artifactLeaks.length, 0, "Private build canaries must not enter deployable artifacts");

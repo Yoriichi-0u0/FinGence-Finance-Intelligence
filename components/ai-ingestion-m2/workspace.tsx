@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { PageHeader, Panel } from '@/components/ui';
 import {M2ClientFence,principalScope,readPending,retainPending,retirePending,migrateOwnedLegacy,legacyPendingKey} from '@/lib/ai-ingestion/m2-client-state';
 import type { VerifiedDocumentBatchV1 } from '@/lib/server/ai-ingestion/v2-i1/persistence';
@@ -18,7 +19,7 @@ type View = {
     report: Report | null;
 };
 const api = '/api/ai-ingestion/m2';
-export default function M2Workspace() {
+export default function M2Workspace({financialConsumers=false}:{financialConsumers?:boolean}) {
     const [email, setEmail] = useState(''), [password, setPassword] = useState(''), [active, setActive] = useState(false), [role, setRole] = useState(''), [file, setFile] = useState<File | null>(null), [jobs, setJobs] = useState<{
         id: string;
         state: string;
@@ -231,6 +232,7 @@ export default function M2Workspace() {
  {(batch.documentQuarantine || batch.documentFailure) && <p className="rounded bg-amber-50 p-3 text-sm">Document quarantined: {batch.documentQuarantine?.reasons.join(', ') ?? batch.documentFailure?.code}</p>}
  <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr><th>Record</th><th>Amount / currency</th><th>Status / source</th></tr></thead><tbody>{verification?.accepted.map(row => <tr key={row.id} className="border-t"><td className="p-2">{row.financial.source_transaction_id ?? 'No source ID'}</td><td>{row.financial.source_amount ?? `Debit ${row.financial.debit ?? '—'} / Credit ${row.financial.credit ?? '—'}`} {row.financial.currency ?? ''}</td><td>{row.status}<details><summary>Evidence</summary>{row.evidenceIds.map(id => { const item = batch.evidence?.items.find(i => i.id === id); return <p className="max-w-xs break-all" key={id}>{item?.text} · {item?.sheet ?? ''} {item?.address ?? ''} {item?.page !== null && item?.page !== undefined ? `page ${item.page}` : ''} {item?.box ? JSON.stringify(item.box) : ''}</p>; })}</details></td></tr>)}</tbody></table></div>
  <details><summary>Quarantined records and verification reasons</summary>{[...(verification?.rejected ?? []), ...(verification?.unresolved ?? [])].map(row => <p className="break-all p-2 text-sm" key={row.id}>{row.id}: {row.reasons.join(', ')} · {row.evidenceIds.join(', ')}</p>)}</details></>}{!view && <p className="text-sm text-slate-600">Select an authorized operation to view its persisted results.</p>}</div></Panel>
+ {financialConsumers&&batch&&<Link className="block rounded border bg-teal-800 p-3 text-center text-sm text-white" href={`/transactions?batch=${batch.attemptId}&warnings=${warnings}`}>Open connected Transactions, Analytics and Reports</Link>}
  <Panel title="3. Financial intelligence and report"><div className="space-y-3 p-5"><label className="text-sm">Warning policy <select className="rounded border p-2" value={warnings} onChange={e => { const value = e.target.value as 'include' | 'exclude'; setWarnings(value); setAnswer(''); if (selected)
                 void load(selected, value); }}><option value="exclude">Exclude warnings</option><option value="include">Include warnings</option></select></label>{view?.report?.groups.map((g, n) => <div className="rounded border p-3" key={n}><p>{g.status === 'AVAILABLE' ? `${g.total} ${g.currency}` : 'Calculation unavailable'}</p><p className="text-sm">Source-signed amount sum · {g.monetaryBasis ?? 'basis unavailable'} · {g.reason ? 'The source monetary convention does not support a signed-amount total.' : `${g.sources.length} cited verified records`}</p></div>)}{!view?.report?.groups.length && <p>No supported financial total available.</p>}<p className="text-sm text-slate-600">Never revenue, expenses, profit or cash flow. Rejected/unresolved records are excluded. Experimental source arithmetic only.</p><button className="min-h-11 rounded border px-4" disabled={!view?.report} onClick={download}>Download sourced JSON report</button><label className="block text-sm">Ask about verified totals<input className="mt-1 block w-full rounded border p-2" placeholder="What is the source-signed total?" value={question} onChange={e => { setQuestion(e.target.value); setAnswer(''); }}/></label><button className="min-h-11 rounded border px-4" disabled={!view?.report || !question} onClick={ask}>Ask deterministic tool</button>{answer && <p className="whitespace-pre-wrap text-sm" role="status">{answer}</p>}<p className="text-sm">Live Groq, model-backed answers, reconciliation and forecasting are not activated.</p></div></Panel>
  </>}</>}{message && <p className="rounded border p-3 text-sm" role="status">{message}</p>}</div>;

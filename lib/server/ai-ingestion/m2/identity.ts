@@ -25,6 +25,11 @@ export async function resolveM2Principal(tx: SqlConnection, token: string, finan
         throw new Error('ACCESS_DENIED');
     return principal;
 }
+/** Shared OS-local account KDF; no browser-supplied verification claims. */
+export async function hashLocalPassword(password:string){
+ if(typeof password!=='string'||password.length<12||password.length>128)throw new Error('INVALID_LOCAL_ACCOUNT');
+ const salt=randomBytes(16).toString('hex');return salt+':'+(await derive(password,salt)).toString('hex');
+}
 /** OS-local provisioning only. Never called by a financial HTTP request. No fallback account. */
 export async function provisionM2Account(db: TransactionDatabase, input: {
     email: string;
@@ -34,9 +39,9 @@ export async function provisionM2Account(db: TransactionDatabase, input: {
 }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email) || input.email.length > 200 || input.password.length < 12 || input.password.length > 128 || !input.organizationName.trim())
         throw new Error('INVALID_LOCAL_ACCOUNT');
-    const salt = randomBytes(16).toString('hex'), hash = (await derive(input.password, salt)).toString('hex');
+    const hash = await hashLocalPassword(input.password);
     const userId = randomUUID(), organizationId = randomUUID();
-    await db.transaction(async (tx) => { await tx.query('INSERT INTO fingence_m2.organizations VALUES($1,$2)', [organizationId, input.organizationName.trim().slice(0, 120)]); await tx.query('INSERT INTO fingence_m2.users VALUES($1,$2,$3)', [userId, input.email.trim().toLowerCase(), salt + ':' + hash]); await tx.query('INSERT INTO fingence_m2.memberships(user_id,organization_id,role) VALUES($1,$2,$3)', [userId, organizationId, input.role ?? 'Finance']); });
+    await db.transaction(async (tx) => { await tx.query('INSERT INTO fingence_m2.organizations VALUES($1,$2)', [organizationId, input.organizationName.trim().slice(0, 120)]); await tx.query('INSERT INTO fingence_m2.users VALUES($1,$2,$3)', [userId, input.email.trim().toLowerCase(), hash]); await tx.query('INSERT INTO fingence_m2.memberships(user_id,organization_id,role) VALUES($1,$2,$3)', [userId, organizationId, input.role ?? 'Finance']); });
     return { userId, organizationId };
 }
 export function createM2Identity(db: TransactionDatabase) {

@@ -6,6 +6,15 @@ including Increments 01–03B. Check that PR and the actual checkout for merge/C
 check the Vercel deployment's source SHA before claiming a hosted release. Dated status
 statements elsewhere are historical; they do not override this guide or the actual code.
 
+## M3 development checkpoint (30 October 2026)
+
+[The connected M3 consumers](../integration/v2-m3-financial-consumers.md) now present
+one tenant-owned verified V2 selection in the actual local Transactions, Analytics
+and Reports pages, with exact source calculations, chart/date grouping, downloadable
+JSON and deterministic sourced answers. Local scoped management implements the three
+roles; hosted identity, economic publication and live inference remain disabled.
+This is a stacked feature checkpoint, not a main/Production release.
+
 ## M2 development checkpoint (30 October 2026)
 
 The local-only V2 tenant financial pipeline is documented in
