@@ -18,9 +18,9 @@ export class M2ClientFence {
   epoch = 0;
   principal: M2ClientPrincipal | null = null;
   observe(value: unknown): boolean {
-    let next:M2ClientPrincipal;
-    try{next=clientPrincipal(value);}catch(error){this.invalidate();throw error;}
-    const changed=accessScope(next)!==accessScope(this.principal);
+    // Validation is atomic: a thrown observation does not advance the response epoch.
+    // The request catch can then invalidate the client display using its captured epoch.
+    const next=clientPrincipal(value),changed=accessScope(next)!==accessScope(this.principal);
     if(changed){this.epoch++;this.principal=next;}
     return changed;
   }
