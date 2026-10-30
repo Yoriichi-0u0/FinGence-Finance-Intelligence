@@ -30,3 +30,11 @@ export function plotRatios(amounts: readonly string[]): number[] {
     const max = values.reduce((a, v) => { const n = v < 0n ? -v : v; return n > a ? n : a; }, 0n);
     return values.map(v => max === 0n ? 0 : Number(v * 100000n / max) / 100000);
 }
+
+/** UI-only question generation. Complements, never substitutes for, dataset/auth fencing. */
+export class QuestionRequestFence {
+    private generation = 0;
+    invalidate() { this.generation++; }
+    begin() { return ++this.generation; }
+    accepts(ticket: number) { return ticket === this.generation; }
+}

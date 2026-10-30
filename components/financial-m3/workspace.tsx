@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PageHeader, Panel } from '@/components/ui';
 import { M2ClientFence, principalScope, type M2ClientPrincipal } from '@/lib/ai-ingestion/m2-client-state';
-import { readSelection, saveSelection, validSelection, type FinancialSelection } from '@/lib/financial-m3/selection';
+import { readSelection, saveSelection, validSelection, QuestionRequestFence, type FinancialSelection } from '@/lib/financial-m3/selection';
 import type { FinancialSnapshot, FinancialFacts } from '@/lib/server/financial-m3/consumers';
 import type { createManagementService } from '@/lib/server/financial-m3/management';
 import SourceChart from './source-chart';
@@ -21,12 +21,13 @@ const titles = { transactions: 'Transactions', analytics: 'Financial analytics',
 export default function FinancialWorkspace({ view }: {
     view: keyof typeof titles;
 }) {
+    const questionRequests = useRef(new QuestionRequestFence());
     const fence = useRef(new M2ClientFence()), request = useRef(0), authenticating = useRef(false), initialHint = useRef(true);
     const [principal, setPrincipal] = useState<M2ClientPrincipal | null>(null), [jobs, setJobs] = useState<{
         id: string;
         state: string;
     }[]>([]), [selected, setSelected] = useState<FinancialSelection | null>(null), [snapshot, setSnapshot] = useState<FinancialSnapshot | null>(null), [overview, setOverview] = useState<Overview | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState(''), [email, setEmail] = useState(''), [password, setPassword] = useState(''), [question, setQuestion] = useState(''), [answer, setAnswer] = useState('');
-    const clear = useCallback(() => { request.current++; setJobs([]); setSelected(null); setSnapshot(null); setOverview(null); setAnswer(''); setQuestion(''); setBusy(false); }, []);
+    const clear = useCallback(() => { request.current++; setJobs([]); setSelected(null); setSnapshot(null); setOverview(null); questionRequests.current.invalidate(); setAnswer(''); setQuestion(''); setBusy(false); }, []);
     const invalidate = useCallback(() => { fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
     const load = useCallback(async (selection: FinancialSelection) => {
         const p = fence.current.principal;
@@ -35,7 +36,7 @@ export default function FinancialWorkspace({ view }: {
         const epoch = fence.current.epoch, sequence = ++request.current;
         setSelected(selection);
         setSnapshot(null);
-        setAnswer('');
+        questionRequests.current.invalidate(); setAnswer('');
         setError('');
         setBusy(true);
         try {
@@ -188,7 +189,7 @@ export default function FinancialWorkspace({ view }: {
         catch {
             if (epoch === fence.current.epoch) {
                 setSnapshot(null);
-                setAnswer('');
+                questionRequests.current.invalidate(); setAnswer('');
                 setError('Export was not authorized or its source changed. Refresh before downloading.');
             }
         }
@@ -197,13 +198,14 @@ export default function FinancialWorkspace({ view }: {
         if (!selected || !snapshot)
             return;
         const epoch = fence.current.epoch, sequence = request.current;
-        setAnswer('');
+        questionRequests.current.invalidate(); setAnswer('');
+        const ticket = questionRequests.current.begin();
         try {
             const r = await fetch(`${api}?action=question&batch=${selected.attemptId}&warnings=${selected.warningPolicy}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question }) });
             if (!r.ok)
                 throw new Error();
             const data = await r.json();
-            if (epoch !== fence.current.epoch || sequence !== request.current)
+            if (epoch !== fence.current.epoch || sequence !== request.current || !questionRequests.current.accepts(ticket))
                 return;
             if (data.selectionHash !== snapshot.selection.hash)
                 throw new Error();
@@ -214,7 +216,7 @@ export default function FinancialWorkspace({ view }: {
             }) => `${c.value} ${c.currency} — ${c.recordIds.length} cited records. Source-signed amount sum.`).join('\n') : data.reason);
         }
         catch {
-            if (epoch === fence.current.epoch) {
+            if (epoch === fence.current.epoch && sequence === request.current && questionRequests.current.accepts(ticket)) {
                 setSnapshot(null);
                 setError('Answer could not be authorized and verified. Refresh the selection.');
             }
@@ -247,7 +249,7 @@ export default function FinancialWorkspace({ view }: {
                 request.current++;
                 setSelected(null);
                 setSnapshot(null);
-                setAnswer('');
+                questionRequests.current.invalidate(); setAnswer('');
             } }}><option value="">Select a persisted batch</option>{jobs.map(j => <option value={j.id} key={j.id}>Verified processing · {j.id.slice(0, 8)}</option>)}</select></label><label className="block text-sm">Warning policy<select className="ml-2 rounded border p-2" aria-label="Warning inclusion" value={selected?.warningPolicy ?? 'exclude'} disabled={!selected} onChange={e => { if (selected)
                 void load({ ...selected, warningPolicy: e.target.value as 'include' | 'exclude' }); }}><option value="exclude">Exclude warnings</option><option value="include">Include warnings</option></select></label>{busy && <p role="status">Loading authorized persisted results…</p>}{snapshot && <><p className="break-all text-sm">Source: {snapshot.source.filename} · {snapshot.source.format}</p><p className="break-all font-mono text-xs text-slate-600">Selection proof: {snapshot.selection.hash}</p><p className="text-sm">{snapshot.counts.selected} selected · {snapshot.counts.accepted} verified · {snapshot.counts.rejected} rejected · {snapshot.counts.unresolved} unresolved · {snapshot.counts.excludedWarnings} warnings excluded</p><p className="text-sm">{snapshot.counts.sourceRows === null ? 'Source row count is not established.' : `${snapshot.counts.sourceRows} observed source rows.`} Quarantine is excluded from calculations.</p></>}</div></Panel>
  {!snapshot ? <Panel title="No financial dataset displayed"><p className="p-5 text-sm">Upload a registered synthetic document or select an authorized completed batch. Missing, uncertain and denied results never become zero-valued financial dashboards.</p></Panel> : <>
@@ -255,7 +257,7 @@ export default function FinancialWorkspace({ view }: {
  {view === 'transactions' && <Panel title="Independently verified transactions"><TransactionTable records={records}/></Panel>}
  {view === 'analytics' && <>{snapshot.analytics.map((g, i) => <Panel title={`Observed transaction-date series · ${g.currency ?? 'unavailable currency'}`} key={i}><div className="space-y-4 p-5"><SourceChart points={g.days} currency={g.currency ?? ''}/>{g.minimum !== null && <p className="break-all text-sm">Minimum source amount: {g.minimum}; maximum: {g.maximum} {g.currency}.</p>}<h3 className="font-semibold">Monthly source totals</h3>{g.months.map(p => <p className="break-all text-sm" key={p.period}>{p.period}: {p.total === null ? 'Amount unavailable' : `${p.total} ${g.currency}`} · {p.recordCount} records</p>)}</div></Panel>)}<CapabilityStates snapshot={snapshot}/></>}
  {view === 'reports' && <Panel title="Source-backed financial report"><div className="space-y-4 p-5"><p className="text-sm">This report contains this exact selected record subset, conventions, warning policy, evidence coordinates, date groups and source citations. No illustrative figures are included.</p><button className="min-h-11 rounded bg-teal-800 px-4 text-white" onClick={download}>Download financial JSON report</button><TransactionTable records={records}/><CapabilityStates snapshot={snapshot}/></div></Panel>}
- <Panel title="Grounded financial questions"><div className="space-y-3 p-5"><p className="text-sm">Deterministic source tools; genuine model responses are unavailable.</p><label className="block text-sm">Question<input className="mt-1 block w-full rounded border p-2" placeholder="What is the source-signed total?" value={question} onChange={e => { setQuestion(e.target.value); setAnswer(''); }}/></label><button className="min-h-11 rounded border px-4" disabled={!question} onClick={ask}>Ask verified source tool</button>{answer && <p role="status" className="whitespace-pre-wrap break-words text-sm">{answer}</p>}<p className="text-xs text-slate-600">Supported: source-signed totals and selected-record count. Answers use the same selection proof and citations as the table and report.</p></div></Panel>
+ <Panel title="Grounded financial questions"><div className="space-y-3 p-5"><p className="text-sm">Deterministic source tools; genuine model responses are unavailable.</p><label className="block text-sm">Question<input className="mt-1 block w-full rounded border p-2" placeholder="What is the source-signed total?" value={question} onChange={e => { setQuestion(e.target.value); questionRequests.current.invalidate(); setAnswer(''); }}/></label><button className="min-h-11 rounded border px-4" disabled={!question} onClick={ask}>Ask verified source tool</button>{answer && <p role="status" className="whitespace-pre-wrap break-words text-sm">{answer}</p>}<p className="text-xs text-slate-600">Supported: source-signed totals and selected-record count. Answers use the same selection proof and citations as the table and report.</p></div></Panel>
  </>}
  </>}
  </>}{error && <p className="rounded border border-amber-300 bg-amber-50 p-4 text-sm" role="status">{error}</p>}</div>;
