@@ -6,6 +6,15 @@ including Increments 01–03B. Check that PR and the actual checkout for merge/C
 check the Vercel deployment's source SHA before claiming a hosted release. Dated status
 statements elsewhere are historical; they do not override this guide or the actual code.
 
+## M2 development checkpoint (30 October 2026)
+
+The local-only V2 tenant financial pipeline is documented in
+[the M2 runbook](../integration/v2-m2-tenant-financial-pipeline.md). Its `/ai-ingestion`
+workspace connects actual extraction and independent verification to owned V2 persistence,
+exact source calculations, JSON export and deterministic questions. Interpretation is
+explicitly SIMULATED; live inference and financial publication remain disabled. This
+section describes the feature branch, not a merged or hosted release.
+
 ## What is available
 
 - **Stable deterministic path:** CSV/XLSX → reviewed mapping/conventions → validation →
