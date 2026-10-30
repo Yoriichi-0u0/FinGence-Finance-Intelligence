@@ -340,7 +340,7 @@ export default function AnomalyWorkspace() {
                 <a className={primary} href={`${api}?action=report&format=pdf&${reportQuery}`} download><FileText aria-hidden="true" size={16} /> Download PDF</a>
                 <a className={secondary} href={`${api}?action=report&format=json&${reportQuery}`} download><FileJson aria-hidden="true" size={16} /> JSON evidence</a>
               </div>
-              <p className="mt-3 flex items-center gap-1.5 text-[11px] text-[var(--muted)]"><Download aria-hidden="true" size={12} /> Each download is audited. The PDF and JSON carry the same report hash.</p>
+              <p className="mt-3 flex items-center gap-1.5 text-[11px] text-[var(--muted)]"><Download aria-hidden="true" size={12} /> Each download is audited and content-hashed. Separate downloads have their own generation time; source figures and references remain consistent.</p>
             </div>
           </Panel>
           <Panel title="Rules and evaluation" eyebrow={analysis.detectorVersion}>
