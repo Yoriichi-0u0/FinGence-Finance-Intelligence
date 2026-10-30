@@ -7,7 +7,7 @@ import { createM2Identity, tokenHash } from '../../lib/server/ai-ingestion/m2/id
 import { createM2Pipeline } from '../../lib/server/ai-ingestion/m2/pipeline';
 import { createFinancialConsumers } from '../../lib/server/financial-m3/consumers';
 import { createManagementService } from '../../lib/server/financial-m3/management';
-import { SECURITY_AUDIT_ACTIONS, LOCAL_ADMINISTRATION_AUDIT_ACTIONS } from '../../lib/server/security/audit';
+import { SECURITY_AUDIT_ACTIONS, LOCAL_ADMINISTRATION_AUDIT_ACTIONS, LOCAL_POC_AUDIT_ACTIONS } from '../../lib/server/security/audit';
 import { installM5Schema } from '../../lib/server/tenant-admin-m5/schema';
 import { bootstrapOrganization, createTenantAdministration, issueRecoveryAdmin, setOrganizationActive } from '../../lib/server/tenant-admin-m5/service';
 import { failingAudit, m5Database, password } from './support';
@@ -71,7 +71,7 @@ describe('M5 local schema and audit contract', () => {
     });
     it('keeps the hosted Phase 3 action list unchanged and adds only local administration actions', () => {
         const hosted = [...readFileSync('supabase/sql/phase3-security-audit-api-events.sql', 'utf8').split('security_audit_events_target_type_check')[0].matchAll(/'([a-z_]+\.[a-z_]+)'/g)].map(m => m[1]);
-        expect([...SECURITY_AUDIT_ACTIONS].sort()).toEqual([...hosted, ...LOCAL_ADMINISTRATION_AUDIT_ACTIONS].sort());
+        expect([...SECURITY_AUDIT_ACTIONS].sort()).toEqual([...hosted, ...LOCAL_ADMINISTRATION_AUDIT_ACTIONS, ...LOCAL_POC_AUDIT_ACTIONS].sort());
     });
 });
 

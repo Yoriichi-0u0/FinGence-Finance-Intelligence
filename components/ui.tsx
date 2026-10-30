@@ -119,6 +119,8 @@ const statusStyles: Record<string, string> = {
   Review: "bg-[var(--amber-soft)] text-[var(--amber)] ring-amber-200",
   Open: "bg-[var(--red-soft)] text-[var(--red)] ring-red-200",
   Reviewed: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  Explained: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
+  Escalated: "bg-[var(--red-soft)] text-[var(--red)] ring-red-200",
   Investigating: "bg-blue-50 text-blue-700 ring-blue-200",
   Dismissed: "bg-slate-100 text-slate-600 ring-slate-200",
   Processed: "bg-[var(--green-soft)] text-[var(--green)] ring-green-200",
