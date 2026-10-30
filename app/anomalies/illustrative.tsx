@@ -17,7 +17,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { anomalies as seededAnomalies } from "@/lib/mock-data";
 import type { Anomaly, AnomalyStatus } from "@/lib/types";
 
-export default function AnomaliesPage() {
+export default function IllustrativeAnomaliesPage() {
   const [items, setItems] = useState<Anomaly[]>(seededAnomalies);
   const [selectedId, setSelectedId] = useState(seededAnomalies[0].id);
   const selected = items.find((item) => item.id === selectedId) ?? items[0];
