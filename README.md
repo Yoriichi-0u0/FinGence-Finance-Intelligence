@@ -141,3 +141,11 @@ This is **NOT the final production system**. Measured fixture outcomes demonstra
 The development and Git root are the same directory. Stable and experimental source are in this single checkout. Read [workspace instructions](docs/ai-ingestion/workspace.md) for current paths and offline setup. Historical paths and dated verification remain execution evidence. Workspace consolidation does not deploy or authorize live LLM inference.
 
 The 26 October V2 feature checkpoint, security synchronization, local isolation and secure Groq setup boundary are documented in [V2 publication readiness](docs/ai-ingestion/publication-2026-10-26.md). No genuine inference had executed at that checkpoint. The [27 October Increment 03B report](docs/ai-ingestion/increment-03/refinement-03b.md) records the first genuine request's acceptance failure and subsequent credential-free refinement. No additional inference or production release is implied.
+
+### M3 local connected financial views
+
+Use `pnpm m3:dev` and open `http://127.0.0.1:3183/ai-ingestion` after private local
+account setup in [the M3 runbook](docs/integration/v2-m3-financial-consumers.md).
+The selected independently verified V2 batch is shared across Transactions, Analytics,
+Reports and deterministic source questions. Interpretation is SIMULATED; these views
+and membership administration are local experimental capabilities, not hosted APIs.

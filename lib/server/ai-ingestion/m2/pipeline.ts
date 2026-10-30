@@ -40,6 +40,7 @@ export async function registeredM2Source(bytes: Uint8Array) {
         readFile('public/samples/ai-ingestion-increment-03/manifest.json', 'utf8'),
         readFile('synthetic/ai-ingestion-i2/manifest.json', 'utf8'),
         readFile('synthetic/m2/manifest.json', 'utf8'),
+        readFile('synthetic/m3/manifest.json', 'utf8'),
     ]);
     for (const text of manifests) {
         const manifest = JSON.parse(text);
