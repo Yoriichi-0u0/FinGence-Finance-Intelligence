@@ -142,6 +142,12 @@ The development and Git root are the same directory. Stable and experimental sou
 
 The 26 October V2 feature checkpoint, security synchronization, local isolation and secure Groq setup boundary are documented in [V2 publication readiness](docs/ai-ingestion/publication-2026-10-26.md). No genuine inference had executed at that checkpoint. The [27 October Increment 03B report](docs/ai-ingestion/increment-03/refinement-03b.md) records the first genuine request's acceptance failure and subsequent credential-free refinement. No additional inference or production release is implied.
 
+### PoC anomaly review and management report
+
+With `pnpm m5:dev`, Finance members open `http://127.0.0.1:3185/anomalies`, upload the synthetic
+PoC transaction CSV and download a PDF management report. See
+[the runbook](docs/integration/poc-anomaly-review-report.md). Synthetic data only.
+
 ### M5 local tenant administration
 
 Use `pnpm m5:dev` and open `http://127.0.0.1:3185/admin` after OS-owner bootstrap in

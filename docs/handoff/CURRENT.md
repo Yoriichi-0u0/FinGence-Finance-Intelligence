@@ -6,6 +6,13 @@ including Increments 01–03B. Check that PR and the actual checkout for merge/C
 check the Vercel deployment's source SHA before claiming a hosted release. Dated status
 statements elsewhere are historical; they do not override this guide or the actual code.
 
+## PoC anomaly review and management report (31 October 2026, issue #31)
+
+[Anomaly review and report](../integration/poc-anomaly-review-report.md): on the local M5 stack,
+`/anomalies` replaces the mock with transparent rules over a Finance-uploaded synthetic source CSV,
+explicit audited review decisions, and a downloadable PDF/JSON management report. Reconciliation is
+quoted only from a `FinancePoCReconciliationV1` snapshot (Codex, #30); until wired it reads unavailable.
+
 ## M5 development checkpoint (31 October 2026)
 
 [Local tenant administration](../integration/v2-m5-tenant-administration.md) adds `/admin`
