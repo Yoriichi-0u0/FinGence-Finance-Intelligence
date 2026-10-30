@@ -14,8 +14,9 @@ import { createPersistenceRepository } from "../../lib/server/persistence/reposi
 import { syntheticResult, header } from "./fixtures";
 
 // Never uses developer credentials or the running PostgreSQL service/data directory.
-const binaries = process.env.FINGENCE_TEST_PG_BIN ?? "C:\\Program Files\\PostgreSQL\\18\\bin";
-const available = existsSync(join(binaries, "initdb.exe")) && existsSync(join(binaries, "pg_ctl.exe"));
+const binaries = process.env.FINGENCE_TEST_PG_BIN ?? (process.platform === "win32" ? "C:\\Program Files\\PostgreSQL\\18\\bin" : "/opt/homebrew/opt/postgresql@18/bin");
+const executable = (name: string) => join(binaries, name + (process.platform === "win32" ? ".exe" : ""));
+const available = existsSync(executable("initdb")) && existsSync(executable("pg_ctl"));
 const suite = available ? describe : describe.skip;
 suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", () => {
   let directory: string, port: number, pool: Pool, started = false;
@@ -42,7 +43,7 @@ suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", 
   }
   beforeAll(async () => {
     directory = mkdtempSync(join(tmpdir(), "fingence-c3b1-pg-"));
-    execFileSync(join(binaries, "initdb.exe"), ["-D", directory, "-U", "postgres", "-A", "trust", "--no-locale", "-E", "UTF8"], { windowsHide: true, timeout: 30000, stdio: "pipe" });
+    execFileSync(executable("initdb"), ["-D", directory, "-U", "postgres", "-A", "trust", "--no-locale", "-E", "UTF8"], { windowsHide: true, timeout: 30000, stdio: "pipe" });
     const reservation = createServer();
     await new Promise<void>((done, reject) => { reservation.once("error", reject); reservation.listen(0, "127.0.0.1", done); });
     port = (reservation.address() as { port: number }).port;
@@ -50,7 +51,7 @@ suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", 
     // Windows server descendants can retain pipe handles after pg_ctl exits.
     // Use the log file plus ignored stdio so startup cannot wait on inherited pipes.
     started = true;
-    execFileSync(join(binaries, "pg_ctl.exe"), ["-D", directory, "-l", join(directory, "test-server.log"), "-o", `-h 127.0.0.1 -p ${port}`, "-w", "-t", "30", "start"], { windowsHide: true, timeout: 35000, stdio: "ignore" });
+    execFileSync(executable("pg_ctl"), ["-D", directory, "-l", join(directory, "test-server.log"), "-o", `-h 127.0.0.1 -p ${port}`, "-w", "-t", "30", "start"], { windowsHide: true, timeout: 35000, stdio: "ignore" });
     pool = makePool();
     await pool.query("CREATE ROLE anon; CREATE ROLE authenticated;");
     for (const path of ["../../supabase/sql/phase1-clean-setup.sql", "../../supabase/sql/c3b1-grouped-persistence-upgrade.sql"]) {
@@ -63,7 +64,7 @@ suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", 
   });
   afterAll(async () => {
     await Promise.all(pools.map(value => value.end()));
-    if (started && existsSync(join(directory, "postmaster.pid"))) execFileSync(join(binaries, "pg_ctl.exe"), ["-D", directory, "-m", "fast", "-w", "-t", "20", "stop"], { windowsHide: true, timeout: 25000, stdio: "ignore" });
+    if (started && existsSync(join(directory, "postmaster.pid"))) execFileSync(executable("pg_ctl"), ["-D", directory, "-m", "fast", "-w", "-t", "20", "stop"], { windowsHide: true, timeout: 25000, stdio: "ignore" });
     // Only remove the exact fresh temporary cluster created by this suite.
     if (directory) {
       const child = relative(resolve(tmpdir()), resolve(directory));

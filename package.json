@@ -22,7 +22,8 @@
     "ai:evaluate": "node --conditions=react-server scripts/ai-cli.mjs evaluate",
     "ai:benchmark": ".venv-ai/bin/python scripts/ai-benchmark.py",
     "ai:demo": "FINGENCE_AI_LOCAL=1 FINGENCE_EXTRACTOR=docling FINGENCE_AI_PYTHON=.venv-ai/bin/python next dev --hostname 127.0.0.1 --port 3103",
-    "test:ai": "vitest run tests/ai-ingestion"
+    "test:ai": "vitest run tests/ai-ingestion",
+    "demo:financial:local": "node scripts/local-financial-demo.mjs"
   },
   "dependencies": {
     "fflate": "0.8.3",
@@ -50,7 +51,7 @@
     "eslint-config-next": "16.4.1",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   },
   "packageManager": "pnpm@11.19.0",
   "engines": {
