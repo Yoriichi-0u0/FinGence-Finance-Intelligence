@@ -13,7 +13,8 @@ import { createPocFinanceQa } from '../../lib/server/poc-finance-qa/service';
 import { acceptNarration, narrationRequest, templateNarrator } from '../../lib/poc-finance-qa/narration';
 import { m5Database, password } from '../tenant-admin-m5/support';
 
-/** The issue #46 demo journeys on the owner-unpacked synthetic pack (never committed). Feature files only. */
+/** The issue #46 demo journeys on the owner-unpacked synthetic pack (never committed). Feature files only.
+ * Each question recomputes facts over the 6,000-row file, so a journey can take several seconds under a full serial run. */
 const candidates = [process.env.FINGENCE_POC_DATASET_DIR, '../../datasets/poc-2026-03', '.local/datasets/poc-2026-03'].filter(Boolean) as string[];
 const directory = candidates.find(d => existsSync(join(d, 'source_transactions_6000.csv')) && existsSync(join(d, 'demo_general_ledger_mar2026.csv')));
 let pg: PGlite, db: TransactionDatabase, finance: string, march: string, full: string;
@@ -54,7 +55,7 @@ describe.skipIf(!directory)('Finance questions on the supplied March and full-ye
         expect((await ask(s(), 'How many months of history are observed?')).headline).toBe('1 observed month for BUS-001 (MYR): 2026-03.');
         expect(await ask(s(), 'What is the next-month cash-movement forecast?')).toMatchObject({ status: 'UNAVAILABLE', code: 'FORECAST_UNAVAILABLE', facts: [] });
         expect(await ask(s(), 'What is net profit?')).toMatchObject({ status: 'REFUSED', code: 'UNSUPPORTED_METRIC', facts: [] });
-    });
+    }, 60000);
     it('journey B: full 6,000-row source never inherits the March reconciliation', async () => {
         const s = () => ({ source: full, business: 'BUS-001', period: '2026-03' });
         expect((await ask(s(), 'How much cash movement was recorded?')).headline).toBe('Net signed bank cash movement for BUS-001 · 2026-03 is MYR 102,950.56.');
@@ -67,5 +68,5 @@ describe.skipIf(!directory)('Finance questions on the supplied March and full-ye
         expect(f.interpretation).toContain('net is experimental and low confidence');
         expect(f.interpretation).toContain('Pooled across 3 businesses, net WAPE is 52.85%, worse than simply repeating last month (46.90%).');
         expect((await ask({ source: full, business: 'BUS-001', period: '2026-03' }, 'Cash movement for BUS-002?')).code).toBe('SELECTION_MISMATCH');
-    });
+    }, 60000);
 });
