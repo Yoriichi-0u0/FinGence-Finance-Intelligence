@@ -217,13 +217,13 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
         `${r.reason} Matching months or totals never establish that two uploads are the same source, so no figure is shown.`, [link.reconciliation]);
     const snap = r.snapshot, cm = snap.cashMovement;
     if (cm.bank !== t.net) return unavailable(intent, 'RECONCILIATION_UNAVAILABLE', `No reconciliation for ${s.fileName} · ${scope}.`,
-        'The persisted reconciliation bank movement does not equal this source\'s net movement, so neither figure is quoted.', [link.reconciliation]);
+        'The reconciliation bank movement does not equal this source\'s net movement, so neither figure is quoted.', [link.reconciliation]);
     const counts = RECONCILIATION_STATUSES.map(k => [k, snap.counts[k] ?? 0] as const), categoryFacts: Fact[] = counts.map(([k, n]) => ({ id: `count.${k}`, label: CATEGORY[k].replace(/^./, ch => ch.toUpperCase()), value: String(n), unit: 'COUNT' }));
     const hashFacts: Fact[] = [{ id: 'ledgerSha256', label: 'Ledger source SHA-256', value: snap.sources.ledger.sha256, unit: 'TEXT' }];
     const evidence = [link.reconciliation, link.report], hashes = `bank SHA-256 ${snap.sources.bank.sha256.slice(0, 12)}…, ledger SHA-256 ${snap.sources.ledger.sha256.slice(0, 12)}…`;
     if (intent === 'RECONCILIATION_DIFFERENCE') return answered(intent,
         `Bank minus ledger for ${scope} is ${money(c, cm.signedDifference)} (bank ${money(c, cm.bank)}, ledger ${money(c, cm.ledger)}).`,
-        `From the persisted reconciliation of this exact uploaded bank file and its ledger pair (${hashes}). The row categories show which records differ; the cause of the difference is not inferred.`,
+        `From the reconciliation of this exact uploaded bank file and its ledger pair (${hashes}). The row categories show which records differ; the cause of the difference is not inferred.`,
         [{ id: 'bank', label: 'Bank movement', value: cm.bank, unit: 'MONEY', currency: c }, { id: 'ledger', label: 'Ledger movement', value: cm.ledger, unit: 'MONEY', currency: c }, { id: 'difference', label: 'Bank − ledger', value: cm.signedDifference, unit: 'MONEY', currency: c }, ...categoryFacts, ...hashFacts],
         evidence);
     const bankRecords = snap.results.filter(x => x.bankRecordId).length, matchedBank = snap.results.filter(x => matched(x.status) && x.bankRecordId).length;

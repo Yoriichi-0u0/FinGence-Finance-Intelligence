@@ -4,7 +4,8 @@ import {m5LocalEnabled} from '@/lib/server/tenant-admin-m5/flags';
 import FinancialWorkspace from '@/components/financial-m3/workspace';
 import ManagementReportLink from '@/components/poc-anomalies/report-link';
 import IllustrativePage from './illustrative';
+import { DemoGate } from '@/components/demo/gate';
 export default async function Page(){
  if(m3LocalEnabled()){const h=await headers();let request:Request;try{request=new Request(`http://${h.get('host')??'invalid'}/reports`,{headers:h});}catch{return <IllustrativePage/>;}if(m3RequestAllowed(request))return <><FinancialWorkspace view="reports" administration={m5LocalEnabled()}/>{m5LocalEnabled()?<ManagementReportLink/>:null}</>;}
- return <IllustrativePage/>;
+ return <DemoGate view="reports" illustrative={<IllustrativePage />} />;
 }

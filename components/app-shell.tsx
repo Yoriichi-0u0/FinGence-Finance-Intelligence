@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { DemoProcessingProvider } from "@/components/demo/context";
+import { DemoBanner } from "@/components/demo/banner";
 import {
   AlertTriangle,
   Building2,
@@ -35,6 +37,8 @@ const navigation = [
 const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
 // Local combined PoC only; the page and API are absent elsewhere.
 const financeQuestions = { href: "/finance-questions", label: "Finance questions", icon: MessageSquareText };
+// Browser-only synthetic demo: rule-based answers over the current processing context.
+const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareText };
 
 function Brand() {
   return (
@@ -54,7 +58,7 @@ function Brand() {
   );
 }
 
-function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false }: { onNavigate?: () => void; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean }) {
+function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false }: { onNavigate?: () => void; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -64,7 +68,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
       </div>
 
       <nav aria-label="Primary navigation" className="space-y-1">
-        {[...navigation, ...(localReconciliation ? [financeQuestions] : []), ...(localAdministration ? [administration] : [])].map((item) => {
+        {[...navigation, ...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : []), ...(localAdministration ? [administration] : [])].map((item) => {
           const Icon = item.icon;
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
@@ -101,9 +105,9 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
             <Building2 aria-hidden="true" size={20} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">{localFinancialConsumers ? "Synthetic organization" : "SAIC"}</span>
-            <span className="block truncate text-xs text-slate-300">{localFinancialConsumers ? "Local experimental workspace" : "Finance Workspace"}</span>
-            <span className="mt-0.5 block text-xs text-slate-400">{localFinancialConsumers ? "Hosted access disabled" : "August 2026"}</span>
+            <span className="block text-sm font-semibold">{localFinancialConsumers ? "Synthetic organization" : syntheticDemo ? "Synthetic demo" : "SAIC"}</span>
+            <span className="block truncate text-xs text-slate-300">{localFinancialConsumers ? "Local experimental workspace" : syntheticDemo ? "No sign-in · browser only" : "Finance Workspace"}</span>
+            <span className="mt-0.5 block text-xs text-slate-400">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Use fictional data only" : "August 2026"}</span>
           </span>
           <ChevronDown aria-hidden="true" size={16} className="text-slate-300" />
         </button>
@@ -112,18 +116,19 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
   );
 }
 
-export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
   return (
-    <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)]">
-      <aside className="sticky top-0 hidden h-dvh lg:block">
-        <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} />
+    <DemoProcessingProvider enabled={syntheticDemo}>
+    <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)] print:block">
+      <aside className="sticky top-0 hidden h-dvh lg:block print:hidden">
+        <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} syntheticDemo={syntheticDemo} />
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-[var(--border)] bg-white/96 px-4 backdrop-blur-sm lg:hidden">
+        <header className="sticky top-0 z-30 flex h-16 print:hidden items-center justify-between border-b border-[var(--border)] bg-white/96 px-4 backdrop-blur-sm lg:hidden">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -141,14 +146,14 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
           </div>
           <span
             className="grid size-9 place-items-center rounded-full bg-[var(--teal-soft)] text-sm font-semibold text-[var(--teal-dark)]"
-            aria-label={localFinancialConsumers ? "Local environment indicator, not account identity" : "Demonstration avatar — authentication not implemented"}
+            aria-label={localFinancialConsumers ? "Local environment indicator, not account identity" : syntheticDemo ? "Synthetic demo, no sign-in" : "Demonstration avatar — authentication not implemented"}
           >
-            {localFinancialConsumers ? "LC" : "AM"}
+            {localFinancialConsumers ? "LC" : syntheticDemo ? "SD" : "AM"}
           </span>
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
-          {!(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && pathname !== "/data" && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
+          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
           {children}
@@ -172,10 +177,11 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             >
               <X aria-hidden="true" size={21} />
             </button>
-            <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} syntheticDemo={syntheticDemo} onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       ) : null}
     </div>
+    </DemoProcessingProvider>
   );
 }

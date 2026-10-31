@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { pocLocalEnabled, pocRequestAllowed } from '@/lib/server/poc-reconciliation/runtime';
 import ReconciliationWorkspace from '@/components/poc-reconciliation/workspace';
 import IllustrativePage from './illustrative';
+import { DemoGate } from '@/components/demo/gate';
 export default async function Page() {
     if (pocLocalEnabled()) {
         const h = await headers();
@@ -11,5 +12,5 @@ export default async function Page() {
         if (!pocRequestAllowed(request)) notFound();
         return <ReconciliationWorkspace />;
     }
-    return <IllustrativePage />;
+    return <DemoGate view="reconciliation" illustrative={<IllustrativePage />} />;
 }
