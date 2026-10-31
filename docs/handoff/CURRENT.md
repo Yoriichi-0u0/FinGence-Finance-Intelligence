@@ -1,5 +1,14 @@
 # FinGence — current technical entrypoint
 
+## Issue #46 Finance questions — 31 October 2026
+
+[Finance questions runbook](../integration/poc-finance-questions.md): under `pnpm poc:dev`,
+`/finance-questions` answers eight fixed intents (totals, cash movement, bank−ledger difference,
+matches, records to review, anomaly candidates, monthly history, cash baseline) from the
+selected Finance-authorized upload, with source SHA, scope and evidence links. Rule-based, not
+live AI; profit/ratio/advice/fraud/cause questions are refused. Typed narration contract only
+(`lib/poc-finance-qa/narration.ts`); no provider call. Local synthetic only; 67 Production probes.
+
 ## Issue #38 integrated Saturday PoC — 31 October 2026
 
 [Two-journey integration walkthrough](../integration/poc-saturday-integration.md) combines
