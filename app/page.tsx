@@ -22,6 +22,7 @@ import {
   RiskBadge,
 } from "@/components/ui";
 import { formatCurrency, formatPercent } from "@/lib/formatters";
+import { DemoGate } from "@/components/demo/gate";
 import {
   anomalies,
   budgetVariances,
@@ -35,7 +36,12 @@ import {
 
 const periods: PeriodLabel[] = ["This Month", "Last Month", "Quarter", "Year"];
 
+/** Synthetic demo: verified results from the current processing context; local modes keep the illustrative page. */
 export default function OverviewPage() {
+  return <DemoGate view="overview" illustrative={<IllustrativeOverview />} />;
+}
+
+function IllustrativeOverview() {
   const [period, setPeriod] = useState<PeriodLabel>("This Month");
   const summary = periodSummaries[period];
 
