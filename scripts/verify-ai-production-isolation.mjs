@@ -70,12 +70,19 @@ if (!artifactsOnly) {
   const response=await fetch(new URL(path,origin),{method,...(method==="POST"?{headers:{"Content-Type":"text/csv","X-FinGence-File-Name":"a.csv"},body:"{}"}:{})});await response.arrayBuffer();
   results.push({path,method,status:response.status,blocked:[403,404].includes(response.status)});
  }
+ // Local PoC cash forecast API (issue #37) is absent from production; it has no write handler anywhere.
+ for (const [query,method] of [["action=sources","GET"],["action=forecast&"+pocSource,"GET"],["action=forecast&"+pocSource,"POST"]]) {
+  const path="/api/ai-ingestion/m2/forecast?"+query;
+  const response=await fetch(new URL(path,origin),{method});await response.arrayBuffer();
+  results.push({path,method,status:response.status,blocked:[403,404,405].includes(response.status)});
+ }
  assert.ok(!(await (await fetch(new URL("/",origin))).text()).includes('href="/admin"'),"Local administration navigation leaked into production");
  // Hosted public views retain their explicit illustrative fallback, never local financial data.
  for(const path of ["/transactions","/analytics","/reports"]){
   const response=await fetch(new URL(path,origin));const html=await response.text();
   assert.equal(response.status,200);assert.ok(!html.includes("Selection proof:")&&!html.includes("One authorized V2 dataset")&&!html.includes("PoC management report")&&!html.includes("Source-backed synthetic bank records")&&!html.includes("Observed monthly bank movement"),"Local consumer UI leaked into production");
  }
+ { const html=await (await fetch(new URL("/forecasting",origin))).text();assert.ok(html.includes("No XGBoost or ARIMA model is trained")&&!html.includes("Six-month average baseline"),"Local cash forecast leaked into production"); }
  { const html=await (await fetch(new URL("/anomalies",origin))).text();assert.ok(html.includes("Mock prototype result")&&!html.includes("Rule-based review candidates"),"Local anomaly review leaked into production"); }
 }
 const sentinels = JSON.parse(process.env.FINGENCE_ISOLATION_SENTINELS ?? "[]");
