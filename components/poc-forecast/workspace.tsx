@@ -230,7 +230,7 @@ export default function ForecastWorkspace() {
             {view ? (
               <dl className="grid gap-3 text-sm md:col-span-3 sm:grid-cols-3">
                 <div className="min-w-0"><dt className="text-xs text-[var(--muted)]">Source SHA-256</dt><dd className="mt-1 break-all font-mono text-xs">{view.source.sha256}</dd></div>
-                <div><dt className="text-xs text-[var(--muted)]">History interval</dt><dd className="mt-1 font-medium">{b?.interval ? `${monthLabel(b.interval.first, true)} – ${monthLabel(b.interval.last, true)} · ${b.interval.months} months` : "None"}</dd></div>
+                <div><dt className="text-xs text-[var(--muted)]">History interval</dt><dd className="mt-1 font-medium">{b?.interval ? `${monthLabel(b.interval.first, true)} – ${monthLabel(b.interval.last, true)} · ${b.interval.months} month${b.interval.months === 1 ? "" : "s"}` : "None"}</dd></div>
                 <div><dt className="text-xs text-[var(--muted)]">Rows for this business</dt><dd className="mt-1 font-medium">{view.options.find(o => o.businessId === view.selection.businessId)?.rows.toLocaleString()} of {view.source.rowCount.toLocaleString()} · {currency ?? "no single currency"}</dd></div>
               </dl>
             ) : null}
