@@ -1,0 +1,13 @@
+{
+  "version": "m2-synthetic-sources-v1",
+  "files": {
+    "quarantine.csv": {
+      "sha256": "e96b980804f951625e1378985313b9badaf82ef90dfd7626e1169844c514cdcc",
+      "bytes": 123
+    },
+    "verified-mixed.csv": {
+      "sha256": "a7c64a864eefd791d45c8d2b4bf7638b0058cfca5fb4bb88450a0ad247e5a52b",
+      "bytes": 285
+    }
+  }
+}

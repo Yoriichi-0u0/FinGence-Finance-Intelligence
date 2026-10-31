@@ -1,5 +1,16 @@
 # FinGence — current technical guidance
 
+For the combined university PoC (reconciliation, anomaly candidates and management PDF),
+run `pnpm poc:dev` and follow the [one-server runbook](docs/integration/poc-combined-financial-intelligence.md).
+This source-derived synthetic workflow is local only; older dated prototype status is historical.
+The local `/forecasting` page adds a backtested bank cash baseline; see the [cash forecast runbook](docs/integration/poc-cash-forecast.md).
+The local `/finance-questions` page answers fixed source-grounded questions (rule-based, not live AI); see the [Finance questions runbook](docs/integration/poc-finance-questions.md).
+
+For the local V2 Milestone 2 upload → verification → tenant-owned results/report workflow,
+use the [M2 runbook](docs/integration/v2-m2-tenant-financial-pipeline.md) and `pnpm m2:dev`.
+Interpretation is SIMULATED; hosted APIs and live provider dispatch remain disabled.
+
+
 Run the application directly from your Git clone's root:
 
 ```sh
@@ -136,3 +147,24 @@ This is **NOT the final production system**. Measured fixture outcomes demonstra
 The development and Git root are the same directory. Stable and experimental source are in this single checkout. Read [workspace instructions](docs/ai-ingestion/workspace.md) for current paths and offline setup. Historical paths and dated verification remain execution evidence. Workspace consolidation does not deploy or authorize live LLM inference.
 
 The 26 October V2 feature checkpoint, security synchronization, local isolation and secure Groq setup boundary are documented in [V2 publication readiness](docs/ai-ingestion/publication-2026-10-26.md). No genuine inference had executed at that checkpoint. The [27 October Increment 03B report](docs/ai-ingestion/increment-03/refinement-03b.md) records the first genuine request's acceptance failure and subsequent credential-free refinement. No additional inference or production release is implied.
+
+### PoC anomaly review and management report
+
+With `pnpm m5:dev`, Finance members open `http://127.0.0.1:3185/anomalies`, upload the synthetic
+PoC transaction CSV and download a PDF management report. See
+[the runbook](docs/integration/poc-anomaly-review-report.md). Synthetic data only.
+
+### M5 local tenant administration
+
+Use `pnpm m5:dev` and open `http://127.0.0.1:3185/admin` after OS-owner bootstrap in
+[the M5 runbook](docs/integration/v2-m5-tenant-administration.md). Organizations are created
+locally by the OS owner; members enroll with single-use codes and are activated by an Admin.
+This is local experimental administration, not hosted identity.
+
+### M3 local connected financial views
+
+Use `pnpm m3:dev` and open `http://127.0.0.1:3183/ai-ingestion` after private local
+account setup in [the M3 runbook](docs/integration/v2-m3-financial-consumers.md).
+The selected independently verified V2 batch is shared across Transactions, Analytics,
+Reports and deterministic source questions. Interpretation is SIMULATED; these views
+and membership administration are local experimental capabilities, not hosted APIs.

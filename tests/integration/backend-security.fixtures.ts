@@ -28,7 +28,9 @@ export async function createLocalSecurityFixture() {
       ('session-a','analyst-a','org-a',true), ('session-b','analyst-b','org-b',true),
       ('reviewer','reviewer-a','org-a',true), ('admin','admin-a','org-a',true),
       ('revoked','revoked-a','org-a',true), ('expired','analyst-a','org-a',false);`);
-  const socket = new PGLiteSocketServer({ db: local, host: "127.0.0.1", port: 0, maxConnections: 1 });
+  // The pool remains single-connection; a destroyed socket may still be closing
+  // when pg opens its replacement. Reserve one extra server slot for that overlap.
+  const socket = new PGLiteSocketServer({ db: local, host: "127.0.0.1", port: 0, maxConnections: 2 });
   await socket.start();
   const endpoint = new URL(`postgres://postgres@${socket.getServerConn()}/postgres`);
   const pool = new Pool({ host: endpoint.hostname, port: Number(endpoint.port), user: "postgres", database: "postgres", max: 1,
@@ -63,5 +65,11 @@ export async function createLocalSecurityFixture() {
   }
   const request = (session?: string) => new Request("http://127.0.0.1/internal", { headers: session ? { "x-synthetic-session": session } : {} });
   return { local, pool, database, writer, results, receipt, resolvePrincipal, resolveAccess, resolveTransactionScope, request,
-    close: async () => { await pool.end(); await socket.stop(); await local.close(); } };
+    close: async () => {
+      await pool.end();
+      const deadline = Date.now() + 1500;
+      while (socket.getStats().activeConnections > 0 && Date.now() < deadline) await new Promise(resolve => setImmediate(resolve));
+      if (socket.getStats().activeConnections !== 0) throw new Error('PGlite clients did not disconnect');
+      await socket.stop(); await local.close();
+    } };
 }

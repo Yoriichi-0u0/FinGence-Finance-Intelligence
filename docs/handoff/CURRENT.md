@@ -1,10 +1,118 @@
 # FinGence — current technical entrypoint
 
+## Issue #49 combined Finance demonstration — 31 October 2026
+
+[Combined review and Q&A walkthrough](../integration/poc-review-qa-integration.md) retains both
+reviewed histories, connects source-pair-bound human review metadata read-only to Finance Q&A,
+and preserves original matcher outcomes/figures and management PDF. Explained never means
+matched or cleared. Rule-based, no live AI; local synthetic only; **69 Production probes**.
+
+
+## Issue #45 local exception annotations — 31 October 2026
+
+[Finance reconciliation review](../integration/poc-reconciliation-review.md) adds persistent
+Open/Investigating/Explained/Escalated annotations with explanations, history and optimistic
+conflicts. Original matcher statuses, counts, source evidence and financial JSON stay immutable.
+This is optional human exception review, not routine ingestion mapping or financial approval.
+Local Finance only; separate annotation aggregates are available for future composition.
+
+## Issue #46 Finance questions — 31 October 2026
+
+[Finance questions runbook](../integration/poc-finance-questions.md): under `pnpm poc:dev`,
+`/finance-questions` answers eight fixed intents (totals, cash movement, bank−ledger difference,
+matches, records to review, anomaly candidates, monthly history, cash baseline) from the
+selected Finance-authorized upload, with source SHA, scope and evidence links. Rule-based, not
+live AI; profit/ratio/advice/fraud/cause questions are refused. Typed narration contract only
+(`lib/poc-finance-qa/narration.ts`); no provider call. Local synthetic only; the branch originally had 67 probes; the combined candidate has 69.
+
+## Issue #38 integrated Saturday PoC — 31 October 2026
+
+[Two-journey integration walkthrough](../integration/poc-saturday-integration.md) combines
+source-backed Transactions/Analytics and the measured cash forecast above the PR #35 fallback.
+Shared source/business selection links the actual uploaded data across views. March-only
+forecasting remains unavailable; full-file reconciliation cannot inherit the March bank SHA.
+All six original forecasting commits are retained. Local synthetic only; 63 Production probes.
+
+## Issue #36 source-backed PoC views — 31 October 2026
+
+[Uploaded-source Transactions and Analytics](../integration/poc-source-insights.md) adds
+read-only Finance-scoped source exploration, exact monthly cash movement, observed trends
+and source-bound anomaly/reconciliation context. It reuses existing uploaded bytes and
+M3/M5 access controls. No new accounting classification, forecast, live inference or hosted
+financial access is enabled. The older M3/Production page branches remain intact.
+
+## Issue #37 cash forecast — 31 October 2026
+
+[Cash forecast runbook](../integration/poc-cash-forecast.md): under `pnpm poc:dev`, `/forecasting`
+replaces the mock with a deterministic six-month-mean baseline over the Finance-uploaded source,
+with rolling-origin WAPE/MAE backtests (pooled receipts 18.01%, payments 9.81%, net 52.85% —
+worse than last month's 46.90%). Bank receipts/payments only; not AI, revenue or a cash flow
+statement. GET-only, Finance-only, audited; the illustrative page remains when the PoC is off.
+
+## Issue #34 combined local PoC — 31 October 2026
+
+[Combined financial intelligence runbook](../integration/poc-combined-financial-intelligence.md)
+is the current entrypoint for reconciliation → anomalies → combined PDF/JSON on one local
+server/database/Finance session. The optional report reader is now wired with exact bank SHA
+and tenant/business/period/currency matching. Older branch-specific "not wired" statements
+below are historical. March-only input yields 14 anomaly candidates; 9 applies to the March
+selection from the full 6,000-row input. Production remains isolated.
+
+## Issue #30 local PoC addition — 31 October 2026
+
+The additive bank/GL source contract, authenticated local API and demonstration instructions
+are in [poc-reconciliation.md](../integration/poc-reconciliation.md). The authoritative shared
+type is `FinancePoCReconciliationV1` in `lib/poc-reconciliation/contracts.ts`. This deterministic
+synthetic source-pair path does not replace C1/V2 records or enable hosted financial APIs.
+All older dated status statements below retain their historical meaning.
+
 Updated 27 October 2026. Start here before editing or consuming this repository.
 This guide describes the source introduced by [PR #4](https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/4),
 including Increments 01–03B. Check that PR and the actual checkout for merge/CI state;
 check the Vercel deployment's source SHA before claiming a hosted release. Dated status
 statements elsewhere are historical; they do not override this guide or the actual code.
+
+## PoC anomaly review and management report (31 October 2026, issue #31)
+
+[Anomaly review and report](../integration/poc-anomaly-review-report.md): on the local M5 stack,
+`/anomalies` replaces the mock with transparent rules over a Finance-uploaded synthetic source CSV,
+explicit audited review decisions, and a downloadable PDF/JSON management report. Reconciliation is
+quoted only from a `FinancePoCReconciliationV1` snapshot (Codex, #30); until wired it reads unavailable.
+
+## M5 development checkpoint (31 October 2026)
+
+[Local tenant administration](../integration/v2-m5-tenant-administration.md) adds `/admin`
+and `/enroll` (`pnpm m5:dev`): OS-owner organization bootstrap with a one-time Admin code,
+Admin-issued single-use enrollment into inactive memberships, role/activation changes,
+session revocation, account suspension separate from membership, and an organization audit.
+Suspension is enforced by the shared session resolver; legacy M3 management delegates to M5.
+Local only; no hosted identity, Production users or audit migration.
+
+## M4 development checkpoint (30 October 2026)
+
+[The M4 provider boundary and evaluation](../integration/v2-m4-model-boundary.md) connect
+recorded controls and a separately authorized one-shot Groq CLI to the same M2 verification,
+V2 persistence and M3 consumers. The browser remains RECORDED_TEST; no M4 live inference
+has run. Durable dispatch uncertainty, shared quotas and source/tenant-bound authorization
+remain fail closed. This is a stacked development checkpoint, not a hosted activation.
+
+## M3 development checkpoint (30 October 2026)
+
+[The connected M3 consumers](../integration/v2-m3-financial-consumers.md) now present
+one tenant-owned verified V2 selection in the actual local Transactions, Analytics
+and Reports pages, with exact source calculations, chart/date grouping, downloadable
+JSON and deterministic sourced answers. Local scoped management implements the three
+roles; hosted identity, economic publication and live inference remain disabled.
+This is a stacked feature checkpoint, not a main/Production release.
+
+## M2 development checkpoint (30 October 2026)
+
+The local-only V2 tenant financial pipeline is documented in
+[the M2 runbook](../integration/v2-m2-tenant-financial-pipeline.md). Its `/ai-ingestion`
+workspace connects actual extraction and independent verification to owned V2 persistence,
+exact source calculations, JSON export and deterministic questions. Interpretation is
+explicitly SIMULATED; live inference and financial publication remain disabled. This
+section describes the feature branch, not a merged or hosted release.
 
 ## What is available
 

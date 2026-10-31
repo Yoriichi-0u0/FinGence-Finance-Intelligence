@@ -16,7 +16,7 @@ export interface Run03 {
   evidence: SemanticEvidence | null; proposal: unknown; blueprint: SemanticBlueprint | null; verification: SemanticVerification | null;
   receipt: Receipt03 | null; requestTokenBound: number | null; stages: Stage[]; promptHash: string | null; error: string | null; runtimeMs: number;
 }
-const folders = ["public/samples/ai-ingestion", "public/samples/ai-ingestion-increment-02", "public/samples/ai-ingestion-increment-03"];
+const folders = ["public/samples/ai-ingestion", "public/samples/ai-ingestion-increment-02", "public/samples/ai-ingestion-increment-03", "synthetic/ai-ingestion-i2"];
 export async function registeredSynthetic03(bytes: Uint8Array) {
   const digest = createHash("sha256").update(bytes).digest("hex");
   for (const folder of folders) {
