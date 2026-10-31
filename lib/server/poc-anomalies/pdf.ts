@@ -110,7 +110,6 @@ export async function renderManagementReport(report: PocReport): Promise<Uint8Ar
             ['Reviewer: Explained', String(h.states.EXPLAINED)], ['Reviewer: Escalated', String(h.states.ESCALATED)],
         ]);
         text('Explained does not mean matched, reconciled, cleared or settled. The original outcomes and the signed difference above are unchanged.', { size: 8.5, font: bold, color: amber });
-        text(h.basis, { size: 8.5, color: muted });
     } else {
         text(`Human review summary unavailable. ${h.reason}`, { font: bold });
         text('No reviewer decision counts are reported.', { size: 8.5, color: muted });
