@@ -1,0 +1,226 @@
+{
+  "configuration": {
+    "version": "ai05-preflight/0.1.0",
+    "status": "BLOCKED_HELDOUT_RUNTIME_BOUNDARY",
+    "officialEvaluationStarted": false,
+    "truthLoadedForEvaluation": false,
+    "reviewed": {
+      "dataset": {
+        "path": "research/reconciliation/m2/fixtures/artifact-manifest.json",
+        "sha256": "4daa97994adb9cc1994f8b5547c6a411d2123fddbd984ad641cb4b69c3c6c3e1",
+        "value": {
+          "artifacts": {
+            "annotations/development.json": "78e5e4a826323cd562dd22c0fdc305348fca914ca12c922aa6aa541ffb0727bc",
+            "annotations/train.json": "a0772037fc05260a499f203fffbade555326393cb4114c8b4e3503e3b49addc1",
+            "eligibility/rejections.json": "c96029c71f3932759f14a5cbcc2fd4ebf371d646df9b9975e9d8101fe57fa0bb",
+            "evaluation-only/heldout-truth.json": "517f2a12831b6d908e824690696e7c771374910303c538f1d86f86983189b92b",
+            "inputs/development.json": "36b292e39e366aa91e2193cf08755b3e2130935400c5d34e3ac37665e2054645",
+            "inputs/heldout.json": "9fe36cf5c7e6ca591817620fe94707635e32e3ea6183ec59fd6dbb8b241d26ec",
+            "inputs/train.json": "0defc598bc6d168ee80b1a389689f7dadeb5b3f444b85dd3d1f838652574c83e",
+            "split-manifest.json": "9c60a5aac628524ae9dd138b805855c8fe9a7508868541492ed180d81a7f0c36"
+          },
+          "hashConvention": "SHA-256 byte-exact UTF-8",
+          "seed": "fingence-ai01-m2-frozen-001",
+          "version": "ai01-m2/1.1.0"
+        }
+      },
+      "baselines": {
+        "path": "docs/reconciliation/evidence/ai02/configuration.json",
+        "sha256": "a61455e293d370e8d5b4343afb4d61c6c1ee6fe9b5f600187586386944957167",
+        "value": {
+          "algorithmVersion": "ai02/1.0.0",
+          "datasetVersion": "ai01-m2/1.1.0",
+          "E0": {
+            "date": {
+              "field": "canonicalDate",
+              "maxDays": 2
+            },
+            "threshold": 1,
+            "margin": 0
+          },
+          "E1": {
+            "date": {
+              "field": "canonicalDate",
+              "maxDays": 2
+            },
+            "threshold": 0.95,
+            "margin": 0.2
+          },
+          "selection": "minimize explicit false + unannotated suggestions, maximize economic F1, higher threshold, higher margin",
+          "heldoutEvaluated": false
+        }
+      },
+      "semantic": {
+        "path": "docs/reconciliation/evidence/ai03/selected-config.json",
+        "sha256": "2a3d6395dd2fd234200e1364874f01c750275970dab2e79d27f0d5172151d746",
+        "value": {
+          "algorithmVersion": "ai03/0.1.0",
+          "modelMetadata": {
+            "modelRepository": "Xenova/multilingual-e5-small",
+            "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+            "tokenizerRevision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+            "library": "@huggingface/transformers",
+            "libraryVersion": "4.3.2",
+            "precision": "fp32",
+            "provider": "cpu",
+            "dimension": 384,
+            "pooling": "attention-mask-aware mean",
+            "normalization": "L2",
+            "maxTokens": 512,
+            "offline": true,
+            "node": "v24.14.1",
+            "platform": "win32",
+            "arch": "x64",
+            "weightSHA256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+            "tokenizerSHA256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39"
+          },
+          "config": {
+            "date": {
+              "field": "canonicalDate",
+              "maxDays": 2
+            },
+            "threshold": 0.9,
+            "margin": 0.03
+          },
+          "text": "NFKC, whitespace collapse; query: description | counterparty; no lowercasing",
+          "score": "raw cosine rounded to 1e-6, not a probability",
+          "assignment": "unchanged AI02 mutual unique support",
+          "options": {
+            "batchSize": 8,
+            "cacheEntries": 512,
+            "timeoutMs": 120000
+          },
+          "heldoutEvaluated": false
+        }
+      },
+      "model": {
+        "path": "research/reconciliation/ai03/model-config.json",
+        "sha256": "af18dec0cb5b71f990f7024bb12b32af424eec52084302ebb8444886e7202075",
+        "value": {
+          "status": "APPROVED_PINNED_LOCAL_RUNTIME",
+          "originalModel": "intfloat/multilingual-e5-small",
+          "modelRepository": "Xenova/multilingual-e5-small",
+          "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+          "tokenizerRevision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+          "library": "@huggingface/transformers",
+          "libraryVersion": "4.3.2",
+          "precision": "fp32",
+          "device": "cpu",
+          "dimension": 384,
+          "maxTokens": 512,
+          "pooling": "attention-mask-aware mean",
+          "normalization": "L2",
+          "prefix": "query: ",
+          "weightFile": "onnx/model.onnx",
+          "weightBytes": 470268533,
+          "weightSHA256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+          "tokenizerSHA256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+          "filesSHA256": {
+            "config.json": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1",
+            "tokenizer.json": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+            "tokenizer_config.json": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+            "special_tokens_map.json": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7",
+            "sentencepiece.bpe.model": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+            "onnx/model.onnx": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff"
+          }
+        }
+      }
+    },
+    "verificationPolicy": {
+      "version": "ai04-policy/1.0.0",
+      "dateField": "canonicalDate",
+      "maxDays": 2,
+      "scope": "SYNTHETIC_SPLIT_COHORT",
+      "identity": "EXACT_REFERENCE_AND_COUNTERPARTY"
+    },
+    "verificationPolicyFingerprint": "61fd0d328f74b8646cfbc1c3ee669ce6cf04ceb5836f7515523d9b00baefddea",
+    "software": {
+      "node": "v24.14.1",
+      "platform": "win32",
+      "architecture": "x64",
+      "project": {
+        "name": "finsight-prototype",
+        "version": "0.1.0",
+        "private": true,
+        "scripts": {
+          "dev": "next dev",
+          "build": "next build",
+          "start": "next start",
+          "lint": "eslint",
+          "test": "vitest run",
+          "test:watch": "vitest",
+          "typecheck": "next typegen && tsc --noEmit --incremental false",
+          "check:server-boundary": "node scripts/verify-server-boundary.mjs",
+          "test:ingestion": "vitest run tests/ingestion",
+          "test:analytics": "vitest run tests/analytics.test.ts tests/analytics-adapter.test.ts tests/integration/ingestion-analytics.test.ts",
+          "test:persistence": "vitest run tests/persistence tests/integration/grouped-consultation.test.ts",
+          "test:security": "vitest run tests/security",
+          "phase2:ingest": "node --conditions=react-server scripts/phase2.mjs",
+          "demo:persistence": "vitest run tests/integration/grouped-consultation.test.ts --reporter=verbose"
+        },
+        "dependencies": {
+          "fflate": "0.8.3",
+          "lucide-react": "^1.38.0",
+          "next": "16.3.6",
+          "papaparse": "5.7.0",
+          "pg": "8.23.1",
+          "react": "19.2.8",
+          "react-dom": "19.2.8",
+          "read-excel-file": "9.3.10",
+          "server-only": "0.0.1"
+        },
+        "devDependencies": {
+          "@electric-sql/pglite": "0.5.8",
+          "@electric-sql/pglite-socket": "0.2.11",
+          "@tailwindcss/postcss": "^4",
+          "@types/node": "^20",
+          "@types/papaparse": "5.5.2",
+          "@types/pg": "8.23.1",
+          "@types/react": "^19",
+          "@types/react-dom": "^19",
+          "eslint": "^9",
+          "eslint-config-next": "16.3.6",
+          "tailwindcss": "^4",
+          "typescript": "^5",
+          "vitest": "4.1.11"
+        },
+        "packageManager": "pnpm@11.19.0",
+        "engines": {
+          "node": "24.x"
+        }
+      },
+      "vitest": "4.1.11"
+    },
+    "note": "Preparatory snapshot only. The unchanged matching and verification entry points deny heldout. No official configuration seal, predictions, metrics or model execution is claimed.",
+    "fingerprint": "608552ebb722e9d48eaf0d88bcad0cef2ffb6dc2c884fce9aa1db3850eabe7f3"
+  },
+  "capabilities": [
+    {
+      "component": "E0 runBaseline",
+      "supported": false,
+      "error": "Unsupported development input/version/split"
+    },
+    {
+      "component": "E1 runBaseline",
+      "supported": false,
+      "error": "Unsupported development input/version/split"
+    },
+    {
+      "component": "E2b rankSemantic",
+      "supported": false,
+      "error": "Unsupported development input/version/split"
+    },
+    {
+      "component": "AI04 project",
+      "supported": false,
+      "error": "Unsupported source envelope or forbidden fields/split"
+    },
+    {
+      "component": "AI04 verify",
+      "supported": false,
+      "error": "Invalid verification envelope or injected field"
+    }
+  ],
+  "modelCalls": 0,
+  "preflightMs": 1.847400000000107
+}

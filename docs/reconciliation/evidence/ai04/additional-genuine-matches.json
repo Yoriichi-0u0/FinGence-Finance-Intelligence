@@ -1,0 +1,25 @@
+{
+  "evaluationOnly": true,
+  "additionalGenuineMatchesVsE1": [
+    {
+      "split": "train",
+      "bankId": "r-afa317eb290ed02054985ff6",
+      "ledgerId": "r-0050265427ec3a82c0a8f0b1",
+      "disposition": "UNRESOLVED_REVIEW",
+      "reasons": [
+        "REFERENCE_MISSING",
+        "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER"
+      ]
+    },
+    {
+      "split": "development",
+      "bankId": "r-cd8accd879632ce4ec347573",
+      "ledgerId": "r-8758f71912158db0780d9cfb",
+      "disposition": "UNRESOLVED_REVIEW",
+      "reasons": [
+        "REFERENCE_MISSING",
+        "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER"
+      ]
+    }
+  ]
+}

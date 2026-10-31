@@ -1,0 +1,11 @@
+{
+  "status": "INSTALLED_RUNTIME_MATCHES_PREEXISTING_APPROVED_LOCK",
+  "transformers": "4.3.2",
+  "onnxruntimeNode": "1.30.0",
+  "approvedOnnxruntimeNode": "1.30.0",
+  "runtimeLockSHA256": "2e69fc01810d1d4a329e6387de8cd41061d8138709c5a4b05c5caa0550baaa84",
+  "approvedRepositoryLockSHA256": "2e69fc01810d1d4a329e6387de8cd41061d8138709c5a4b05c5caa0550baaa84",
+  "approvedCopyWasInPreTruthStartingSnapshot": true,
+  "inventoryTiming": "Supplementary post-execution inventory, linked to the unchanged pre-existing approved lock snapshot; not retroactively inserted into official freeze",
+  "installedOrDownloaded": false
+}

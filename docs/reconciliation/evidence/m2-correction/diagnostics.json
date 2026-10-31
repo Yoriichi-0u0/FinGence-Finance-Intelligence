@@ -1,0 +1,1299 @@
+{
+  "date": "2026-10-30",
+  "before": {
+    "version": "ai01-m2/1.0.0",
+    "definition": "Unique exact reference + exact amount/currency/direction; description dependence means multiple equal non-description candidates with no shared true reference. Not a model score.",
+    "splits": [
+      {
+        "split": "train",
+        "rows": 150,
+        "templates": 6,
+        "suggested": 30,
+        "uniqueExactReference": 30,
+        "descriptionDependent": 0,
+        "ambiguityAbstentions": 15,
+        "negativeEdges": 24,
+        "probes": [
+          {
+            "bankId": "r-ed1a8464715956be7f0d8236",
+            "ledgerId": "r-b8a53818631897a23c220c51",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-b8a53818631897a23c220c51"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-423636ee2934845a5d5a254d",
+            "ledgerId": "r-6edef3f6bd465d9e95c1442b",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-6edef3f6bd465d9e95c1442b"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-75874f10f99fd4214abed0d4",
+            "ledgerId": "r-f14c3b49808e9b33a595b932",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-f14c3b49808e9b33a595b932"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-981c303a1aa8744e22e2f294",
+            "ledgerId": "r-3162d28656a0b1317ac0c562",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-3162d28656a0b1317ac0c562"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-3d89fb95aeddba8af243e0a4",
+            "ledgerId": "r-4445f7a1d4fc6c874d429123",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-4445f7a1d4fc6c874d429123"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-094665f1a2a7171d58f45992",
+            "ledgerId": "r-e0c5ddeabef98a7a2e8c1d79",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-ac686456c34cc41c90265b05",
+            "ledgerId": "r-280a06565004dc8ab753893b",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-280a06565004dc8ab753893b"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-3caebdee52169a41d7ffb59f",
+            "ledgerId": "r-0012fe61dbe9ed1b43f81278",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-0012fe61dbe9ed1b43f81278"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-de8f96480dd381db152b479b",
+            "ledgerId": "r-ca82e9bdce626a9bf7cdb7b7",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-ca82e9bdce626a9bf7cdb7b7"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-5725e8c5fcc8e3e2b6d2d9ae",
+            "ledgerId": "r-f9361c581efae88ddb425880",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-f9361c581efae88ddb425880"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-e535189f7114179f5f9dceda",
+            "ledgerId": "r-b018b44fc338c68f2f6189d0",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-b018b44fc338c68f2f6189d0"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-ddd3fac550cd9d94b929a895",
+            "ledgerId": "r-3bfa3d5e250e32c92e35423e",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-3bfa3d5e250e32c92e35423e"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-aa5560cf438239bfae012d88",
+            "ledgerId": "r-0d888ab610c5d8d508440852",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-0d888ab610c5d8d508440852"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-a9906c56dbdac3a3b5332483",
+            "ledgerId": "r-3900483201f026bdbc20e4ad",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-3900483201f026bdbc20e4ad"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-0426563cd1bdf897738df491",
+            "ledgerId": "r-e23b3810d42636051caacf51",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-e23b3810d42636051caacf51"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-e3762dc9872818939e677e1f",
+            "ledgerId": "r-e5cbff96d7dff37a5f2eb4fe",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-0906cc4a78fc08429e763f2e",
+            "ledgerId": "r-f9dcb082d44d4cff431f3916",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-f9dcb082d44d4cff431f3916"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-eada3bdc9a78243520ce5eb1",
+            "ledgerId": "r-22dc308b15ff96fa87170f07",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-22dc308b15ff96fa87170f07"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-15dcb57ac1df9632462214a9",
+            "ledgerId": "r-13b780db0aa4e1446baaaff2",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-13b780db0aa4e1446baaaff2"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-dd541a8da94d3905607633c8",
+            "ledgerId": "r-14c018baf73f5587bf0a7d5a",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-14c018baf73f5587bf0a7d5a"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-68f813982cb3ebbe0033d1e1",
+            "ledgerId": "r-e3a51e1117cf7359e6b83789",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-e3a51e1117cf7359e6b83789"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-e74522d871df19819534210f",
+            "ledgerId": "r-dc2bf50ea06fae2d5c2857ec",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-dc2bf50ea06fae2d5c2857ec"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-c426f650ec827fa19297e64e",
+            "ledgerId": "r-6634ee2eb84cf0c6a32833f3",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-6634ee2eb84cf0c6a32833f3"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-245db3fd847b2c5127c28513",
+            "ledgerId": "r-a341bb3249d5087774b9aa79",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-a341bb3249d5087774b9aa79"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-8ea682f022374aaf78400f67",
+            "ledgerId": "r-002bfe594ecf29668a178a4c",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-002bfe594ecf29668a178a4c"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-986b8a2426a6bbc2907795f4",
+            "ledgerId": "r-58f52182e77279d72ec7b937",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-910d3207156c809de3fa7123",
+            "ledgerId": "r-5facb2a8d45cb7d21507695b",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-5facb2a8d45cb7d21507695b"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-2763b290d4c979024f5c2ff9",
+            "ledgerId": "r-469b848457e20729423f493a",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-469b848457e20729423f493a"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-dc5f408a97cbb5f04cdbcf63",
+            "ledgerId": "r-be8c62fd397b3464b209fd98",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-be8c62fd397b3464b209fd98"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-653cd2bc4b0b9b69f31709f5",
+            "ledgerId": "r-40317fea7e0e0b18bf04cc93",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-40317fea7e0e0b18bf04cc93"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          }
+        ]
+      },
+      {
+        "split": "development",
+        "rows": 50,
+        "templates": 2,
+        "suggested": 10,
+        "uniqueExactReference": 10,
+        "descriptionDependent": 0,
+        "ambiguityAbstentions": 5,
+        "negativeEdges": 8,
+        "probes": [
+          {
+            "bankId": "r-aefbf4d738398732969d28d0",
+            "ledgerId": "r-1791561743e2d79cdeafaeb6",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-1791561743e2d79cdeafaeb6"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-87a5ba12bda3e5855e825b23",
+            "ledgerId": "r-c7a8904873ffcda0a6890410",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-c7a8904873ffcda0a6890410"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-ca52903d8b66999db49b3693",
+            "ledgerId": "r-cdf9cdf0fc50fd5d77348454",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-cdf9cdf0fc50fd5d77348454"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-98eaaf1efe6c02b02a1d8e32",
+            "ledgerId": "r-cfd41e9afd0c5adcd7dc08fc",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-cfd41e9afd0c5adcd7dc08fc"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-9718ada45173a535ab8cd7ba",
+            "ledgerId": "r-9f1bfb3a5dadee63fd7938b6",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-9f1bfb3a5dadee63fd7938b6"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-41ecc154e55cb42d77f732e1",
+            "ledgerId": "r-89fc0f463a14e1be4c0d0152",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-c8811e15b7121ea2bec4326c",
+            "ledgerId": "r-d2f74629fcbab212a7201630",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-d2f74629fcbab212a7201630"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-28ca6cfbb03f88e263ecec4d",
+            "ledgerId": "r-90d0118f163a0a612e47fe5c",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-90d0118f163a0a612e47fe5c"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-482e38bfb0dcdf5bf1134ddd",
+            "ledgerId": "r-e2ccdc010bde78efa9c99365",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-e2ccdc010bde78efa9c99365"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-db28a19b24f415aa9665dc72",
+            "ledgerId": "r-5fa8ad35b074164bbebb37a6",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-5fa8ad35b074164bbebb37a6"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          }
+        ]
+      },
+      {
+        "split": "heldout",
+        "rows": 100,
+        "templates": 4,
+        "suggested": 20,
+        "uniqueExactReference": 20,
+        "descriptionDependent": 0,
+        "ambiguityAbstentions": 10,
+        "negativeEdges": 16,
+        "probes": [
+          {
+            "bankId": "r-c090905bd6fa042022b2666e",
+            "ledgerId": "r-99cb422486ca6dafd2ce0fa2",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-99cb422486ca6dafd2ce0fa2"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-9c5f40ba7ed0b16f08f2a867",
+            "ledgerId": "r-52cc2ae5636572c08a79eabe",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-52cc2ae5636572c08a79eabe"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-08b21d71b95f661607ad99ec",
+            "ledgerId": "r-37360c92282fee44b7fc479a",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-37360c92282fee44b7fc479a"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-3c6ffca5b4ee4e837577ab94",
+            "ledgerId": "r-087d6e4ef4d4d7642968c8df",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-087d6e4ef4d4d7642968c8df"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-495992a5b00413322dc59a9e",
+            "ledgerId": "r-e5a22b122644c196dbffb342",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-e5a22b122644c196dbffb342"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-d5c7967e51380f117b3744f2",
+            "ledgerId": "r-d0afa2aec7481162445dcab5",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-ab58c22b88612bfd328ab3c9",
+            "ledgerId": "r-99e7864187d1f3f66c1a3c1c",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-99e7864187d1f3f66c1a3c1c"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-f215597ee7bf0be23e68e64e",
+            "ledgerId": "r-cae29a8d55f27aa9a7481c11",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-cae29a8d55f27aa9a7481c11"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-f4cbce450bf6b535896e022e",
+            "ledgerId": "r-b88e898eaa0ece7f1d4af4be",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-b88e898eaa0ece7f1d4af4be"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-dc5381368d52d9e1d0dabedc",
+            "ledgerId": "r-1b3ca8e461bdf03bbd1758e2",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-1b3ca8e461bdf03bbd1758e2"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-9b04199c79ca4857bca3bc0a",
+            "ledgerId": "r-9ebc6ab4d3085faaf2d8bebe",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-9ebc6ab4d3085faaf2d8bebe"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-017c5a7f402dbcdbe6f162ca",
+            "ledgerId": "r-e8867615444582a0add62424",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-e8867615444582a0add62424"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-212e27943b13cd16368eb48f",
+            "ledgerId": "r-551fe7c470eb08691e4f0850",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-551fe7c470eb08691e4f0850"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-d4dd69f73802ee22fc720e3a",
+            "ledgerId": "r-2e8bc723381624506137366f",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-2e8bc723381624506137366f"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-59b66fbb7f31509f6d699ef1",
+            "ledgerId": "r-36a35cb7209bdb63b69388f8",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-36a35cb7209bdb63b69388f8"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-0e3dff0c926ac29d0c8922c4",
+            "ledgerId": "r-558bb4ad07bd699f66738949",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-e3dce13c9ced91f29aaac997",
+            "ledgerId": "r-52ae33c2ad805623b5378ff0",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-52ae33c2ad805623b5378ff0"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-e59ff99b1a8745d8011d9087",
+            "ledgerId": "r-271e584c6d037f3fcb726b76",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-271e584c6d037f3fcb726b76"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-d7abbc70ca680b0869495eef",
+            "ledgerId": "r-049868de9e329cf5bda5291f",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-049868de9e329cf5bda5291f"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-c03f6b0b0b3fa0abf509d255",
+            "ledgerId": "r-dee3e0d500ad013b610f9d31",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-dee3e0d500ad013b610f9d31"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "version": "ai01-m2/1.1.0",
+    "definition": "Unique exact reference + exact amount/currency/direction; description dependence means multiple equal non-description candidates with no shared true reference. Not a model score.",
+    "splits": [
+      {
+        "split": "train",
+        "rows": 150,
+        "templates": 6,
+        "suggested": 30,
+        "uniqueExactReference": 21,
+        "descriptionDependent": 9,
+        "ambiguityAbstentions": 15,
+        "negativeEdges": 42,
+        "probes": [
+          {
+            "bankId": "r-8fdec8d1af8da8a5be1d4742",
+            "ledgerId": "r-71a95f9871f800c002565dac",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-71a95f9871f800c002565dac"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-e5c30ab12c7c59a8b6946e75",
+            "ledgerId": "r-ac9db2d9b3ebe7eef0955a45",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-0050265427ec3a82c0a8f0b1",
+              "r-ac9db2d9b3ebe7eef0955a45",
+              "r-b17e118a9dabfa7977bbeae2"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-ec55f1f9a85ea2acae912be0",
+            "ledgerId": "r-b17e118a9dabfa7977bbeae2",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-0050265427ec3a82c0a8f0b1",
+              "r-ac9db2d9b3ebe7eef0955a45",
+              "r-b17e118a9dabfa7977bbeae2"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-afa317eb290ed02054985ff6",
+            "ledgerId": "r-0050265427ec3a82c0a8f0b1",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-0050265427ec3a82c0a8f0b1",
+              "r-ac9db2d9b3ebe7eef0955a45",
+              "r-b17e118a9dabfa7977bbeae2"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-7ab00787ecf1ee2f9cb0342b",
+            "ledgerId": "r-1cf66583bf3498e2c69b837c",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-1cf66583bf3498e2c69b837c"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-313de360ae3ca739ff7581f9",
+            "ledgerId": "r-ae4dfede5fbb9d2ad0a01a6b",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-085bacb94dbd97446562000d",
+            "ledgerId": "r-1010b24bacd2e487787f30ff",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-1010b24bacd2e487787f30ff"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-fd26565186918c78c91160cc",
+            "ledgerId": "r-c4fc80a078938b28b586b04e",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-c4fc80a078938b28b586b04e"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-be7b0828555e6252d5ab2a5e",
+            "ledgerId": "r-a8081b5b530c2251a404fb5d",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-a8081b5b530c2251a404fb5d"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-25633a480a861df72c5360a0",
+            "ledgerId": "r-bd4e7bc4d1e48dc8d7cc2c2f",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-bd4e7bc4d1e48dc8d7cc2c2f"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-d01000c65b66d3841f681feb",
+            "ledgerId": "r-b9bd1d9edc03066dc2b9a80f",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-b9bd1d9edc03066dc2b9a80f"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-f1c73762a23f7f058ae99b29",
+            "ledgerId": "r-7d8cd9011fa2903cc3e0a85b",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-3bbd9533aed378b248238153",
+              "r-7d8cd9011fa2903cc3e0a85b",
+              "r-cd80cf27de8b43c4a3d9d782"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-dedc4f1aaa7449821478b20f",
+            "ledgerId": "r-cd80cf27de8b43c4a3d9d782",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-3bbd9533aed378b248238153",
+              "r-7d8cd9011fa2903cc3e0a85b",
+              "r-cd80cf27de8b43c4a3d9d782"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-008fd5bfd8d6e7f85715c0e5",
+            "ledgerId": "r-3bbd9533aed378b248238153",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-3bbd9533aed378b248238153",
+              "r-7d8cd9011fa2903cc3e0a85b",
+              "r-cd80cf27de8b43c4a3d9d782"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-31f547411f1081f04c5b2e0d",
+            "ledgerId": "r-dba8c767d15679f3382937d4",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-dba8c767d15679f3382937d4"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-e985f958dbf3a0ef5ed7a6dd",
+            "ledgerId": "r-a69b311063851303e0c5c9fe",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-7e5f9429268341c7c99d97da",
+            "ledgerId": "r-d6b22a28db5e78a7addaa806",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-d6b22a28db5e78a7addaa806"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-7f11879623b0c5f828493a28",
+            "ledgerId": "r-2417c0300ceed576b509399f",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-2417c0300ceed576b509399f"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-0b27230360d4aedf040ad356",
+            "ledgerId": "r-dcb73c6594b0472288582d04",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-dcb73c6594b0472288582d04"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-d09d4b1765b89c6df0b57728",
+            "ledgerId": "r-c63a04fe5e2150d589c5c712",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-c63a04fe5e2150d589c5c712"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-7c2fdb87466d5dc31172d7ca",
+            "ledgerId": "r-454da1d1540f58bf489845aa",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-454da1d1540f58bf489845aa"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-2a0cfca03faa1e87ba1f9f34",
+            "ledgerId": "r-545e85e33c0319d076404abf",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-545e85e33c0319d076404abf",
+              "r-7ddfc09d8d5f5087b748e7fa",
+              "r-f290822b1e65e613b5748977"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-c4fc77f83accf5c33eef25b6",
+            "ledgerId": "r-f290822b1e65e613b5748977",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-545e85e33c0319d076404abf",
+              "r-7ddfc09d8d5f5087b748e7fa",
+              "r-f290822b1e65e613b5748977"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-da72606c63c15817782eae1a",
+            "ledgerId": "r-7ddfc09d8d5f5087b748e7fa",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-545e85e33c0319d076404abf",
+              "r-7ddfc09d8d5f5087b748e7fa",
+              "r-f290822b1e65e613b5748977"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-3f23f100b197e65e131a2f84",
+            "ledgerId": "r-94b7127bcf233492d346d237",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-94b7127bcf233492d346d237"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-1fae4067ece14f73c4deba79",
+            "ledgerId": "r-52361a83bbd3cfd5f0e0141e",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-75232432b2025a4461c88601",
+            "ledgerId": "r-cf6c5a65f3d8c419ab2aded9",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-cf6c5a65f3d8c419ab2aded9"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-d5a8d00c8883aa4e00885b6e",
+            "ledgerId": "r-182f5c44a165264928ca2a50",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-182f5c44a165264928ca2a50"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-a580a00c5125ab06614dbb89",
+            "ledgerId": "r-da4a9350c29ade5921327c39",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-da4a9350c29ade5921327c39"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-8f278f963767931b9f7128bb",
+            "ledgerId": "r-fbabd6f3ec836f1f26ce0b77",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-fbabd6f3ec836f1f26ce0b77"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          }
+        ]
+      },
+      {
+        "split": "development",
+        "rows": 50,
+        "templates": 2,
+        "suggested": 10,
+        "uniqueExactReference": 7,
+        "descriptionDependent": 3,
+        "ambiguityAbstentions": 5,
+        "negativeEdges": 14,
+        "probes": [
+          {
+            "bankId": "r-29e71b977d6170b7fc1b69b2",
+            "ledgerId": "r-4fe9b52a80eaa616a844ef9d",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-4fe9b52a80eaa616a844ef9d"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-6bf935c97ea6b4bbcda60ccd",
+            "ledgerId": "r-a1915828cd01ac7d7778d09b",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-81875d939c9dd7d28356b132",
+              "r-8758f71912158db0780d9cfb",
+              "r-a1915828cd01ac7d7778d09b"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-27505fc7aed437d649c659a6",
+            "ledgerId": "r-81875d939c9dd7d28356b132",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-81875d939c9dd7d28356b132",
+              "r-8758f71912158db0780d9cfb",
+              "r-a1915828cd01ac7d7778d09b"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-cd8accd879632ce4ec347573",
+            "ledgerId": "r-8758f71912158db0780d9cfb",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-81875d939c9dd7d28356b132",
+              "r-8758f71912158db0780d9cfb",
+              "r-a1915828cd01ac7d7778d09b"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-772d27c6c379c11733d9a0fd",
+            "ledgerId": "r-6823aaefc18a1b9513bf7d37",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-6823aaefc18a1b9513bf7d37"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-c7e4e74aa805af0ef22c5469",
+            "ledgerId": "r-585e7cca0eb23872703c1501",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-bfe047449158c4f1043941a5",
+            "ledgerId": "r-9f68caea0393cf4d7ba62946",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-9f68caea0393cf4d7ba62946"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-ac7d975352ed81037c6ed102",
+            "ledgerId": "r-0d9bcc40649244247301dfe3",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-0d9bcc40649244247301dfe3"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-b94fb057c8e3db7adfaf15ef",
+            "ledgerId": "r-48ad65ed53d8a3ec5f68aa3a",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-48ad65ed53d8a3ec5f68aa3a"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-8ed44693b81165ce1092d07d",
+            "ledgerId": "r-02f402559b1552941b62a798",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-02f402559b1552941b62a798"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          }
+        ]
+      },
+      {
+        "split": "heldout",
+        "rows": 100,
+        "templates": 4,
+        "suggested": 20,
+        "uniqueExactReference": 14,
+        "descriptionDependent": 6,
+        "ambiguityAbstentions": 10,
+        "negativeEdges": 28,
+        "probes": [
+          {
+            "bankId": "r-337f2314c06da21fd31dfd52",
+            "ledgerId": "r-368a6a2de2f8e2b68003ad33",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-368a6a2de2f8e2b68003ad33"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-b41d38fe6ebf984de6d77de9",
+            "ledgerId": "r-c51cf668f58e39c717afd362",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-22ee7e6f2386d59d65ac0239",
+              "r-5014a6a512efebc3946ee607",
+              "r-c51cf668f58e39c717afd362"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-7184a02d5a692d16f059aa99",
+            "ledgerId": "r-22ee7e6f2386d59d65ac0239",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-22ee7e6f2386d59d65ac0239",
+              "r-5014a6a512efebc3946ee607",
+              "r-c51cf668f58e39c717afd362"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-da0c7ab8b0f3c707999e47ff",
+            "ledgerId": "r-5014a6a512efebc3946ee607",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-22ee7e6f2386d59d65ac0239",
+              "r-5014a6a512efebc3946ee607",
+              "r-c51cf668f58e39c717afd362"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-c88bbe469ffca0dd0af082e6",
+            "ledgerId": "r-67d0058d5d7a3489747057bd",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-67d0058d5d7a3489747057bd"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-533d83061a1c9e260f76176c",
+            "ledgerId": "r-c7e1d13578475a11832745aa",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-bd7c14d73f9e5b905ad5dfcd",
+            "ledgerId": "r-e32bce2b3143a3c94ea0c32e",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-e32bce2b3143a3c94ea0c32e"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-29328b1f61ecd2ad68236961",
+            "ledgerId": "r-ca4be33e0e061674ccd99638",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-ca4be33e0e061674ccd99638"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-ca2c4e492f6f44b47b95757b",
+            "ledgerId": "r-a9407ee9d58df0974c6ba4ec",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-a9407ee9d58df0974c6ba4ec"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-2c242ef64b3231296e96357a",
+            "ledgerId": "r-21ded013e2b0203709035a99",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-21ded013e2b0203709035a99"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-1ebc85fcef202fa69b78dbc8",
+            "ledgerId": "r-a8f04a9e7cc05e5bd6ec80b0",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-a8f04a9e7cc05e5bd6ec80b0"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-8e3e163857523127b5de7b47",
+            "ledgerId": "r-fdd7cea5a59fdc3a54fec4ec",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-46c575648bdb9f5a2728b820",
+              "r-893cd330a4a69422aa9d0fa3",
+              "r-fdd7cea5a59fdc3a54fec4ec"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-f4c67625182145cfada39993",
+            "ledgerId": "r-46c575648bdb9f5a2728b820",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-46c575648bdb9f5a2728b820",
+              "r-893cd330a4a69422aa9d0fa3",
+              "r-fdd7cea5a59fdc3a54fec4ec"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-4817dc8f48c8809552b3c77d",
+            "ledgerId": "r-893cd330a4a69422aa9d0fa3",
+            "uniqueExactReference": false,
+            "nonDescriptionCandidateIds": [
+              "r-46c575648bdb9f5a2728b820",
+              "r-893cd330a4a69422aa9d0fa3",
+              "r-fdd7cea5a59fdc3a54fec4ec"
+            ],
+            "descriptionDependent": true,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-91ccea956997557f1b0ccc24",
+            "ledgerId": "r-98d33624d85e95fef3f9edcc",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-98d33624d85e95fef3f9edcc"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-db43ad7b4de16fafb65c713b",
+            "ledgerId": "r-7fa31f7dee430b377c4776c5",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-2264e1dfd70cfa4edd450d9a",
+            "ledgerId": "r-4bd41e81b9b3065214ee5525",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-4bd41e81b9b3065214ee5525"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-dbf4e1fa7f391114dfa93556",
+            "ledgerId": "r-1893014bf26a3d948d5bf785",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-1893014bf26a3d948d5bf785"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-a9d91554464393888df09f99",
+            "ledgerId": "r-68e58d0e3aec6b7a08e253ec",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-68e58d0e3aec6b7a08e253ec"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          },
+          {
+            "bankId": "r-69ff3a7478b6947a8bff2f67",
+            "ledgerId": "r-532f3e17f57185a2b6a3aff2",
+            "uniqueExactReference": true,
+            "nonDescriptionCandidateIds": [
+              "r-532f3e17f57185a2b6a3aff2"
+            ],
+            "descriptionDependent": false,
+            "allCompetitorsExplicitlyNegative": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "date": "2026-10-30",
+  "approval": "Explicit user approval in current chat",
+  "repository": "Xenova/multilingual-e5-small",
+  "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+  "files": [
+    {
+      "file": "config.json",
+      "bytes": 658,
+      "sha256": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1",
+      "gitBlobSHA1": "4104f38273cc595fd9500fd243124e9f6cf383dc",
+      "expected": "4104f38273cc595fd9500fd243124e9f6cf383dc",
+      "verification": "Git blob SHA-1",
+      "durationMs": 427.567
+    },
+    {
+      "file": "tokenizer.json",
+      "bytes": 17082730,
+      "sha256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "gitBlobSHA1": "c08c71c380f26cd853e05e382751b80b30bbbc5e",
+      "expected": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "verification": "LFS SHA-256",
+      "durationMs": 5055.400500000001
+    },
+    {
+      "file": "tokenizer_config.json",
+      "bytes": 443,
+      "sha256": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b",
+      "gitBlobSHA1": "059214673d9d6d2ee319411e2ffec8c024b816d5",
+      "expected": "059214673d9d6d2ee319411e2ffec8c024b816d5",
+      "verification": "Git blob SHA-1",
+      "durationMs": 418.35350000000017
+    },
+    {
+      "file": "special_tokens_map.json",
+      "bytes": 167,
+      "sha256": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7",
+      "gitBlobSHA1": "e0b1d18ecd0ae4ff1d47bd297d910c0cf83e504b",
+      "expected": "e0b1d18ecd0ae4ff1d47bd297d910c0cf83e504b",
+      "verification": "Git blob SHA-1",
+      "durationMs": 302.3766999999998
+    },
+    {
+      "file": "sentencepiece.bpe.model",
+      "bytes": 5069051,
+      "sha256": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+      "gitBlobSHA1": "db9af13bf09fd3028ca32be90d3fb66d5e470399",
+      "expected": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+      "verification": "LFS SHA-256",
+      "durationMs": 1228.1858000000002
+    },
+    {
+      "file": "onnx/model.onnx",
+      "bytes": 470268533,
+      "sha256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "gitBlobSHA1": "9519c70217ff0851e418c9c22c2e6cd5d9212b74",
+      "expected": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "verification": "LFS SHA-256",
+      "durationMs": 48418.3822
+    }
+  ],
+  "totalBytes": 492421582,
+  "durationMs": 56563.3153,
+  "modelRoot": "C:\\Users\\celes\\Downloads\\COS40005 FYP\\ai03-models\\761b726dd34fb83930e26aab4e9ac3899aa1fa78"
+}

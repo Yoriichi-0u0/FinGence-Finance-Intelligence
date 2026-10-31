@@ -1,0 +1,15 @@
+{
+  "artifacts": {
+    "annotations/development.json": "78e5e4a826323cd562dd22c0fdc305348fca914ca12c922aa6aa541ffb0727bc",
+    "annotations/train.json": "a0772037fc05260a499f203fffbade555326393cb4114c8b4e3503e3b49addc1",
+    "eligibility/rejections.json": "c96029c71f3932759f14a5cbcc2fd4ebf371d646df9b9975e9d8101fe57fa0bb",
+    "evaluation-only/heldout-truth.json": "517f2a12831b6d908e824690696e7c771374910303c538f1d86f86983189b92b",
+    "inputs/development.json": "36b292e39e366aa91e2193cf08755b3e2130935400c5d34e3ac37665e2054645",
+    "inputs/heldout.json": "9fe36cf5c7e6ca591817620fe94707635e32e3ea6183ec59fd6dbb8b241d26ec",
+    "inputs/train.json": "0defc598bc6d168ee80b1a389689f7dadeb5b3f444b85dd3d1f838652574c83e",
+    "split-manifest.json": "9c60a5aac628524ae9dd138b805855c8fe9a7508868541492ed180d81a7f0c36"
+  },
+  "hashConvention": "SHA-256 byte-exact UTF-8",
+  "seed": "fingence-ai01-m2-frozen-001",
+  "version": "ai01-m2/1.1.0"
+}

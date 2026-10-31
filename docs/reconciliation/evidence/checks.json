@@ -1,0 +1,125 @@
+{
+  "date": "2026-10-27",
+  "timezone": "Asia/Singapore",
+  "node": "v24.14.1",
+  "head": "9385da7f4bb5ef9abbf2dec39b31e60e639fcaca",
+  "branch": "feature/backend-celester",
+  "upstream": "origin/feature/backend-api-celester",
+  "generatorVersion": "ai01-m1/1.0.1",
+  "commands": [
+    {
+      "command": "pnpm exec vitest run tests/reconciliation/ground-truth.test.ts --maxWorkers=1 --reporter=default --reporter=json --outputFile=docs/reconciliation/evidence/review-baseline.json",
+      "exitCode": 1,
+      "expectedPreFixFailures": 8,
+      "passed": 8,
+      "skipped": 0
+    },
+    {
+      "command": "pnpm exec vitest run tests/reconciliation --maxWorkers=1 --update",
+      "exitCode": 0,
+      "passed": 102,
+      "fixtureUpdated": true
+    },
+    {
+      "command": "pnpm exec vitest run tests/reconciliation --maxWorkers=1 --reporter=default --reporter=json --outputFile=docs/reconciliation/evidence/ai01-tests.json",
+      "exitCode": 0,
+      "passed": 106,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "command": "pnpm exec vitest run tests/reconciliation tests/api tests/persistence tests/integration/grouped-consultation.test.ts tests/recovery/db03.safety.test.ts --config scripts/db03/vitest.config.mts --maxWorkers=1 --reporter=default --reporter=json --outputFile=docs/reconciliation/evidence/ai01-regressions.json",
+      "exitCode": 0,
+      "passed": 630,
+      "failed": 0,
+      "skipped": 0,
+      "nativePostgreSQL": 25
+    },
+    {
+      "command": "pnpm typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "pnpm exec eslint research/reconciliation tests/reconciliation",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0
+    },
+    {
+      "command": "git diff --cached --check",
+      "exitCode": 0
+    }
+  ],
+  "preservation": {
+    "protectedFileSHA256": {
+      "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/physical-backup-manifest.json": "1dc866bbfd3e4b50e4469c303508ed9dc00219f20d41108c8771c0809cb2edfd",
+      "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/recovery.json": "ff0aac47e14611bf61539619735a47a6590a439cc60f16dffcf38629183bceb3",
+      "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/runner.json": "84912a7a2e25b193e80c789892a709d05ff3a862d5235af490bf0f17f94e0dc5",
+      "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/vitest.json": "52cfd87f724f8dae86e122630fae17ca2f2b3a47383a220a3e6676b036812cc7",
+      "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/physical-backup-manifest.json": "f96a151cc057307540f1252902c3dd6951be64a370885ac5859bf213952e1fa1",
+      "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/recovery.json": "309d0dcdded19249a6a587a2c06c4ccce89f5103bd469025014316c9255ced0d",
+      "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/runner.json": "84912a7a2e25b193e80c789892a709d05ff3a862d5235af490bf0f17f94e0dc5",
+      "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/vitest.json": "81178f6fb0208e5df9d3e5b50a844dc56503724f9086c36834d17a30bd8d6f2f",
+      "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/physical-backup-manifest.json": "96b3bdd0634a11bf3af62eb427574c83be83db8ce513ceb9517aa263e6cea393",
+      "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/recovery.json": "812ff183639df8cfb869f8c2a0fae846fbee7b3d0eb318e3997da9fa90c0219b",
+      "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/runner.json": "84912a7a2e25b193e80c789892a709d05ff3a862d5235af490bf0f17f94e0dc5",
+      "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/vitest.json": "501902e084548ed746226c2bce6ae97753d612bfbdfd134af764f95f7bc0f347",
+      "scripts/db03/run.mjs": "e4c1f5bfe86831480b911f5b2a7fc2195c258f638a3a0ed0136878e60cffb8aa"
+    },
+    "preliminaryFiles": 258,
+    "preliminaryHash": "07e0f87bf3d62da0c53ceaa5ade28b0d1a5b97c970825f555e9a096d944127c7",
+    "originalFixtureReconstructionSHA256": "bb17c3ad16ee5b08c1f52f7824cab93d55e7b119b07f1fa5e47e637fbd9d4f6b",
+    "onlyReversedFields": "revision metadata and recurring-case posting/canonical dates and sourceTransactionId; performed in memory only"
+  },
+  "changedFiles": [
+    "docs/reconciliation/ai01-dataset-spec.md",
+    "docs/reconciliation/ai01-verification.md",
+    "docs/reconciliation/annotation-guide.md",
+    "docs/reconciliation/evidence/ai01-regressions.json",
+    "docs/reconciliation/evidence/ai01-tests.json",
+    "docs/reconciliation/evidence/checks.json",
+    "docs/reconciliation/integrity-manifest.json",
+    "research/reconciliation/README.md",
+    "research/reconciliation/fixtures/pilot-dataset.json",
+    "research/reconciliation/generator.ts",
+    "research/reconciliation/validator.ts",
+    "tests/reconciliation/ground-truth.test.ts"
+  ],
+  "addedFiles": [
+    "docs/reconciliation/evidence/review-baseline.json",
+    "research/reconciliation/pilot-annotations.ts"
+  ],
+  "packageFiles": [
+    "docs/reconciliation/.gitattributes",
+    "docs/reconciliation/ai01-dataset-spec.md",
+    "docs/reconciliation/ai01-verification.md",
+    "docs/reconciliation/annotation-guide.md",
+    "docs/reconciliation/evidence/ai01-regressions.json",
+    "docs/reconciliation/evidence/ai01-tests.json",
+    "docs/reconciliation/evidence/checks.json",
+    "docs/reconciliation/evidence/review-baseline.json",
+    "docs/reconciliation/integrity-manifest.json",
+    "research/reconciliation/.gitattributes",
+    "research/reconciliation/README.md",
+    "research/reconciliation/decimal.ts",
+    "research/reconciliation/fixtures/pilot-dataset.json",
+    "research/reconciliation/fixtures/pilot-expectations.json",
+    "research/reconciliation/generator.ts",
+    "research/reconciliation/ground-truth.ts",
+    "research/reconciliation/pilot-annotations.ts",
+    "research/reconciliation/schemas.ts",
+    "research/reconciliation/types.ts",
+    "research/reconciliation/validator.ts",
+    "tests/reconciliation/generator.test.ts",
+    "tests/reconciliation/ground-truth.test.ts",
+    "tests/reconciliation/validator.test.ts"
+  ],
+  "fixture": {
+    "bytes": 53008,
+    "sha256": "6c5961572fc1b725f7129cec35810cbea77f8c560e70ed6f18d677a7094c7044"
+  },
+  "noHostedAccess": true,
+  "noCommitOrPush": true
+}

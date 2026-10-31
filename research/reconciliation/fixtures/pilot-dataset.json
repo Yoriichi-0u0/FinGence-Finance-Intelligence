@@ -1,0 +1,1710 @@
+{
+  "config": {
+    "pilot": "M1",
+    "seed": "fingence-ai01-pilot-001"
+  },
+  "generatorVersion": "ai01-m1/1.0.1",
+  "groundTruth": {
+    "ambiguousCases": [
+      {
+        "bankIds": [
+          "syn-19be4ae63028ebe01163c494",
+          "syn-aa2f5b21b0384d34933fc7ad"
+        ],
+        "id": "case-11",
+        "ledgerIds": [
+          "syn-35169b3d05fab77ca465bd3f",
+          "syn-709613520cc8923c4205bdea"
+        ],
+        "rationale": "Author knows two distinct recurring events; visible evidence cannot disambiguate permutation."
+      },
+      {
+        "bankIds": [
+          "syn-c6b4fe73d3115024dc20bb1f"
+        ],
+        "id": "case-16",
+        "ledgerIds": [
+          "syn-ec81ede2a696f6696c7a3497",
+          "syn-486e01e866d0e197fc375cb4"
+        ],
+        "rationale": "One real counterpart and an unrelated but visibly identical candidate; author identity is privileged."
+      }
+    ],
+    "cases": [
+      {
+        "family": "A",
+        "id": "case-01",
+        "recordIds": [
+          "syn-37d6183aebcd8180a14b3396",
+          "syn-c0c7c378212932b123f9b5a6"
+        ]
+      },
+      {
+        "family": "A",
+        "id": "case-02",
+        "recordIds": [
+          "syn-f592deff42a0b87de4a2d502",
+          "syn-aefe89b868389e03a48e128c"
+        ]
+      },
+      {
+        "family": "A",
+        "id": "case-03",
+        "recordIds": [
+          "syn-3a0c2f043db38c06380d7d62",
+          "syn-05ce3aff94fee436d1ab01fb"
+        ]
+      },
+      {
+        "family": "A",
+        "id": "case-04",
+        "recordIds": [
+          "syn-cdb31a33cb2e164bf1d7dee3",
+          "syn-0b23e266213cc5e1bb8b2023"
+        ]
+      },
+      {
+        "family": "A",
+        "id": "case-05",
+        "recordIds": [
+          "syn-5e2f01f35736dc89f7e42a4e",
+          "syn-78bfc6afd634ed3c6bd19bf1"
+        ]
+      },
+      {
+        "family": "A",
+        "id": "case-06",
+        "recordIds": [
+          "syn-2c22faec11937998a491f56d",
+          "syn-ba427cf3c13904e026a1c409"
+        ]
+      },
+      {
+        "family": "B",
+        "id": "case-07",
+        "recordIds": [
+          "syn-fbe62b3ed0bc2253b4366a4c",
+          "syn-bc7f1aed4cee921973b2f0ec"
+        ]
+      },
+      {
+        "family": "B",
+        "id": "case-08",
+        "recordIds": [
+          "syn-3236c16a0d6b5c7ba1e49a05",
+          "syn-6e4bfd8e3809d20b552463ba"
+        ]
+      },
+      {
+        "family": "C",
+        "id": "case-09",
+        "recordIds": [
+          "syn-e4e60e03a394c0283124a6cb",
+          "syn-02803f78a0ea63ac3d40becf"
+        ]
+      },
+      {
+        "family": "C",
+        "id": "case-10",
+        "recordIds": [
+          "syn-2b7236721d7f38a2281b474c",
+          "syn-f44a1e46ac60d61519099d53"
+        ]
+      },
+      {
+        "family": "D",
+        "id": "case-11",
+        "recordIds": [
+          "syn-19be4ae63028ebe01163c494",
+          "syn-aa2f5b21b0384d34933fc7ad",
+          "syn-35169b3d05fab77ca465bd3f",
+          "syn-709613520cc8923c4205bdea"
+        ]
+      },
+      {
+        "family": "E",
+        "id": "case-12",
+        "recordIds": [
+          "syn-6019a29a38ce63c6599fd928",
+          "syn-1f4bf7af21a3ca89a684a480"
+        ]
+      },
+      {
+        "family": "F",
+        "id": "case-13",
+        "recordIds": [
+          "syn-80c15ece3c36e4086e68f1f6",
+          "syn-6ca701b877da0e1ec8f4639e"
+        ]
+      },
+      {
+        "family": "G",
+        "id": "case-14",
+        "recordIds": [
+          "syn-27104ee552ee57400a71ae72",
+          "syn-323fcf87c2260d283399a92d"
+        ]
+      },
+      {
+        "family": "H",
+        "id": "case-15",
+        "recordIds": [
+          "syn-489580c08864ea7ae8e82331",
+          "syn-7cff5bc8fdea2863f18fd9dc",
+          "syn-d9cc29edbef5d382b8c49536",
+          "syn-9150f0e881a6a57efb19890c"
+        ]
+      },
+      {
+        "family": "I",
+        "id": "case-16",
+        "recordIds": [
+          "syn-c6b4fe73d3115024dc20bb1f",
+          "syn-ec81ede2a696f6696c7a3497",
+          "syn-486e01e866d0e197fc375cb4"
+        ]
+      },
+      {
+        "family": "J",
+        "id": "case-17",
+        "recordIds": [
+          "syn-6a9ae9f584913df9064ae5fc",
+          "syn-2267ebdd7474b0531071e2cc",
+          "syn-70627a9a8c3f92aeb2c769be"
+        ]
+      }
+    ],
+    "nonmatches": [
+      {
+        "bankId": "syn-19be4ae63028ebe01163c494",
+        "ledgerId": "syn-709613520cc8923c4205bdea",
+        "reason": "DISTINCT_EVENT"
+      },
+      {
+        "bankId": "syn-aa2f5b21b0384d34933fc7ad",
+        "ledgerId": "syn-35169b3d05fab77ca465bd3f",
+        "reason": "DISTINCT_EVENT"
+      },
+      {
+        "bankId": "syn-6019a29a38ce63c6599fd928",
+        "ledgerId": "syn-1f4bf7af21a3ca89a684a480",
+        "reason": "AMOUNT"
+      },
+      {
+        "bankId": "syn-80c15ece3c36e4086e68f1f6",
+        "ledgerId": "syn-6ca701b877da0e1ec8f4639e",
+        "reason": "CURRENCY"
+      },
+      {
+        "bankId": "syn-c6b4fe73d3115024dc20bb1f",
+        "ledgerId": "syn-486e01e866d0e197fc375cb4",
+        "reason": "DISTINCT_EVENT"
+      }
+    ],
+    "outcomes": [
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common payment event; explicit reference evidence.",
+        "relationshipId": "case-01-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common payment event; explicit reference evidence.",
+        "relationshipId": "case-02-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common payment event; explicit reference evidence.",
+        "relationshipId": "case-03-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common payment event; explicit reference evidence.",
+        "relationshipId": "case-04-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common payment event; explicit reference evidence.",
+        "relationshipId": "case-05-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common payment event; explicit reference evidence.",
+        "relationshipId": "case-06-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored supplier payment; description variation with shared reference.",
+        "relationshipId": "case-07-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored supplier payment; description variation with shared reference.",
+        "relationshipId": "case-08-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common event with formatting/abbreviation variation.",
+        "relationshipId": "case-09-economic-1"
+      },
+      {
+        "decision": "SUGGEST_PAIR",
+        "reason": "Authored common event with formatting/abbreviation variation.",
+        "relationshipId": "case-10-economic-1"
+      },
+      {
+        "decision": "ABSTAIN_AMBIGUOUS",
+        "reason": "Author knows two distinct recurring events; visible evidence cannot disambiguate permutation.",
+        "relationshipId": "case-11-economic-1"
+      },
+      {
+        "decision": "ABSTAIN_AMBIGUOUS",
+        "reason": "Author knows two distinct recurring events; visible evidence cannot disambiguate permutation.",
+        "relationshipId": "case-11-economic-2"
+      },
+      {
+        "decision": "ABSTAIN_INSUFFICIENT",
+        "reason": "Author knows common event; missing references provide insufficient operational evidence.",
+        "relationshipId": "case-14-economic-1"
+      },
+      {
+        "decision": "ABSTAIN_AMBIGUOUS",
+        "reason": "One real counterpart and an unrelated but visibly identical candidate; author identity is privileged.",
+        "relationshipId": "case-16-economic-1"
+      },
+      {
+        "decision": "UNRESOLVED_GROUP",
+        "reason": "Two bank instalments settle one ledger liability; grouping unsupported operationally in M1.",
+        "relationshipId": "case-17-economic-1"
+      }
+    ],
+    "relationships": [
+      {
+        "bankIds": [
+          "syn-37d6183aebcd8180a14b3396"
+        ],
+        "family": "A",
+        "id": "case-01-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-c0c7c378212932b123f9b5a6"
+        ],
+        "rationale": "Authored common payment event; explicit reference evidence."
+      },
+      {
+        "bankIds": [
+          "syn-f592deff42a0b87de4a2d502"
+        ],
+        "family": "A",
+        "id": "case-02-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-aefe89b868389e03a48e128c"
+        ],
+        "rationale": "Authored common payment event; explicit reference evidence."
+      },
+      {
+        "bankIds": [
+          "syn-3a0c2f043db38c06380d7d62"
+        ],
+        "family": "A",
+        "id": "case-03-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-05ce3aff94fee436d1ab01fb"
+        ],
+        "rationale": "Authored common payment event; explicit reference evidence."
+      },
+      {
+        "bankIds": [
+          "syn-cdb31a33cb2e164bf1d7dee3"
+        ],
+        "family": "A",
+        "id": "case-04-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-0b23e266213cc5e1bb8b2023"
+        ],
+        "rationale": "Authored common payment event; explicit reference evidence."
+      },
+      {
+        "bankIds": [
+          "syn-5e2f01f35736dc89f7e42a4e"
+        ],
+        "family": "A",
+        "id": "case-05-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-78bfc6afd634ed3c6bd19bf1"
+        ],
+        "rationale": "Authored common payment event; explicit reference evidence."
+      },
+      {
+        "bankIds": [
+          "syn-2c22faec11937998a491f56d"
+        ],
+        "family": "A",
+        "id": "case-06-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-ba427cf3c13904e026a1c409"
+        ],
+        "rationale": "Authored common payment event; explicit reference evidence."
+      },
+      {
+        "bankIds": [
+          "syn-fbe62b3ed0bc2253b4366a4c"
+        ],
+        "family": "B",
+        "id": "case-07-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-bc7f1aed4cee921973b2f0ec"
+        ],
+        "rationale": "Authored supplier payment; description variation with shared reference."
+      },
+      {
+        "bankIds": [
+          "syn-3236c16a0d6b5c7ba1e49a05"
+        ],
+        "family": "B",
+        "id": "case-08-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-6e4bfd8e3809d20b552463ba"
+        ],
+        "rationale": "Authored supplier payment; description variation with shared reference."
+      },
+      {
+        "bankIds": [
+          "syn-e4e60e03a394c0283124a6cb"
+        ],
+        "family": "C",
+        "id": "case-09-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-02803f78a0ea63ac3d40becf"
+        ],
+        "rationale": "Authored common event with formatting/abbreviation variation."
+      },
+      {
+        "bankIds": [
+          "syn-2b7236721d7f38a2281b474c"
+        ],
+        "family": "C",
+        "id": "case-10-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-f44a1e46ac60d61519099d53"
+        ],
+        "rationale": "Authored common event with formatting/abbreviation variation."
+      },
+      {
+        "bankIds": [
+          "syn-19be4ae63028ebe01163c494"
+        ],
+        "family": "D",
+        "id": "case-11-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-35169b3d05fab77ca465bd3f"
+        ],
+        "rationale": "Author knows two distinct recurring events; visible evidence cannot disambiguate permutation."
+      },
+      {
+        "bankIds": [
+          "syn-aa2f5b21b0384d34933fc7ad"
+        ],
+        "family": "D",
+        "id": "case-11-economic-2",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-709613520cc8923c4205bdea"
+        ],
+        "rationale": "Author knows two distinct recurring events; visible evidence cannot disambiguate permutation."
+      },
+      {
+        "bankIds": [
+          "syn-27104ee552ee57400a71ae72"
+        ],
+        "family": "G",
+        "id": "case-14-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-323fcf87c2260d283399a92d"
+        ],
+        "rationale": "Author knows common event; missing references provide insufficient operational evidence."
+      },
+      {
+        "bankIds": [
+          "syn-c6b4fe73d3115024dc20bb1f"
+        ],
+        "family": "I",
+        "id": "case-16-economic-1",
+        "kind": "ONE_TO_ONE",
+        "ledgerIds": [
+          "syn-ec81ede2a696f6696c7a3497"
+        ],
+        "rationale": "One real counterpart and an unrelated but visibly identical candidate; author identity is privileged."
+      },
+      {
+        "bankIds": [
+          "syn-6a9ae9f584913df9064ae5fc",
+          "syn-2267ebdd7474b0531071e2cc"
+        ],
+        "family": "J",
+        "id": "case-17-economic-1",
+        "kind": "GROUP",
+        "ledgerIds": [
+          "syn-70627a9a8c3f92aeb2c769be"
+        ],
+        "rationale": "Two bank instalments settle one ledger liability; grouping unsupported operationally in M1."
+      }
+    ],
+    "unmatchedIds": [
+      "syn-6019a29a38ce63c6599fd928",
+      "syn-1f4bf7af21a3ca89a684a480",
+      "syn-80c15ece3c36e4086e68f1f6",
+      "syn-6ca701b877da0e1ec8f4639e",
+      "syn-489580c08864ea7ae8e82331",
+      "syn-7cff5bc8fdea2863f18fd9dc",
+      "syn-d9cc29edbef5d382b8c49536",
+      "syn-9150f0e881a6a57efb19890c",
+      "syn-486e01e866d0e197fc375cb4"
+    ]
+  },
+  "records": [
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "2360.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": "2360.25",
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic utilities payment",
+      "direction": "OUTFLOW",
+      "id": "syn-02803f78a0ea63ac3d40becf",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 5,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "syn 685122d737",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-5",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "1934.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "1934.25",
+      "description": "Synthetic settlement d64f79",
+      "direction": "INFLOW",
+      "id": "syn-05ce3aff94fee436d1ab01fb",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 2,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-12EF55679F",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-2",
+      "sourceTransactionId": "SYN-TX-f00fba58394a",
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "2005.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "2005.25",
+      "description": "Synthetic settlement c2e806",
+      "direction": "OUTFLOW",
+      "id": "syn-0b23e266213cc5e1bb8b2023",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 2,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-AF6BF0E731",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-2",
+      "sourceTransactionId": "SYN-TX-3edca60b3fa9",
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic monthly subscription",
+      "direction": "OUTFLOW",
+      "id": "syn-19be4ae63028ebe01163c494",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": "2026-02-17",
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 6,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "BANK",
+      "sourceAmount": "-125.00",
+      "sourceRowId": "bank-signed-v1:row-6",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "88.11",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": "88.11",
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 5ca89f",
+      "direction": "OUTFLOW",
+      "id": "syn-1f4bf7af21a3ca89a684a480",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 7,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-06DEEB217B",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-7",
+      "sourceTransactionId": "SYN-TX-2de4f2b66187",
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "175.00",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement f18e66",
+      "direction": "OUTFLOW",
+      "id": "syn-2267ebdd7474b0531071e2cc",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 10,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-F68D0336B1",
+      "role": "BANK",
+      "sourceAmount": "175.00",
+      "sourceRowId": "bank-directed-v1:row-10",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "2715.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": null,
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 8456ef",
+      "direction": "OUTFLOW",
+      "id": "syn-27104ee552ee57400a71ae72",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 8,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "BANK",
+      "sourceAmount": "-2715.25",
+      "sourceRowId": "bank-signed-v1:row-8",
+      "sourceTransactionId": "SYN-TX-57795a2c94fc",
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "2431.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "SYNT  UTIL  PMT",
+      "direction": "OUTFLOW",
+      "id": "syn-2b7236721d7f38a2281b474c",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 5,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-632A78B09B",
+      "role": "BANK",
+      "sourceAmount": "2431.25",
+      "sourceRowId": "bank-directed-v1:row-5",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "2147.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement b3077f",
+      "direction": "OUTFLOW",
+      "id": "syn-2c22faec11937998a491f56d",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 3,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-FCD6B75518",
+      "role": "BANK",
+      "sourceAmount": "2147.25",
+      "sourceRowId": "bank-directed-v1:row-3",
+      "sourceTransactionId": "SYN-TX-82ee31c1ccee",
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "2289.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "TRF ABC SDN BHD",
+      "direction": "OUTFLOW",
+      "id": "syn-3236c16a0d6b5c7ba1e49a05",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 4,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-45F5DCE55B",
+      "role": "BANK",
+      "sourceAmount": "2289.25",
+      "sourceRowId": "bank-directed-v1:row-4",
+      "sourceTransactionId": "SYN-TX-277da93b595c",
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "2715.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": null,
+      "credit": "2715.25",
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 8456ef",
+      "direction": "OUTFLOW",
+      "id": "syn-323fcf87c2260d283399a92d",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 8,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-8",
+      "sourceTransactionId": "SYN-TX-c60afbf0f61e",
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": "125.00",
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic monthly subscription",
+      "direction": "OUTFLOW",
+      "id": "syn-35169b3d05fab77ca465bd3f",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": "2026-02-17",
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 6,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-6",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "9007199254740993.123456789",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 7a4944",
+      "direction": "INFLOW",
+      "id": "syn-37d6183aebcd8180a14b3396",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 1,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-5766AEA7A0",
+      "role": "BANK",
+      "sourceAmount": "9007199254740993.123456789",
+      "sourceRowId": "bank-signed-v1:row-1",
+      "sourceTransactionId": "SYN-TX-c9982573ac13",
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "1934.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement d64f79",
+      "direction": "INFLOW",
+      "id": "syn-3a0c2f043db38c06380d7d62",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 2,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-12EF55679F",
+      "role": "BANK",
+      "sourceAmount": "1934.25",
+      "sourceRowId": "bank-signed-v1:row-2",
+      "sourceTransactionId": "SYN-TX-d8e6b137358e",
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": "125.00",
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic subscription settlement",
+      "direction": "OUTFLOW",
+      "id": "syn-486e01e866d0e197fc375cb4",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 10,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-10",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "2786.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": null,
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 700495",
+      "direction": "OUTFLOW",
+      "id": "syn-489580c08864ea7ae8e82331",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 8,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "BANK",
+      "sourceAmount": "2786.25",
+      "sourceRowId": "bank-directed-v1:row-8",
+      "sourceTransactionId": "SYN-TX-5c58f4f724fd",
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "2076.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 11e193",
+      "direction": "INFLOW",
+      "id": "syn-5e2f01f35736dc89f7e42a4e",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 3,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-B180FF16B0",
+      "role": "BANK",
+      "sourceAmount": "2076.25",
+      "sourceRowId": "bank-signed-v1:row-3",
+      "sourceTransactionId": "SYN-TX-16cd64a81612",
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "88.10",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 5ca89f",
+      "direction": "OUTFLOW",
+      "id": "syn-6019a29a38ce63c6599fd928",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 7,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-06DEEB217B",
+      "role": "BANK",
+      "sourceAmount": "-88.10",
+      "sourceRowId": "bank-signed-v1:row-7",
+      "sourceTransactionId": "SYN-TX-daa0fff66087",
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement f18e66",
+      "direction": "OUTFLOW",
+      "id": "syn-6a9ae9f584913df9064ae5fc",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 10,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-F68D0336B1",
+      "role": "BANK",
+      "sourceAmount": "-125.00",
+      "sourceRowId": "bank-signed-v1:row-10",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "2644.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "USD",
+      "debit": "2644.25",
+      "description": "Synthetic settlement 18e086",
+      "direction": "OUTFLOW",
+      "id": "syn-6ca701b877da0e1ec8f4639e",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 7,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-2A813089BE",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-7",
+      "sourceTransactionId": "SYN-TX-e7e950c8b929",
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "2289.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "2289.25",
+      "description": "ABC Supplier Invoice",
+      "direction": "OUTFLOW",
+      "id": "syn-6e4bfd8e3809d20b552463ba",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 4,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-45F5DCE55B",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-4",
+      "sourceTransactionId": "SYN-TX-52a4900eef69",
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "300.00",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "300.00",
+      "description": "Synthetic settlement f18e66",
+      "direction": "OUTFLOW",
+      "id": "syn-70627a9a8c3f92aeb2c769be",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 10,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-F68D0336B1",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-10",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "125.00",
+      "description": "Synthetic monthly subscription",
+      "direction": "OUTFLOW",
+      "id": "syn-709613520cc8923c4205bdea",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-17",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 6,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-6",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "2076.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "2076.25",
+      "description": "Synthetic settlement 11e193",
+      "direction": "INFLOW",
+      "id": "syn-78bfc6afd634ed3c6bd19bf1",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 3,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-B180FF16B0",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-3",
+      "sourceTransactionId": "SYN-TX-66c1de33f98a",
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "2786.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": null,
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 700495",
+      "direction": "OUTFLOW",
+      "id": "syn-7cff5bc8fdea2863f18fd9dc",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 9,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "BANK",
+      "sourceAmount": "-2786.25",
+      "sourceRowId": "bank-signed-v1:row-9",
+      "sourceTransactionId": "SYN-TX-1774418d9180",
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "2644.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 18e086",
+      "direction": "OUTFLOW",
+      "id": "syn-80c15ece3c36e4086e68f1f6",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 7,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-2A813089BE",
+      "role": "BANK",
+      "sourceAmount": "2644.25",
+      "sourceRowId": "bank-directed-v1:row-7",
+      "sourceTransactionId": "SYN-TX-37c28b043712",
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "2786.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": null,
+      "credit": "2786.25",
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement 700495",
+      "direction": "OUTFLOW",
+      "id": "syn-9150f0e881a6a57efb19890c",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 9,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-9",
+      "sourceTransactionId": "SYN-TX-00d2a4d2c28e",
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic monthly subscription",
+      "direction": "OUTFLOW",
+      "id": "syn-aa2f5b21b0384d34933fc7ad",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-17",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 6,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "BANK",
+      "sourceAmount": "125.00",
+      "sourceRowId": "bank-directed-v1:row-6",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "1863.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "1863.25",
+      "description": "Synthetic settlement aae038",
+      "direction": "OUTFLOW",
+      "id": "syn-aefe89b868389e03a48e128c",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 1,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-1EB28C2896",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-1",
+      "sourceTransactionId": "SYN-TX-37f811bcfb63",
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "2147.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "2147.25",
+      "description": "Synthetic settlement b3077f",
+      "direction": "OUTFLOW",
+      "id": "syn-ba427cf3c13904e026a1c409",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 3,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-FCD6B75518",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-3",
+      "sourceTransactionId": "SYN-TX-0ecbba27ee79",
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "2218.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": "2218.25",
+      "currency": "MYR",
+      "debit": null,
+      "description": "ABC Supplier Invoice",
+      "direction": "OUTFLOW",
+      "id": "syn-bc7f1aed4cee921973b2f0ec",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 4,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-615636496B",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-4",
+      "sourceTransactionId": "SYN-TX-956319b92a2e",
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "amount": "9007199254740993.123456789",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "9007199254740993.123456789",
+      "description": "Synthetic settlement 7a4944",
+      "direction": "INFLOW",
+      "id": "syn-c0c7c378212932b123f9b5a6",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-ledger-cash-v1.csv",
+        "row": 1,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-5766AEA7A0",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-cash-v1:row-1",
+      "sourceTransactionId": "SYN-TX-9ec078211683",
+      "systemId": "synthetic-ledger-c",
+      "templateId": "ledger-cash-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic subscription settlement",
+      "direction": "OUTFLOW",
+      "id": "syn-c6b4fe73d3115024dc20bb1f",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 9,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "BANK",
+      "sourceAmount": "125.00",
+      "sourceRowId": "bank-directed-v1:row-9",
+      "sourceTransactionId": "SYN-TX-18e5d6553956",
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "2005.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement c2e806",
+      "direction": "OUTFLOW",
+      "id": "syn-cdb31a33cb2e164bf1d7dee3",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 2,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-AF6BF0E731",
+      "role": "BANK",
+      "sourceAmount": "2005.25",
+      "sourceRowId": "bank-directed-v1:row-2",
+      "sourceTransactionId": "SYN-TX-af62a43a3e85",
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "2786.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": null,
+      "credit": null,
+      "currency": "MYR",
+      "debit": "2786.25",
+      "description": "Synthetic settlement 700495",
+      "direction": "OUTFLOW",
+      "id": "syn-d9cc29edbef5d382b8c49536",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 8,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-8",
+      "sourceTransactionId": "SYN-TX-fe1d05e8582d",
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "2360.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "SYNT  UTIL  PMT",
+      "direction": "OUTFLOW",
+      "id": "syn-e4e60e03a394c0283124a6cb",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": null,
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 5,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-685122D737",
+      "role": "BANK",
+      "sourceAmount": "-2360.25",
+      "sourceRowId": "bank-signed-v1:row-5",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "125.00",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "125.00",
+      "description": "Synthetic subscription settlement",
+      "direction": "OUTFLOW",
+      "id": "syn-ec81ede2a696f6696c7a3497",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 9,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": null,
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-9",
+      "sourceTransactionId": "SYN-TX-805ea5d5084f",
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "amount": "2431.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": "2431.25",
+      "description": "Synthetic utilities payment",
+      "direction": "OUTFLOW",
+      "id": "syn-f44a1e46ac60d61519099d53",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-ledger-expense-v1.csv",
+        "row": 5,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "syn 632a78b09b",
+      "role": "LEDGER",
+      "sourceAmount": null,
+      "sourceRowId": "ledger-expense-v1:row-5",
+      "sourceTransactionId": null,
+      "systemId": "synthetic-ledger-d",
+      "templateId": "ledger-expense-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "amount": "1863.25",
+      "canonicalDate": "2026-02-18",
+      "canonicalDateBasis": "POSTING_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "Synthetic settlement aae038",
+      "direction": "OUTFLOW",
+      "id": "syn-f592deff42a0b87de4a2d502",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-directed-v1.csv",
+        "row": 1,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-1EB28C2896",
+      "role": "BANK",
+      "sourceAmount": "1863.25",
+      "sourceRowId": "bank-directed-v1:row-1",
+      "sourceTransactionId": "SYN-TX-34a72c4f5297",
+      "systemId": "synthetic-bank-b",
+      "templateId": "bank-directed-v1",
+      "transactionDate": null
+    },
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "amount": "2218.25",
+      "canonicalDate": "2026-02-17",
+      "canonicalDateBasis": "TRANSACTION_DATE",
+      "counterparty": "Synthetic Counterparty",
+      "credit": null,
+      "currency": "MYR",
+      "debit": null,
+      "description": "TRF ABC SDN BHD",
+      "direction": "OUTFLOW",
+      "id": "syn-fbe62b3ed0bc2253b4366a4c",
+      "monetaryBasis": "SIGNED_CASH",
+      "postingDate": "2026-02-18",
+      "provenance": {
+        "file": "synthetic-bank-signed-v1.csv",
+        "row": 4,
+        "sheet": null,
+        "synthetic": true
+      },
+      "reference": "SYN-615636496B",
+      "role": "BANK",
+      "sourceAmount": "-2218.25",
+      "sourceRowId": "bank-signed-v1:row-4",
+      "sourceTransactionId": "SYN-TX-a3ff713ec594",
+      "systemId": "synthetic-bank-a",
+      "templateId": "bank-signed-v1",
+      "transactionDate": "2026-02-17"
+    }
+  ],
+  "templates": [
+    {
+      "accountId": "synthetic-bank-cash-a",
+      "columns": [
+        "TxnDate",
+        "BookedDate",
+        "Narrative",
+        "SignedMYR",
+        "Currency",
+        "Ref"
+      ],
+      "convention": "Positive cash inflow; negative cash outflow. Currency is explicit per row, despite the historical synthetic column name.",
+      "dateBasis": "TRANSACTION_DATE",
+      "id": "bank-signed-v1",
+      "monetaryBasis": "SIGNED_CASH",
+      "role": "BANK",
+      "systemId": "synthetic-bank-a"
+    },
+    {
+      "accountId": "synthetic-bank-cash-b",
+      "columns": [
+        "ValueDate",
+        "PostingDate",
+        "Details",
+        "Amount",
+        "Movement",
+        "CCY",
+        "Reference"
+      ],
+      "convention": "Unsigned magnitude with explicit INFLOW/OUTFLOW; canonical posting date, transaction date may be unavailable.",
+      "dateBasis": "POSTING_DATE",
+      "id": "bank-directed-v1",
+      "monetaryBasis": "AMOUNT_DIRECTION",
+      "role": "BANK",
+      "systemId": "synthetic-bank-b"
+    },
+    {
+      "accountId": "synthetic-ledger-cash",
+      "columns": [
+        "JournalDate",
+        "Memo",
+        "CashDebit",
+        "CashCredit",
+        "Currency",
+        "Voucher"
+      ],
+      "convention": "Cash asset account: debit increases cash (inflow), credit decreases cash (outflow). Unused side is unavailable (null), not fabricated zero.",
+      "dateBasis": "TRANSACTION_DATE",
+      "id": "ledger-cash-v1",
+      "monetaryBasis": "CASH_DEBIT_CREDIT",
+      "role": "LEDGER",
+      "systemId": "synthetic-ledger-c"
+    },
+    {
+      "accountId": "synthetic-expense-contra",
+      "columns": [
+        "DocumentDate",
+        "JournalPosting",
+        "SupplierText",
+        "ExpenseDR",
+        "ReversalCR",
+        "CCY",
+        "DocRef"
+      ],
+      "convention": "Synthetic settled expense view only: debit denotes paid expense/outflow; credit denotes refunded expense/inflow. Not a general ledger-wide cash-direction rule.",
+      "dateBasis": "POSTING_DATE",
+      "id": "ledger-expense-v1",
+      "monetaryBasis": "EXPENSE_DEBIT_CREDIT",
+      "role": "LEDGER",
+      "systemId": "synthetic-ledger-d"
+    }
+  ]
+}
