@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertOctagon, AlertTriangle, Check, CircleGauge, Download, FileJson, FileText, Flag, LogOut, RotateCcw, Upload } from "lucide-react";
 import { EmptyState, PageHeader, Panel, StatusBadge } from "@/components/ui";
 import { M2ClientFence, principalScope, type M2ClientPrincipal } from "@/lib/ai-ingestion/m2-client-state";
+import { readSelection, rememberSelection, forgetSelection, browserSelectionStorage } from "@/lib/poc-insights/selection";
 import { groupDigits } from "@/lib/poc-anomalies/format";
 import type { PocAnalysis, PocCandidate, PocSource, ReviewState } from "@/lib/server/poc-anomalies/service";
 
@@ -43,7 +44,7 @@ export default function AnomalyWorkspace() {
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
 
   const clear = useCallback(() => { request.current++; setSources(null); setAnalysis(null); setSelectedRow(null); setBusy(null); setLoading(false); }, []);
-  const invalidate = useCallback(() => { fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
+  const invalidate = useCallback(() => { forgetSelection(browserSelectionStorage, fence.current.principal); fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
   const load = useCallback(async (selection: Selection) => {
     const p = fence.current.principal;
     if (!p || p.role !== "Finance") return;
@@ -56,6 +57,7 @@ export default function AnomalyWorkspace() {
       if (epoch !== fence.current.epoch || sequence !== request.current) return;
       // A response for another user, organization, role or membership version is discarded.
       if (scopeKey(data.scope) !== scopeKey(p) || data.source.id !== selection.sourceId) throw new Error();
+      rememberSelection(browserSelectionStorage, p, { source: data.source.id, business: data.selection.businessId, period: data.selection.period, currency: data.selection.currency });
       setAnalysis(data);
       setSelectedRow(current => data.candidates.some(c => c.rowId === current) ? current : data.candidates[0]?.rowId ?? null);
       history.replaceState(null, "", `/anomalies?${query({ sourceId: data.source.id, businessId: data.selection.businessId, period: data.selection.period, currency: data.selection.currency })}`);
@@ -76,7 +78,7 @@ export default function AnomalyWorkspace() {
       if (epoch !== fence.current.epoch) return;
       if (scopeKey(data.scope) !== scopeKey(p)) throw new Error();
       setSources(data.sources);
-      const hint = preferred ?? (() => { const q = new URLSearchParams(location.search); const s = q.get("source"); return s ? { sourceId: s, businessId: q.get("business") ?? undefined, period: q.get("period") ?? undefined, currency: q.get("currency") ?? undefined } : undefined; })();
+      const hint = preferred ?? (() => { const s = readSelection(browserSelectionStorage, p, location.search); return s ? { sourceId: s.source, businessId: s.business, period: s.period, currency: s.currency } : undefined; })();
       const chosen = hint && data.sources.some(s => s.id === hint.sourceId) ? hint : data.sources[0] ? { sourceId: data.sources[0].id } : null;
       if (chosen) void load(chosen);
     } catch {

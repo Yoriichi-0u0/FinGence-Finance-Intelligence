@@ -21,3 +21,10 @@ export function rememberSelection(storage: PendingStorage, principal: M2ClientPr
 export function forgetSelection(storage: PendingStorage, principal: M2ClientPrincipal | null) {
     if (principal) try { storage.removeItem(key(principal)); } catch { /* Only a disposable preference; server access remains authoritative. */ }
 }
+
+/** Deferred browser access lets preference helpers tolerate browsers that block sessionStorage. */
+export const browserSelectionStorage: PendingStorage = {
+    getItem: key => sessionStorage.getItem(key),
+    setItem: (key, value) => sessionStorage.setItem(key, value),
+    removeItem: key => sessionStorage.removeItem(key),
+};
