@@ -7,7 +7,8 @@ import Papa from 'papaparse';
 import { normalizeDate, normalizeDecimal, subtractDecimals } from '../ingestion/normalizer';
 import { reconciliationStatuses, type CashSource, type CashSourceKind, type CashSourceRow, type FinancePoCReconciliationV1, type ReconciliationStatus } from './contracts';
 const common = ['BusinessID', 'Currency', 'SignedCashMovementMYR'];
-const fields = {
+/** Required columns per cash source; exported so document-role identification uses the same contract. */
+export const CASH_SOURCE_FIELDS = {
     bank: [...common, 'BankTransactionID', 'ValueDate', 'StatementMonth', 'BankReference', 'BankDescription', 'BankDirection', 'BankAmountMYR', 'SourceTransactionID'],
     ledger: [...common, 'LedgerEntryID', 'PostingDate', 'CashAccount', 'LedgerReference', 'LedgerMemo', 'CashAccountDebitMYR', 'CashAccountCreditMYR'],
 };
@@ -28,7 +29,7 @@ export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes).replace(/^\uFEFF/, '');
     const parsed = Papa.parse<string[]>(text, { skipEmptyLines: 'greedy', dynamicTyping: false });
     const [header, ...data] = parsed.data;
-    if (parsed.errors.length || !header || new Set(header).size !== header.length || header.some(h => !h) || !data.length || data.length > 5000 || fields[kind].some(f => !header.includes(f))) throw Error('UNSUPPORTED_CSV_SCHEMA');
+    if (parsed.errors.length || !header || new Set(header).size !== header.length || header.some(h => !h) || !data.length || data.length > 5000 || CASH_SOURCE_FIELDS[kind].some(f => !header.includes(f))) throw Error('UNSUPPORTED_CSV_SCHEMA');
     if (!/^[0-9a-f]{64}$/.test(sha256)) throw Error('INVALID_SOURCE_DIGEST');
     const source: CashSource = { kind, sha256, sourceId: sha256, filename: filename.split(/[/\\]/).pop()!.slice(0, 120), businessId: '', currency: '', period: '', rows: [], evidence: {} };
     const seen = new Set<string>();
@@ -51,7 +52,7 @@ export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind
         const period = kind === 'bank' ? raw.StatementMonth : date.slice(0, 7);
         if (index && (source.businessId !== raw.BusinessID || source.currency !== raw.Currency || source.period !== period)) throw Error('MIXED_SOURCE_SCOPE');
         source.businessId = raw.BusinessID; source.currency = raw.Currency; source.period = period;
-        const evidenceIds = fields[kind].map(field => {
+        const evidenceIds = CASH_SOURCE_FIELDS[kind].map(field => {
             const id = `${sha256}:record:${index + 2}:${field}`;
             source.evidence[id] = { sourceId: sha256, recordId, row: index + 2, field, literal: raw[field] };
             return id;
