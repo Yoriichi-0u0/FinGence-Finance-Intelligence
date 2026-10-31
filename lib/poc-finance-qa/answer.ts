@@ -196,7 +196,7 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
     if (intent === 'CASH_FORECAST') {
         const f = facts.forecast.forecast;
         if (f.status !== 'AVAILABLE') return unavailable(intent, 'FORECAST_UNAVAILABLE', `No forecast for ${s.businessId}: ${f.detail}`,
-            `The six-month baseline needs at least ${MIN_MONTHS} consecutive months so it can be backtested. Nothing is extrapolated from fewer months and no forecast figure is shown.`, [link.forecasting]);
+            'Nothing is extrapolated from a shorter history and no forecast figure is shown. Upload a source with more consecutive months to use the baseline.', [link.forecasting]);
         const fc = facts.forecast.currency ?? c, bt = f.backtest, wape = (m: Metric) => bt[m].methods.find(x => x.method === 'MEAN_6')!.wape;
         const pooledNet = facts.pooled?.backtest.net, pooledMean = pooledNet?.methods.find(x => x.method === 'MEAN_6'), pooledLast = pooledNet?.methods.find(x => x.method === 'LAST_MONTH');
         const pooledNote = facts.pooled && pooledMean && pooledLast && pooledNet!.lowestWape !== 'MEAN_6' ? ` Pooled across ${plural(facts.pooled.businesses, 'business', 'businesses')}, net WAPE is ${percent(pooledMean.wape)}, worse than simply repeating last month (${percent(pooledLast.wape)}).` : '';
