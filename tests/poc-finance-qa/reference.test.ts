@@ -10,6 +10,7 @@ import { installReconciliationSchema, createReconciliationService } from '../../
 import { installPocAnomalySchema } from '../../lib/server/poc-anomalies/schema';
 import { createPocAnomalies } from '../../lib/server/poc-anomalies/service';
 import { createPocFinanceQa } from '../../lib/server/poc-finance-qa/service';
+import { acceptNarration, narrationRequest, templateNarrator } from '../../lib/poc-finance-qa/narration';
 import { m5Database, password } from '../tenant-admin-m5/support';
 
 /** The issue #46 demo journeys on the owner-unpacked synthetic pack (never committed). Feature files only. */
@@ -31,7 +32,11 @@ describe.skipIf(!directory)('Finance questions on the supplied March and full-ye
     }, 120000);
     afterAll(async () => { await pg?.close(); });
     const ask = async (selection: { source: string; business?: string; period?: string }, question: string) => {
-        const r = await createPocFinanceQa(db).ask(finance, selection, question); if (r.status !== 'OK') throw Error('refused'); return r.answer;
+        const r = await createPocFinanceQa(db).ask(finance, selection, question); if (r.status !== 'OK') throw Error('refused');
+        // Every real answer must also pass the future narration contract unchanged: no figure outside its facts.
+        const request = narrationRequest(r.answer);
+        if (request) expect(acceptNarration(r.answer, await templateNarrator.narrate(request), 'DETERMINISTIC_TEMPLATE').accepted).toBe(true);
+        return r.answer;
     };
 
     it('journey A: March bank and ledger', async () => {

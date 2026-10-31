@@ -189,6 +189,7 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
             `${plural(months.length, `${consecutive && months.length > 1 ? 'consecutive ' : ''}observed month`)} for ${s.businessId} (${c})${months.length > 1 ? `, ${months[0].period} to ${months.at(-1)!.period}` : `: ${months[0].period}`}.`,
             `${months.length > 1 ? `Monthly net movement ranged from ${money(c, low.net)} in ${low.period} to ${money(c, high.net)} in ${high.period}. ` : ''}Months are exactly those present in the uploaded file; ${consecutive ? 'none is missing' : 'gaps are not filled in'} and no month is invented.`,
             [{ id: 'months', label: 'Observed months', value: String(months.length), unit: 'COUNT' }, { id: 'first', label: 'First month', value: months[0].period, unit: 'PERIOD' }, { id: 'last', label: 'Last month', value: months.at(-1)!.period, unit: 'PERIOD' },
+                ...(months.length > 1 ? [{ id: 'lowest', label: 'Lowest net month', value: low.period, unit: 'PERIOD' as const }, { id: 'highest', label: 'Highest net month', value: high.period, unit: 'PERIOD' as const }] : []),
                 ...months.map(m => ({ id: `net.${m.period}`, label: `Net ${m.period} (${m.rows} rows)`, value: m.net, unit: 'MONEY' as const, currency: c }))],
             [link.forecasting, link.transactions]);
     }
@@ -202,9 +203,9 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
         return answered(intent,
             `Six-month baseline for ${s.businessId} in ${f.period}: receipts ${money(fc, f.credits)}, payments ${money(fc, f.debits)}, derived net ${money(fc, f.net)}.`,
             `The mean of ${f.basis.first} to ${f.basis.last}, a deterministic statistical baseline, not AI. In ${plural(f.tests, 'rolling-origin backtest month')} its WAPE was ${percent(wape('credits'))} for receipts, ${percent(wape('debits'))} for payments and ${percent(wape('net'))} for net, so net is experimental and low confidence.${pooledNote}`,
-            [{ id: 'period', label: 'Forecast month', value: f.period, unit: 'PERIOD' }, { id: 'receipts', label: 'Receipts (bank credits)', value: f.credits, unit: 'MONEY', currency: fc }, { id: 'payments', label: 'Payments (debit magnitude)', value: f.debits, unit: 'MONEY', currency: fc }, { id: 'net', label: 'Derived net (low confidence)', value: f.net, unit: 'MONEY', currency: fc },
+            [{ id: 'period', label: 'Forecast month', value: f.period, unit: 'PERIOD' }, { id: 'basis.first', label: 'Baseline from', value: f.basis.first, unit: 'PERIOD' }, { id: 'basis.last', label: 'Baseline to', value: f.basis.last, unit: 'PERIOD' }, { id: 'tests', label: 'Backtest months', value: String(f.tests), unit: 'COUNT' }, { id: 'receipts', label: 'Receipts (bank credits)', value: f.credits, unit: 'MONEY', currency: fc }, { id: 'payments', label: 'Payments (debit magnitude)', value: f.debits, unit: 'MONEY', currency: fc }, { id: 'net', label: 'Derived net (low confidence)', value: f.net, unit: 'MONEY', currency: fc },
                 { id: 'wape.receipts', label: 'Receipts WAPE', value: wape('credits') ?? 'n/a', unit: 'PERCENT' }, { id: 'wape.payments', label: 'Payments WAPE', value: wape('debits') ?? 'n/a', unit: 'PERCENT' }, { id: 'wape.net', label: 'Net WAPE', value: wape('net') ?? 'n/a', unit: 'PERCENT' },
-                ...(pooledMean && pooledLast ? [{ id: 'pooled.net.mean6', label: 'Pooled net WAPE, six-month', value: pooledMean.wape ?? 'n/a', unit: 'PERCENT' as const }, { id: 'pooled.net.last', label: 'Pooled net WAPE, last month', value: pooledLast.wape ?? 'n/a', unit: 'PERCENT' as const }] : [])],
+                ...(pooledMean && pooledLast ? [{ id: 'pooled.businesses', label: 'Pooled businesses', value: String(facts.pooled!.businesses), unit: 'COUNT' as const }, { id: 'pooled.net.mean6', label: 'Pooled net WAPE, six-month', value: pooledMean.wape ?? 'n/a', unit: 'PERCENT' as const }, { id: 'pooled.net.last', label: 'Pooled net WAPE, last month', value: pooledLast.wape ?? 'n/a', unit: 'PERCENT' as const }] : [])],
             [link.forecasting]);
     }
 
@@ -216,17 +217,18 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
     if (cm.bank !== t.net) return unavailable(intent, 'RECONCILIATION_UNAVAILABLE', `No reconciliation for ${s.fileName} · ${scope}.`,
         'The persisted reconciliation bank movement does not equal this source\'s net movement, so neither figure is quoted.', [link.reconciliation]);
     const counts = RECONCILIATION_STATUSES.map(k => [k, snap.counts[k] ?? 0] as const), categoryFacts: Fact[] = counts.map(([k, n]) => ({ id: `count.${k}`, label: CATEGORY[k].replace(/^./, ch => ch.toUpperCase()), value: String(n), unit: 'COUNT' }));
+    const hashFacts: Fact[] = [{ id: 'ledgerSha256', label: 'Ledger source SHA-256', value: snap.sources.ledger.sha256, unit: 'TEXT' }];
     const evidence = [link.reconciliation, link.report], hashes = `bank SHA-256 ${snap.sources.bank.sha256.slice(0, 12)}…, ledger SHA-256 ${snap.sources.ledger.sha256.slice(0, 12)}…`;
     if (intent === 'RECONCILIATION_DIFFERENCE') return answered(intent,
         `Bank minus ledger for ${scope} is ${money(c, cm.signedDifference)} (bank ${money(c, cm.bank)}, ledger ${money(c, cm.ledger)}).`,
         `From the persisted reconciliation of this exact uploaded bank file and its ledger pair (${hashes}). The row categories show which records differ; the cause of the difference is not inferred.`,
-        [{ id: 'bank', label: 'Bank movement', value: cm.bank, unit: 'MONEY', currency: c }, { id: 'ledger', label: 'Ledger movement', value: cm.ledger, unit: 'MONEY', currency: c }, { id: 'difference', label: 'Bank − ledger', value: cm.signedDifference, unit: 'MONEY', currency: c }, ...categoryFacts],
+        [{ id: 'bank', label: 'Bank movement', value: cm.bank, unit: 'MONEY', currency: c }, { id: 'ledger', label: 'Ledger movement', value: cm.ledger, unit: 'MONEY', currency: c }, { id: 'difference', label: 'Bank − ledger', value: cm.signedDifference, unit: 'MONEY', currency: c }, ...categoryFacts, ...hashFacts],
         evidence);
     const bankRecords = snap.results.filter(x => x.bankRecordId).length, matchedBank = snap.results.filter(x => matched(x.status) && x.bankRecordId).length;
     if (intent === 'RECONCILIATION_MATCHES') return answered(intent,
         `${matchedBank} of ${bankRecords} bank records matched a ledger entry: ${snap.counts.MATCH_EXACT ?? 0} exact and ${snap.counts.MATCH_DATE_SHIFT ?? 0} date shift.`,
         `The other outcomes are ${counts.filter(([k]) => !matched(k)).map(([k, n]) => `${n} ${CATEGORY[k]}`).join(', ')}. Categories come from fixed matching rules over the uploaded bank and ledger files (${hashes}).`,
-        [{ id: 'matched', label: 'Matched bank records', value: String(matchedBank), unit: 'COUNT' }, { id: 'bankRecords', label: 'Bank records', value: String(bankRecords), unit: 'COUNT' }, ...categoryFacts],
+        [{ id: 'matched', label: 'Matched bank records', value: String(matchedBank), unit: 'COUNT' }, { id: 'bankRecords', label: 'Bank records', value: String(bankRecords), unit: 'COUNT' }, ...categoryFacts, ...hashFacts],
         evidence);
     const exceptions = snap.results.filter(x => !matched(x.status)), open = facts.candidates.filter(x => x.review === 'OPEN');
     const groups: RecordGroup[] = RECONCILIATION_STATUSES.filter(k => !matched(k)).map(k => ({ label: `Reconciliation: ${CATEGORY[k]}`, detail: `${snap.counts[k] ?? 0} outcome${snap.counts[k] === 1 ? '' : 's'}`, recordIds: exceptions.filter(x => x.status === k).flatMap(x => [x.bankRecordId, ...x.ledgerRecordIds].filter((v): v is string => !!v)) })).filter(g => g.recordIds.length);
