@@ -1,0 +1,7 @@
+{
+  "freezeFingerprint": "0874f932eca2a38e83730c872eda6cde57d9a73d57ad59bcace41b1b11dd80b2",
+  "freezeSHA256": "50b7aeeeb12abce4b5b82769176f6c4e364029f1b3751202a564bdd0eafab4a7",
+  "phase": "PREDICTIONS_FROZEN_BEFORE_TRUTH",
+  "predictionsSHA256": "55160f6062a820272b9f0e87f167fbded4b14cf2a6a75d30db697f422b238b26",
+  "truthLoaded": false
+}

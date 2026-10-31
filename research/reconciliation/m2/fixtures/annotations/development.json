@@ -1,0 +1,724 @@
+{
+  "ambiguous": [
+    {
+      "bankIds": [
+        "r-5f291074150c41d6e9f54439",
+        "r-fc8f3a714995e835c444b7ae"
+      ],
+      "family": "E",
+      "id": "c-45525b4b6dec80bd98a485a2",
+      "ledgerIds": [
+        "r-bcf09c020e2346379ad404cb",
+        "r-ec870f3e27df35275c31e1ce"
+      ]
+    },
+    {
+      "bankIds": [
+        "r-1480294fb89e259b50762670"
+      ],
+      "family": "F",
+      "id": "c-0dca9879bdec59c23ff078ac",
+      "ledgerIds": [
+        "r-fc77e29ce10c60ba805f3d74",
+        "r-0d64d65cba857f1bc412e099"
+      ]
+    },
+    {
+      "bankIds": [
+        "r-f40cf287cf2cd26eb9ac4ef2"
+      ],
+      "family": "N",
+      "id": "c-2fa800ec899aea61b28edb72",
+      "ledgerIds": [
+        "r-c1e613db35820ab207ebae92",
+        "r-71951915b5976a8b8a5d93be"
+      ]
+    },
+    {
+      "bankIds": [
+        "r-90ccb0c1c53094ed88791ad7",
+        "r-d893b34b0c199c6087c1a8fd"
+      ],
+      "family": "O",
+      "id": "c-159da02d7d941f8561d6b002",
+      "ledgerIds": [
+        "r-5cd9c096cac29bf1d8bc4a32"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "family": "A",
+      "id": "c-9aed77c1e47925de4561b288",
+      "recordIds": [
+        "r-29e71b977d6170b7fc1b69b2",
+        "r-4fe9b52a80eaa616a844ef9d"
+      ]
+    },
+    {
+      "family": "B",
+      "id": "c-490f700049e8dd0731f8b071",
+      "recordIds": [
+        "r-6bf935c97ea6b4bbcda60ccd",
+        "r-a1915828cd01ac7d7778d09b"
+      ]
+    },
+    {
+      "family": "C",
+      "id": "c-d2c87df2aebf94711c5b3e6f",
+      "recordIds": [
+        "r-27505fc7aed437d649c659a6",
+        "r-81875d939c9dd7d28356b132"
+      ]
+    },
+    {
+      "family": "D",
+      "id": "c-288ba63c718d21eddc0e1d92",
+      "recordIds": [
+        "r-cd8accd879632ce4ec347573",
+        "r-8758f71912158db0780d9cfb"
+      ]
+    },
+    {
+      "family": "E",
+      "id": "c-45525b4b6dec80bd98a485a2",
+      "recordIds": [
+        "r-5f291074150c41d6e9f54439",
+        "r-fc8f3a714995e835c444b7ae",
+        "r-bcf09c020e2346379ad404cb",
+        "r-ec870f3e27df35275c31e1ce"
+      ]
+    },
+    {
+      "family": "F",
+      "id": "c-0dca9879bdec59c23ff078ac",
+      "recordIds": [
+        "r-1480294fb89e259b50762670",
+        "r-fc77e29ce10c60ba805f3d74",
+        "r-0d64d65cba857f1bc412e099"
+      ]
+    },
+    {
+      "family": "G",
+      "id": "c-ec07a9a827984ef8e6e33658",
+      "recordIds": [
+        "r-b2642d638ab12ee832ab9f21",
+        "r-69a4fd81120aad92017c39ed"
+      ]
+    },
+    {
+      "family": "H",
+      "id": "c-cb60807ea78ec6e0afa9b328",
+      "recordIds": [
+        "r-772d27c6c379c11733d9a0fd",
+        "r-6823aaefc18a1b9513bf7d37"
+      ]
+    },
+    {
+      "family": "I",
+      "id": "c-1970c7fad6505f3521f69284",
+      "recordIds": [
+        "r-0c8a95c5a9e93df815a5ac4c",
+        "r-fcb11d4c75903427b35621ad"
+      ]
+    },
+    {
+      "family": "J",
+      "id": "c-9415ca81ffbdc7d0f838f06d",
+      "recordIds": [
+        "r-0e44049e0359aeb9525e4461"
+      ]
+    },
+    {
+      "family": "K",
+      "id": "c-eba1a299f24a8c86dc323b5e",
+      "recordIds": [
+        "r-a16a79ab3522e6332c4374f2",
+        "r-c7d69c538d4acd0f24f6cb01"
+      ]
+    },
+    {
+      "family": "L",
+      "id": "c-0b42d91dd1eb2cf71e97e2bf",
+      "recordIds": [
+        "r-0b92dfe508f8938b91054091",
+        "r-6b8e0d825a85e575fe497a1b"
+      ]
+    },
+    {
+      "family": "M",
+      "id": "c-7b826d4b58aa85077d244b0c",
+      "recordIds": [
+        "r-3c31005928bb83a569f28b63",
+        "r-58fb2a0ab9b5ec6741c73b30"
+      ]
+    },
+    {
+      "family": "N",
+      "id": "c-2fa800ec899aea61b28edb72",
+      "recordIds": [
+        "r-f40cf287cf2cd26eb9ac4ef2",
+        "r-c1e613db35820ab207ebae92",
+        "r-71951915b5976a8b8a5d93be"
+      ]
+    },
+    {
+      "family": "O",
+      "id": "c-159da02d7d941f8561d6b002",
+      "recordIds": [
+        "r-90ccb0c1c53094ed88791ad7",
+        "r-d893b34b0c199c6087c1a8fd",
+        "r-5cd9c096cac29bf1d8bc4a32"
+      ]
+    },
+    {
+      "family": "P",
+      "id": "c-2041f3881cfc920d97b23a2f",
+      "recordIds": [
+        "r-c7e4e74aa805af0ef22c5469",
+        "r-585e7cca0eb23872703c1501"
+      ]
+    },
+    {
+      "family": "Q",
+      "id": "c-c4573c0d21d1a629a9a47622",
+      "recordIds": [
+        "r-bfe047449158c4f1043941a5",
+        "r-9f68caea0393cf4d7ba62946"
+      ]
+    },
+    {
+      "family": "R",
+      "id": "c-bbe2b31d7e91a1da67b563fa",
+      "recordIds": [
+        "r-ac7d975352ed81037c6ed102",
+        "r-b94fb057c8e3db7adfaf15ef",
+        "r-0d9bcc40649244247301dfe3",
+        "r-48ad65ed53d8a3ec5f68aa3a"
+      ]
+    },
+    {
+      "family": "S",
+      "id": "c-c273174f9fb46ebbabff0218",
+      "recordIds": [
+        "r-170237372d2fb3d951f8406a",
+        "r-298b44a3206ab35c719d7789",
+        "r-1ae7c231ad1664c1d5a628ab"
+      ]
+    },
+    {
+      "family": "T",
+      "id": "c-38bd40e7456a36feeec1d25d",
+      "recordIds": [
+        "r-b2ef6709689c587705141d5f",
+        "r-ba613e2b0a07651d51f2a70b",
+        "r-11148ef9d3934faebc1da520"
+      ]
+    },
+    {
+      "family": "U",
+      "id": "c-7f16f29c827fc81931398334",
+      "recordIds": [
+        "r-8ed44693b81165ce1092d07d",
+        "r-02f402559b1552941b62a798"
+      ]
+    }
+  ],
+  "negatives": [
+    {
+      "bankId": "r-6bf935c97ea6b4bbcda60ccd",
+      "ledgerId": "r-81875d939c9dd7d28356b132",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-6bf935c97ea6b4bbcda60ccd",
+      "ledgerId": "r-8758f71912158db0780d9cfb",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-27505fc7aed437d649c659a6",
+      "ledgerId": "r-a1915828cd01ac7d7778d09b",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-27505fc7aed437d649c659a6",
+      "ledgerId": "r-8758f71912158db0780d9cfb",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-cd8accd879632ce4ec347573",
+      "ledgerId": "r-a1915828cd01ac7d7778d09b",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-cd8accd879632ce4ec347573",
+      "ledgerId": "r-81875d939c9dd7d28356b132",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-5f291074150c41d6e9f54439",
+      "ledgerId": "r-ec870f3e27df35275c31e1ce",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-fc8f3a714995e835c444b7ae",
+      "ledgerId": "r-bcf09c020e2346379ad404cb",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-1480294fb89e259b50762670",
+      "ledgerId": "r-0d64d65cba857f1bc412e099",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-a16a79ab3522e6332c4374f2",
+      "ledgerId": "r-c7d69c538d4acd0f24f6cb01",
+      "reason": "AMOUNT"
+    },
+    {
+      "bankId": "r-0b92dfe508f8938b91054091",
+      "ledgerId": "r-6b8e0d825a85e575fe497a1b",
+      "reason": "CURRENCY"
+    },
+    {
+      "bankId": "r-3c31005928bb83a569f28b63",
+      "ledgerId": "r-58fb2a0ab9b5ec6741c73b30",
+      "reason": "COUNTERPARTY"
+    },
+    {
+      "bankId": "r-f40cf287cf2cd26eb9ac4ef2",
+      "ledgerId": "r-71951915b5976a8b8a5d93be",
+      "reason": "DISTINCT_EVENT"
+    },
+    {
+      "bankId": "r-d893b34b0c199c6087c1a8fd",
+      "ledgerId": "r-5cd9c096cac29bf1d8bc4a32",
+      "reason": "DISTINCT_EVENT"
+    }
+  ],
+  "outcomes": [
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-4a4b1ad1ee6f15d1ab655651"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-b274ee9728a658c12fc5c752"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-4af2db9d67e2a6bfbf6b3ce3"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-7b7e325bb1a2ea10e2f87765"
+    },
+    {
+      "decision": "ABSTAIN_AMBIGUOUS",
+      "subjectId": "rel-fcbf244f50ccab839b068067"
+    },
+    {
+      "decision": "ABSTAIN_AMBIGUOUS",
+      "subjectId": "rel-1d6ebf3b3c44062a3838d217"
+    },
+    {
+      "decision": "ABSTAIN_AMBIGUOUS",
+      "subjectId": "rel-c887fd2766909bb0e7e53b0d"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-0d64d65cba857f1bc412e099"
+    },
+    {
+      "decision": "ABSTAIN_INSUFFICIENT",
+      "subjectId": "rel-9030ead456b5b70cb81ad479"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-65cb4e9ab9b959282a53a358"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-0c8a95c5a9e93df815a5ac4c"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-fcb11d4c75903427b35621ad"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-0e44049e0359aeb9525e4461"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-a16a79ab3522e6332c4374f2"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-c7d69c538d4acd0f24f6cb01"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-0b92dfe508f8938b91054091"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-6b8e0d825a85e575fe497a1b"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-3c31005928bb83a569f28b63"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-58fb2a0ab9b5ec6741c73b30"
+    },
+    {
+      "decision": "ABSTAIN_AMBIGUOUS",
+      "subjectId": "rel-f0cc5b66f36d8d4ac5aa6b49"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-71951915b5976a8b8a5d93be"
+    },
+    {
+      "decision": "ABSTAIN_AMBIGUOUS",
+      "subjectId": "rel-149872bb18886cfd55f28af2"
+    },
+    {
+      "decision": "UNRESOLVED_UNMATCHED",
+      "subjectId": "r-d893b34b0c199c6087c1a8fd"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-8939fbae6338e46639a3fcc1"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-2df9ce396680b4455b616781"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-9cabcf2a276cc9b0e290aa26"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-bc5e92c05f2ab8b2587abe82"
+    },
+    {
+      "decision": "UNRESOLVED_GROUP",
+      "subjectId": "rel-f5467425ad04409d41245f64"
+    },
+    {
+      "decision": "UNRESOLVED_GROUP",
+      "subjectId": "rel-b0f77674fc6a667d72cf0d16"
+    },
+    {
+      "decision": "SUGGEST_PAIR",
+      "subjectId": "rel-0a9acba6c448222791505236"
+    }
+  ],
+  "relationships": [
+    {
+      "bankIds": [
+        "r-29e71b977d6170b7fc1b69b2"
+      ],
+      "economicId": "e-645aa2c92eb927239bf4a583",
+      "family": "A",
+      "id": "rel-4a4b1ad1ee6f15d1ab655651",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-4fe9b52a80eaa616a844ef9d"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-6bf935c97ea6b4bbcda60ccd"
+      ],
+      "economicId": "e-3bbdb1a26000ab8ecba0df6d",
+      "family": "B",
+      "id": "rel-b274ee9728a658c12fc5c752",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-a1915828cd01ac7d7778d09b"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-27505fc7aed437d649c659a6"
+      ],
+      "economicId": "e-1febe1c3be7f48f4b3d90580",
+      "family": "C",
+      "id": "rel-4af2db9d67e2a6bfbf6b3ce3",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-81875d939c9dd7d28356b132"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-cd8accd879632ce4ec347573"
+      ],
+      "economicId": "e-857e4891dc63baca52e2fdc5",
+      "family": "D",
+      "id": "rel-7b7e325bb1a2ea10e2f87765",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-8758f71912158db0780d9cfb"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-5f291074150c41d6e9f54439"
+      ],
+      "economicId": "e-73f353839e6761a89435a9d7",
+      "family": "E",
+      "id": "rel-fcbf244f50ccab839b068067",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-bcf09c020e2346379ad404cb"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-fc8f3a714995e835c444b7ae"
+      ],
+      "economicId": "e-987d23d4c5317e4f860c2876",
+      "family": "E",
+      "id": "rel-1d6ebf3b3c44062a3838d217",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-ec870f3e27df35275c31e1ce"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-1480294fb89e259b50762670"
+      ],
+      "economicId": "e-05e9ff32fbfad8fba5c2569a",
+      "family": "F",
+      "id": "rel-c887fd2766909bb0e7e53b0d",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-fc77e29ce10c60ba805f3d74"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-b2642d638ab12ee832ab9f21"
+      ],
+      "economicId": "e-1e81a85c65122d10643b673b",
+      "family": "G",
+      "id": "rel-9030ead456b5b70cb81ad479",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-69a4fd81120aad92017c39ed"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-772d27c6c379c11733d9a0fd"
+      ],
+      "economicId": "e-bca83cce8b2fe9373f94d13e",
+      "family": "H",
+      "id": "rel-65cb4e9ab9b959282a53a358",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-6823aaefc18a1b9513bf7d37"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-f40cf287cf2cd26eb9ac4ef2"
+      ],
+      "economicId": "e-e2d65f56e305c83863676035",
+      "family": "N",
+      "id": "rel-f0cc5b66f36d8d4ac5aa6b49",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-c1e613db35820ab207ebae92"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-90ccb0c1c53094ed88791ad7"
+      ],
+      "economicId": "e-627b6b2cdba2f054b84f4516",
+      "family": "O",
+      "id": "rel-149872bb18886cfd55f28af2",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-5cd9c096cac29bf1d8bc4a32"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-c7e4e74aa805af0ef22c5469"
+      ],
+      "economicId": "e-75415382ac239cf086feb6fc",
+      "family": "P",
+      "id": "rel-8939fbae6338e46639a3fcc1",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-585e7cca0eb23872703c1501"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-bfe047449158c4f1043941a5"
+      ],
+      "economicId": "e-8be7f685567f3e8530784df8",
+      "family": "Q",
+      "id": "rel-2df9ce396680b4455b616781",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-9f68caea0393cf4d7ba62946"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-ac7d975352ed81037c6ed102"
+      ],
+      "economicId": "e-28b760a3e5677b860af8a53c",
+      "family": "R",
+      "id": "rel-9cabcf2a276cc9b0e290aa26",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-0d9bcc40649244247301dfe3"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-b94fb057c8e3db7adfaf15ef"
+      ],
+      "economicId": "e-a0f7bddfec7258e6f440b666",
+      "family": "R",
+      "id": "rel-bc5e92c05f2ab8b2587abe82",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-48ad65ed53d8a3ec5f68aa3a"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-170237372d2fb3d951f8406a",
+        "r-298b44a3206ab35c719d7789"
+      ],
+      "economicId": "e-a2dd7fa4ba0061845596c4b5",
+      "family": "S",
+      "id": "rel-f5467425ad04409d41245f64",
+      "kind": "PARTIAL",
+      "ledgerIds": [
+        "r-1ae7c231ad1664c1d5a628ab"
+      ],
+      "remainingAmount": "25.00"
+    },
+    {
+      "bankIds": [
+        "r-b2ef6709689c587705141d5f"
+      ],
+      "economicId": "e-5fd39bbe338aa977e037fa1e",
+      "family": "T",
+      "id": "rel-b0f77674fc6a667d72cf0d16",
+      "kind": "GROUP",
+      "ledgerIds": [
+        "r-ba613e2b0a07651d51f2a70b",
+        "r-11148ef9d3934faebc1da520"
+      ],
+      "remainingAmount": null
+    },
+    {
+      "bankIds": [
+        "r-8ed44693b81165ce1092d07d"
+      ],
+      "economicId": "e-4fb5d587e0201acce07c7453",
+      "family": "U",
+      "id": "rel-0a9acba6c448222791505236",
+      "kind": "PAIR",
+      "ledgerIds": [
+        "r-02f402559b1552941b62a798"
+      ],
+      "remainingAmount": null
+    }
+  ],
+  "seed": "fingence-ai01-m2-frozen-001",
+  "split": "development",
+  "unmatched": [
+    {
+      "economicId": "e-81639e8685518f37a4727001",
+      "family": "F",
+      "recordId": "r-0d64d65cba857f1bc412e099"
+    },
+    {
+      "economicId": "e-13dd9570e17e5839c53cfbed",
+      "family": "I",
+      "recordId": "r-0c8a95c5a9e93df815a5ac4c"
+    },
+    {
+      "economicId": "e-cfcf75889943333ce0d9f639",
+      "family": "I",
+      "recordId": "r-fcb11d4c75903427b35621ad"
+    },
+    {
+      "economicId": "e-8f3eab83fbb59fce64991b53",
+      "family": "J",
+      "recordId": "r-0e44049e0359aeb9525e4461"
+    },
+    {
+      "economicId": "e-b677f7ccb8ff3e33d597a6f7",
+      "family": "K",
+      "recordId": "r-a16a79ab3522e6332c4374f2"
+    },
+    {
+      "economicId": "e-afe3000288bc69a102aaad3c",
+      "family": "K",
+      "recordId": "r-c7d69c538d4acd0f24f6cb01"
+    },
+    {
+      "economicId": "e-16c39c44d95f329f9637a28b",
+      "family": "L",
+      "recordId": "r-0b92dfe508f8938b91054091"
+    },
+    {
+      "economicId": "e-e5a8e36970c9eb3fc0dba358",
+      "family": "L",
+      "recordId": "r-6b8e0d825a85e575fe497a1b"
+    },
+    {
+      "economicId": "e-61e17aa6833a882ef7da8dcd",
+      "family": "M",
+      "recordId": "r-3c31005928bb83a569f28b63"
+    },
+    {
+      "economicId": "e-dc2bea2268ea4d0b02ce676f",
+      "family": "M",
+      "recordId": "r-58fb2a0ab9b5ec6741c73b30"
+    },
+    {
+      "economicId": "e-c04f0a940635ce9e1a330d20",
+      "family": "N",
+      "recordId": "r-71951915b5976a8b8a5d93be"
+    },
+    {
+      "economicId": "e-272e61557c2eb88f77aea329",
+      "family": "O",
+      "recordId": "r-d893b34b0c199c6087c1a8fd"
+    }
+  ],
+  "version": "ai01-m2/1.1.0"
+}

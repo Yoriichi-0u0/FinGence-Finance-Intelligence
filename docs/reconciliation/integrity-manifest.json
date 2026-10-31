@@ -1,0 +1,36 @@
+{
+  "hashConvention": {
+    "algorithm": "SHA-256",
+    "artifacts": "byte-exact",
+    "sources": "crlf-to-lf-v1"
+  },
+  "baseHead": "9385da7f4bb5ef9abbf2dec39b31e60e639fcaca",
+  "generatorVersion": "ai01-m1/1.0.1",
+  "artifactPaths": "repository-relative; includes fixtures and machine-readable evidence",
+  "artifacts": {
+    "docs/reconciliation/evidence/ai01-regressions.json": "f2610076f55d8053f9f6d11aeef693cbdfd9169f80074bedcf1264c06c6aa47b",
+    "docs/reconciliation/evidence/ai01-tests.json": "6424caee0e6f001e38ecfacec484ad07e3fb85c43c137bf64c680d69420e1e3d",
+    "docs/reconciliation/evidence/checks.json": "da0e8eaa964019929f6b90dae20b4e5dddc9d6e80e6980f154d69aed837192d7",
+    "docs/reconciliation/evidence/review-baseline.json": "10f653b1e793773f99b151159941c7eded4c56ef0d18c022ef1b244aeff3bb3b",
+    "research/reconciliation/fixtures/pilot-dataset.json": "6c5961572fc1b725f7129cec35810cbea77f8c560e70ed6f18d677a7094c7044",
+    "research/reconciliation/fixtures/pilot-expectations.json": "3c8114c6b670d7c790329f454879c59c3e67e9d7fa63f043951fcc39dfcbdaac"
+  },
+  "sources": {
+    "docs/reconciliation/.gitattributes": "3ed77a80cf8c5ef7f346015f557db30e7ee4c1bd080c3f0e278ed0cca8aaf1b5",
+    "docs/reconciliation/ai01-dataset-spec.md": "bfcf30edc3a4ccb1e92a1e5b421a3d9cc703a65950d81208b4da71685c347e4f",
+    "docs/reconciliation/ai01-verification.md": "6d3c8c85757f8387c5bcac68f8eb4086c323e0344c1adad15bc769238040d01c",
+    "docs/reconciliation/annotation-guide.md": "ddda0ea51fffcfbc81a2b0374b306b8640983aba3994b4ed4916c73c893cc082",
+    "research/reconciliation/.gitattributes": "9bcf8a89a7c4d53560c323a0f579c709f93f3ab86ad5f026aca09a60727792a2",
+    "research/reconciliation/README.md": "4667e27f22a163a1eda62f6285c19bf6d8fdc45aef115f96da877147af08bab7",
+    "research/reconciliation/decimal.ts": "e1dea3d2a8e3237abafb5eb78540332618c53a619a81c1f7e4e619e796390bea",
+    "research/reconciliation/generator.ts": "6a63c64433e10eb9775770d0e0920e745e81c2b29ac9304bfe503cdabc17937f",
+    "research/reconciliation/ground-truth.ts": "a3a1842d396851577fef435d8dadf2de844f4dfba359f4e76ef40cc3df3f2f8e",
+    "research/reconciliation/pilot-annotations.ts": "d04370b4dd69d24288b04a64f13e6fe6383d3fde7d3457138d5f048f1d0135b0",
+    "research/reconciliation/schemas.ts": "6ccc367392d4cfa7619cff1587a2117a1cd09aa61a01d2b67e033cbb80ea0f60",
+    "research/reconciliation/types.ts": "7e88db10aaea73efc0cd495eddae6061b485fb3709c1f6733437e62ba0e3987f",
+    "research/reconciliation/validator.ts": "a9e24047975f1034ca05cd55d26cda002d104e1eac9194c06e92884b6dab88a6",
+    "tests/reconciliation/generator.test.ts": "761c37b55a98d3074ff65f5432be2b68a467bdf2a8c2b4c771633454bcd4e08b",
+    "tests/reconciliation/ground-truth.test.ts": "5d934ed29692669426a49b8e379f0f68b2861f69522afd2f067bd0a0a92be289",
+    "tests/reconciliation/validator.test.ts": "ff3c2b24c9cb1e714b27fddfa93d3297e6f3eb590802637e399fa54f65912fd8"
+  }
+}

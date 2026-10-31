@@ -1,0 +1,284 @@
+{
+  "actualHeldout": {
+    "explicitNegatives": 28,
+    "genuinePairs": 32,
+    "groups": 4,
+    "records": 100,
+    "schemas": 4,
+    "unmatchedRecords": 24
+  },
+  "fingerprint": "5316a91b047695ed381b7337b50a4a21b590df3eca8d284219b57a28e9e0f170",
+  "freezeFingerprint": "0874f932eca2a38e83730c872eda6cde57d9a73d57ad59bcace41b1b11dd80b2",
+  "predictionsSHA256": "55160f6062a820272b9f0e87f167fbded4b14cf2a6a75d30db697f422b238b26",
+  "protocolVersion": "ai05-official/1.0.0",
+  "results": [
+    {
+      "method": "E0",
+      "metrics": {
+        "after": {
+          "assessedSuggestions": 8,
+          "coverage": 0.16,
+          "explicitFalsePositives": 0,
+          "f1": 0.4,
+          "falseNegatives": 24,
+          "precision": 1,
+          "recall": 0.25,
+          "safety": {
+            "ambiguousCasesForced": 0,
+            "authoredAbstentionContradictions": 0,
+            "counterpartyConflict": 0,
+            "dateViolation": 0,
+            "duplicateAssignments": 0,
+            "invalidDirection": 0,
+            "missingIdentityEvidence": 0,
+            "unknownVerificationEvidence": 0,
+            "unmatchedRecordsSuggested": 0,
+            "unsupportedGroupedMatches": 0,
+            "wrongAmount": 0,
+            "wrongCurrency": 0
+          },
+          "suggestions": 8,
+          "truePositives": 8,
+          "unannotatedSuggestions": 0,
+          "unresolvedBankRecords": 42,
+          "unresolvedRatio": 0.84
+        },
+        "before": {
+          "assessedSuggestions": 14,
+          "coverage": 0.28,
+          "explicitFalsePositives": 0,
+          "f1": 0.6086956521739131,
+          "falseNegatives": 18,
+          "precision": 1,
+          "recall": 0.4375,
+          "safety": {
+            "ambiguousCasesForced": 0,
+            "authoredAbstentionContradictions": 0,
+            "counterpartyConflict": 0,
+            "dateViolation": 0,
+            "duplicateAssignments": 0,
+            "invalidDirection": 0,
+            "missingIdentityEvidence": 2,
+            "unknownVerificationEvidence": 2,
+            "unmatchedRecordsSuggested": 0,
+            "unsupportedGroupedMatches": 0,
+            "wrongAmount": 0,
+            "wrongCurrency": 0
+          },
+          "suggestions": 14,
+          "truePositives": 14,
+          "unannotatedSuggestions": 0,
+          "unresolvedBankRecords": 36,
+          "unresolvedRatio": 0.72
+        },
+        "denominators": {
+          "allRecords": 100,
+          "ambiguousCases": 8,
+          "bankRecords": 50,
+          "explicitNegatives": 28,
+          "genuinePairs": 32,
+          "unmatchedRecords": 24,
+          "unsupportedGroups": 4
+        },
+        "evaluationVersion": "ai05-metrics/1.0.0",
+        "retrieval": {
+          "candidateBlockingRecall": 1,
+          "candidateCount": 232,
+          "recallAt1": 0.5,
+          "recallAt3": 0.6875,
+          "recallAt5": 0.6875,
+          "survivingGenuinePairs": 32
+        },
+        "verification": {
+          "blockedProposals": 0,
+          "correctProposalsRetained": 8,
+          "correctProposalsWithheld": 6,
+          "incorrectProposalsWithheld": 0,
+          "unresolvedReview": 6,
+          "verifiedSuggestions": 8
+        }
+      },
+      "runFingerprint": "dcca3ee573ac5a79194cb78804973a644f261410fdac8c110931830389ea9e68",
+      "verificationFingerprint": "cd762ec223fd822ed7b024ede6fe4d8b919c3d3b6b3a02f6cd2d01516841a821"
+    },
+    {
+      "method": "E1",
+      "metrics": {
+        "after": {
+          "assessedSuggestions": 8,
+          "coverage": 0.16,
+          "explicitFalsePositives": 0,
+          "f1": 0.4,
+          "falseNegatives": 24,
+          "precision": 1,
+          "recall": 0.25,
+          "safety": {
+            "ambiguousCasesForced": 0,
+            "authoredAbstentionContradictions": 0,
+            "counterpartyConflict": 0,
+            "dateViolation": 0,
+            "duplicateAssignments": 0,
+            "invalidDirection": 0,
+            "missingIdentityEvidence": 0,
+            "unknownVerificationEvidence": 0,
+            "unmatchedRecordsSuggested": 0,
+            "unsupportedGroupedMatches": 0,
+            "wrongAmount": 0,
+            "wrongCurrency": 0
+          },
+          "suggestions": 8,
+          "truePositives": 8,
+          "unannotatedSuggestions": 0,
+          "unresolvedBankRecords": 42,
+          "unresolvedRatio": 0.84
+        },
+        "before": {
+          "assessedSuggestions": 16,
+          "coverage": 0.32,
+          "explicitFalsePositives": 0,
+          "f1": 0.6666666666666666,
+          "falseNegatives": 16,
+          "precision": 1,
+          "recall": 0.5,
+          "safety": {
+            "ambiguousCasesForced": 0,
+            "authoredAbstentionContradictions": 2,
+            "counterpartyConflict": 0,
+            "dateViolation": 0,
+            "duplicateAssignments": 0,
+            "invalidDirection": 0,
+            "missingIdentityEvidence": 4,
+            "unknownVerificationEvidence": 4,
+            "unmatchedRecordsSuggested": 0,
+            "unsupportedGroupedMatches": 0,
+            "wrongAmount": 0,
+            "wrongCurrency": 0
+          },
+          "suggestions": 16,
+          "truePositives": 16,
+          "unannotatedSuggestions": 0,
+          "unresolvedBankRecords": 34,
+          "unresolvedRatio": 0.68
+        },
+        "denominators": {
+          "allRecords": 100,
+          "ambiguousCases": 8,
+          "bankRecords": 50,
+          "explicitNegatives": 28,
+          "genuinePairs": 32,
+          "unmatchedRecords": 24,
+          "unsupportedGroups": 4
+        },
+        "evaluationVersion": "ai05-metrics/1.0.0",
+        "retrieval": {
+          "candidateBlockingRecall": 1,
+          "candidateCount": 232,
+          "recallAt1": 0.625,
+          "recallAt3": 0.6875,
+          "recallAt5": 0.6875,
+          "survivingGenuinePairs": 32
+        },
+        "verification": {
+          "blockedProposals": 0,
+          "correctProposalsRetained": 8,
+          "correctProposalsWithheld": 8,
+          "incorrectProposalsWithheld": 0,
+          "unresolvedReview": 8,
+          "verifiedSuggestions": 8
+        }
+      },
+      "runFingerprint": "ae0fe9a26b53641e6e58ef6789b1bc682e1e75a76a707808efce1061cbf6b3d7",
+      "verificationFingerprint": "10203867f9368b9c67fbed8d53c830df4a5b5228493cb75d8c762eac52e2c6da"
+    },
+    {
+      "method": "E2b",
+      "metrics": {
+        "after": {
+          "assessedSuggestions": 8,
+          "coverage": 0.16,
+          "explicitFalsePositives": 0,
+          "f1": 0.4,
+          "falseNegatives": 24,
+          "precision": 1,
+          "recall": 0.25,
+          "safety": {
+            "ambiguousCasesForced": 0,
+            "authoredAbstentionContradictions": 0,
+            "counterpartyConflict": 0,
+            "dateViolation": 0,
+            "duplicateAssignments": 0,
+            "invalidDirection": 0,
+            "missingIdentityEvidence": 0,
+            "unknownVerificationEvidence": 0,
+            "unmatchedRecordsSuggested": 0,
+            "unsupportedGroupedMatches": 0,
+            "wrongAmount": 0,
+            "wrongCurrency": 0
+          },
+          "suggestions": 8,
+          "truePositives": 8,
+          "unannotatedSuggestions": 0,
+          "unresolvedBankRecords": 42,
+          "unresolvedRatio": 0.84
+        },
+        "before": {
+          "assessedSuggestions": 20,
+          "coverage": 0.4,
+          "explicitFalsePositives": 2,
+          "f1": 0.6923076923076923,
+          "falseNegatives": 14,
+          "precision": 0.9,
+          "recall": 0.5625,
+          "safety": {
+            "ambiguousCasesForced": 0,
+            "authoredAbstentionContradictions": 2,
+            "counterpartyConflict": 2,
+            "dateViolation": 0,
+            "duplicateAssignments": 0,
+            "invalidDirection": 0,
+            "missingIdentityEvidence": 6,
+            "unknownVerificationEvidence": 8,
+            "unmatchedRecordsSuggested": 4,
+            "unsupportedGroupedMatches": 0,
+            "wrongAmount": 0,
+            "wrongCurrency": 0
+          },
+          "suggestions": 20,
+          "truePositives": 18,
+          "unannotatedSuggestions": 0,
+          "unresolvedBankRecords": 30,
+          "unresolvedRatio": 0.6
+        },
+        "denominators": {
+          "allRecords": 100,
+          "ambiguousCases": 8,
+          "bankRecords": 50,
+          "explicitNegatives": 28,
+          "genuinePairs": 32,
+          "unmatchedRecords": 24,
+          "unsupportedGroups": 4
+        },
+        "evaluationVersion": "ai05-metrics/1.0.0",
+        "retrieval": {
+          "candidateBlockingRecall": 1,
+          "candidateCount": 232,
+          "recallAt1": 0.625,
+          "recallAt3": 0.6875,
+          "recallAt5": 0.6875,
+          "survivingGenuinePairs": 32
+        },
+        "verification": {
+          "blockedProposals": 0,
+          "correctProposalsRetained": 8,
+          "correctProposalsWithheld": 10,
+          "incorrectProposalsWithheld": 2,
+          "unresolvedReview": 12,
+          "verifiedSuggestions": 8
+        }
+      },
+      "runFingerprint": "886cdbb08b2165cb84eb6299aa6bde2eacf061e570072ea4d9f71019da2d4dcf",
+      "verificationFingerprint": "ea6eaaa6d9c073eab5abbe9eade4d922e399fde093fe51e0db309d8c43a3c32e"
+    }
+  ],
+  "truthSHA256": "517f2a12831b6d908e824690696e7c771374910303c538f1d86f86983189b92b"
+}

@@ -1,0 +1,184 @@
+{
+  "status": "VERIFIED_BEFORE_AI_ONLY_COMMIT",
+  "publicationDate": "2026-10-31",
+  "repository": "Yoriichi-0u0/FinGence-Finance-Intelligence",
+  "branch": "feature/ai-reconciliation-celester",
+  "prBase": "feature/backend-api-celester",
+  "baseCommit": "9385da7f4bb5ef9abbf2dec39b31e60e639fcaca",
+  "draft": true,
+  "previousPrsUnmodified": [
+    2,
+    35
+  ],
+  "allExistingImplementationFixturesAndResultsUnchanged": true,
+  "preExistingBytePreservation": {
+    "filesChecked": 1089,
+    "metadataOnlyChanges": [],
+    "allOtherFilesUnchanged": true,
+    "gitInfoExcludeUnchanged": true,
+    "allPreExistingFilesUnchanged": true
+  },
+  "excludedLocalFiles": [
+    "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/physical-backup-manifest.json",
+    "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/recovery.json",
+    "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/runner.json",
+    "docs/database/db03/evidence/2026-10-27T12-52-50-072Z/vitest.json",
+    "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/physical-backup-manifest.json",
+    "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/recovery.json",
+    "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/runner.json",
+    "docs/database/db03/evidence/2026-10-27T12-55-58-853Z/vitest.json",
+    "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/physical-backup-manifest.json",
+    "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/recovery.json",
+    "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/runner.json",
+    "docs/database/db03/evidence/2026-10-27T13-09-48-952Z/vitest.json",
+    "scripts/db03/run.mjs"
+  ],
+  "filesPublished": 181,
+  "exactFileInventory": "docs/reconciliation/publication/files.txt",
+  "tests": {
+    "command": "pnpm exec vitest run tests/reconciliation tests/api tests/persistence tests/integration/grouped-consultation.test.ts tests/recovery/db03.safety.test.ts --config scripts/db03/vitest.config.mts --maxWorkers=1",
+    "passed": 887,
+    "failed": 0,
+    "skipped": 3,
+    "passingFiles": 41,
+    "skippedFiles": 2,
+    "nativePostgreSQLTestsPassed": 25,
+    "nativeVersion": "18.6",
+    "publicationIntegrityTestsIncluded": 6,
+    "skipExplanation": "Historical AI03 evidence-writing real-model test and both already-completed one-shot official AI05 stages intentionally disabled; prior actual inference/evaluation evidence retained unchanged"
+  },
+  "typeScript": "pnpm typecheck: passed",
+  "strictLint": "All research/reconciliation, tests/reconciliation, scripts/ai-research and independent audit: passed with zero warnings/errors",
+  "workingCopyIntegrity": "All AI phase manifests, six model files and official prediction/evaluation seals passed",
+  "gitObjectIntegrity": {
+    "status": "PASSED",
+    "ref": "INDEX",
+    "referencesVerified": 378,
+    "uniqueGitBlobsRead": 178,
+    "historicalSourceCheckoutProofs": [
+      {
+        "context": "docs/reconciliation/ai02-integrity-manifest.json",
+        "file": "package.json",
+        "convention": "CAPTURED_CRLF_SOURCE_FROM_LF_GIT_BLOB",
+        "gitBlobSHA256": "bda6bc5a432394aadf3ff7a58fb96d01864c2c7162785a9e1ca26808a545d22f",
+        "recordedCheckoutSHA256": "97bfccf9152ee6360abf9cd36639ec23c90db7fdf6fbd67d223d6090bb726258"
+      },
+      {
+        "context": "docs/reconciliation/ai02-integrity-manifest.json",
+        "file": "tsconfig.json",
+        "convention": "CAPTURED_CRLF_SOURCE_FROM_LF_GIT_BLOB",
+        "gitBlobSHA256": "43303692a072f25e9782a7a40219585c243c648f74a680006311dad973f41213",
+        "recordedCheckoutSHA256": "803a7867b6832c231bdbc0095ec28ce019aa31ed6c3c37b61f5ef3e136029c1b"
+      },
+      {
+        "context": "docs/reconciliation/ai03-integrity-manifest.json",
+        "file": "package.json",
+        "convention": "CAPTURED_CRLF_SOURCE_FROM_LF_GIT_BLOB",
+        "gitBlobSHA256": "bda6bc5a432394aadf3ff7a58fb96d01864c2c7162785a9e1ca26808a545d22f",
+        "recordedCheckoutSHA256": "97bfccf9152ee6360abf9cd36639ec23c90db7fdf6fbd67d223d6090bb726258"
+      },
+      {
+        "context": "docs/reconciliation/ai03-integrity-manifest.json",
+        "file": "tsconfig.json",
+        "convention": "CAPTURED_CRLF_SOURCE_FROM_LF_GIT_BLOB",
+        "gitBlobSHA256": "43303692a072f25e9782a7a40219585c243c648f74a680006311dad973f41213",
+        "recordedCheckoutSHA256": "803a7867b6832c231bdbc0095ec28ce019aa31ed6c3c37b61f5ef3e136029c1b"
+      },
+      {
+        "context": "AI05 official freeze",
+        "file": "package.json",
+        "convention": "CAPTURED_CRLF_SOURCE_FROM_LF_GIT_BLOB",
+        "gitBlobSHA256": "bda6bc5a432394aadf3ff7a58fb96d01864c2c7162785a9e1ca26808a545d22f",
+        "recordedCheckoutSHA256": "97bfccf9152ee6360abf9cd36639ec23c90db7fdf6fbd67d223d6090bb726258"
+      },
+      {
+        "context": "AI05 official freeze",
+        "file": "pnpm-lock.yaml",
+        "convention": "CAPTURED_CRLF_SOURCE_FROM_LF_GIT_BLOB",
+        "gitBlobSHA256": "7ca853a4562b35b5d4ecbcf2b43487324b7710884c104e0db1fdc99b570f33c6",
+        "recordedCheckoutSHA256": "6180d73c7e6d8de2dafb042565a753c86b9b60968e25d9b336175ce3f1695ed3"
+      },
+      {
+        "context": "AI05 official freeze",
+        "file": "scripts/db03/vitest.config.mts",
+        "convention": "CAPTURED_CRLF_SOURCE_FROM_LF_GIT_BLOB",
+        "gitBlobSHA256": "97953bc563e370ce0091f445d36bf7668bfa81ec49b38dd9961e47c534faeaaa",
+        "recordedCheckoutSHA256": "c74e3f36f395b058e5c8bb89fb662d9cb50992646d4e6bb0a5e3945880506886"
+      }
+    ],
+    "rawArtifacts": "Byte-exact; no normalization or fallback for datasets, measurements, predictions or other evidence",
+    "officialFreezeFingerprint": "0874f932eca2a38e83730c872eda6cde57d9a73d57ad59bcace41b1b11dd80b2",
+    "officialEvaluationFingerprint": "5316a91b047695ed381b7337b50a4a21b590df3eca8d284219b57a28e9e0f170"
+  },
+  "stagedScan": {
+    "stagedFilesScanned": 174,
+    "bytesScanned": 6720142,
+    "credentialFindings": [],
+    "utf8TextOnly": true,
+    "rawModelDatabaseOrCacheFiles": false,
+    "M2SyntheticRowsVerified": 300,
+    "whitespace": "Passed staged file contents",
+    "finalFilesScanned": 181,
+    "finalCredentialFindings": [],
+    "finalContentWhitelist": "Only AI code/tests/docs, synthetic fixtures, frozen evidence and publication metadata; UTF-8 text only"
+  },
+  "initialVerificationFindings": [
+    "Seven historical source/config capture hashes matched CRLF working copies but differed from LF Git blobs; exact recorded SHA-256 reconstructed for the four finite source/config paths, with no raw-artifact conversion.",
+    "Default staged whitespace check reports preserved CRLF terminators. A temporary scoped-attribute approach was correctly rejected by the historical source manifest; both attribute files were restored byte-for-byte before commit. Final whitespace verification uses command-local cr-at-eol recognition while retaining all other default whitespace checks; no original metadata is changed."
+  ],
+  "researchResults": {
+    "trainDevelopmentPreVerification": {
+      "E0": {
+        "tp": 28,
+        "fp": 0
+      },
+      "E1": {
+        "tp": 32,
+        "fp": 0
+      },
+      "E5": {
+        "tp": 34,
+        "fp": 4
+      }
+    },
+    "trainDevelopmentVerifiedTPPerMethod": 18,
+    "heldout": {
+      "records": 100,
+      "genuinePairs": 32,
+      "raw": {
+        "E0": {
+          "tp": 14,
+          "fp": 0
+        },
+        "E1": {
+          "tp": 16,
+          "fp": 0
+        },
+        "E5": {
+          "tp": 18,
+          "fp": 2
+        }
+      },
+      "verifiedPerMethod": {
+        "tp": 8,
+        "fp": 0,
+        "recall": 0.25,
+        "f1": 0.4,
+        "bankCoverage": 0.16
+      },
+      "sameVerifiedPairs": true,
+      "E5FinalVerifiedAdvantage": false
+    }
+  },
+  "safety": {
+    "researchOnly": true,
+    "productionAccountingApproved": false,
+    "hostedSupabaseAccessed": false,
+    "productionDatabaseChanged": false,
+    "modelDownloadedOrRuntimeInstalled": false,
+    "officialEvaluationRerunOrRetuned": false,
+    "mergedOrDeploymentInitiated": false,
+    "DB04OrAI06OrUIImplemented": false
+  },
+  "gitWhitespaceCommand": "git -c core.whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol diff --cached --check"
+}

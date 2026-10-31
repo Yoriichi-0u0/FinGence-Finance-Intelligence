@@ -1,0 +1,53 @@
+{
+  "hashConvention": {
+    "algorithm": "SHA-256",
+    "artifacts": "byte-exact",
+    "sources": "crlf-to-lf-v1"
+  },
+  "version": "ai01-m2/1.1.0",
+  "baseHead": "9385da7f4bb5ef9abbf2dec39b31e60e639fcaca",
+  "artifactPaths": "repository-relative",
+  "historicalEvidence": "evidence/m2/ describes 1.0.0; evidence/m2-correction/ describes this correction, with initial sandbox failures explicitly retained.",
+  "artifacts": {
+    "docs/reconciliation/evidence/m2-correction/ai01-tests.json": "42f6f2575ffddabc5b7f2a33a16268d5947b82342168b33d7c7021a7204c1c69",
+    "docs/reconciliation/evidence/m2-correction/checks.json": "879ea14ab1a914b3fc6802038c355f806d44d45d92cc7eac9b209098c992d062",
+    "docs/reconciliation/evidence/m2-correction/diagnostics.json": "4ff1f3dd635b9f61b73caf0df6be6eef2902205fd7654f4cc665e5e3d01f404d",
+    "docs/reconciliation/evidence/m2-correction/regressions-sandbox-failure.json": "8d231ddb7c8c6c5f0d01b0307e40a9bd3027323f6d30e28c0980e8db4385731f",
+    "docs/reconciliation/evidence/m2-correction/regressions.json": "ca85ce470eb0374cc889b30121f0a96f9c41b7d7b6f294fb43d35af933ce17d8",
+    "docs/reconciliation/evidence/m2/ai01-tests.json": "b2bb61a3020604a067caa68b91c44d3d3ff008c05edf3a43967fe03caf696203",
+    "docs/reconciliation/evidence/m2/checks.json": "bb8209d1b5d864093967837ca2b62c280e5e80116bc58ea760c7c1ddfb895cab",
+    "docs/reconciliation/evidence/m2/regressions.json": "12e7b48295bd83b0d2ef17c98513202179924cf22b7972b3159808ac5306785f",
+    "research/reconciliation/m2/fixtures/annotations/development.json": "78e5e4a826323cd562dd22c0fdc305348fca914ca12c922aa6aa541ffb0727bc",
+    "research/reconciliation/m2/fixtures/annotations/train.json": "a0772037fc05260a499f203fffbade555326393cb4114c8b4e3503e3b49addc1",
+    "research/reconciliation/m2/fixtures/artifact-manifest.json": "4daa97994adb9cc1994f8b5547c6a411d2123fddbd984ad641cb4b69c3c6c3e1",
+    "research/reconciliation/m2/fixtures/eligibility/rejections.json": "c96029c71f3932759f14a5cbcc2fd4ebf371d646df9b9975e9d8101fe57fa0bb",
+    "research/reconciliation/m2/fixtures/evaluation-only/heldout-truth.json": "517f2a12831b6d908e824690696e7c771374910303c538f1d86f86983189b92b",
+    "research/reconciliation/m2/fixtures/inputs/development.json": "36b292e39e366aa91e2193cf08755b3e2130935400c5d34e3ac37665e2054645",
+    "research/reconciliation/m2/fixtures/inputs/heldout.json": "9fe36cf5c7e6ca591817620fe94707635e32e3ea6183ec59fd6dbb8b241d26ec",
+    "research/reconciliation/m2/fixtures/inputs/train.json": "0defc598bc6d168ee80b1a389689f7dadeb5b3f444b85dd3d1f838652574c83e",
+    "research/reconciliation/m2/fixtures/split-manifest.json": "9c60a5aac628524ae9dd138b805855c8fe9a7508868541492ed180d81a7f0c36"
+  },
+  "sources": {
+    "docs/reconciliation/ai01-m2-dataset-spec.md": "67290aff3ff286efc68de0e93113d0c25c69ffe65a95150e6d9a38ad47c42334",
+    "docs/reconciliation/ai01-m2-evaluation-splits.md": "896010f04af0c402b07c787db6c73957379c339cf4ad4a0a7668b88bf900f54e",
+    "docs/reconciliation/ai01-m2-verification.md": "4fd3f474d822328a9fa5cd8df2e0efb10d504359cfdc46c345d520cf417de6ed",
+    "research/reconciliation/m2/.gitattributes": "71d42b90e64e11454415595a38628d1c0b4846ff075f9c977c9938f5dc6ea558",
+    "research/reconciliation/m2/README.md": "12ad8cfdd5f6b92eb00a90d48a5942e4064a911a7003e94088a0d1c8f881fe1e",
+    "research/reconciliation/m2/access.ts": "c586af7da9132c324569e9dd4afcfd5d1bd952bd59cfcabf721d7a70bb0a8b82",
+    "research/reconciliation/m2/annotations.ts": "f4877591666750e9ecfdb149117b923de31731caec989c910728d7521cb8e0d0",
+    "research/reconciliation/m2/artifacts.ts": "e4cdb45f43ae1ba754290e68a412f9cad304061815171380b977f2331a209cf9",
+    "research/reconciliation/m2/diagnostics.mjs": "36b50ec98eb1afef03647e8956b03622171c4f12410f48512c2f48bf226f9eac",
+    "research/reconciliation/m2/features.ts": "ac2bbf181a01edfc0a770b632a60016a016d946108d5132c46694d2991b0f3a3",
+    "research/reconciliation/m2/generator.ts": "4b97f81d133129ae216d8bacb3ea84b98585dfa8fbd8fb71ad8514a15ea47e08",
+    "research/reconciliation/m2/scenarios.ts": "c8c8051e6387bc716f3591b27b17c0cf220e2f159a265c9597165a1c2896d703",
+    "research/reconciliation/m2/schemas.ts": "f32e714c80fa5bc86195f45ab124b4a10497522fe8d64ce15e298b5f8db1dde6",
+    "research/reconciliation/m2/serialization.ts": "676542f5dd0c72779dfdc95d7d405196929b54883464fce3815b5824f1fb4d35",
+    "research/reconciliation/m2/types.ts": "f88028d7650b63236f2b041a389f2394dd78d806297d8e3304cdb26f7c18a9ff",
+    "research/reconciliation/m2/validator.ts": "77983110e98e331c595f2222ba0182886d70aea734415dc57576dfb1b4518392",
+    "tests/reconciliation/m2-access.test.ts": "31ca223b2d22c402ff46c9efe3bcc3a437c5c1e1f342dc7dadd766629b287112",
+    "tests/reconciliation/m2-artifacts.test.ts": "8aeae5425b86489dc3e0a675fcb11ebb05b6056f80aad2c61500c6959ccf5c3d",
+    "tests/reconciliation/m2-generation.test.ts": "f4e689f01bcc24e647ad4a025673d59ef087e6d03ba145428b7a2b1b89dd8ee7",
+    "tests/reconciliation/m2-quality.test.ts": "de16fdcbe9e090dc7a7b0a367c99aa51ddc7d574b8d1a554ed966bdfb4d67184",
+    "tests/reconciliation/m2-validation.test.ts": "a9508d6977261c84317cdc2dbd01703cd841eef340a4e33523feafc411a5bca7"
+  }
+}

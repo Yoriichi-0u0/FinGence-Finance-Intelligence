@@ -1,0 +1,16 @@
+{
+  "seed": "fingence-ai01-pilot-001",
+  "summary": {
+    "rows": 40,
+    "bankRows": 20,
+    "ledgerRows": 20,
+    "templates": 4,
+    "truePairs": 14,
+    "explicitNegativePairs": 5,
+    "unmatchedRecords": 9,
+    "ambiguousCases": 2,
+    "unsupportedGroups": 1,
+    "suggestedPairs": 10
+  },
+  "familyRows": { "A": 12, "B": 4, "C": 4, "D": 4, "E": 2, "F": 2, "G": 2, "H": 4, "I": 3, "J": 3 }
+}

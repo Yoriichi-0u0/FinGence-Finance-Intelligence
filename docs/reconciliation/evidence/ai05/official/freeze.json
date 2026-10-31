@@ -1,0 +1,176 @@
+{
+  "adapterVersion": "ai05-heldout-adapter/1.0.0",
+  "artifacts": {
+    "docs/reconciliation/ai05-evaluation-protocol.md": "ee8842afc8fe397a75aea5372dae8af30a616879094adc8285e70277d17509e5",
+    "docs/reconciliation/evidence/ai02/configuration.json": "a61455e293d370e8d5b4343afb4d61c6c1ee6fe9b5f600187586386944957167",
+    "docs/reconciliation/evidence/ai03/selected-config.json": "2a3d6395dd2fd234200e1364874f01c750275970dab2e79d27f0d5172151d746",
+    "package.json": "97bfccf9152ee6360abf9cd36639ec23c90db7fdf6fbd67d223d6090bb726258",
+    "pnpm-lock.yaml": "6180d73c7e6d8de2dafb042565a753c86b9b60968e25d9b336175ce3f1695ed3",
+    "research/reconciliation/m2/fixtures/artifact-manifest.json": "4daa97994adb9cc1994f8b5547c6a411d2123fddbd984ad641cb4b69c3c6c3e1",
+    "research/reconciliation/m2/fixtures/inputs/heldout.json": "9fe36cf5c7e6ca591817620fe94707635e32e3ea6183ec59fd6dbb8b241d26ec",
+    "scripts/db03/vitest.config.mts": "c74e3f36f395b058e5c8bb89fb662d9cb50992646d4e6bb0a5e3945880506886",
+    "tests/reconciliation/ai05-official.test.ts": "9050e6ce65f716f6426b2bdc435bb0305b5ff8080893a834f8d5804930c35aed"
+  },
+  "configs": {
+    "E0": {
+      "date": {
+        "field": "canonicalDate",
+        "maxDays": 2
+      },
+      "margin": 0,
+      "threshold": 1
+    },
+    "E1": {
+      "date": {
+        "field": "canonicalDate",
+        "maxDays": 2
+      },
+      "margin": 0.2,
+      "threshold": 0.95
+    },
+    "E2b": {
+      "date": {
+        "field": "canonicalDate",
+        "maxDays": 2
+      },
+      "margin": 0.03,
+      "threshold": 0.9
+    }
+  },
+  "dataset": {
+    "artifacts": {
+      "annotations/development.json": "78e5e4a826323cd562dd22c0fdc305348fca914ca12c922aa6aa541ffb0727bc",
+      "annotations/train.json": "a0772037fc05260a499f203fffbade555326393cb4114c8b4e3503e3b49addc1",
+      "eligibility/rejections.json": "c96029c71f3932759f14a5cbcc2fd4ebf371d646df9b9975e9d8101fe57fa0bb",
+      "evaluation-only/heldout-truth.json": "517f2a12831b6d908e824690696e7c771374910303c538f1d86f86983189b92b",
+      "inputs/development.json": "36b292e39e366aa91e2193cf08755b3e2130935400c5d34e3ac37665e2054645",
+      "inputs/heldout.json": "9fe36cf5c7e6ca591817620fe94707635e32e3ea6183ec59fd6dbb8b241d26ec",
+      "inputs/train.json": "0defc598bc6d168ee80b1a389689f7dadeb5b3f444b85dd3d1f838652574c83e",
+      "split-manifest.json": "9c60a5aac628524ae9dd138b805855c8fe9a7508868541492ed180d81a7f0c36"
+    },
+    "hashConvention": "SHA-256 byte-exact UTF-8",
+    "seed": "fingence-ai01-m2-frozen-001",
+    "version": "ai01-m2/1.1.0"
+  },
+  "embeddingOptions": {
+    "batchSize": 8,
+    "cacheEntries": 512,
+    "timeoutMs": 120000
+  },
+  "fingerprint": "0874f932eca2a38e83730c872eda6cde57d9a73d57ad59bcace41b1b11dd80b2",
+  "hardware": {
+    "cpu": "Intel(R) Core(TM) Ultra 5 125H",
+    "logicalCpus": 18,
+    "totalMemoryBytes": 16641941504
+  },
+  "measurement": {
+    "noTuning": true,
+    "numericalTolerance": 0.00001,
+    "truthOrder": "Only after prediction seal; separate evaluator process",
+    "warmReplays": 7
+  },
+  "model": {
+    "device": "cpu",
+    "dimension": 384,
+    "filesSHA256": {
+      "config.json": "cb99455288675345e1a4f411438d5d0adbba5fbd3a67ea4fb03c015433b996c1",
+      "onnx/model.onnx": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff",
+      "sentencepiece.bpe.model": "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
+      "special_tokens_map.json": "d05497f1da52c5e09554c0cd874037a083e1dc1b9cfd48034d1c717f1afc07a7",
+      "tokenizer.json": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+      "tokenizer_config.json": "a1d6bc8734a6f635dc158508bef000f8e2e5a759c7d92f984b2c86e5ff53425b"
+    },
+    "library": "@huggingface/transformers",
+    "libraryVersion": "4.3.2",
+    "maxTokens": 512,
+    "modelRepository": "Xenova/multilingual-e5-small",
+    "normalization": "L2",
+    "originalModel": "intfloat/multilingual-e5-small",
+    "pooling": "attention-mask-aware mean",
+    "precision": "fp32",
+    "prefix": "query: ",
+    "revision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+    "status": "APPROVED_PINNED_LOCAL_RUNTIME",
+    "tokenizerRevision": "761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+    "tokenizerSHA256": "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+    "weightBytes": 470268533,
+    "weightFile": "onnx/model.onnx",
+    "weightSHA256": "4aa845c27760e06e9a686b9d8b5d440eae4b6612cd09e5b522b716d3941f77ff"
+  },
+  "modelRoot": "C:\\Users\\celes\\Downloads\\COS40005 FYP\\ai03-models\\761b726dd34fb83930e26aab4e9ac3899aa1fa78",
+  "protocolVersion": "ai05-official/1.0.0",
+  "runtimeRoot": "C:\\Users\\celes\\Downloads\\COS40005 FYP\\ai03-runtime",
+  "software": {
+    "architecture": "x64",
+    "node": "v24.14.1",
+    "platform": "win32",
+    "transformers": "4.3.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.11"
+  },
+  "sources": {
+    "research/reconciliation/ai02/abstention.ts": "439cac7ec8d849086a8fb58443f3542b92bb764f12c1e7f5e5fed0b4a08fad58",
+    "research/reconciliation/ai02/adapter.ts": "9d604464090feb353f49ae6d01466f45061b17437730f3b4af7cc927a0fbcb8a",
+    "research/reconciliation/ai02/candidates.ts": "639c2c8814966bbc7264105b49c3016e2372b5fd865507dfa1cbc93b360fdf40",
+    "research/reconciliation/ai02/evaluator.ts": "2e8a24d26b1737821b20ec8d9b8a22f31ab555bf4eadc89991dfb84d7298ce74",
+    "research/reconciliation/ai02/exact.ts": "c14c5247ce59dbc29ce8365a16e64f989bc424274b36298ef1cc3c5118c4c7e8",
+    "research/reconciliation/ai02/experiment.ts": "1903412bd8c6ceadd1666d4f02a032eff2c92d834ae5a238a6e9e08608cd7a68",
+    "research/reconciliation/ai02/fuzzy.ts": "d372e3b07f02a3bc91adbb306925ccfef682f241977537e76250cb7547b0c472",
+    "research/reconciliation/ai02/run.ts": "fd1744bdc67f1278e0c850f3642444982fe96e098ec3abd5629e3d7f5d97df94",
+    "research/reconciliation/ai02/scoring.ts": "1a0df52022856718956be69a6a0fb348cebfe8e2020d93786620bc99b99d6c2f",
+    "research/reconciliation/ai02/types.ts": "a49d8ff58c473decb220018c20fd21ade5a4cf3191400a135d21f18a2c245f62",
+    "research/reconciliation/ai02/verify.mjs": "555abc3a8263d55e65779fc2c4f1ecede5065a8897333a74a887eb00cf024819",
+    "research/reconciliation/ai03/embedding.ts": "300834742accf04ee3172200b1a2bc8afd796ad45704ec6f963c79821069ea7a",
+    "research/reconciliation/ai03/evaluation.ts": "4b82c6a7fa347de5dfb0f17b0b237e9960094fda043849be052719a8b8007c01",
+    "research/reconciliation/ai03/experiment.ts": "e909fabf0241b1ea660bb430166d4a9d41330c95360363edb80a00103a9ee853",
+    "research/reconciliation/ai03/model-config.json": "af18dec0cb5b71f990f7024bb12b32af424eec52084302ebb8444886e7202075",
+    "research/reconciliation/ai03/model-loader.ts": "f6889233f8aa8231a4e297fb185813670bf22d3bb7b2f5ce3481620067442788",
+    "research/reconciliation/ai03/model-worker.mjs": "b836c1b4162782a4b185cab39d4f544e5dc025e1d5af1b4bc8df78eb5ce5c857",
+    "research/reconciliation/ai03/semantic-ranker.ts": "a77a9c00e472f2d36e2b8f6c61a03a8388a32b5aee6c39ae10f3819367656585",
+    "research/reconciliation/ai03/text-features.ts": "6939b7dc10d03face5cca7f770a48de787e7f5606c9040c3cc37387d4a8fc5c5",
+    "research/reconciliation/ai03/types.ts": "5b5730c293d6e856a1df84926deeb07def985f4dfa40b578da6654d5a209c142",
+    "research/reconciliation/ai03/verify.mjs": "1feb85a85c949db5945ffc24d2781979742d472b1151c5cc0a4730aa14d4d0c8",
+    "research/reconciliation/ai04/evaluation.ts": "53957d81a92d403b16208bcf0764b10717c58568be1272cee0ad5bf32a01c5a6",
+    "research/reconciliation/ai04/experiment.ts": "16b607f16e69d029a87037cc528e3b2dcbaad84e10dd9826c060bc2302bec084",
+    "research/reconciliation/ai04/financial-verifier.ts": "200114ee159046489b34c0afeeba7259aad7b09bc8d65bead46b8bc622df8a24",
+    "research/reconciliation/ai04/identity-verifier.ts": "ace0cc4e65fe766aa87f78ef97246445a5e90e24247ce499e192e970e0a5d144",
+    "research/reconciliation/ai04/orchestrator.ts": "4b36a35eaf32cf42bddf547d65a92073b326ea91e0e9facbc4b5c69da2dba0c8",
+    "research/reconciliation/ai04/policy.ts": "305f7f1ec03a0f049c4e4cdb6c852cd4f293016f266ca1e08014d95ebdfa7434",
+    "research/reconciliation/ai04/projection.ts": "60e5b14fce87993b59a1e61592ba7109fce2d33c292477b24b011818904b272d",
+    "research/reconciliation/ai04/types.ts": "1be784738e216db3354d72dde13fb7eeba61813cfa2a6ad7f618f8ccebec7067",
+    "research/reconciliation/ai04/verify.mjs": "c0fd4e5c5839f5989776efd364369da5bc17fb4043dd3deec0d90af54ce574cd",
+    "research/reconciliation/ai05/adapter.ts": "a9133d28f51df019f5d711446fda8437c90a622dec2bd0f8ce2307baa7b6c63d",
+    "research/reconciliation/ai05/freeze.ts": "39cf1ae611e8826d0433c095cb4a7151eb0f98478eeab5a89bf83aebfe4a72f8",
+    "research/reconciliation/ai05/heldout-evaluator.ts": "55c4c2f36ce8de6709b061952947bc1721a96a1ca0607ca65b559792e5b8b30b",
+    "research/reconciliation/ai05/metrics.ts": "9bc550bbc5cddaf8efcbff2eccf3eb7f2d706e5d7ffe7f1e8bff5f24885c1c1c",
+    "research/reconciliation/ai05/prediction-runner.ts": "97028254cb4eb9381eeadb3e9362aff4a68a8591e3fc4168c227005c550d5a6f",
+    "research/reconciliation/ai05/preflight.ts": "09527e3993479bc401c0eb8c88a7e6f79016e552e8b741f605d75a17f1ecbf53",
+    "research/reconciliation/ai05/types.ts": "9f86f5411fda1c8213ce92778cd17b3c275d1640cd4e86b6b28ce1b5f57b7c71",
+    "research/reconciliation/ai05/verify.mjs": "2b91d589c8778cc5123e27c66a919fb8c3d13e07ba53bac50983c7fdc3224ba7",
+    "research/reconciliation/decimal.ts": "e1dea3d2a8e3237abafb5eb78540332618c53a619a81c1f7e4e619e796390bea",
+    "research/reconciliation/generator.ts": "6a63c64433e10eb9775770d0e0920e745e81c2b29ac9304bfe503cdabc17937f",
+    "research/reconciliation/ground-truth.ts": "a3a1842d396851577fef435d8dadf2de844f4dfba359f4e76ef40cc3df3f2f8e",
+    "research/reconciliation/m2/access.ts": "c586af7da9132c324569e9dd4afcfd5d1bd952bd59cfcabf721d7a70bb0a8b82",
+    "research/reconciliation/m2/annotations.ts": "f4877591666750e9ecfdb149117b923de31731caec989c910728d7521cb8e0d0",
+    "research/reconciliation/m2/artifacts.ts": "e4cdb45f43ae1ba754290e68a412f9cad304061815171380b977f2331a209cf9",
+    "research/reconciliation/m2/diagnostics.mjs": "36b50ec98eb1afef03647e8956b03622171c4f12410f48512c2f48bf226f9eac",
+    "research/reconciliation/m2/features.ts": "ac2bbf181a01edfc0a770b632a60016a016d946108d5132c46694d2991b0f3a3",
+    "research/reconciliation/m2/generator.ts": "4b97f81d133129ae216d8bacb3ea84b98585dfa8fbd8fb71ad8514a15ea47e08",
+    "research/reconciliation/m2/scenarios.ts": "c8c8051e6387bc716f3591b27b17c0cf220e2f159a265c9597165a1c2896d703",
+    "research/reconciliation/m2/schemas.ts": "f32e714c80fa5bc86195f45ab124b4a10497522fe8d64ce15e298b5f8db1dde6",
+    "research/reconciliation/m2/serialization.ts": "676542f5dd0c72779dfdc95d7d405196929b54883464fce3815b5824f1fb4d35",
+    "research/reconciliation/m2/types.ts": "f88028d7650b63236f2b041a389f2394dd78d806297d8e3304cdb26f7c18a9ff",
+    "research/reconciliation/m2/validator.ts": "77983110e98e331c595f2222ba0182886d70aea734415dc57576dfb1b4518392",
+    "research/reconciliation/pilot-annotations.ts": "d04370b4dd69d24288b04a64f13e6fe6383d3fde7d3457138d5f048f1d0135b0",
+    "research/reconciliation/schemas.ts": "6ccc367392d4cfa7619cff1587a2117a1cd09aa61a01d2b67e033cbb80ea0f60",
+    "research/reconciliation/types.ts": "7e88db10aaea73efc0cd495eddae6061b485fb3709c1f6733437e62ba0e3987f",
+    "research/reconciliation/validator.ts": "a9e24047975f1034ca05cd55d26cda002d104e1eac9194c06e92884b6dab88a6"
+  },
+  "verificationPolicy": {
+    "dateField": "canonicalDate",
+    "identity": "EXACT_REFERENCE_AND_COUNTERPARTY",
+    "maxDays": 2,
+    "scope": "SYNTHETIC_SPLIT_COHORT",
+    "version": "ai04-policy/1.0.0"
+  }
+}

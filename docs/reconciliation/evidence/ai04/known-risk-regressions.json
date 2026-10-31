@@ -1,0 +1,1551 @@
+{
+  "verifierVersion": "ai04/1.0.0",
+  "policyVersion": "ai04-policy/1.0.0",
+  "risks": [
+    {
+      "split": "train",
+      "bankId": "r-35fa8b11551bead6e6c50d3e",
+      "ledgerId": "r-65c284798e3bcb82636e7b1e",
+      "category": "AUTHORED_ABSTENTION_CONTRADICTION",
+      "decision": {
+        "bankId": "r-35fa8b11551bead6e6c50d3e",
+        "ledgerId": "r-65c284798e3bcb82636e7b1e",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "REFERENCE_MISSING",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-35fa8b11551bead6e6c50d3e",
+              "r-65c284798e3bcb82636e7b1e"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "REFERENCE_MISSING"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    },
+    {
+      "split": "train",
+      "bankId": "r-51867a69a8e088f1a8641a33",
+      "ledgerId": "r-0123205be660574c79374956",
+      "category": "INCORRECT_COUNTERPARTY",
+      "decision": {
+        "bankId": "r-51867a69a8e088f1a8641a33",
+        "ledgerId": "r-0123205be660574c79374956",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "REFERENCE_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_CONFLICT",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-51867a69a8e088f1a8641a33",
+              "r-0123205be660574c79374956"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "COUNTERPARTY_CONFLICT"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    },
+    {
+      "split": "train",
+      "bankId": "r-56be5fcb12e5b25a6ab9c8cd",
+      "ledgerId": "r-0409e7e874a2423c7bb84fb9",
+      "category": "AUTHORED_ABSTENTION_CONTRADICTION",
+      "decision": {
+        "bankId": "r-56be5fcb12e5b25a6ab9c8cd",
+        "ledgerId": "r-0409e7e874a2423c7bb84fb9",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "REFERENCE_MISSING",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-56be5fcb12e5b25a6ab9c8cd",
+              "r-0409e7e874a2423c7bb84fb9"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "REFERENCE_MISSING"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    },
+    {
+      "split": "train",
+      "bankId": "r-649a571c749361e62462167e",
+      "ledgerId": "r-1fef59d08eb04dd34555b90f",
+      "category": "INCORRECT_COUNTERPARTY",
+      "decision": {
+        "bankId": "r-649a571c749361e62462167e",
+        "ledgerId": "r-1fef59d08eb04dd34555b90f",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "REFERENCE_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_CONFLICT",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-649a571c749361e62462167e",
+              "r-1fef59d08eb04dd34555b90f"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "COUNTERPARTY_CONFLICT"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    },
+    {
+      "split": "train",
+      "bankId": "r-8ab4b5db6671f42165670f48",
+      "ledgerId": "r-a5d6e790fc74b2d183eaa189",
+      "category": "INCORRECT_COUNTERPARTY",
+      "decision": {
+        "bankId": "r-8ab4b5db6671f42165670f48",
+        "ledgerId": "r-a5d6e790fc74b2d183eaa189",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "REFERENCE_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_CONFLICT",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-8ab4b5db6671f42165670f48",
+              "r-a5d6e790fc74b2d183eaa189"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "COUNTERPARTY_CONFLICT"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    },
+    {
+      "split": "train",
+      "bankId": "r-fa90ac36eee440e674c6898d",
+      "ledgerId": "r-14da09acd2cc9b1e6189e9bd",
+      "category": "AUTHORED_ABSTENTION_CONTRADICTION",
+      "decision": {
+        "bankId": "r-fa90ac36eee440e674c6898d",
+        "ledgerId": "r-14da09acd2cc9b1e6189e9bd",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "REFERENCE_MISSING",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-fa90ac36eee440e674c6898d",
+              "r-14da09acd2cc9b1e6189e9bd"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "REFERENCE_MISSING"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    },
+    {
+      "split": "development",
+      "bankId": "r-3c31005928bb83a569f28b63",
+      "ledgerId": "r-58fb2a0ab9b5ec6741c73b30",
+      "category": "INCORRECT_COUNTERPARTY",
+      "decision": {
+        "bankId": "r-3c31005928bb83a569f28b63",
+        "ledgerId": "r-58fb2a0ab9b5ec6741c73b30",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "REFERENCE_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_CONFLICT",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-3c31005928bb83a569f28b63",
+              "r-58fb2a0ab9b5ec6741c73b30"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "COUNTERPARTY_CONFLICT"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    },
+    {
+      "split": "development",
+      "bankId": "r-b2642d638ab12ee832ab9f21",
+      "ledgerId": "r-69a4fd81120aad92017c39ed",
+      "category": "AUTHORED_ABSTENTION_CONTRADICTION",
+      "decision": {
+        "bankId": "r-b2642d638ab12ee832ab9f21",
+        "ledgerId": "r-69a4fd81120aad92017c39ed",
+        "algorithm": "E2b",
+        "topology": "PAIR",
+        "verifierVersion": "ai04/1.0.0",
+        "policyVersion": "ai04-policy/1.0.0",
+        "checks": [
+          {
+            "code": "RECORD_EXISTENCE",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "UNIQUE_SOURCE_IDENTITIES",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "PAIR_TOPOLOGY",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "DISTINCT_ROLES",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "COMPLETE_SYNTHETIC_SCOPE",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21"
+            ]
+          },
+          {
+            "code": "SOURCE_IDENTITY",
+            "status": "PASS",
+            "evidence": [
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_PROVENANCE",
+            "status": "PASS",
+            "evidence": [
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "SYNTHETIC_ELIGIBILITY",
+            "status": "PASS",
+            "evidence": [
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "SOURCE_TRANSACTION_ID",
+            "status": "PASS",
+            "evidence": [
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "MONETARY_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "DATE_BASIS",
+            "status": "PASS",
+            "evidence": [
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "EXACT_AMOUNT",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "CURRENCY",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "DIRECTION",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "CANONICAL_DATE_WINDOW",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "REFERENCE_MISSING",
+            "status": "NOT_VERIFIED",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "COUNTERPARTY_AGREEMENT",
+            "status": "PASS",
+            "evidence": [
+              "r-b2642d638ab12ee832ab9f21",
+              "r-69a4fd81120aad92017c39ed"
+            ]
+          },
+          {
+            "code": "UNIQUE_FINANCIALLY_PLAUSIBLE_PARTNER",
+            "status": "PASS",
+            "evidence": []
+          },
+          {
+            "code": "UNIQUE_ASSIGNMENT",
+            "status": "PASS",
+            "evidence": []
+          }
+        ],
+        "reasons": [
+          "REFERENCE_MISSING"
+        ],
+        "disposition": "UNRESOLVED_REVIEW"
+      }
+    }
+  ],
+  "allEightWithheld": true
+}

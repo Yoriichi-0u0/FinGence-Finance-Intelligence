@@ -1,0 +1,22 @@
+{
+  "algorithmVersion": "ai02/1.0.0",
+  "datasetVersion": "ai01-m2/1.1.0",
+  "E0": {
+    "date": {
+      "field": "canonicalDate",
+      "maxDays": 2
+    },
+    "threshold": 1,
+    "margin": 0
+  },
+  "E1": {
+    "date": {
+      "field": "canonicalDate",
+      "maxDays": 2
+    },
+    "threshold": 0.95,
+    "margin": 0.2
+  },
+  "selection": "minimize explicit false + unannotated suggestions, maximize economic F1, higher threshold, higher margin",
+  "heldoutEvaluated": false
+}
