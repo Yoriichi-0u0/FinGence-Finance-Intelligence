@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Issue #36 source-backed PoC views — 31 October 2026
+
+[Uploaded-source Transactions and Analytics](../integration/poc-source-insights.md) adds
+read-only Finance-scoped source exploration, exact monthly cash movement, observed trends
+and source-bound anomaly/reconciliation context. It reuses existing uploaded bytes and
+M3/M5 access controls. No new accounting classification, forecast, live inference or hosted
+financial access is enabled. The older M3/Production page branches remain intact.
+
 ## Issue #34 combined local PoC — 31 October 2026
 
 [Combined financial intelligence runbook](../integration/poc-combined-financial-intelligence.md)

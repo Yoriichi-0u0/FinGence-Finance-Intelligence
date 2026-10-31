@@ -58,6 +58,11 @@ if (!artifactsOnly) {
   const response=await fetch(new URL(path,origin),{method,...(method==="POST"?{headers:{"Content-Type":"application/json"},body:"{}"}:{})});await response.arrayBuffer();
   results.push({path,method,status:response.status,blocked:[403,404].includes(response.status)});
  }
+ for(const [query,method] of [["action=sources","GET"],["source=11111111-1111-4111-8111-111111111111","GET"],["","POST"]]) {
+  const path="/api/ai-ingestion/m2/insights"+(query?"?"+query:"");
+  const response=await fetch(new URL(path,origin),{method});await response.arrayBuffer();
+  results.push({path,method,status:response.status,blocked:[403,404].includes(response.status)});
+ }
  // Local PoC anomaly review and management-report APIs (issue #31) are absent from production.
  const pocSource="source=11111111-1111-4111-8111-111111111111";
  for (const [query,method] of [["action=sources","GET"],["action=analysis&"+pocSource,"GET"],["action=report&format=pdf&"+pocSource,"GET"],["action=upload","POST"],["action=review","POST"]]) {
@@ -69,7 +74,7 @@ if (!artifactsOnly) {
  // Hosted public views retain their explicit illustrative fallback, never local financial data.
  for(const path of ["/transactions","/analytics","/reports"]){
   const response=await fetch(new URL(path,origin));const html=await response.text();
-  assert.equal(response.status,200);assert.ok(!html.includes("Selection proof:")&&!html.includes("One authorized V2 dataset")&&!html.includes("PoC management report"),"Local consumer UI leaked into production");
+  assert.equal(response.status,200);assert.ok(!html.includes("Selection proof:")&&!html.includes("One authorized V2 dataset")&&!html.includes("PoC management report")&&!html.includes("Source-backed synthetic bank records")&&!html.includes("Observed monthly bank movement"),"Local consumer UI leaked into production");
  }
  { const html=await (await fetch(new URL("/anomalies",origin))).text();assert.ok(html.includes("Mock prototype result")&&!html.includes("Rule-based review candidates"),"Local anomaly review leaked into production"); }
 }
@@ -128,7 +133,7 @@ const requiredPath = resolve(".next/required-server-files.json");
 for (const file of JSON.parse(readFileSync(requiredPath, "utf8")).files) checkPath(requiredPath, file, process.cwd());
 console.log(JSON.stringify({ mode: artifactsOnly ? "PRODUCTION_ARTIFACTS_ONLY" : "LOCAL_PRODUCTION_NO_INFERENCE", results,
   tracesInspected, additionalRootsInspected, artifactsInspected, sentinelsChecked: sentinels.length, privateTraceFiles, artifactLeaks }, null, 2));
-assert.ok(artifactsOnly || results.length === 57 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
+assert.ok(artifactsOnly || results.length === 60 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
 assert.ok(tracesInspected > 0 && artifactsInspected > 0, "A production build is required");
 assert.equal(privateTraceFiles.length, 0, "Production traces must exclude private AI state, environments and evaluation labels");
 assert.equal(artifactLeaks.length, 0, "Private build canaries must not enter deployable artifacts");
