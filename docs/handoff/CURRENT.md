@@ -1,5 +1,12 @@
 # FinGence — current technical entrypoint
 
+## Issue #51 report human review summary — 31 October 2026
+
+[Report human review summary](../integration/poc-report-human-review.md): the management PDF/JSON
+add a separate, source-pair-bound summary of reviewer states (March: 24 original; 22 Open,
+0 Investigating, 1 Explained, 1 Escalated) or an explicit unavailable reason. Original figures
+unchanged; Explained never means matched or cleared. No new route; still 69 probes.
+
 ## Issue #49 combined Finance demonstration — 31 October 2026
 
 [Combined review and Q&A walkthrough](../integration/poc-review-qa-integration.md) retains both

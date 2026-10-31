@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { toCents } from './source';
+import { reviewStates, reviewableStatuses, type ReviewState } from '../poc-reconciliation/reviews';
 
 /**
  * Read-only consumer view of Codex's `FinancePoCReconciliationV1` snapshot (issue #30,
@@ -47,4 +48,38 @@ export function readReconciliation(value: unknown, scope: ReconciliationScope): 
     if (toCents(rest.cashMovement.bank) - toCents(rest.cashMovement.ledger) !== toCents(rest.cashMovement.signedDifference))
         return { status: 'UNAVAILABLE', reason: 'Reconciliation cash movement difference is not bank minus ledger.' };
     return { status: 'AVAILABLE', snapshot: { ...rest, counts: tally, results } };
+}
+
+/**
+ * Human reconciliation-review annotations (issue #51). Read-only summary of the reviewers'
+ * current states over the snapshot's original review-eligible outcomes. Annotations never
+ * change the snapshot: EXPLAINED is not matched, reconciled, cleared or settled.
+ */
+export type HumanReviewState = ReviewState;
+export type HumanReviewView =
+    | { status: 'AVAILABLE'; version: 'poc-report-reconciliation-review-v1'; reconciliationId: string; originalEligible: number; eligibleByStatus: Partial<Record<ReconciliationStatus, number>>; states: Record<HumanReviewState, number>; basis: string }
+    | { status: 'UNAVAILABLE'; reason: string };
+export const HUMAN_REVIEW_BASIS = 'Current reviewer annotations on the original review-eligible reconciliation outcomes. Explained records an explanation only; it does not mean matched, reconciled, cleared or settled. Original outcomes and the signed difference are unchanged.';
+const unavailable = (reason: string): HumanReviewView => ({ status: 'UNAVAILABLE', reason });
+
+/** Unavailable unless the aggregate describes exactly this snapshot's scope and source pair and accounts for every eligible outcome once. */
+export function readHumanReview(value: unknown, reconciliation: ReconciliationView): HumanReviewView {
+    if (reconciliation.status !== 'AVAILABLE') return unavailable('Reconciliation is unavailable for this source, so no human review summary is reported.');
+    if (value === null || value === undefined) return unavailable('Human review decisions are unavailable: no unique, consistent persisted reconciliation matches this bank and ledger source pair.');
+    const a = value as { version?: unknown; reconciliationId?: unknown; scope?: Record<string, unknown>; sources?: { bank?: Record<string, unknown>; ledger?: Record<string, unknown> }; eligible?: unknown; states?: Record<string, unknown> };
+    const snap = reconciliation.snapshot;
+    const eligibleByStatus = Object.fromEntries(reviewableStatuses.map(k => [k, snap.counts[k] ?? 0])) as Partial<Record<ReconciliationStatus, number>>;
+    const originalEligible = Object.values(eligibleByStatus).reduce((sum, n) => sum + (n ?? 0), 0);
+    const bound = a.version === 'poc-reconciliation-review-aggregate-v1' && typeof a.reconciliationId === 'string'
+        && (['organizationId', 'businessId', 'period', 'currency'] as const).every(k => a.scope?.[k] === snap.scope[k])
+        && (['bank', 'ledger'] as const).every(k => a.sources?.[k]?.sha256 === snap.sources[k].sha256 && a.sources?.[k]?.sourceId === snap.sources[k].sourceId);
+    if (!bound) return unavailable('The human review summary does not belong to this reconciliation scope and source pair.');
+    const states = a.states ?? {}, keys = Object.keys(states);
+    if (keys.length !== reviewStates.length || !reviewStates.every(k => Number.isSafeInteger(states[k]) && (states[k] as number) >= 0))
+        return unavailable('The human review summary is not well formed.');
+    const counted = reviewStates.reduce((sum, k) => sum + (states[k] as number), 0);
+    if (a.eligible !== originalEligible || counted !== originalEligible)
+        return unavailable('Human review states do not account for every original review-eligible outcome exactly once.');
+    return { status: 'AVAILABLE', version: 'poc-report-reconciliation-review-v1', reconciliationId: a.reconciliationId as string, originalEligible, eligibleByStatus,
+        states: Object.fromEntries(reviewStates.map(k => [k, states[k]])) as Record<HumanReviewState, number>, basis: HUMAN_REVIEW_BASIS };
 }
