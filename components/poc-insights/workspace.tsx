@@ -20,7 +20,7 @@ const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-l
 const money = (currency: string, value: string) => `${currency} ${groupDigits(value)}`;
 
 export default function PocInsightsWorkspace({ view }: { view: 'transactions' | 'analytics' }) {
-    const fence = useRef(new M2ClientFence()), request = useRef({ sequence: 0 }), authenticating = useRef(false);
+    const fence = useRef(new M2ClientFence()), request = useRef({ sequence: 0 }), authenticating = useRef(false), sessionPaused = useRef(false);
     const [principal, setPrincipal] = useState<M2ClientPrincipal | null>(null), [checked, setChecked] = useState(false);
     const [sources, setSources] = useState<PocSource[] | null>(null), [data, setData] = useState<PocInsights | null>(null);
     const [query, setQuery] = useState<Query | null>(null), [loading, setLoading] = useState(false), [error, setError] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export default function PocInsightsWorkspace({ view }: { view: 'transactions' | 
         let ended = false;
         const access = fence.current, pending = request.current;
         const check = async () => {
-            if (authenticating.current) return;
+            if (authenticating.current || sessionPaused.current) return;
             const epoch = fence.current.epoch;
             try { const r = await fetch(auth + '?action=session', { cache: 'no-store' }); if (!r.ok) throw Error(); const value = await r.json();
                 if (!ended && epoch === fence.current.epoch) { if (value.active) adopt(value); else invalidate(); }
@@ -82,13 +82,18 @@ export default function PocInsightsWorkspace({ view }: { view: 'transactions' | 
     }, [adopt, invalidate]);
     async function signIn(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault(); const form = event.currentTarget, fields = new FormData(form);
-        authenticating.current = true; invalidate(); setError(null);
+        authenticating.current = true; sessionPaused.current = true; invalidate(); setError(null);
         try { const r = await fetch(auth + '?action=login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: fields.get('email'), password: fields.get('password') }) });
-            if (!r.ok) throw Error(); adopt(await r.json()); form.reset();
+            if (!r.ok) throw Error(); const value = await r.json(); if (value.active !== true) throw Error(); adopt(value); sessionPaused.current = false; form.reset();
         } catch { setError('Sign-in refused. An active local account and membership are required.'); }
         finally { authenticating.current = false; }
     }
-    function signOut() { invalidate(); void fetch(auth + '?action=logout', { method: 'POST' }).catch(() => undefined); }
+    async function signOut() {
+        // A failed/lost logout response must not let polling silently restore the old cookie session.
+        sessionPaused.current = true; invalidate(); setError(null);
+        try { const r = await fetch(auth + '?action=logout', { method: 'POST' }); if (!r.ok) throw Error(); }
+        catch { setError('Financial data is cleared. Server sign-out could not be confirmed. Sign in explicitly to establish access again.'); }
+    }
     const title = view === 'transactions' ? 'Transactions' : 'Financial analytics';
     if (!checked) return <EmptyState title="Checking local access" description="Financial data stays hidden until the current session is verified." />;
     if (!principal) return <div className="space-y-5"><PageHeader title={title} description="Explore your organization's uploaded synthetic bank source." />

@@ -44,7 +44,11 @@ must already exist for the exact bank bytes before its snapshot can appear in An
   preference. That preference contains no credentials, financial payload or authority. It is
   keyed by user/org/role/membership version and discarded when access is invalidated.
 - Session polling, response epochs and request sequence fencing clear financial results on
-  logout/revocation and prevent late responses restoring old scope. Missing/invalid selection
+  logout/revocation and prevent late responses restoring old scope. Explicit sign-out pauses
+  restoration until a successful fresh sign-in; a lost/failed logout response shows an
+  unconfirmed notice and never silently re-adopts the old cookie. Server revocation cannot
+  be claimed when the request did not arrive; the local pause is not a durable logout grant
+  across reloads. Missing/invalid selection
   displays unavailable and can recover by choosing an authorized uploaded source.
 
 ## Financial policy / provenance
