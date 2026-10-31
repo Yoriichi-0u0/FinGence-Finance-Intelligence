@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Issue #45 local exception annotations — 31 October 2026
+
+[Finance reconciliation review](../integration/poc-reconciliation-review.md) adds persistent
+Open/Investigating/Explained/Escalated annotations with explanations, history and optimistic
+conflicts. Original matcher statuses, counts, source evidence and financial JSON stay immutable.
+This is optional human exception review, not routine ingestion mapping or financial approval.
+Local Finance only; separate annotation aggregates are available for future composition.
+
 ## Issue #38 integrated Saturday PoC — 31 October 2026
 
 [Two-journey integration walkthrough](../integration/poc-saturday-integration.md) combines

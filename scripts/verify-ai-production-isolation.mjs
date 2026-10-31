@@ -45,6 +45,11 @@ if (!artifactsOnly) {
   results.push({path,method,status:response.status,blocked:[403,404].includes(response.status)});
  }
  const reconciliationHtml=await (await fetch(new URL('/reconciliation',origin))).text();
+ for(const method of ['GET','POST']) {
+  const path='/api/ai-ingestion/m2/reconciliation/reviews?id=11111111-1111-4111-8111-111111111111';
+  const response=await fetch(new URL(path,origin),{method});await response.arrayBuffer();
+  results.push({path,method,status:response.status,blocked:[403,404].includes(response.status)});
+ }
  assert.ok(!reconciliationHtml.includes('Supplied March 2026 synthetic')&&!reconciliationHtml.includes('Bank statement CSV'),'Local PoC workspace leaked into production');
  for (const [action,method] of [["","GET"],["","POST"],["management","GET"],["export","GET"],["question","POST"],["membership","POST"],["revoke","POST"]]) {
   const path="/api/ai-ingestion/m2/consumers"+(action?"?action="+action:"");
@@ -140,7 +145,7 @@ const requiredPath = resolve(".next/required-server-files.json");
 for (const file of JSON.parse(readFileSync(requiredPath, "utf8")).files) checkPath(requiredPath, file, process.cwd());
 console.log(JSON.stringify({ mode: artifactsOnly ? "PRODUCTION_ARTIFACTS_ONLY" : "LOCAL_PRODUCTION_NO_INFERENCE", results,
   tracesInspected, additionalRootsInspected, artifactsInspected, sentinelsChecked: sentinels.length, privateTraceFiles, artifactLeaks }, null, 2));
-assert.ok(artifactsOnly || results.length === 63 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
+assert.ok(artifactsOnly || results.length === 65 && results.every(result => result.blocked), "Experimental pages/APIs must be unavailable in production");
 assert.ok(tracesInspected > 0 && artifactsInspected > 0, "A production build is required");
 assert.equal(privateTraceFiles.length, 0, "Production traces must exclude private AI state, environments and evaluation labels");
 assert.equal(artifactLeaks.length, 0, "Private build canaries must not enter deployable artifacts");
