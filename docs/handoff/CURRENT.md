@@ -1,5 +1,29 @@
 # FinGence — current technical entrypoint
 
+## Issue #38 integrated Saturday PoC — 31 October 2026
+
+[Two-journey integration walkthrough](../integration/poc-saturday-integration.md) combines
+source-backed Transactions/Analytics and the measured cash forecast above the PR #35 fallback.
+Shared source/business selection links the actual uploaded data across views. March-only
+forecasting remains unavailable; full-file reconciliation cannot inherit the March bank SHA.
+All six original forecasting commits are retained. Local synthetic only; 63 Production probes.
+
+## Issue #36 source-backed PoC views — 31 October 2026
+
+[Uploaded-source Transactions and Analytics](../integration/poc-source-insights.md) adds
+read-only Finance-scoped source exploration, exact monthly cash movement, observed trends
+and source-bound anomaly/reconciliation context. It reuses existing uploaded bytes and
+M3/M5 access controls. No new accounting classification, forecast, live inference or hosted
+financial access is enabled. The older M3/Production page branches remain intact.
+
+## Issue #37 cash forecast — 31 October 2026
+
+[Cash forecast runbook](../integration/poc-cash-forecast.md): under `pnpm poc:dev`, `/forecasting`
+replaces the mock with a deterministic six-month-mean baseline over the Finance-uploaded source,
+with rolling-origin WAPE/MAE backtests (pooled receipts 18.01%, payments 9.81%, net 52.85% —
+worse than last month's 46.90%). Bank receipts/payments only; not AI, revenue or a cash flow
+statement. GET-only, Finance-only, audited; the illustrative page remains when the PoC is off.
+
 ## Issue #34 combined local PoC — 31 October 2026
 
 [Combined financial intelligence runbook](../integration/poc-combined-financial-intelligence.md)
