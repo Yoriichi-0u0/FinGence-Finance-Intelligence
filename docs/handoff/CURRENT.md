@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Issue #49 combined Finance demonstration — 31 October 2026
+
+[Combined review and Q&A walkthrough](../integration/poc-review-qa-integration.md) retains both
+reviewed histories, connects source-pair-bound human review metadata read-only to Finance Q&A,
+and preserves original matcher outcomes/figures and management PDF. Explained never means
+matched or cleared. Rule-based, no live AI; local synthetic only; **69 Production probes**.
+
+
 ## Issue #45 local exception annotations — 31 October 2026
 
 [Finance reconciliation review](../integration/poc-reconciliation-review.md) adds persistent
@@ -15,7 +23,7 @@ Local Finance only; separate annotation aggregates are available for future comp
 matches, records to review, anomaly candidates, monthly history, cash baseline) from the
 selected Finance-authorized upload, with source SHA, scope and evidence links. Rule-based, not
 live AI; profit/ratio/advice/fraud/cause questions are refused. Typed narration contract only
-(`lib/poc-finance-qa/narration.ts`); no provider call. Local synthetic only; 67 Production probes.
+(`lib/poc-finance-qa/narration.ts`); no provider call. Local synthetic only; the branch originally had 67 probes; the combined candidate has 69.
 
 ## Issue #38 integrated Saturday PoC — 31 October 2026
 

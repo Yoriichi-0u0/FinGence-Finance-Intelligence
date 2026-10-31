@@ -41,7 +41,7 @@ describe('answers quote only the computed facts', () => {
         expect(diff.interpretation).toContain('the cause of the difference is not inferred');
         expect(answerQuestion(march, 'How many transactions were matched?').headline).toBe('2 of 4 bank records matched a ledger entry: 1 exact and 1 date shift.');
         const review = answerQuestion(march, 'Which transactions require review?');
-        expect(review.headline).toBe('3 reconciliation outcomes and 1 open anomaly review candidate need review for BUS-T · 2026-03.');
+        expect(review.headline).toBe('3 original reconciliation exceptions remain for BUS-T · 2026-03; 1 open anomaly review candidate.');
         expect(review.records.map(g => [g.label, g.recordIds])).toEqual([['Reconciliation: bank only', ['B3']], ['Reconciliation: ledger only', ['L9']], ['Reconciliation: amount review', ['B4', 'L4']], ['Open anomaly review candidates', ['B3']]]);
         for (const facts of [year, { ...march, reconciliation: readReconciliation(snapshot(), { ...binding, bankSha256: 'c'.repeat(64) }) }, { ...march, reconciliation: readReconciliation(snapshot('381.00'), binding) }]) {
             const r = answerQuestion(facts, 'What is the bank-versus-ledger difference?');

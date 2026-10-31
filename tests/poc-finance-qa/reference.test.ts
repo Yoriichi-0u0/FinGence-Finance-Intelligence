@@ -10,6 +10,7 @@ import { installReconciliationSchema, createReconciliationService } from '../../
 import { installPocAnomalySchema } from '../../lib/server/poc-anomalies/schema';
 import { createPocAnomalies } from '../../lib/server/poc-anomalies/service';
 import { createPocFinanceQa } from '../../lib/server/poc-finance-qa/service';
+import { createReconciliationReviews } from '../../lib/server/poc-reconciliation/reviews';
 import { acceptNarration, narrationRequest, templateNarrator } from '../../lib/poc-finance-qa/narration';
 import { m5Database, password } from '../tenant-admin-m5/support';
 
@@ -17,7 +18,7 @@ import { m5Database, password } from '../tenant-admin-m5/support';
  * Each question recomputes facts over the 6,000-row file, so a journey can take several seconds under a full serial run. */
 const candidates = [process.env.FINGENCE_POC_DATASET_DIR, '../../datasets/poc-2026-03', '.local/datasets/poc-2026-03'].filter(Boolean) as string[];
 const directory = candidates.find(d => existsSync(join(d, 'source_transactions_6000.csv')) && existsSync(join(d, 'demo_general_ledger_mar2026.csv')));
-let pg: PGlite, db: TransactionDatabase, finance: string, march: string, full: string;
+let pg: PGlite, db: TransactionDatabase, finance: string, march: string, full: string, reconciliationId: string;
 const value = (facts: { id: string; value: string }[], id: string) => facts.find(f => f.id === id)?.value;
 
 describe.skipIf(!directory)('Finance questions on the supplied March and full-year sources', () => {
@@ -26,7 +27,7 @@ describe.skipIf(!directory)('Finance questions on the supplied March and full-ye
         await provisionM3Account(db, { email: 'finance@qa-ref.invalid', password, role: 'Finance', organizationName: 'qa-ref' });
         finance = (await createM2Identity(db).login('finance@qa-ref.invalid', password)).token;
         const bank = readFileSync(join(directory!, 'demo_bank_statement_mar2026.csv')), ledger = readFileSync(join(directory!, 'demo_general_ledger_mar2026.csv'));
-        await createReconciliationService(db).ingest(finance, bank, ledger, 'demo_bank_statement_mar2026.csv', 'demo_general_ledger_mar2026.csv');
+        reconciliationId = (await createReconciliationService(db).ingest(finance, bank, ledger, 'demo_bank_statement_mar2026.csv', 'demo_general_ledger_mar2026.csv')).id;
         const anomalies = createPocAnomalies(db), a = await anomalies.upload(finance, 'demo_bank_statement_mar2026.csv', bank), b = await anomalies.upload(finance, 'source_transactions_6000.csv', readFileSync(join(directory!, 'source_transactions_6000.csv')));
         if (a.status !== 'STORED' || b.status !== 'STORED') throw Error('upload failed');
         march = a.sourceId; full = b.sourceId;
@@ -50,11 +51,27 @@ describe.skipIf(!directory)('Finance questions on the supplied March and full-ye
         expect(diff.headline).toBe('Bank minus ledger for BUS-001 · 2026-03 is MYR 2,516.06 (bank MYR 102,950.56, ledger MYR 100,434.50).');
         expect(['MATCH_EXACT', 'MATCH_DATE_SHIFT', 'BANK_ONLY', 'LEDGER_ONLY', 'AMOUNT_MISMATCH_REVIEW', 'AMBIGUOUS_DUPLICATE_LEDGER', 'REFERENCE_MISMATCH_REVIEW'].map(k => value(diff.facts, `count.${k}`))).toEqual(['151', '6', '7', '6', '4', '3', '4']);
         expect((await ask(s(), 'How many transactions were matched?')).headline).toBe('157 of 175 bank records matched a ledger entry: 151 exact and 6 date shift.');
-        expect((await ask(s(), 'Which transactions require review?')).headline).toBe('24 reconciliation outcomes and 14 open anomaly review candidates need review for BUS-001 · 2026-03.');
+        expect((await ask(s(), 'Which transactions require review?')).headline).toBe('24 original reconciliation exceptions remain for BUS-001 · 2026-03; 14 open anomaly review candidates.');
         expect((await ask(s(), 'How many anomalies were identified?')).headline).toMatch(/^14 of 175 source records for BUS-001 · 2026-03 are anomaly review candidates/);
         expect((await ask(s(), 'How many months of history are observed?')).headline).toBe('1 observed month for BUS-001 (MYR): 2026-03.');
         expect(await ask(s(), 'What is the next-month cash-movement forecast?')).toMatchObject({ status: 'UNAVAILABLE', code: 'FORECAST_UNAVAILABLE', facts: [] });
         expect(await ask(s(), 'What is net profit?')).toMatchObject({ status: 'REFUSED', code: 'UNSUPPORTED_METRIC', facts: [] });
+    }, 60000);
+    it('quotes current human decisions separately while the original 24 exceptions and MYR 2516.06 remain immutable', async () => {
+        const reviews = createReconciliationReviews(db), before = await reviews.get(finance, reconciliationId);
+        if (before.status !== 'OK') throw Error('review unavailable');
+        const original = JSON.stringify(await createReconciliationService(db).get(finance, reconciliationId));
+        for (const [status, state] of [['AMOUNT_MISMATCH_REVIEW', 'EXPLAINED'], ['AMBIGUOUS_DUPLICATE_LEDGER', 'ESCALATED']] as const) {
+            const outcome = before.outcomes.find(o => o.status === status)!;
+            expect((await reviews.review(finance, { reconciliationId, outcomeKey: outcome.key, state, rationale: 'Annotation only; discrepancy remains uncleared.', expectedVersion: 0 })).status).toBe('REVIEWED');
+        }
+        const review = await ask({ source: march }, 'Which transactions require review?');
+        expect(['exceptions', 'review.OPEN', 'review.INVESTIGATING', 'review.EXPLAINED', 'review.ESCALATED'].map(id => value(review.facts, id))).toEqual(['24', '22', '0', '1', '1']);
+        expect(review.interpretation).toContain('Explained never means matched or cleared');
+        expect(value((await ask({ source: march }, 'What is the difference?')).facts, 'difference')).toBe('2516.06');
+        expect(JSON.stringify(await createReconciliationService(db).get(finance, reconciliationId))).toBe(original);
+        const fullReview = await ask({ source: full, business: 'BUS-001', period: '2026-03' }, 'Which transactions require review?');
+        expect(fullReview.facts.some(f => f.id.startsWith('review.'))).toBe(false);
     }, 60000);
     it('journey B: full 6,000-row source never inherits the March reconciliation', async () => {
         const s = () => ({ source: full, business: 'BUS-001', period: '2026-03' });

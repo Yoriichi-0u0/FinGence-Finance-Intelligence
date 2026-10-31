@@ -5,6 +5,7 @@ import { persistSecurityAuditEvent } from '../security/audit-store';
 import type { M2Principal } from '../ai-ingestion/m2/identity';
 import { resolveM3Principal } from '../financial-m3/management';
 import { readScopedReconciliation } from '../poc-reconciliation/service';
+import { readReconciliationReviewAggregate } from '../poc-reconciliation/reviews';
 import type { PocSource } from '../poc-anomalies/service';
 import { parseSource, type ParsedSource, type SourceLayout } from '../../poc-anomalies/source';
 import { detectAnomalies, type Candidate } from '../../poc-anomalies/detector';
@@ -73,11 +74,22 @@ export function createPocFinanceQa(db: TransactionDatabase) {
         const forecasts = new Map(projection.options.map(o => [o.businessId, forecastBusiness(parsed.rows.filter(r => r.businessId === o.businessId))]));
         const forecast = forecasts.get(sel.businessId)!, peers = [...forecasts.values()].filter(f => f.forecast.status === 'AVAILABLE' && f.currency === forecast.currency);
         const pooled = forecast.forecast.status === 'AVAILABLE' ? poolBacktests(peers) : null;
+        const reconciliation = readReconciliation(await readScopedReconciliation(tx, p, binding), binding);
+        let reconciliationReviews: QaFacts['reconciliationReviews'] = null;
+        if (reconciliation.status === 'AVAILABLE') {
+            const snap = reconciliation.snapshot;
+            const row = (await tx.query<{ id: string }>(`SELECT id::text FROM fingence_poc.reconciliations
+                WHERE organization_id=$1 AND bank_sha256=$2 AND ledger_sha256=$3
+                AND snapshot #>> '{scope,businessId}'=$4 AND snapshot #>> '{scope,period}'=$5
+                AND snapshot #>> '{scope,currency}'=$6 FOR SHARE`,
+                [p.organization_id, snap.sources.bank.sha256, snap.sources.ledger.sha256, sel.businessId, sel.period, sel.currency])).rows[0];
+            if (row) reconciliationReviews = await readReconciliationReviewAggregate(tx, p, row.id);
+        }
         const facts: QaFacts = {
             selection: { sourceId: source.id, fileName: source.fileName, sha256: source.sha256, ...sel },
             businesses: projection.options.map(o => o.businessId), periods: projection.periods, totals: projection.totals, series: projection.series,
             candidates: candidates.filter(c => inScope(c.row)).map(c => ({ rowId: c.row.rowId, severity: c.severity, rules: c.findings.map(f => f.ruleId), review: reviews.get(c.row.rowId) ?? 'OPEN' })),
-            reconciliation: readReconciliation(await readScopedReconciliation(tx, p, binding), binding),
+            reconciliation, reconciliationReviews,
             forecast, pooled: pooled && { businesses: peers.length, backtest: pooled },
         };
         return { facts, context: {

@@ -4,6 +4,7 @@ import { RULES, type RuleId, type Severity } from '../poc-anomalies/detector';
 import { RECONCILIATION_STATUSES, type ReconciliationStatus, type ReconciliationView } from '../poc-anomalies/reconciliation';
 import { MIN_MONTHS, nextPeriod, type BusinessForecast, type Metric, type MetricBacktest } from '../poc-forecast/forecast';
 import type { BankTotals } from '../poc-insights/model';
+import type { ReconciliationReviewAggregateV1 } from '../poc-reconciliation/reviews';
 
 /**
  * Rule-based financial-facts answers. A fixed keyword router picks one supported intent and every
@@ -38,6 +39,7 @@ export type QaFacts = {
     series: (BankTotals & { period: string })[];
     candidates: QaCandidate[];
     reconciliation: ReconciliationView;
+    reconciliationReviews?: ReconciliationReviewAggregateV1 | null;
     forecast: BusinessForecast;
     pooled: { businesses: number; backtest: Record<Metric, Omit<MetricBacktest, 'points'>> } | null;
 };
@@ -231,11 +233,23 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
         [{ id: 'matched', label: 'Matched bank records', value: String(matchedBank), unit: 'COUNT' }, { id: 'bankRecords', label: 'Bank records', value: String(bankRecords), unit: 'COUNT' }, ...categoryFacts, ...hashFacts],
         evidence);
     const exceptions = snap.results.filter(x => !matched(x.status)), open = facts.candidates.filter(x => x.review === 'OPEN');
+    const review = facts.reconciliationReviews;
+    // Metadata must describe this exact saved source pair and scope, never an equal-total/month substitute.
+    const reviewBound = review?.version === 'poc-reconciliation-review-aggregate-v1'
+        && (['organizationId', 'businessId', 'period', 'currency'] as const).every(k => review.scope[k] === snap.scope[k])
+        && review.sources.bank.sha256 === snap.sources.bank.sha256 && review.sources.ledger.sha256 === snap.sources.ledger.sha256
+        && review.eligible === exceptions.length
+        && Object.values(review.states).every(n => Number.isSafeInteger(n) && n >= 0)
+        && Object.values(review.states).reduce((sum, n) => sum + n, 0) === exceptions.length;
+    const humanFacts: Fact[] = reviewBound ? (['OPEN', 'INVESTIGATING', 'EXPLAINED', 'ESCALATED'] as const).map(state =>
+        ({ id: `review.${state}`, label: `Human review: ${state.toLowerCase()}`, value: String(review.states[state]), unit: 'COUNT' })) : [];
+    const humanNote = reviewBound ? `Current human review decisions: Open ${review.states.OPEN}, Investigating ${review.states.INVESTIGATING}, Explained ${review.states.EXPLAINED}, Escalated ${review.states.ESCALATED}.`
+        : 'Human review decisions are unavailable for this exact source pair.';
     const groups: RecordGroup[] = RECONCILIATION_STATUSES.filter(k => !matched(k)).map(k => ({ label: `Reconciliation: ${CATEGORY[k]}`, detail: `${snap.counts[k] ?? 0} outcome${snap.counts[k] === 1 ? '' : 's'}`, recordIds: exceptions.filter(x => x.status === k).flatMap(x => [x.bankRecordId, ...x.ledgerRecordIds].filter((v): v is string => !!v)) })).filter(g => g.recordIds.length);
     if (open.length) groups.push({ label: 'Open anomaly review candidates', detail: 'Deterministic rule findings', recordIds: open.map(x => x.rowId) });
     return answered(intent,
-        `${plural(exceptions.length, 'reconciliation outcome')} and ${plural(open.length, 'open anomaly review candidate')} need review for ${scope}.`,
-        `Reconciliation outcomes other than exact or date-shift matches need a person to confirm them; anomaly candidates come from separate source rules, so a row can appear in both lists. No cause or wrongdoing is inferred.`,
-        [{ id: 'exceptions', label: 'Reconciliation outcomes to review', value: String(exceptions.length), unit: 'COUNT' }, { id: 'open', label: 'Open anomaly candidates', value: String(open.length), unit: 'COUNT' }, ...categoryFacts.filter(f => !/MATCH_(EXACT|DATE_SHIFT)$/.test(f.id))],
+        `${plural(exceptions.length, 'original reconciliation exception')} remain for ${scope}; ${plural(open.length, 'open anomaly review candidate')}.`,
+        `These are original reconciliation exceptions, unchanged by annotations. ${humanNote} Explained never means matched or cleared; the discrepancy remains. Anomaly candidates come from separate source rules, so a row can appear in both lists. No cause or wrongdoing is inferred.`,
+        [{ id: 'exceptions', label: 'Original reconciliation exceptions (unchanged)', value: String(exceptions.length), unit: 'COUNT' }, { id: 'open', label: 'Open anomaly candidates', value: String(open.length), unit: 'COUNT' }, ...humanFacts, ...categoryFacts.filter(f => !/MATCH_(EXACT|DATE_SHIFT)$/.test(f.id))],
         [link.reconciliation, link.anomalies], groups);
 }
