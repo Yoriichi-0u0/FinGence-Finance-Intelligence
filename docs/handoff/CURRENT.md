@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Issue #37 cash forecast — 31 October 2026
+
+[Cash forecast runbook](../integration/poc-cash-forecast.md): under `pnpm poc:dev`, `/forecasting`
+replaces the mock with a deterministic six-month-mean baseline over the Finance-uploaded source,
+with rolling-origin WAPE/MAE backtests (pooled receipts 18.01%, payments 9.81%, net 52.85% —
+worse than last month's 46.90%). Bank receipts/payments only; not AI, revenue or a cash flow
+statement. GET-only, Finance-only, audited; the illustrative page remains when the PoC is off.
+
 ## Issue #34 combined local PoC — 31 October 2026
 
 [Combined financial intelligence runbook](../integration/poc-combined-financial-intelligence.md)
