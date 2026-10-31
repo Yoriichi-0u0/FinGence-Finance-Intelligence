@@ -91,7 +91,7 @@ export default function DemoDataWorkspace() {
             <Panel title="3. Documents identified" eyebrow={processedAt ? `Processed ${new Date(processedAt).toLocaleString()}${persisted ? '' : ' · not kept after reload'}` : undefined}>
                 <Table caption="Identified documents" columns={['Document', 'Role', 'Decision', 'Records', 'Scope', 'SHA-256']} rows={context.documents.map(d => [
                     <span key="n" className="break-all">{d.name}</span>, d.role ? ROLE[d.role] : 'Not identified',
-                    <span key="d" className="grid gap-1"><DecisionBadge decision={d.decision} /><span className="text-xs text-[var(--muted)]">{d.reason}</span></span>,
+                    <span key="d" className="grid gap-1"><DecisionBadge decision={d.decision} label={d.decision === 'AUTO_ACCEPTED' && context.status === 'QUARANTINED' ? 'Identified · run quarantined' : undefined} /><span className="text-xs text-[var(--muted)]">{d.reason}</span></span>,
                     d.rows ?? '—', d.businessId ? `${d.businessId} · ${d.periods.length > 1 ? `${d.periods[0]} to ${d.periods.at(-1)}` : d.periods[0] ?? ''} · ${d.currency}` : '—',
                     <code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>,
                 ])} />
