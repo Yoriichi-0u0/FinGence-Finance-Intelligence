@@ -4,6 +4,7 @@ For the combined university PoC (reconciliation, anomaly candidates and manageme
 run `pnpm poc:dev` and follow the [one-server runbook](docs/integration/poc-combined-financial-intelligence.md).
 This source-derived synthetic workflow is local only; older dated prototype status is historical.
 The local `/forecasting` page adds a backtested bank cash baseline; see the [cash forecast runbook](docs/integration/poc-cash-forecast.md).
+The local `/finance-questions` page answers fixed source-grounded questions (rule-based, not live AI); see the [Finance questions runbook](docs/integration/poc-finance-questions.md).
 
 For the local V2 Milestone 2 upload → verification → tenant-owned results/report workflow,
 use the [M2 runbook](docs/integration/v2-m2-tenant-financial-pipeline.md) and `pnpm m2:dev`.

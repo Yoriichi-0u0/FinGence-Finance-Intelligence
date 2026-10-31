@@ -18,3 +18,19 @@ CREATE TABLE IF NOT EXISTS fingence_poc.reconciliations (
 );
 ALTER TABLE fingence_poc.reconciliations ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON ALL TABLES IN SCHEMA fingence_poc FROM PUBLIC, anon, authenticated;
+-- Additive human annotations only; the original matcher snapshot is never updated.
+CREATE UNIQUE INDEX IF NOT EXISTS reconciliations_organization_id_idx ON fingence_poc.reconciliations(organization_id,id);
+CREATE TABLE IF NOT EXISTS fingence_poc.reconciliation_reviews (
+ organization_id uuid NOT NULL,
+ reconciliation_id uuid NOT NULL,
+ outcome_key text NOT NULL CHECK(outcome_key ~ '^[a-f0-9]{64}$'),
+ version integer NOT NULL CHECK(version > 0),
+ state text NOT NULL CHECK(state IN ('OPEN','INVESTIGATING','EXPLAINED','ESCALATED')),
+ rationale text NOT NULL CHECK(length(rationale) <= 600 AND (state='OPEN' OR length(btrim(rationale)) > 0)),
+ decided_by uuid NOT NULL REFERENCES fingence_m2.users(id),
+ decided_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ PRIMARY KEY(organization_id,reconciliation_id,outcome_key,version),
+ FOREIGN KEY(organization_id,reconciliation_id) REFERENCES fingence_poc.reconciliations(organization_id,id)
+);
+ALTER TABLE fingence_poc.reconciliation_reviews ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON fingence_poc.reconciliation_reviews FROM PUBLIC, anon, authenticated;

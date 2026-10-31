@@ -16,8 +16,8 @@ export const LOCAL_ADMINISTRATION_AUDIT_ACTIONS = [
   "session.revoked",
 ] as const;
 
-/** Local PoC anomaly review decisions (issue #31); widened locally by the same installer, hosted fails closed. */
-export const LOCAL_POC_AUDIT_ACTIONS = ["anomaly.reviewed"] as const;
+/** Local PoC anomaly/reconciliation annotations; widened locally by the same installer, hosted fails closed. */
+export const LOCAL_POC_AUDIT_ACTIONS = ["anomaly.reviewed", "reconciliation.reviewed"] as const;
 
 export const SECURITY_AUDIT_ACTIONS = [
   "auth.sign_in",
