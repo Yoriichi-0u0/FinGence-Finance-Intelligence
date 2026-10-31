@@ -70,7 +70,7 @@ function score(totals: Record<Method, Totals>) {
 
 /** One business's rows (any order). Refuses rather than inventing months, currencies or signs. */
 export function forecastBusiness(rows: ForecastRow[]): BusinessForecast {
-    const base = { version: FORECAST_VERSION, currency: null, history: [], interval: null } as const;
+    const base = { version: FORECAST_VERSION, currency: null, history: [], interval: null } satisfies Omit<BusinessForecast, 'forecast'>;
     if (!rows.length) return { ...base, forecast: unavailable('NO_ROWS', 'No source rows for this business.') };
     const currencies = [...new Set(rows.map(r => r.currency))].sort();
     if (currencies.length > 1) return { ...base, forecast: unavailable('CURRENCY_MIX', `Rows use ${currencies.length} currencies (${currencies.join(', ')}); amounts are never converted or combined.`) };
