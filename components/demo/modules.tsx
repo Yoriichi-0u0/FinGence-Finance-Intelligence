@@ -11,7 +11,7 @@ import { reconciliationStatuses, type ReconciliationStatus } from '@/lib/poc-rec
 import { answerQuestion, suggestions, MAX_QUESTION, type QaAnswer } from '@/lib/poc-finance-qa/answer';
 import { qaFacts } from '@/lib/demo/questions';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
-import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, button, money, outflow, primaryButton } from './shared';
+import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, button, usesOwnDocuments, money, outflow, primaryButton } from './shared';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
@@ -157,7 +157,7 @@ function Reports({ c }: { c: Ready }) {
     return <>
         <PageHeader title="Reports" description="Management summary generated from the same processing context as every other page." actions={<div className="flex flex-wrap gap-2 print:hidden"><button type="button" className={button} onClick={download}><Download aria-hidden="true" size={16} />JSON evidence</button><button type="button" className={primaryButton} onClick={() => window.print()}><Printer aria-hidden="true" size={16} />Print or save PDF</button></div>} />
         <SourceStrip context={c} />
-        <Panel title={`Management summary · ${s.businessName} · ${s.period}`} eyebrow="Synthetic demonstration · not for financial publication">
+        <Panel title={`Management summary · ${s.businessName} · ${s.period}`} eyebrow={`${usesOwnDocuments(c) ? 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
             <div className="space-y-5 p-4 text-sm sm:p-5">
                 <section><h3 className="font-semibold">Sources</h3><ul className="mt-1 space-y-1 text-xs">{rep.sources.map(x => <li key={x.sha256} className="break-all">{x.role.replace('_', ' ').toLowerCase()}: {x.name} · SHA-256 {x.sha256}</li>)}</ul></section>
                 <section><h3 className="font-semibold">Bank cash movement</h3><p>Cash in {money(s.currency, rep.cash.credits)} ({rep.cash.creditRows} records); cash out {outflow(s.currency, rep.cash.debits)} ({rep.cash.debitRows}); net {money(s.currency, rep.cash.net)}. Not revenue, profit or a cash flow statement.</p></section>

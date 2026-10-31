@@ -7,6 +7,8 @@ import type { Decision, ProcessingContext } from '@/lib/demo/pipeline';
 export const money = (currency: string, value: string) => `${currency} ${groupDigits(value)}`;
 /** Labelled cash-out figures are shown as magnitudes; the signed source value stays in tables and JSON. */
 export const outflow = (currency: string, value: string) => money(currency, value.replace(/^-/, ''));
+/** True when the current processing includes the visitor's own files rather than only the built-in fictional samples. */
+export const usesOwnDocuments = (context: ProcessingContext) => context.documents.some(d => d.provenance === 'USER_SUPPLIED');
 export const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
 export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)] disabled:cursor-not-allowed disabled:opacity-50';
 

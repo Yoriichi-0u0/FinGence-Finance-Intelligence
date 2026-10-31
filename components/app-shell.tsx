@@ -107,7 +107,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold">{localFinancialConsumers ? "Synthetic organization" : syntheticDemo ? "Synthetic demo" : "SAIC"}</span>
             <span className="block truncate text-xs text-slate-300">{localFinancialConsumers ? "Local experimental workspace" : syntheticDemo ? "No sign-in · browser only" : "Finance Workspace"}</span>
-            <span className="mt-0.5 block text-xs text-slate-400">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Fictional data only" : "August 2026"}</span>
+            <span className="mt-0.5 block text-xs text-slate-400">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Use fictional data only" : "August 2026"}</span>
           </span>
           <ChevronDown aria-hidden="true" size={16} className="text-slate-300" />
         </button>

@@ -72,7 +72,7 @@ export const STAGE_TITLES: Record<StageId, string> = {
     FORECAST: 'Supported forecast', REPORT: 'Management summary',
 };
 const LIMITATIONS = [
-    'Synthetic demonstration processed in this browser only; nothing is uploaded, persisted or shared.',
+    'Processed in this browser only; nothing is uploaded to a server or shared. The input documents are kept temporarily in this browser tab\'s sessionStorage until results are cleared or the tab is closed.',
     'Signed cash movement is bank cash in and out. It is not revenue, expenses, profit or a cash flow statement.',
     'Document roles and column meanings come from exact schema signatures and configured cash conventions, not from a language model.',
     'Reconciliation exceptions and anomaly candidates are quarantined for exception handling; none is cleared automatically.',
