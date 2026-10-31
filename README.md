@@ -24,6 +24,7 @@ Use Node 24.x and pnpm 11.19.0; local verification uses Node 24.22.0. See the
 verification and private local material. No nested checkout is required.
 
 Start with [the current team and AI technical entrypoint](docs/handoff/CURRENT.md).
+For the no-login connected demo, see the [FinGence 2.0 Phase 1 runbook](docs/integration/fingence2-phase1-demo.md).
 It maps the stable C1/C2 exports, experimental V2 schemas/verifier, runtime requirements,
 ownership, tested reuse examples and the missing V2-to-C1 bridge. It also includes a short
 instruction block for coding assistants. [PR #4](https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/4)

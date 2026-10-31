@@ -1,5 +1,15 @@
 # FinGence — current technical entrypoint
 
+## FinGence 2.0 Phase 1 connected synthetic demo — 1 November 2026
+
+[Phase 1 runbook](../integration/fingence2-phase1-demo.md): hosted and plain `pnpm dev` open with
+no sign-in. `/data` processes a bank statement + cash-account ledger (+ optional bank history) in
+the browser in one action; Overview, Transactions, Reconciliation, Analytics, Anomalies,
+Forecasting, Reports and `/ask` read the same verified processing context. Shared pure engine
+`lib/poc-reconciliation/engine.ts` (server wrappers unchanged in behaviour). Local authenticated
+stacks are unchanged; the C1 page is at `/data/c1`. Phase 2/3 contracts:
+[processing architecture](../architecture/fingence2-processing-architecture.md). Still 69 probes.
+
 ## Issue #49 combined Finance demonstration — 31 October 2026
 
 [Combined review and Q&A walkthrough](../integration/poc-review-qa-integration.md) retains both
