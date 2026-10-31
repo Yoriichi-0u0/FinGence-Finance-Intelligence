@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Issue #38 integrated Saturday PoC — 31 October 2026
+
+[Two-journey integration walkthrough](../integration/poc-saturday-integration.md) combines
+source-backed Transactions/Analytics and the measured cash forecast above the PR #35 fallback.
+Shared source/business selection links the actual uploaded data across views. March-only
+forecasting remains unavailable; full-file reconciliation cannot inherit the March bank SHA.
+All six original forecasting commits are retained. Local synthetic only; 63 Production probes.
+
 ## Issue #36 source-backed PoC views — 31 October 2026
 
 [Uploaded-source Transactions and Analytics](../integration/poc-source-insights.md) adds

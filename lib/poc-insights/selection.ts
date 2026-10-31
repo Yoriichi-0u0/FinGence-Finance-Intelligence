@@ -1,5 +1,11 @@
 import type { M2ClientPrincipal, PendingStorage } from '../ai-ingestion/m2-client-state';
 export type PocSelection = { source: string; business?: string; period?: string; currency?: string };
+/** Forecasts use all observed months; preserve the explorer's month only as a navigation preference. */
+export function forecastContext(previous: PocSelection | null, source: string, business: string, currency: string | null, periods: string[]): PocSelection {
+    const same = previous?.source === source && previous.business === business && previous.currency === currency;
+    const period = same && previous.period && periods.includes(previous.period) ? previous.period : periods.at(-1);
+    return { source, business, ...(currency ? { currency } : {}), ...(period ? { period } : {}) };
+}
 const key = (p: M2ClientPrincipal) => 'fingence-poc-source-v1:' + JSON.stringify([p.userId, p.organizationId, p.role, p.membershipVersion]);
 function validate(value: unknown): PocSelection {
     const v = value as PocSelection;

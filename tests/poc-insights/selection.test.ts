@@ -1,10 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { readSelection, rememberSelection, forgetSelection } from '../../lib/poc-insights/selection';
+import { readSelection, rememberSelection, forgetSelection, forecastContext } from '../../lib/poc-insights/selection';
 import type { M2ClientPrincipal } from '../../lib/ai-ingestion/m2-client-state';
 const p: M2ClientPrincipal = { userId: '11111111-1111-4111-8111-111111111111', organizationId: '22222222-2222-4222-8222-222222222222', role: 'Finance', membershipVersion: 1 };
 const selected = { source: '33333333-3333-4333-8333-333333333333', business: 'BUS-001', period: '2026-03', currency: 'MYR' };
 const store = () => { const map = new Map<string, string>(); return { getItem: (k: string) => map.get(k) ?? null, setItem: (k: string, v: string) => { map.set(k, v); }, removeItem: (k: string) => { map.delete(k); } }; };
 describe('non-authoritative cross-page source selection', () => {
+    it('preserves an observed selected month through forecasting without carrying it to a different source or business', () => {
+        const periods = ['2026-03', '2026-08'];
+        expect(forecastContext(selected, selected.source, 'BUS-001', 'MYR', periods)).toEqual(selected);
+        expect(forecastContext(selected, selected.source, 'BUS-002', 'MYR', periods).period).toBe('2026-08');
+        expect(forecastContext(selected, '44444444-4444-4444-8444-444444444444', 'BUS-001', 'MYR', periods).period).toBe('2026-08');
+        expect(forecastContext(selected, selected.source, 'BUS-001', 'MYR', ['2026-04']).period).toBe('2026-04');
+        expect(forecastContext(null, selected.source, 'BUS-001', null, [])).toEqual({ source: selected.source, business: 'BUS-001' });
+    });
     it('preserves the selected source/business/period/currency through sidebar navigation', () => {
         const s = store(); rememberSelection(s, p, selected); expect(readSelection(s, p, '')).toEqual(selected);
         expect(readSelection(s, p, '?' + new URLSearchParams({ ...selected, period: '2026-02' }))).toEqual({ ...selected, period: '2026-02' });

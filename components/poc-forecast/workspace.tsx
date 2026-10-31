@@ -9,6 +9,7 @@ import { M2ClientFence, principalScope, type M2ClientPrincipal } from "@/lib/ai-
 import { groupDigits } from "@/lib/poc-anomalies/format";
 import type { Method, MethodScore, Metric, MonthTotals } from "@/lib/poc-forecast/forecast";
 import type { ForecastSource, ForecastView } from "@/lib/server/poc-forecast/service";
+import { readSelection, rememberSelection, forgetSelection, forecastContext, browserSelectionStorage } from "@/lib/poc-insights/selection";
 
 type Notice = { tone: "success" | "error"; text: string } | null;
 type Selection = { sourceId: string; businessId?: string };
@@ -58,29 +59,34 @@ function ScoreTable({ title, rows, currency }: { title: string; rows: { metric: 
 }
 
 export default function ForecastWorkspace() {
-  const fence = useRef(new M2ClientFence()), authenticating = useRef(false), request = useRef(0);
+  const fence = useRef(new M2ClientFence()), authenticating = useRef(false), request = useRef(0), sessionPaused = useRef(false);
   const [principal, setPrincipal] = useState<M2ClientPrincipal | null>(null), [checked, setChecked] = useState(false);
   const [sources, setSources] = useState<ForecastSource[] | null>(null), [view, setView] = useState<ForecastView | null>(null);
+  const [navigation, setNavigation] = useState("");
   const [loading, setLoading] = useState(false), [busy, setBusy] = useState(false), [notice, setNotice] = useState<Notice>(null);
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
 
   // Every financial figure is dropped on sign-out, session loss, or any user, organization, role or membership change.
-  const clear = useCallback(() => { request.current++; setSources(null); setView(null); setLoading(false); }, []);
-  const invalidate = useCallback(() => { fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
+  const clear = useCallback(() => { request.current++; setSources(null); setView(null); setNavigation(""); setLoading(false); }, []);
+  const invalidate = useCallback(() => { forgetSelection(browserSelectionStorage, fence.current.principal); fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
   const load = useCallback(async (selection: Selection) => {
     const p = fence.current.principal;
     if (!p || p.role !== "Finance") return;
     const epoch = fence.current.epoch, sequence = ++request.current;
-    setLoading(true); setNotice(null);
+    setLoading(true); setView(null); setNotice(null);
     try {
       const q = new URLSearchParams({ action: "forecast", source: selection.sourceId, ...(selection.businessId ? { business: selection.businessId } : {}) });
       const r = await fetch(`${api}?${q}`, { cache: "no-store" });
       if (!r.ok) throw new Error();
       const data = await r.json() as ForecastView;
       if (epoch !== fence.current.epoch || sequence !== request.current) return;
-      if (scopeKey(data.scope) !== scopeKey(p) || data.source.id !== selection.sourceId) throw new Error();
+      if (scopeKey(data.scope) !== scopeKey(p) || data.source.id !== selection.sourceId || (selection.businessId && data.selection.businessId !== selection.businessId)) throw new Error();
+      const context = forecastContext(readSelection(browserSelectionStorage, p, location.search), data.source.id, data.selection.businessId, data.business.currency, data.business.history.map(m => m.period));
+      rememberSelection(browserSelectionStorage, p, context);
       setView(data);
-      history.replaceState(null, "", `/forecasting?${new URLSearchParams({ source: data.source.id, business: data.selection.businessId })}`);
+      const query = new URLSearchParams(context).toString();
+      setNavigation(query);
+      history.replaceState(null, "", `/forecasting?${query}`);
     } catch {
       if (epoch === fence.current.epoch && sequence === request.current) { setView(null); setNotice({ tone: "error", text: "The selected source could not be forecast for this account. Refresh or choose another source." }); }
     } finally {
@@ -98,8 +104,9 @@ export default function ForecastWorkspace() {
       if (epoch !== fence.current.epoch) return;
       if (scopeKey(data.scope) !== scopeKey(p)) throw new Error();
       setSources(data.sources);
-      const q = new URLSearchParams(location.search), hinted = q.get("source");
-      const chosen = hinted && data.sources.some(s => s.id === hinted) ? { sourceId: hinted, businessId: q.get("business") ?? undefined } : data.sources[0] ? { sourceId: data.sources[0].id } : null;
+      const hinted = readSelection(browserSelectionStorage, p, location.search);
+      if (hinted && !data.sources.some(s => s.id === hinted.source)) throw new Error();
+      const chosen = hinted ? { sourceId: hinted.source, businessId: hinted.business } : data.sources[0] ? { sourceId: data.sources[0].id } : null;
       if (chosen) void load(chosen);
     } catch {
       if (epoch === fence.current.epoch) setNotice({ tone: "error", text: "Sources could not be authorized or audited. Sign in again or refresh." });
@@ -113,7 +120,7 @@ export default function ForecastWorkspace() {
   useEffect(() => {
     let ended = false;
     const check = async () => {
-      if (authenticating.current) return;
+      if (authenticating.current || sessionPaused.current) return;
       const epoch = fence.current.epoch;
       try {
         const r = await fetch(auth + "?action=session", { cache: "no-store" });
@@ -136,6 +143,7 @@ export default function ForecastWorkspace() {
   async function signIn(event: React.FormEvent) {
     event.preventDefault();
     authenticating.current = true;
+    sessionPaused.current = true;
     invalidate();
     const epoch = fence.current.epoch;
     setBusy(true); setNotice(null);
@@ -146,6 +154,7 @@ export default function ForecastWorkspace() {
       const data = await r.json();
       if (epoch !== fence.current.epoch) return;
       setPassword("");
+      sessionPaused.current = false;
       adopt(data);
     } catch {
       setNotice({ tone: "error", text: "Sign-in refused. Check the address and password; the account and membership must both be active." });
@@ -155,8 +164,10 @@ export default function ForecastWorkspace() {
     }
   }
   async function signOut() {
-    await fetch(auth + "?action=logout", { method: "POST" }).catch(() => undefined);
+    sessionPaused.current = true;
     invalidate(); setNotice(null);
+    try { const r = await fetch(auth + "?action=logout", { method: "POST" }); if (!r.ok) throw new Error(); }
+    catch { setNotice({ tone: "error", text: "Financial results are hidden. Server sign-out is unconfirmed; sign in again explicitly to continue." }); }
   }
 
   const notices = notice ? <p role={notice.tone === "error" ? "alert" : "status"} className={`mb-4 rounded-lg border px-4 py-3 text-sm ${notice.tone === "error" ? "border-red-200 bg-[var(--red-soft)] text-[var(--red)]" : "border-green-200 bg-[var(--green-soft)] text-[var(--green)]"}`}>{notice.text}</p> : null;
@@ -211,19 +222,21 @@ export default function ForecastWorkspace() {
       {label}
       {notices}
 
+      {view && !loading ? <nav aria-label="Selected source views" className="mb-4 flex flex-wrap gap-2"><Link className={secondary} href={`/transactions?${navigation}`}>Transactions</Link><Link className={secondary} href={`/analytics?${navigation}`}>Analytics</Link><Link className={secondary} href={`/anomalies?${navigation}`}>Anomalies</Link><Link className={secondary} href={`/anomalies?${navigation}#management-report`}>Management report</Link></nav> : null}
+
       <Panel title="Source data" eyebrow="Finance-uploaded input">
         <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-3">
           {sources === null ? <p className="text-sm text-[var(--muted)] md:col-span-3" role="status">Loading sources…</p> : !sources.length ? (
             <div className="md:col-span-3"><EmptyState title="No source uploaded yet" description="Forecasts read the same Finance-uploaded source as anomaly review. Upload source_transactions_6000.csv on the Anomalies page first." /><p className="mt-3 text-center"><Link className="text-sm font-semibold text-[var(--teal)] underline" href="/anomalies">Open Anomalies to upload a source</Link></p></div>
           ) : (<>
             <label className="min-w-0 text-sm font-medium md:col-span-2">Source file
-              <select className={field} disabled={loading} value={view?.source.id ?? ""} onChange={e => void load({ sourceId: e.target.value })}>
+              <select aria-label="Source file" className={field} disabled={loading} value={view?.source.id ?? ""} onChange={e => void load({ sourceId: e.target.value })}>
                 {!view ? <option value="">Choose a source</option> : null}
                 {sources.map(s => <option key={s.id} value={s.id}>{s.fileName} · {s.rowCount.toLocaleString()} rows · {new Date(s.uploadedAt).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}</option>)}
               </select>
             </label>
             <label className="min-w-0 text-sm font-medium">Business
-              <select className={field} disabled={!view || loading} value={view?.selection.businessId ?? ""} onChange={e => view && void load({ sourceId: view.source.id, businessId: e.target.value })}>
+              <select aria-label="Business" className={field} disabled={!view || loading} value={view?.selection.businessId ?? ""} onChange={e => view && void load({ sourceId: view.source.id, businessId: e.target.value })}>
                 {view?.options.map(o => <option key={o.businessId} value={o.businessId}>{o.businessName} ({o.businessId})</option>)}
               </select>
             </label>
