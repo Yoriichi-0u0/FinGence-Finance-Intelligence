@@ -14,8 +14,8 @@ import { bank, ledger, csv } from './fixtures';
 
 let pg: PGlite, db: TransactionDatabase, finance: string, colleague: string, other: string, tech: string, admin: string, revoked: string;
 let id: string, original: FinancePoCReconciliationV1;
-const b = csv([bank, { ...bank, BankTransactionID: 'BANK-DUP', BankReference: 'DUP-REF', BankAmountMYR: '50.00', SignedCashMovementMYR: '50.00' }]);
-const l = csv([{ ...ledger, CashAccountDebitMYR: '6380.52', SignedCashMovementMYR: '6380.52' }, ...['GL-DUP-A', 'GL-DUP-B'].map(LedgerEntryID => ({ ...ledger, LedgerEntryID, LedgerReference: 'DUP-REF', CashAccountDebitMYR: '50.00', SignedCashMovementMYR: '50.00' }))]);
+const b = csv([bank, { ...bank, BankTransactionID: 'BANK-DUP', BankReference: 'DUP-REF', BankAmountMYR: '50.00', SignedCashMovementMYR: '50.00' }, { ...bank, BankTransactionID: 'BANK-EXACT', BankReference: 'EXACT-REF' }]);
+const l = csv([{ ...ledger, CashAccountDebitMYR: '6380.52', SignedCashMovementMYR: '6380.52' }, ...['GL-DUP-A', 'GL-DUP-B'].map(LedgerEntryID => ({ ...ledger, LedgerEntryID, LedgerReference: 'DUP-REF', CashAccountDebitMYR: '50.00', SignedCashMovementMYR: '50.00' })), { ...ledger, LedgerEntryID: 'GL-EXACT', LedgerReference: 'EXACT-REF' }]);
 const hash = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('hex');
 beforeAll(async () => {
     ({ pg, db } = await m5Database()); await installReconciliationSchema(db);
@@ -85,12 +85,15 @@ describe('separate, durable Finance exception annotations', () => {
         expect(await service.get(finance, randomUUID())).toEqual({ status: 'REFUSED', code: 'UNAVAILABLE' });
         const input = { reconciliationId: id, outcomeKey: 'f'.repeat(64), state: 'EXPLAINED' as const, rationale: 'Not an existing source outcome.', expectedVersion: 0 };
         expect(await service.review(finance, input)).toEqual({ status: 'REFUSED', code: 'UNAVAILABLE' });
+        const exact = original.results.find(r => r.status === 'MATCH_EXACT')!;
+        expect(exact).toBeDefined();
+        expect(await service.review(finance, { ...input, outcomeKey: reconciliationOutcomeKey(original, exact) })).toEqual({ status: 'REFUSED', code: 'UNAVAILABLE' });
         for (const t of [other, tech, admin]) expect(await service.review(t, input)).toEqual({ status: 'REFUSED', code: 'UNAVAILABLE' });
         await expect(service.review(finance, { ...input, bankSha256: '0'.repeat(64) } as never)).rejects.toThrow();
         const corrupt: TransactionDatabase = { close: db.close, transaction: work => db.transaction(tx => work({ query: async (sql, args) => {
             const r = await tx.query(sql, args);
             if (sql.includes('SELECT snapshot,bank_sha256')) return { ...r, rows: r.rows.map(row => ({ ...row as object, bank_sha256: '0'.repeat(64) })) } as never;
-            return r;
+            return r as never;
         } })) };
         expect(await createReconciliationReviews(corrupt).get(finance, id)).toEqual({ status: 'REFUSED', code: 'UNAVAILABLE' });
     });
@@ -100,7 +103,7 @@ describe('separate, durable Finance exception annotations', () => {
         await expect(createReconciliationReviews(failingAudit(db)).review(finance, { reconciliationId: id, outcomeKey: current.key, state: 'EXPLAINED', rationale: 'AUDIT_PAYLOAD_MUST_NOT_APPEAR', expectedVersion: current.review.version })).rejects.toThrow('audit failure');
         const read = await service.get(finance, id); if (read.status !== 'OK') throw Error('read failed');
         expect(read.outcomes[0].review.version).toBe(current.review.version);
-        const audits = (await pg.query("SELECT * FROM security_audit_events WHERE action='reconciliation.reviewed'")).rows;
+        const audits = (await pg.query<{ outcome: string }>("SELECT * FROM security_audit_events WHERE action='reconciliation.reviewed'")).rows;
         expect(audits.filter(a => a.outcome === 'success')).toHaveLength(3);
         expect(JSON.stringify(audits)).not.toContain('One-cent'); expect(JSON.stringify(audits)).not.toContain('AUDIT_PAYLOAD');
     });
