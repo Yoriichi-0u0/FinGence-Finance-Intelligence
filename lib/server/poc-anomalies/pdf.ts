@@ -98,6 +98,24 @@ export async function renderManagementReport(report: PocReport): Promise<Uint8Ar
         text('No ledger movement, matching status or reconciliation difference is reported.', { size: 8.5, color: muted });
     }
 
+    // Separate from the anomaly review summary below: these are reviewer annotations on reconciliation outcomes.
+    y -= 8; room(60);
+    text('Human reconciliation review (annotations, not cleared transactions)', { size: 10.5, font: bold, color: teal, gap: 5 });
+    const h = report.reconciliationHumanReview;
+    if (h.status === 'AVAILABLE') {
+        const eligible = Object.entries(h.eligibleByStatus).map(([k, n]) => `${n} ${statusTitle(k).toLowerCase()}`).join(', ');
+        pairs([
+            ['Original review-eligible', `${h.originalEligible} outcomes (${eligible}); unchanged by review`],
+            ['Reviewer: Open', String(h.states.OPEN)], ['Reviewer: Investigating', String(h.states.INVESTIGATING)],
+            ['Reviewer: Explained', String(h.states.EXPLAINED)], ['Reviewer: Escalated', String(h.states.ESCALATED)],
+        ]);
+        text('Explained does not mean matched, reconciled, cleared or settled. The original outcomes and the signed difference above are unchanged.', { size: 8.5, font: bold, color: amber });
+        text(h.basis, { size: 8.5, color: muted });
+    } else {
+        text(`Human review summary unavailable. ${h.reason}`, { font: bold });
+        text('No reviewer decision counts are reported.', { size: 8.5, color: muted });
+    }
+
     heading('Anomaly review summary');
     const k = report.counts;
     pairs([

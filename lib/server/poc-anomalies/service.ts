@@ -8,7 +8,7 @@ import type { M2Principal } from '../ai-ingestion/m2/identity';
 import { resolveM3Principal } from '../financial-m3/management';
 import { parseSource, SourceError, fromCents, toCents, type ParsedSource, type SourceLayout, type SourceRefusal } from '../../poc-anomalies/source';
 import { detectAnomalies, DETECTOR_VERSION, RULES, THRESHOLDS, type Candidate, type RuleId, type Severity } from '../../poc-anomalies/detector';
-import { readReconciliation, type ReconciliationScope, type ReconciliationView } from '../../poc-anomalies/reconciliation';
+import { readHumanReview, readReconciliation, type FinancePoCReconciliationV1, type HumanReviewView, type ReconciliationScope, type ReconciliationView } from '../../poc-anomalies/reconciliation';
 import { renderManagementReport } from './pdf';
 
 export type ReviewState = 'OPEN' | 'EXPLAINED' | 'ESCALATED';
@@ -36,8 +36,9 @@ export type PocAnalysis = {
     evaluation: PocEvaluation | null;
     limitations: string[];
 };
-export type PocReport = Omit<PocAnalysis, 'status'> & { reportVersion: 'poc-management-report-v1'; generatedAt: string; reconciliation: ReconciliationView; reportHash: string };
+export type PocReport = Omit<PocAnalysis, 'status'> & { reportVersion: 'poc-management-report-v1'; generatedAt: string; reconciliation: ReconciliationView; reconciliationHumanReview: HumanReviewView; reportHash: string };
 export type ReconciliationReader = (tx: SqlConnection, principal: M2Principal, scope: ReconciliationScope) => Promise<unknown>;
+export type HumanReviewReader = (tx: SqlConnection, principal: M2Principal, snapshot: FinancePoCReconciliationV1) => Promise<unknown>;
 export type SelectionInput = { sourceId: string; businessId?: string; period?: string; currency?: string };
 
 export const POC_LIMITATIONS = [
@@ -73,7 +74,7 @@ function analyze(sha256: string, content: Uint8Array) {
     return entry;
 }
 
-export function createPocAnomalies(db: TransactionDatabase, options: { reconciliation?: ReconciliationReader } = {}) {
+export function createPocAnomalies(db: TransactionDatabase, options: { reconciliation?: ReconciliationReader; humanReview?: HumanReviewReader } = {}) {
     /** Finance only. Other authenticated roles get a committed, audited denial; invalid sessions throw. */
     async function finance<T>(token: string, target: [SecurityAuditTargetType, string], work: (tx: SqlConnection, p: M2Principal) => Promise<T>) {
         return db.transaction(async (tx): Promise<T | PocRefused> => {
@@ -178,7 +179,10 @@ export function createPocAnomalies(db: TransactionDatabase, options: { reconcili
             if (!analysis) { await audit(tx, p, 'report.downloaded', 'failure', 'report', 'poc-management-report'); return refused('UNAVAILABLE'); }
             const s = analysis.selection, scope = { organizationId: p.organization_id, businessId: s.businessId, period: s.period, currency: s.currency, bankSha256: analysis.source.sha256 };
             const reconciliation = readReconciliation(options.reconciliation ? await options.reconciliation(tx, p, scope) : null, scope);
-            const unsigned = { ...analysis, reportVersion: 'poc-management-report-v1' as const, generatedAt: new Date().toISOString(), reconciliation };
+            // Annotations are read only for the validated snapshot; they never alter it or the counts above.
+            const annotations = reconciliation.status === 'AVAILABLE' && options.humanReview ? await options.humanReview(tx, p, reconciliation.snapshot) : null;
+            const reconciliationHumanReview = readHumanReview(annotations, reconciliation);
+            const unsigned = { ...analysis, reportVersion: 'poc-management-report-v1' as const, generatedAt: new Date().toISOString(), reconciliation, reconciliationHumanReview };
             const report: PocReport = { ...unsigned, reportHash: createHash('sha256').update(JSON.stringify(canonical(unsigned))).digest('hex') };
             await audit(tx, p, 'report.downloaded', 'success', 'report', analysis.source.id);
             return { status: 'OK' as const, report, bytes: format === 'pdf' ? await renderManagementReport(report) : new TextEncoder().encode(JSON.stringify(report, null, 2)) };

@@ -4,6 +4,7 @@ import { m5Runtime } from '../tenant-admin-m5/runtime';
 import { installPocAnomalySchema } from './schema';
 import { createPocAnomalies } from './service';
 import { installReconciliationSchema, readScopedReconciliation } from '../poc-reconciliation/service';
+import { readReportReviewAggregate } from './human-review';
 const initialized = new WeakMap<object, Promise<void>>();
 /** The PoC anomaly review rides on the local M5 stack; it has no flag of its own and never runs hosted. */
 export async function pocRuntime() {
@@ -19,5 +20,5 @@ export async function pocRuntime() {
         initialized.set(base.database, ready);
     }
     await ready;
-    return { ...base, anomalies: createPocAnomalies(base.database, { reconciliation: readScopedReconciliation }) };
+    return { ...base, anomalies: createPocAnomalies(base.database, { reconciliation: readScopedReconciliation, humanReview: readReportReviewAggregate }) };
 }
