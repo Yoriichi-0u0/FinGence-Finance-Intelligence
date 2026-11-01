@@ -24,7 +24,7 @@ describe('AI interpretation panel', () => {
         expect(t).toMatch(/Withdrawal \(RM\) Money out Heading agrees/);
         expect(t).toContain('Running balance agrees with every signed amount');
         expect(t).toContain('Model rationale (not evidence)');
-        expect(t).toContain('It never supplied an amount');
+        expect(t).toContain('It never supplies an amount');
     });
     it('renders nothing when no document needed interpretation', async () => {
         const c = await processDocuments([doc('public/demo', 'demo-bank-statement-2026-03.csv'), doc('public/demo', 'demo-general-ledger-2026-03.csv')]);

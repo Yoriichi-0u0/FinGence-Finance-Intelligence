@@ -17,7 +17,7 @@ export function InterpretationPanel({ context }: { context: ProcessingContext })
     if (!docs.length) return null;
     return <Panel title="AI layout interpretation" eyebrow="Model proposal · deterministic acceptance">
         <div className="space-y-6 p-4 sm:p-5">
-            <p className="text-sm text-[var(--muted-strong)]">A language model proposed how each unfamiliar document is laid out. It never supplied an amount: every row was re-read from the original file under the proposal, and the proposal was accepted only because every check below passed.</p>
+            <p className="text-sm text-[var(--muted-strong)]">A language model proposed how each unfamiliar document is laid out. It never supplies an amount: every row is re-read from the original file under the proposal, which is accepted only when every check below passes and is otherwise quarantined.</p>
             {docs.map(d => {
                 const i = d.interpretation!, r = i.receipt, rationale = (i.proposal as { rationale?: unknown } | null)?.rationale;
                 return <section key={d.sha256} aria-label={`AI interpretation of ${d.name}`} className="space-y-3 border-t border-[var(--border)] pt-4 first:border-0 first:pt-0">
