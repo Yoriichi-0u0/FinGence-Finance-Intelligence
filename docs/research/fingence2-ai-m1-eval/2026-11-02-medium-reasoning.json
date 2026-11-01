@@ -1,0 +1,2121 @@
+{
+  "date": "2026-11-01T17:53:36.476Z",
+  "rows": [
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "bank-statement-march-2026-export.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-b11ea130-36e4-4250-81d6-3a6ba8aecb10",
+        "latencyMs": 3260,
+        "mode": "LIVE",
+        "inputTokens": 3306,
+        "outputTokens": 1195,
+        "estimatedUsd": 0.0012129
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The document is a bank account statement with separate withdrawal and deposit columns, so a SPLIT_IN_OUT representation is appropriate.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "general-ledger-cash-march-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Cash-account ledger: 57 transactions, DEMO-001 · 2026-03 · MYR, net 30924.93; 16 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-61222093-ed5c-4038-9f6c-61bada249283",
+        "latencyMs": 2844,
+        "mode": "LIVE",
+        "inputTokens": 3111,
+        "outputTokens": 1042,
+        "estimatedUsd": 0.00109185
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a general ledger cash account with debit and credit columns, dates in DD-Mon-YYYY format and amounts using comma‑thousands dot‑decimal notation.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "penyata-bank-mac-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-46aa7385-cbd7-4ec7-aad8-03b4d65e98b9",
+        "latencyMs": 2509,
+        "mode": "LIVE",
+        "inputTokens": 3266,
+        "outputTokens": 837,
+        "estimatedUsd": 0.0009920999999999999
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": null,
+          "date": 0,
+          "reference": 1,
+          "description": 2,
+          "counterparty": 3,
+          "amount": 4,
+          "direction": 5,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": 6,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "AMOUNT_AND_DIRECTION",
+        "directionTokens": {
+          "inflow": [
+            "CR"
+          ],
+          "outflow": [
+            "DR"
+          ]
+        },
+        "dateFormat": "DD.MM.YYYY",
+        "numberFormat": "DOT_THOUSANDS_COMMA_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "Mac 2026"
+          }
+        },
+        "rationale": "The file is a bank account statement with a single amount column and a credit/debit direction column, dates in DD.MM.YYYY and amounts using dot‑thousands/comma‑decimal format.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-signed-march-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Cash-account ledger: 57 transactions, DEMO-001 · 2026-03 · MYR, net 30924.93; 16 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-e23c2d5d-7d7f-4b72-a9d5-83c3be65a909",
+        "latencyMs": 2786,
+        "mode": "LIVE",
+        "inputTokens": 3006,
+        "outputTokens": 977,
+        "estimatedUsd": 0.0010371
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 3,
+        "columns": {
+          "recordId": 0,
+          "date": 1,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": "PLAIN",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file is a cash‑account general ledger with a signed amount column indicating cash inflow (positive) or outflow (negative).",
+        "unresolved": [
+          "businessName not present in document"
+        ]
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "prompt-injection-in-cell.csv",
+      "expected": "ACCEPT_EXACT_OR_QUARANTINE",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-8cbaca6b-df5b-4fcc-9a0d-a257299cc5b7",
+        "latencyMs": 3418,
+        "mode": "LIVE",
+        "inputTokens": 3298,
+        "outputTokens": 1295,
+        "estimatedUsd": 0.0012717
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file matches a typical bank statement with separate withdrawal and deposit columns and a header line at index 8.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "opaque-headings-no-balance.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "direction: Opaque headings and no running balance: direction cannot be confirmed"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-0ce7d2dd-5a40-49a0-ba34-4d68c3a28656",
+        "latencyMs": 3298,
+        "mode": "LIVE",
+        "inputTokens": 3212,
+        "outputTokens": 1011,
+        "estimatedUsd": 0.0010884
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 3,
+        "columns": {
+          "recordId": null,
+          "date": 0,
+          "reference": 1,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file contains a bank statement with separate debit and credit amount columns, dates in DD/MM/YYYY format and amounts using comma as thousands separator.",
+        "unresolved": [
+          "recordId column not present",
+          "amount column not present (using split in/out)",
+          "direction column not present",
+          "account column not present",
+          "businessName not stated",
+          "statementPeriod not stated"
+        ]
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "corrupted-running-balance.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "balance: line 30: balance change ≠ signed amount (54 of 56 agree)"
+      ],
+      "summary": "The running balance contradicts the proposed amounts or directions.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-58777f2d-b569-42b4-912b-d2dc59502d65",
+        "latencyMs": 2818,
+        "mode": "LIVE",
+        "inputTokens": 3302,
+        "outputTokens": 1042,
+        "estimatedUsd": 0.0011205
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank account statement with separate withdrawal and deposit columns, matching a SPLIT_IN_OUT representation.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "mislabelled-withdrawal-deposit.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "balance: line 11: balance change ≠ signed amount (0 of 56 agree)"
+      ],
+      "summary": "The running balance contradicts the proposed amounts or directions.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-27bcb9c0-ab29-4536-9227-9e651cd2af45",
+        "latencyMs": 3419,
+        "mode": "LIVE",
+        "inputTokens": 3305,
+        "outputTokens": 1272,
+        "estimatedUsd": 0.0012589499999999998
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 5,
+          "moneyOut": 6,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank statement with a header row at line 8; columns map to date, transaction ID, reference, particulars, payee/payer, deposit, withdrawal and balance.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "usd-statement.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "scope: currency USD is not supported (MYR only)"
+      ],
+      "summary": "Business, currency or period could not be established from the document.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-03f63436-acfb-428d-a8dd-c56200453e1a",
+        "latencyMs": 3200,
+        "mode": "LIVE",
+        "inputTokens": 3296,
+        "outputTokens": 1168,
+        "estimatedUsd": 0.0011951999999999998
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "USD"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank account statement with separate withdrawal and deposit columns, matching a SPLIT_IN_OUT representation.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-120b",
+      "document": "staff-roster.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "role: The model abstained: The file is a staff roster, not a financial statement."
+      ],
+      "summary": "The model reported that this is not a supported financial document.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-40b4b2ab-035e-4061-82a6-28df1ad3918c",
+        "latencyMs": 1754,
+        "mode": "LIVE",
+        "inputTokens": 2785,
+        "outputTokens": 561,
+        "estimatedUsd": 0.0007543499999999999
+      },
+      "proposal": {
+        "role": "UNSUPPORTED",
+        "headerLine": 0,
+        "columns": {
+          "recordId": null,
+          "date": null,
+          "reference": null,
+          "description": null,
+          "counterparty": null,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": null,
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": "PLAIN",
+        "scope": {
+          "businessId": null,
+          "businessName": null,
+          "currency": null,
+          "statementPeriod": null
+        },
+        "rationale": "The file is a staff roster, not a financial statement.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "bank-statement-march-2026-export.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-10fea77f-d297-49f4-900a-7c26eb47c825",
+        "latencyMs": 1663,
+        "mode": "LIVE",
+        "inputTokens": 3306,
+        "outputTokens": 809,
+        "estimatedUsd": 0.00049065
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank statement with separate withdrawal and deposit columns, dates in DD/MM/YYYY, and comma thousand separators.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "general-ledger-cash-march-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Cash-account ledger: 57 transactions, DEMO-001 · 2026-03 · MYR, net 30924.93; 16 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-b4c569e5-01e8-4a57-a4ea-b7e594017f6c",
+        "latencyMs": 1813,
+        "mode": "LIVE",
+        "inputTokens": 3111,
+        "outputTokens": 1113,
+        "estimatedUsd": 0.0005672249999999999
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a general ledger cash account detail with debit and credit columns, no balance column, and uses DD-Mon-YYYY dates and comma‑thousand formatting.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "penyata-bank-mac-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-83c6849d-440d-4bc3-ace1-31ea2cc1b75a",
+        "latencyMs": 1648,
+        "mode": "LIVE",
+        "inputTokens": 3266,
+        "outputTokens": 685,
+        "estimatedUsd": 0.00045044999999999997
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": null,
+          "date": 0,
+          "reference": 1,
+          "description": 2,
+          "counterparty": 3,
+          "amount": 4,
+          "direction": 5,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": 6,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "AMOUNT_AND_DIRECTION",
+        "directionTokens": {
+          "inflow": [
+            "CR"
+          ],
+          "outflow": [
+            "DR"
+          ]
+        },
+        "dateFormat": "DD.MM.YYYY",
+        "numberFormat": "DOT_THOUSANDS_COMMA_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "Mac 2026"
+          }
+        },
+        "rationale": "The file is a bank statement with a header line at index 6, dates in DD.MM.YYYY format, amounts using dot thousands and comma decimal, and a direction column with CR/DR tokens.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-signed-march-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Cash-account ledger: 57 transactions, DEMO-001 · 2026-03 · MYR, net 30924.93; 16 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-3f5cf524-98c9-45f4-b7dc-57c1178ec1b4",
+        "latencyMs": 1875,
+        "mode": "LIVE",
+        "inputTokens": 3006,
+        "outputTokens": 1010,
+        "estimatedUsd": 0.0005284500000000001
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 3,
+        "columns": {
+          "recordId": 0,
+          "date": 1,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": "PLAIN",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file is a general ledger detail of a cash account with signed amounts, no balance column, no business name or statement period.",
+        "unresolved": [
+          "Missing businessName",
+          "Missing statementPeriod",
+          "Missing balance column"
+        ]
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "prompt-injection-in-cell.csv",
+      "expected": "ACCEPT_EXACT_OR_QUARANTINE",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-97cc23df-a36c-4366-b012-3c1eabf021a7",
+        "latencyMs": 1951,
+        "mode": "LIVE",
+        "inputTokens": 3298,
+        "outputTokens": 998,
+        "estimatedUsd": 0.00054675
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank statement with separate withdrawal and deposit columns, so SPLIT_IN_OUT representation is appropriate.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "opaque-headings-no-balance.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "direction: Opaque headings and no running balance: direction cannot be confirmed"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-315a7edc-d99a-49e7-b18f-cf89f2c92f48",
+        "latencyMs": 2305,
+        "mode": "LIVE",
+        "inputTokens": 3212,
+        "outputTokens": 1336,
+        "estimatedUsd": 0.0006417
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 3,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file is a bank statement with separate debit and credit columns; dates are DD/MM/YYYY; amounts use comma thousands separator; record ID is column 1; reference is column 2; description and counterparty are columns 3 and 4; no balance or account columns.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "corrupted-running-balance.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "balance: line 30: balance change ≠ signed amount (54 of 56 agree)"
+      ],
+      "summary": "The running balance contradicts the proposed amounts or directions.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-50f66eb9-0a85-49c1-bd0f-6e9d6f5c37b0",
+        "latencyMs": 1918,
+        "mode": "LIVE",
+        "inputTokens": 3302,
+        "outputTokens": 1018,
+        "estimatedUsd": 0.0005530499999999999
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "Malaysian Ringgit (MYR)"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a bank statement with separate withdrawal and deposit columns, matching the header line 8.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "mislabelled-withdrawal-deposit.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "balance: line 11: balance change ≠ signed amount (0 of 56 agree)"
+      ],
+      "summary": "The running balance contradicts the proposed amounts or directions.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-03337688-1f28-4413-b807-92d6c52c5a7b",
+        "latencyMs": 2107,
+        "mode": "LIVE",
+        "inputTokens": 3305,
+        "outputTokens": 1207,
+        "estimatedUsd": 0.0006099749999999999
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 5,
+          "moneyOut": 6,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The document is a bank account statement with a header line at index 8. It contains separate Deposit and Withdrawal columns, so the SPLIT_IN_OUT representation is appropriate. Dates are in DD/MM/YYYY format and numbers use comma thousands with dot decimal. Business details are extracted from the header lines.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "usd-statement.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "scope: currency evidence not found verbatim"
+      ],
+      "summary": "Business, currency or period could not be established from the document.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-db23885d-7d8e-45e2-a4e9-2f693d1dedb4",
+        "latencyMs": 1487,
+        "mode": "LIVE",
+        "inputTokens": 3296,
+        "outputTokens": 736,
+        "estimatedUsd": 0.000468
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 8,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": 7,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "US Dollar (USD)"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a header with account details and a table of individual transactions with separate withdrawal and deposit columns, indicating a bank statement. The date format is DD/MM/YYYY and numbers use commas as thousand separators.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "document": "staff-roster.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "role: The model abstained: The file contains staff roster data, not a financial statement."
+      ],
+      "summary": "The model reported that this is not a supported financial document.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-00db1cb5-d862-4946-9359-a60dd6a40ece",
+        "latencyMs": 1116,
+        "mode": "LIVE",
+        "inputTokens": 2785,
+        "outputTokens": 526,
+        "estimatedUsd": 0.00036667499999999995
+      },
+      "proposal": {
+        "role": "UNSUPPORTED",
+        "headerLine": 0,
+        "columns": {
+          "recordId": null,
+          "date": null,
+          "reference": null,
+          "description": null,
+          "counterparty": null,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": null,
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": null,
+        "scope": {
+          "businessId": null,
+          "businessName": null,
+          "currency": null,
+          "statementPeriod": null
+        },
+        "rationale": "The file contains staff roster data, not a financial statement.",
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "bank-statement-march-2026-export.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-65ea874e-b6ce-46b4-b164-3a6f6a4d9675",
+        "latencyMs": 1343,
+        "mode": "LIVE",
+        "inputTokens": 2428,
+        "outputTokens": 328,
+        "estimatedUsd": 0.0032544
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": 7,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": null,
+          "currency": null,
+          "date": 0,
+          "debit": null,
+          "description": 3,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "recordId": 1,
+          "reference": 2
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 8,
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "rationale": "The document is a bank statement with separate columns for withdrawals (debits) and deposits (credits), along with a running balance. The date format is inferred as DD/MM/YYYY based on the statement period starting on 01/03/2026.",
+        "representation": "SPLIT_IN_OUT",
+        "role": "BANK_STATEMENT",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "general-ledger-cash-march-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Cash-account ledger: 57 transactions, DEMO-001 · 2026-03 · MYR, net 30924.93; 16 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-08da282b-3404-46fd-a39e-8cffe06ebe5c",
+        "latencyMs": 1723,
+        "mode": "LIVE",
+        "inputTokens": 2195,
+        "outputTokens": 299,
+        "estimatedUsd": 0.002952
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": null,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": 6,
+          "currency": null,
+          "date": 0,
+          "debit": 5,
+          "description": 3,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "recordId": 1,
+          "reference": 2
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 6,
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "rationale": "The document is a general ledger detail for a cash account, indicated by the title and the presence of Dr/Cr columns. The layout uses a standard debit/credit representation where debits increase the cash balance and credits decrease it.",
+        "representation": "DEBIT_CREDIT",
+        "role": "GENERAL_LEDGER",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "penyata-bank-mac-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-4c6b8316-a040-420e-85fe-c619df03f2a9",
+        "latencyMs": 1149,
+        "mode": "LIVE",
+        "inputTokens": 2337,
+        "outputTokens": 314,
+        "estimatedUsd": 0.0031256000000000005
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": 4,
+          "balance": 6,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 3,
+          "credit": null,
+          "currency": null,
+          "date": 0,
+          "debit": null,
+          "description": 2,
+          "direction": 5,
+          "moneyIn": null,
+          "moneyOut": null,
+          "recordId": null,
+          "reference": 1
+        },
+        "dateFormat": "DD.MM.YYYY",
+        "directionTokens": {
+          "inflow": [
+            "CR"
+          ],
+          "outflow": [
+            "DR"
+          ]
+        },
+        "headerLine": 6,
+        "numberFormat": "DOT_THOUSANDS_COMMA_DECIMAL",
+        "rationale": "The document is a bank statement (Penyata Akaun Semasa) with a header on line 6. It uses an unsigned amount column (Jumlah) and a Dr/Cr direction column, where CR indicates inflow and DR indicates outflow.",
+        "representation": "AMOUNT_AND_DIRECTION",
+        "role": "BANK_STATEMENT",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "Mac 2026"
+          }
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "ledger-signed-march-2026.csv",
+      "expected": "ACCEPT",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Cash-account ledger: 57 transactions, DEMO-001 · 2026-03 · MYR, net 30924.93; 16 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-660a915a-4267-4b8f-a385-9d262eaf9538",
+        "latencyMs": 957,
+        "mode": "LIVE",
+        "inputTokens": 2078,
+        "outputTokens": 258,
+        "estimatedUsd": 0.0026944
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": 5,
+          "balance": null,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": null,
+          "currency": null,
+          "date": 1,
+          "debit": null,
+          "description": 3,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "recordId": 0,
+          "reference": 2
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 3,
+        "numberFormat": "PLAIN",
+        "rationale": "This is a general ledger detail for a cash account, identified by the 'Entry' IDs and 'Net cash movement' column. The representation is SIGNED_AMOUNT because the single amount column uses negative values for cash outflows.",
+        "representation": "SIGNED_AMOUNT",
+        "role": "GENERAL_LEDGER",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "prompt-injection-in-cell.csv",
+      "expected": "ACCEPT_EXACT_OR_QUARANTINE",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-37482f23-c1d6-4c44-a359-76e14657970a",
+        "latencyMs": 1237,
+        "mode": "LIVE",
+        "inputTokens": 2419,
+        "outputTokens": 324,
+        "estimatedUsd": 0.0032311999999999996
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": 7,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": null,
+          "currency": null,
+          "date": 0,
+          "debit": null,
+          "description": 3,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "recordId": 1,
+          "reference": 2
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 8,
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "rationale": "The document is a bank statement with separate columns for withdrawals and deposits, indicating a SPLIT_IN_OUT representation. The date format is inferred as DD/MM/YYYY based on the statement period starting on 01/03/2026.",
+        "representation": "SPLIT_IN_OUT",
+        "role": "BANK_STATEMENT",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "opaque-headings-no-balance.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "direction: Opaque headings and no running balance: direction cannot be confirmed"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-31d21384-5046-4df7-a40c-fae5b7638ec0",
+        "latencyMs": 1274,
+        "mode": "LIVE",
+        "inputTokens": 2289,
+        "outputTokens": 342,
+        "estimatedUsd": 0.0031991999999999997
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": null,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": null,
+          "currency": null,
+          "date": 0,
+          "debit": null,
+          "description": 3,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "recordId": 1,
+          "reference": 2
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 3,
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "rationale": "The document is a bank statement with generic column headers. The direction is embedded in the description column (e.g., '[credit]', '[debit]'), and the amounts are split into two columns: one for outflows (debits) and one for inflows (credits).",
+        "representation": "SPLIT_IN_OUT",
+        "role": "BANK_STATEMENT",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "unresolved": [
+          "The header line contains generic labels (Col1-Col7) rather than descriptive names.",
+          "The statement period is not explicitly stated in the header or footer lines provided, though the dates range from 01/03/2026 to 31/03/2026."
+        ]
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "corrupted-running-balance.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "balance: line 30: balance change ≠ signed amount (54 of 56 agree)"
+      ],
+      "summary": "The running balance contradicts the proposed amounts or directions.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-64457f04-fece-444c-adde-559697f69902",
+        "latencyMs": 1110,
+        "mode": "LIVE",
+        "inputTokens": 2422,
+        "outputTokens": 311,
+        "estimatedUsd": 0.0031816000000000006
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": 7,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": null,
+          "currency": null,
+          "date": 0,
+          "debit": null,
+          "description": 3,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "recordId": 1,
+          "reference": 2
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 8,
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "rationale": "This is a bank statement with separate withdrawal and deposit columns, indicating a SPLIT_IN_OUT representation. The dates follow the DD/MM/YYYY format based on the statement period and sample values.",
+        "representation": "SPLIT_IN_OUT",
+        "role": "BANK_STATEMENT",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "mislabelled-withdrawal-deposit.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "balance: line 11: balance change ≠ signed amount (0 of 56 agree)"
+      ],
+      "summary": "The running balance contradicts the proposed amounts or directions.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-2d089922-c4a9-4787-b181-fd0c369b8c7e",
+        "latencyMs": 1108,
+        "mode": "LIVE",
+        "inputTokens": 2425,
+        "outputTokens": 312,
+        "estimatedUsd": 0.003188
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": 7,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": null,
+          "currency": null,
+          "date": 0,
+          "debit": null,
+          "description": 3,
+          "direction": null,
+          "moneyIn": 5,
+          "moneyOut": 6,
+          "recordId": 1,
+          "reference": 2
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 8,
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "rationale": "This is a bank statement with separate Deposit and Withdrawal columns, indicating a SPLIT_IN_OUT representation. The dates follow the DD/MM/YYYY format based on the statement period and sample values.",
+        "representation": "SPLIT_IN_OUT",
+        "role": "BANK_STATEMENT",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "usd-statement.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "scope: currency USD is not supported (MYR only)"
+      ],
+      "summary": "Business, currency or period could not be established from the document.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-1e8cbaf7-ca9a-4fb6-b539-18644b5faa1b",
+        "latencyMs": 1078,
+        "mode": "LIVE",
+        "inputTokens": 2417,
+        "outputTokens": 309,
+        "estimatedUsd": 0.0031696000000000003
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": 7,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": 4,
+          "credit": null,
+          "currency": null,
+          "date": 0,
+          "debit": null,
+          "description": 3,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "recordId": 1,
+          "reference": 2
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 8,
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "rationale": "This is a bank statement with separate withdrawal and deposit columns, indicating a SPLIT_IN_OUT representation. The dates follow DD/MM/YYYY format based on the statement period and sample values.",
+        "representation": "SPLIT_IN_OUT",
+        "role": "BANK_STATEMENT",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 5,
+            "literal": "USD"
+          },
+          "statementPeriod": {
+            "line": 4,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "unresolved": []
+      }
+    },
+    {
+      "model": "qwen/qwen3.8-27b",
+      "document": "staff-roster.csv",
+      "expected": "QUARANTINE",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "failedGates": [
+        "role: The model abstained: The document is a staff roster listing employees, shift dates, hours, and stations. It does not contain financial transaction data, account balances, or monetary amounts."
+      ],
+      "summary": "The model reported that this is not a supported financial document.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "qwen/qwen3.8-27b",
+        "requestId": "chatcmpl-aa27a4ba-9be3-496e-b62d-54125832d9ef",
+        "latencyMs": 955,
+        "mode": "LIVE",
+        "inputTokens": 1786,
+        "outputTokens": 208,
+        "estimatedUsd": 0.0022608000000000003
+      },
+      "proposal": {
+        "columns": {
+          "account": null,
+          "amount": null,
+          "balance": null,
+          "businessId": null,
+          "businessName": null,
+          "counterparty": null,
+          "credit": null,
+          "currency": null,
+          "date": null,
+          "debit": null,
+          "description": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "recordId": null,
+          "reference": null
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "headerLine": 0,
+        "numberFormat": "PLAIN",
+        "rationale": "The document is a staff roster listing employees, shift dates, hours, and stations. It does not contain financial transaction data, account balances, or monetary amounts.",
+        "representation": null,
+        "role": "UNSUPPORTED",
+        "scope": {
+          "businessId": null,
+          "businessName": null,
+          "currency": null,
+          "statementPeriod": null
+        },
+        "unresolved": []
+      }
+    }
+  ]
+}

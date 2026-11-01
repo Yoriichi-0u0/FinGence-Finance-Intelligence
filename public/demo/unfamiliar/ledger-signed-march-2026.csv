@@ -1,0 +1,61 @@
+Business,DEMO-001
+Currency,MYR
+
+Entry,Date,Reference,Description,Counterparty,Net cash movement (MYR)
+GL-DEMO-0001,2026-03-02,F8TAEWZCCLQV,Marketplace payout,GrabFood Marketplace Payout,1567.26
+GL-DEMO-0002,2026-03-03,29TPR9UKHD7J,Daily POS settlement,POS Sales Settlement,2615.15
+GL-DEMO-0003,2026-03-03,TYQXDMRHVE4U,Ingredient purchase,Borneo Fresh Supplies,-778.57
+GL-DEMO-0004,2026-03-03,UBBVNKHA9U9W,Packaging purchase,Kuching Packaging Supply,-235.94
+GL-DEMO-0005,2026-03-05,77GU84UDG5UL,Catering invoice receipt,Hartanah Events Catering,2569.94
+GL-DEMO-0006,2026-03-05,77GU84UDG5UL,Catering invoice receipt (duplicate posting),Hartanah Events Catering,2569.94
+GL-DEMO-0007,2026-03-05,GLWP6CKB88H8,Ingredient purchase,Borneo Fresh Supplies,-712.28
+GL-DEMO-0008,2026-03-05,KJBWCPYSJZLX,Daily POS settlement,POS Sales Settlement,2231.48
+GL-DEMO-0009,2026-03-05,PPX6NKKMKSWW,Daily POS settlement,POS Sales Settlement,1852.50
+GL-DEMO-0010,2026-03-06,CRYXRNFB2NGG,Marketplace payout,GrabFood Marketplace Payout,1297.88
+GL-DEMO-0011,2026-03-06,NMB665QBX6L8,Daily POS settlement,POS Sales Settlement,2204.02
+GL-DEMO-0012,2026-03-07,FBBVRYD2WJZX,Packaging purchase,Kuching Packaging Supply,-190.12
+GL-DEMO-0013,2026-03-07,LBQQ2Y7SY33Z,Daily POS settlement,POS Sales Settlement,2413.72
+GL-DEMO-0014,2026-03-07,SQPRVG4XJC8N,Payroll transfer,Staff Payroll,-9405.37
+GL-DEMO-0015,2026-03-07,T6PZPSLNALJM,Ingredient purchase,Borneo Fresh Supplies,-454.76
+GL-DEMO-0016,2026-03-08,XCB3ECHRCECU,Daily POS settlement,POS Sales Settlement,2398.93
+GL-DEMO-0017,2026-03-09,BKHUT9PEA6AG,Marketplace payout,GrabFood Marketplace Payout,1279.47
+GL-DEMO-0018,2026-03-09,USQKNP7W3B43,Daily POS settlement,POS Sales Settlement,2616.54
+GL-DEMO-0019,2026-03-10,WVCWU85ATWGN,Ingredient purchase,Borneo Fresh Supplies,-445.97
+GL-DEMO-0020,2026-03-11,MQEBSJTZM29Z,Daily POS settlement,POS Sales Settlement,2702.55
+GL-DEMO-0021,2026-03-12,9BWPN4BHRLTT,Daily POS settlement,POS Sales Settlement,2303.44
+GL-DEMO-0022,2026-03-12,HY57BKVPRA9G,Marketplace payout,GrabFood Marketplace Payout,1310.52
+GL-DEMO-0023,2026-03-12,WLX4CB7QGJ6Q,Packaging purchase,Kuching Packaging Supply,-264.50
+GL-DEMO-0024,2026-03-13,TDY7R4L4G95A,Daily POS settlement,POS Sales Settlement,2816.36
+GL-DEMO-0025,2026-03-13,YR5G89R3MJM4,Ingredient purchase,Borneo Fresh Supplies,-598.14
+GL-DEMO-0026,2026-03-14,7ZKWTZS3CWJ8,Shoplot rent,Jalan Demo Properties,-4200.00
+GL-DEMO-0027,2026-03-14,89AEXPZBW5XD,Electricity bill,Sarawak Energy,-700.30
+GL-DEMO-0028,2026-03-14,GUFR2M6C3529,Catering invoice receipt,Hartanah Events Catering,2650.84
+GL-DEMO-0029,2026-03-15,DJQNUZ9LSL8H,Ingredient purchase,Borneo Fresh Supplies,-547.18
+GL-DEMO-0030,2026-03-15,W4U9MBT824HX,Daily POS settlement,POS Sales Settlement,2220.57
+GL-DEMO-0031,2026-03-16,DMQ494JYLS8G,Daily POS settlement,POS Sales Settlement,2251.42
+GL-DEMO-0032,2026-03-16,KXNY7GY9V4F9,Marketplace payout,GrabFood Marketplace Payout,977.38
+GL-DEMO-0033,2026-03-16,SGT3ZQHHJALD,Packaging purchase,Kuching Packaging Supply,-247.12
+GL-DEMO-0034,2026-03-17,QT6RVA2UKS8W,Daily POS settlement,POS Sales Settlement,2665.16
+GL-DEMO-0035,2026-03-18,5YFPYWMM8H4C,Ingredient purchase,Borneo Fresh Supplies,-6850.00
+GL-DEMO-0036,2026-03-18,A4VGJHPVK4LW,Ingredient purchase,Borneo Fresh Supplies,-540.98
+GL-DEMO-0037,2026-03-19,B95GN68P2FVT,Marketplace payout,GrabFood Marketplace Payout,1216.94
+GL-DEMO-0038,2026-03-19,U2JKSMEHXEF6,Daily POS settlement,POS Sales Settlement,2448.65
+GL-DEMO-0039,2026-03-20,DPX6X3RQYJSQ,Daily POS settlement,POS Sales Settlement,2479.80
+GL-DEMO-0040,2026-03-21,2559G3TGZGZA,Ingredient purchase,Borneo Fresh Supplies,-503.63
+GL-DEMO-0041,2026-03-21,8CJQDS5K7A7C,Supplier payment,Ace Niaga Trading,-2480.00
+GL-DEMO-0042,2026-03-21,EE8MXJ5VGD9V,Packaging purchase,Kuching Packaging Supply,-175.87
+GL-DEMO-0043,2026-03-21,EV6NH92F4ESG,Daily POS settlement,POS Sales Settlement,2917.32
+GL-DEMO-0044,2026-03-21,NQR6KXNVT9Q4,Payroll transfer,Staff Payroll,-9142.81
+GL-DEMO-0045,2026-03-22,6DXZ8Y3C7VXW,Marketplace payout,GrabFood Marketplace Payout,988.05
+GL-DEMO-0046,2026-03-23,3BZV9A5JTYAK,Daily POS settlement,POS Sales Settlement,2098.29
+GL-DEMO-0047,2026-03-23,LYGW3V48BY7Q,Ingredient purchase,Borneo Fresh Supplies,-866.33
+GL-DEMO-0048,2026-03-23,PDTNCYC6RSK2,Catering invoice receipt,Hartanah Events Catering,2723.68
+GL-DEMO-0049,2026-03-24,KX89GMG6W5TF,Daily POS settlement,POS Sales Settlement,2749.24
+GL-DEMO-0050,2026-03-24,ZT6UDXCZ4ZJK,Packaging purchase,Kuching Packaging Supply,-214.50
+GL-DEMO-0051,2026-03-25,9PYJBVR2JHHX,Daily POS settlement,POS Sales Settlement,3097.70
+GL-DEMO-0052,2026-03-25,LXMNHRHJ8858,Packaging purchase,Kuching Packaging Supply,-214.82
+GL-DEMO-0053,2026-03-26,8EDVWNGZ4RZ6,Marketplace payout,GrabFood Marketplace Payout,1540.83
+GL-DEMO-0054,2026-03-26,LAR47XE8KLT2,Ingredient purchase,Borneo Fresh Supplies,-601.77
+GL-DEMO-0055,2026-03-27,NMETF5M33G7Z,Daily POS settlement,POS Sales Settlement,2107.92
+GL-DEMO-0056,2026-03-29,Q35W4CZSQYGK,Cheque 000431 to Borneo Fresh Supplies (unpresented),Borneo Fresh Supplies,-733.20
+GL-DEMO-0057,2026-03-31,E3DJ236GZZD7,Cash deposit in transit,POS Sales Settlement,2145.60
