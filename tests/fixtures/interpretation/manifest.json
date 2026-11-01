@@ -1,0 +1,34 @@
+{
+  "generator": "fingence-unfamiliar-layouts-v1",
+  "origin": "PUBLIC_FICTIONAL_SYNTHETIC",
+  "derivedFrom": [
+    "demo-bank-statement-2026-03.csv",
+    "demo-general-ledger-2026-03.csv"
+  ],
+  "files": {
+    "opaque-headings-no-balance.csv": {
+      "sha256": "fd36e9f7677b3eb8db36383d2ab71f4056a61151414d3cbee1c052042ef56d07",
+      "bytes": 7024
+    },
+    "corrupted-running-balance.csv": {
+      "sha256": "5555b1fe172d3297c8d73b2fc7b47494f89d7b3ebbffb0765a50b1fed6e89981",
+      "bytes": 8044
+    },
+    "mislabelled-withdrawal-deposit.csv": {
+      "sha256": "7cbceb7503d5a7d70155a5a84d229965599b8df436638d0bd9d392b1763b8e9b",
+      "bytes": 8044
+    },
+    "prompt-injection-in-cell.csv": {
+      "sha256": "480019c2b07d7d7a66d0752c18681adae38beb097145fe28a92298a457657290",
+      "bytes": 8151
+    },
+    "usd-statement.csv": {
+      "sha256": "556790652c2dbbcd2a859f914d44f7c2fb991e8f486146abb122bb0a50844d53",
+      "bytes": 8039
+    },
+    "staff-roster.csv": {
+      "sha256": "b669b6a0aa350ed543483a3e9dae11930c7e6452d58b0f95a58f15e9d08bcfff",
+      "bytes": 586
+    }
+  }
+}

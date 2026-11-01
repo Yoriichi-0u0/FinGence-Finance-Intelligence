@@ -1,0 +1,26 @@
+{
+  "generator": "fingence-unfamiliar-layouts-v1",
+  "origin": "PUBLIC_FICTIONAL_SYNTHETIC",
+  "derivedFrom": [
+    "demo-bank-statement-2026-03.csv",
+    "demo-general-ledger-2026-03.csv"
+  ],
+  "files": {
+    "bank-statement-march-2026-export.csv": {
+      "sha256": "d44f297560622118249a6fa794e3dbfecb71ed0c703daac0d5e2d132e1dc2538",
+      "bytes": 8044
+    },
+    "general-ledger-cash-march-2026.csv": {
+      "sha256": "2becb51eef0562366b434e9ffd81360ac00604702d3b85f880c9530d374f0de2",
+      "bytes": 5461
+    },
+    "penyata-bank-mac-2026.csv": {
+      "sha256": "a45c90ca68b297f6292d6eea7fa9539fb1319fad44ca983928ebd6fd8056887b",
+      "bytes": 6920
+    },
+    "ledger-signed-march-2026.csv": {
+      "sha256": "380642c030f7a8c0e6ef4f2e503596ecea02a5aa876612474b823bb90b3d720a",
+      "bytes": 5160
+    }
+  }
+}
