@@ -39,6 +39,15 @@ describe('AI-interpreted unfamiliar layouts reproduce the Phase 1 results', () =
     });
 });
 
+describe('processing identity follows the verified content, not the proposal wording', () => {
+    it('two different proposals that read the documents identically give the same processing ID', async () => {
+        const inputs = [unfamiliar('bank-statement-march-2026-export.csv'), unfamiliar('general-ledger-cash-march-2026.csv')];
+        const variant: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); p.rationale = 'Different wording.'; p.scope.statementPeriod = null; p.unresolved = ['none']; return { proposal: p, receipt }; } };
+        const a = await processDocuments(inputs, undefined, undefined, { interpreter: recorded }), b = await processDocuments(inputs, undefined, undefined, { interpreter: variant });
+        expect(b.processingId).toBe(a.processingId);
+    });
+});
+
 describe('without a usable interpreter the Phase 1 behaviour is unchanged', () => {
     it('quarantines unfamiliar layouts when no interpreter is configured', async () => {
         const c = await processDocuments([unfamiliar('bank-statement-march-2026-export.csv'), sample(LEDGER)]);

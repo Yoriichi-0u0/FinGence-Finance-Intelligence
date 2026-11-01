@@ -96,7 +96,7 @@ materialize canonical CSV (lineage: canonical row → source line)
 existing Extract → Verify (second parser) → Reconcile → Analyze → Forecast → Report
 ```
 
-- **Processing identity.** The processing ID is `H(version, role:sha256, interpretation:sha256:mappingHash)`. It changes when the accepted mapping changes and is stable for equivalent proposals.
+- **Processing identity.** The processing ID is `H(version, role:sha256:canonicalSha256prefix)`. It follows the verified canonical content, not the wording of the model's proposal, so two live runs that read the document the same way give the same ID.
 - **Reload.** An accepted proposal and its receipt are kept with the documents in `sessionStorage`. A reload re-runs the gates on the stored proposal instead of calling the model again; the receipt stays marked as the original live call.
 - **Deployment.** The route answers only when `GROQ_API_KEY` and `FINGENCE_AI_GATEWAY=1` are set. Otherwise it returns 404 and the UI behaves exactly like Phase 1.
 - **Request bounds.** Bodies are limited to 48 KB, with a per-instance rate limit and no persistence or logging of content.

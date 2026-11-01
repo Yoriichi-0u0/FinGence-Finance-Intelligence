@@ -153,7 +153,8 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
                 if (verdict.canonical && verdict.mappingKey) {
                     bytes = verdict.canonical.bytes;
                     record.canonicalSha256 = await digest(bytes); record.canonicalNet = verdict.canonical.net;
-                    record.mappingHash = (await digest(new TextEncoder().encode(verdict.mappingKey))).slice(0, 16);
+                    // Identity follows the verified canonical content, so equivalent proposals give the same processing ID.
+                    record.mappingHash = record.canonicalSha256.slice(0, 16);
                     Object.assign(doc, { role: verdict.role, decision: 'AUTO_ACCEPTED', reason: `AI layout proposal accepted after ${verdict.checks.length} deterministic checks.` });
                 } else doc.reason = `AI layout proposal quarantined: ${verdict.summary}`;
             } catch (error) {
