@@ -30,11 +30,12 @@ export async function POST(request: Request) {
     try { body = JSON.parse(text); } catch { return json({ code: 'INVALID_JSON' }, 400); }
     const evidence = evidenceSchema.safeParse((body as { evidence?: unknown } | null)?.evidence);
     if (!evidence.success) return json({ code: 'INVALID_EVIDENCE' }, 400);
-    if (!limiter.take()) return json({ code: 'RATE_LIMITED' }, 429);
+    if (!limiter.take()) return json({ code: 'RATE_LIMITED', retryAfterSeconds: 60 }, 429);
     try {
         return json(await proposeLayout(evidence.data));
     } catch (error) {
         const code = error instanceof InterpreterUnavailable ? error.code : 'INTERPRETER_FAILED';
-        return json({ code }, code === 'RATE_LIMITED' ? 429 : 502);
+        const retryAfterSeconds = error instanceof InterpreterUnavailable ? error.retryAfterSeconds : undefined;
+        return json(code === 'RATE_LIMITED' ? { code, retryAfterSeconds: Math.ceil(retryAfterSeconds ?? 20) } : { code }, code === 'RATE_LIMITED' ? 429 : 502);
     }
 }

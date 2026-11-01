@@ -56,7 +56,7 @@ describe('AI interpretation gateway', () => {
         const r = await route();
         const response = await r.POST(post({ evidence }));
         expect(response.status).toBe(429);
-        expect(await response.json()).toEqual({ code: 'RATE_LIMITED' });
+        expect(await response.json()).toEqual({ code: 'RATE_LIMITED', retryAfterSeconds: 20 });
         expect(limited).toHaveBeenCalledTimes(1);
         vi.stubGlobal('fetch', groq(500, {}));
         expect((await r.POST(post({ evidence }))).status).toBe(502);

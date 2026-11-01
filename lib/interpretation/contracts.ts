@@ -59,4 +59,5 @@ export type ModelReceipt = {
 };
 export type InterpretationResult = { proposal: unknown; receipt: ModelReceipt };
 export interface LayoutInterpreter { propose(evidence: LayoutEvidence): Promise<InterpretationResult> }
-export class InterpreterUnavailable extends Error { constructor(readonly code: string) { super(code); } }
+/** `retryAfterSeconds` is set only for a provider refusal (HTTP 429), which is never billed and may be retried. */
+export class InterpreterUnavailable extends Error { constructor(readonly code: string, readonly retryAfterSeconds?: number) { super(code); } }

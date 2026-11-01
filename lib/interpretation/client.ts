@@ -11,14 +11,24 @@ export async function gatewayStatus(): Promise<GatewayStatus> {
     } catch { return { available: false }; }
 }
 
+async function callGateway(evidence: Parameters<LayoutInterpreter['propose']>[0]): Promise<InterpretationResult> {
+    let response: Response;
+    try { response = await fetch('/api/ai/interpret', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ evidence }) }); }
+    catch { throw new InterpreterUnavailable('GATEWAY_UNREACHABLE'); }
+    const body = await response.json().catch(() => null) as (InterpretationResult & { code?: string; retryAfterSeconds?: number }) | null;
+    if (!response.ok || !body?.receipt) throw new InterpreterUnavailable(body?.code ?? `GATEWAY_HTTP_${response.status}`, response.status === 429 ? body?.retryAfterSeconds : undefined);
+    return { proposal: body.proposal, receipt: body.receipt };
+}
+/** One retry, only after a rate-limit refusal (never billed) and only when the wait is short. Any other failure is final. */
 export const gatewayInterpreter: LayoutInterpreter = {
     async propose(evidence) {
-        let response: Response;
-        try { response = await fetch('/api/ai/interpret', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ evidence }) }); }
-        catch { throw new InterpreterUnavailable('GATEWAY_UNREACHABLE'); }
-        const body = await response.json().catch(() => null) as (InterpretationResult & { code?: string }) | null;
-        if (!response.ok || !body?.receipt) throw new InterpreterUnavailable(body?.code ?? `GATEWAY_HTTP_${response.status}`);
-        return { proposal: body.proposal, receipt: body.receipt };
+        try { return await callGateway(evidence); }
+        catch (error) {
+            const wait = error instanceof InterpreterUnavailable ? error.retryAfterSeconds : undefined;
+            if (wait === undefined || wait > 45) throw error;
+            await new Promise(resolve => setTimeout(resolve, wait * 1000 + 500));
+            return callGateway(evidence);
+        }
     },
 };
 

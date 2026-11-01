@@ -53,14 +53,14 @@ describe.skipIf(!LIVE)('live layout interpretation evaluation', () => {
             const evidence = buildEvidence(table, 'f'.repeat(64), d.name);
             let row: Record<string, unknown> = { model, document: d.name, expected: d.expect };
             try {
-                const { proposal, receipt } = await proposeLayout(evidence, { model });
+                const { proposal, receipt } = await proposeLayout(evidence, { model, reasoningEffort: (process.env.FINGENCE_AI_EVAL_REASONING as 'low' | 'medium' | 'high' | undefined) ?? 'low' });
                 const verdict = verifyProposal(table, proposal);
                 const reference = d.reference ? verifyProposal(table, CORRECT[d.reference]) : null;
                 const exact = !!verdict.canonical && !!reference?.canonical && decode(verdict.canonical.bytes) === decode(reference.canonical.bytes);
                 const accepted = verdict.decision === 'AUTO_ACCEPTED';
                 const falseAcceptance = accepted && !exact;
                 const outcome = falseAcceptance ? 'FALSE_ACCEPTANCE' : accepted ? 'ACCEPTED_EXACT' : 'QUARANTINED';
-                row = { ...row, outcome, meetsExpectation: d.expect === 'ACCEPT' ? outcome === 'ACCEPTED_EXACT' : d.expect === 'QUARANTINE' ? outcome === 'QUARANTINED' : !falseAcceptance,
+                row = { ...row, reasoning: process.env.FINGENCE_AI_EVAL_REASONING ?? 'low', outcome, meetsExpectation: d.expect === 'ACCEPT' ? outcome === 'ACCEPTED_EXACT' : d.expect === 'QUARANTINE' ? outcome === 'QUARANTINED' : !falseAcceptance,
                     failedGates: verdict.checks.filter(c => !c.passed).map(c => `${c.id}: ${c.detail}`), summary: verdict.summary,
                     mapping: d.reference && d.expect !== 'QUARANTINE' ? fieldAccuracy(proposal, CORRECT[d.reference]) : null, receipt, proposal };
                 await sleep(Math.max(8_000, ((receipt.inputTokens ?? 3000) + (receipt.outputTokens ?? 1000)) / 8000 * 60_000 + 2_000));

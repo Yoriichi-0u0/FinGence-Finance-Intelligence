@@ -1,5 +1,15 @@
 # FinGence — current technical entrypoint
 
+## FinGence 2.0 AI M1 layout interpretation — 2 November 2026
+
+[AI roadmap and model selection](../architecture/fingence2-ai-roadmap.md) and the
+[M1 runbook](../integration/fingence2-ai-m1-layout-interpretation.md). Groq `openai/gpt-oss-120b`
+proposes the layout of unfamiliar bank statements and cash-account ledgers (strict JSON schema;
+it never supplies amounts). `lib/interpretation/gates.ts` accepts a proposal only when every row of the
+original bytes re-derives it; the canonical Phase 1 pipeline then runs unchanged. The gateway
+`/api/ai/interpret` is 404 unless `FINGENCE_AI_GATEWAY=1` and `GROQ_API_KEY` are set; without it the
+app is exactly Phase 1. Production enablement is an owner decision.
+
 ## FinGence 2.0 Phase 1 connected synthetic demo — 1 November 2026
 
 [Phase 1 runbook](../integration/fingence2-phase1-demo.md): hosted and plain `pnpm dev` open with

@@ -12,6 +12,10 @@ export const PROMPT_REVISION = 'layout-interpretation-1';
 
 /** The hosted gateway answers only when the key is present AND the operator explicitly enabled it. */
 export function aiGatewayEnabled() { return process.env.FINGENCE_AI_GATEWAY === '1' && !!process.env.GROQ_API_KEY; }
+export function reasoningEffort(): 'low' | 'medium' | 'high' {
+    const configured = process.env.FINGENCE_AI_REASONING_EFFORT;
+    return configured === 'medium' || configured === 'high' ? configured : 'low';
+}
 export function interpreterModel() {
     const configured = process.env.FINGENCE_AI_INTERPRET_MODEL;
     return configured && INTERPRETER_MODELS.includes(configured) ? configured : DEFAULT_INTERPRETER_MODEL;
@@ -77,14 +81,15 @@ const responseSchema = z.object({
     usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).optional(),
 });
 
-export type GroqTransport = (body: Record<string, unknown>, signal: AbortSignal) => Promise<{ status: number; json: unknown }>;
+export type GroqTransport = (body: Record<string, unknown>, signal: AbortSignal) => Promise<{ status: number; json: unknown; retryAfterSeconds?: number }>;
 const defaultTransport: GroqTransport = async (body, signal) => {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST', signal, redirect: 'error',
         headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
-    return { status: response.status, json: await response.json().catch(() => null) };
+    const retryAfter = Number(response.headers.get('retry-after'));
+    return { status: response.status, json: await response.json().catch(() => null), retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined };
 };
 
 /** One bounded completion, no retries. The proposal is returned unparsed: the caller's gates decide. */
@@ -95,13 +100,13 @@ export async function proposeLayout(evidence: LayoutEvidence, options: { model?:
         model, temperature: 0, max_completion_tokens: 3000,
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: JSON.stringify(evidence) }],
         response_format: { type: 'json_schema', json_schema: { name: 'layout_proposal', strict: true, schema: proposalJsonSchema() } },
-        ...(model.startsWith('openai/') ? { reasoning_effort: options.reasoningEffort ?? 'medium' } : { reasoning_effort: 'none' }),
+        ...(model.startsWith('openai/') ? { reasoning_effort: options.reasoningEffort ?? reasoningEffort() } : { reasoning_effort: 'none' }),
     };
     const started = Date.now();
-    let reply: { status: number; json: unknown };
+    let reply: Awaited<ReturnType<GroqTransport>>;
     try { reply = await (options.transport ?? defaultTransport)(body, AbortSignal.timeout(45_000)); }
     catch { throw new InterpreterUnavailable('PROVIDER_UNREACHABLE'); }
-    if (reply.status === 429) throw new InterpreterUnavailable('RATE_LIMITED');
+    if (reply.status === 429) throw new InterpreterUnavailable('RATE_LIMITED', reply.retryAfterSeconds);
     if (reply.status !== 200) throw new InterpreterUnavailable(`PROVIDER_HTTP_${reply.status}`);
     const parsed = responseSchema.safeParse(reply.json);
     if (!parsed.success) throw new InterpreterUnavailable('PROVIDER_RESPONSE_INVALID');
