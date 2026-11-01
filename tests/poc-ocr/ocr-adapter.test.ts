@@ -111,6 +111,96 @@ describe('Xiaomi-OCR-0 adapter: anchoring never invents coordinates', () => {
     });
 });
 
+// A reader that prints "Credit (MYR) Balance (MYR)" as one region, as RapidOCR did on the low-resolution scan.
+function mergedHeadings(regions: AnchorRegion[]): AnchorRegion[] {
+    const kept = regions.filter(r => r.text !== 'Credit (MYR)' && r.text !== 'Balance (MYR)');
+    return [...kept, { text: 'Credit (MYR) Balance (MYR)', box: [420, 120, 545, 130], width: 595, height: 842, coordinateSystem: 'TOP_LEFT_POINTS', rowKey: null }];
+}
+const regionBoxes = (sets: AnchorSet[]) => sets.flatMap(a => a.pages[0].regions.map(r => JSON.stringify(r.box)));
+
+describe('Xiaomi-OCR-0 adapter: optional anchoring methods (off by default)', () => {
+    const full = () => proposal([HEAD, FORWARD, ...ROWS], summaryText(SUMMARY));
+
+    it('anchors a merged heading group by the reader’s own column bands, never by splitting its box', () => {
+        const a = anchors(mergedHeadings(printedPage(HEAD, FORWARD, ROWS, SUMMARY)));
+        const strict = run(full(), a);
+        expect(strict.verification.accepted).toEqual([]);
+        expect(strict.evidence.unanchored.map(u => u.reason)).toContain('HEADER_UNANCHORED');
+        const evidence = anchorOcrDocument(full(), [a], { headingGroups: true });
+        const verification = verifyOcrStatement(evidence);
+        expect(verification.decision).toBe('VERIFIED');
+        expect(verification.accepted).toHaveLength(3);
+        const banded = evidence.items.filter(i => i.method.endsWith('+column-bands'));
+        expect(banded.map(i => i.column).sort()).toEqual(['Balance', 'Balance', 'Balance', 'Balance', 'Credit']);
+        expect(evidence.items.filter(i => i.method.endsWith('+heading-group')).map(i => i.box)).toEqual([[420, 120, 545, 130], [420, 120, 545, 130]]);
+        for (const item of evidence.items) if (item.box) expect(regionBoxes([a])).toContain(JSON.stringify(item.box));
+    });
+
+    it('leaves cells under a merged heading unresolved when the reader’s columns are not clearly separated', () => {
+        const regions = mergedHeadings(printedPage(HEAD, FORWARD, ROWS, SUMMARY)).map(r => (r.text === '2,615.15' ? { ...r, box: [492, r.box[1], 542, r.box[3]] as AnchorRegion['box'] } : r));
+        const evidence = anchorOcrDocument(full(), [anchors(regions)], { headingGroups: true });
+        expect(evidence.unanchored.map(u => u.reason)).toContain('COLUMN_GROUP_UNRESOLVED');
+        expect(verifyOcrStatement(evidence).accepted.find(r => r.reference === 'REFA00000001')).toBeUndefined();
+    });
+
+    it('refuses a model value moved between the columns of a heading group', () => {
+        const shifted = ROWS.map(r => [...r]); shifted[0][4] = ''; shifted[0][5] = '2,615.15';
+        const evidence = anchorOcrDocument(proposal([HEAD, FORWARD, ...shifted], summaryText(SUMMARY)), [anchors(mergedHeadings(printedPage(HEAD, FORWARD, ROWS, SUMMARY)))], { headingGroups: true });
+        expect(evidence.unanchored.filter(u => u.text === '2,615.15').map(u => u.reason)).toEqual(['COLUMN_MISMATCH']);
+        expect(verifyOcrStatement(evidence).accepted.find(r => r.reference === 'REFA00000001')).toBeUndefined();
+    });
+
+    it('confirms each cell of a row with whichever reader anchored it, keeping each reader’s own box', () => {
+        const printed = printedPage(HEAD, FORWARD, ROWS, SUMMARY);
+        const a = anchors(printed.filter(r => r.text !== 'Borneo Fresh Supplies'));
+        const b: AnchorSet = { reader: 'rapidocr', sourceSha256: SHA, pages: [{ page: 1, regions: printed.filter(r => r.text !== '778.57').map(r => ({ ...r, box: r.box.map(v => v * 2) as AnchorRegion['box'], width: 1190, height: 1684, coordinateSystem: 'TOP_LEFT_PIXELS' })) }] };
+        expect(verifyOcrStatement(anchorOcrDocument(full(), [a, b])).accepted.find(r => r.reference === 'REFB00000002')).toBeUndefined();
+        const evidence = anchorOcrDocument(full(), [a, b], { crossReaderCells: true });
+        const verification = verifyOcrStatement(evidence);
+        expect(verification.decision).toBe('VERIFIED');
+        const row = verification.accepted.find(r => r.reference === 'REFB00000002')!;
+        const items = row.evidenceIds.map(id => evidence.items.find(i => i.id === id)!);
+        expect(new Set(items.map(i => i.method))).toEqual(new Set(['xiaomi-ocr-0+docling-02-anchor', 'xiaomi-ocr-0+rapidocr-anchor']));
+        for (const i of items) expect(regionBoxes([i.coordinateSystem === 'TOP_LEFT_PIXELS' ? b : a])).toContain(JSON.stringify(i.box));
+    });
+
+    it('confirms an amount whose reader separators differ only when every digit is equal, keeping exact cents', () => {
+        const misSeparated = (to: string) => printedPage(HEAD, FORWARD, ROWS, SUMMARY).map(r => (r.text === '20,286.58' ? { ...r, text: to } : r));
+        expect(run(full(), anchors(misSeparated('20.286.58'))).verification.accepted.find(r => r.reference === 'REFB00000002')).toBeUndefined();
+        const evidence = anchorOcrDocument(full(), [anchors(misSeparated('20.286.58'))], { moneySeparators: true });
+        const row = verifyOcrStatement(evidence).accepted.find(r => r.reference === 'REFB00000002')!;
+        expect(row.balance).toBe('20286.58');
+        expect(evidence.items.filter(i => i.method.endsWith('+money-separator')).map(i => i.text)).toEqual(['20,286.58']);
+        for (const wrong of ['20.286.68', '2.028.658', '20286.58']) {
+            const held = anchorOcrDocument(full(), [anchors(misSeparated(wrong))], { moneySeparators: true });
+            expect(held.unanchored.map(u => u.text)).toContain('20,286.58');
+            expect(verifyOcrStatement(held).accepted.find(r => r.reference === 'REFB00000002')).toBeUndefined();
+        }
+    });
+
+    it('never applies separator equivalence to dates or references', () => {
+        const regions = printedPage(HEAD, FORWARD, ROWS, SUMMARY).map(r => (r.text === '02/03/2026' ? { ...r, text: '02.03.2026' } : r));
+        const evidence = anchorOcrDocument(full(), [anchors(regions)], { moneySeparators: true });
+        expect(evidence.unanchored.map(u => u.text)).toContain('02/03/2026');
+    });
+
+    it('treats an omitted amount the reader printed with other separators as omitted', () => {
+        const regions = printedPage(HEAD, FORWARD, ROWS, SUMMARY).map(r => (r.text === '20,286.58' ? { ...r, text: '20.286.58' } : r));
+        const { verification } = run(proposal([HEAD, FORWARD, ROWS[0], ROWS[2]], summaryText(SUMMARY)), anchors(regions));
+        expect(verification.checks.find(c => c.id === 'no-omitted-amounts')).toMatchObject({ passed: false, detail: 'p1 778.57, p1 20.286.58' });
+    });
+
+    it('keeps a column conflict from any reader when composing a row across readers', () => {
+        const printed = printedPage(HEAD, FORWARD, ROWS, SUMMARY);
+        const a = anchors(printed.filter(r => r.text !== 'Borneo Fresh Supplies'));
+        // The second reader sees an extra amount under Credit in row 2, where the model transcribed none.
+        const b: AnchorSet = { reader: 'rapidocr', sourceSha256: SHA, pages: [{ page: 1, regions: [...printed, { text: '1.00', box: [420, 176, 470, 186], width: 595, height: 842, coordinateSystem: 'TOP_LEFT_POINTS', rowKey: null }] }] };
+        const evidence = anchorOcrDocument(full(), [a, { ...b, pages: [{ page: 1, regions: b.pages[0].regions.filter(r => r.text !== '778.57') }] }], { crossReaderCells: true });
+        expect(evidence.unanchored.filter(u => u.reason === 'COLUMN_CONFLICT').map(u => u.column)).toEqual(['Credit']);
+        expect(verifyOcrStatement(evidence).accepted.find(r => r.reference === 'REFB00000002')).toBeUndefined();
+    });
+});
+
 describe('Xiaomi-OCR-0 adapter: independent financial verification', () => {
     it('quarantines a tampered printed amount even when both readers read it correctly', () => {
         const printed = ROWS.map(r => [...r]); printed[1][3] = '773.57';

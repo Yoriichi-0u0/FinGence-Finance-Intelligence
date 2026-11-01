@@ -24,7 +24,7 @@ export type AnchorRegion = {
     text: string; box: [number, number, number, number]; width: number; height: number;
     coordinateSystem: 'TOP_LEFT_POINTS' | 'TOP_LEFT_PIXELS'; rowKey: string | null;
 };
-export type AnchorReader = 'docling-02' | 'rapidocr';
+export type AnchorReader = 'docling-02' | 'rapidocr' | 'rapidocr-x2';
 export type AnchorSet = { reader: AnchorReader; sourceSha256: string; pages: { page: number; regions: AnchorRegion[] }[] };
 
 /** Same item shape as the V2 worker output (`workerEvidenceSchema`), plus a stable identity. */
@@ -35,7 +35,7 @@ export type OcrEvidenceItem = {
 };
 export type RowKind = 'HEADER' | 'TRANSACTION' | 'BALANCE_FORWARD' | 'SUMMARY' | 'OTHER';
 export type OcrRow = { page: number; table: string; index: number; kind: RowKind; cells: Record<string, string>; itemIds: string[] };
-export type UnanchoredCell = { itemId: string; page: number; column: string; text: string; reason: 'NO_INDEPENDENT_MATCH' | 'AMBIGUOUS_MATCH' | 'ROW_KEY_UNANCHORED' | 'HEADER_UNANCHORED' | 'COLUMN_MISMATCH' | 'COLUMN_CONFLICT' };
+export type UnanchoredCell = { itemId: string; page: number; column: string; text: string; reason: 'NO_INDEPENDENT_MATCH' | 'AMBIGUOUS_MATCH' | 'ROW_KEY_UNANCHORED' | 'HEADER_UNANCHORED' | 'COLUMN_MISMATCH' | 'COLUMN_CONFLICT' | 'COLUMN_GROUP_UNRESOLVED' };
 export type OcrEvidence = {
     version: typeof OCR_EVIDENCE_VERSION; sourceSha256: string; filename: string; receipt: OcrReceipt; anchorReaders: AnchorReader[];
     items: OcrEvidenceItem[]; rows: OcrRow[]; unanchored: UnanchoredCell[]; texts: { page: number; text: string }[];

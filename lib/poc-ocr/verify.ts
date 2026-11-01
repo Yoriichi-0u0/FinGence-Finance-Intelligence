@@ -1,5 +1,6 @@
 import type { Check, Quarantined } from '../demo/pipeline';
 import { fromCents, toCents } from '../poc-anomalies/source';
+import { READER_MONEY } from './anchor';
 import { OCR_VERIFICATION_VERSION, type OcrEvidence, type OcrHeldRecord, type OcrRow, type OcrVerification, type OcrVerifiedRecord } from './contracts';
 
 /**
@@ -44,7 +45,8 @@ export function verifyOcrStatement(evidence: OcrEvidence): OcrVerification {
     const truncated = evidence.warnings.filter(w => /token limit/.test(w));
     check('complete-output', 'Model output is complete on every page', !truncated.length, truncated.length ? truncated.join(' ') : `${new Set(evidence.items.map(i => i.page)).size} pages`);
     check('structure', 'Transaction table with Date, Reference, Debit, Credit and Balance columns', signed && transactions.length > 0, `${[...columns].join(', ') || 'no header'}; ${transactions.length} transaction rows`);
-    const omitted = evidence.unclaimed.filter(u => MONEY.test(u.text));
+    // Reader-shaped money (either separator), so an omitted amount read as 1.234.56 is still caught.
+    const omitted = evidence.unclaimed.filter(u => READER_MONEY.test(u.text));
     check('no-omitted-amounts', 'Every amount the independent reader found is claimed by the transcription', omitted.length === 0, omitted.length ? omitted.slice(0, 5).map(u => `p${u.page} ${u.text}`).join(', ') : `${evidence.unclaimed.length} unclaimed non-amount regions`);
     // Instructions are searched in the model text and in content only the independent reader saw.
     const instruction = [...evidence.items.map(i => i.text), ...evidence.texts.map(t => t.text), ...evidence.unclaimed.map(u => u.text)].filter(t => INSTRUCTION_TEXT.test(t));

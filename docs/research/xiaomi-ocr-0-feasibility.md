@@ -2,6 +2,7 @@
 
 Dated 1 November 2026. Local experiment on branch `poc/xiaomi-ocr-0-feasibility` (from `origin/main` cb5db46).
 Not merged, pushed or deployed. Synthetic documents only. No OCR endpoint, no external inference service.
+Follow-up (Katana kit, alternate anchoring, conditional OCR, corpus plan): [xiaomi-ocr-0-follow-up.md](xiaomi-ocr-0-follow-up.md).
 
 ## Recommendation: EXPERIMENT FURTHER
 
@@ -195,8 +196,9 @@ $R/.venv/bin/pip install "torch==2.14.0" "transformers==5.17.0" "torchvision==0.
 .venv-ai/bin/python -I $R/scripts/baselines.py . $R/corpus $R/outputs/baselines
 $R/.venv/bin/python -I $R/scripts/ocr0_run.py --mode page --out $R/outputs/ocr0-page.json $R/corpus/pages/*.png
 .venv-ai/bin/python -I $R/scripts/region_crops.py $R/corpus $R/outputs/baselines/docling-evidence.json $R/corpus/regions S2-scan S3-lowres N1-tampered-amount N5-prompt-injection
-$R/.venv/bin/python -I $R/scripts/ocr0_run.py --mode table --out $R/outputs/ocr0-table.json $R/corpus/regions/*-t*.png
-$R/.venv/bin/python -I $R/scripts/ocr0_run.py --mode text  --out $R/outputs/ocr0-text.json  $R/corpus/regions/*-s.png
+$R/.venv/bin/python -I $R/scripts/ocr0_run.py --mode table --out $R/outputs/ocr0-table.json $R/corpus/regions/*-p[0-9]-t[0-9].png
+$R/.venv/bin/python -I $R/scripts/ocr0_run.py --mode text  --out $R/outputs/ocr0-text.json  $R/corpus/regions/*-p[0-9]-s.png
+# The recorded table run used *-t*.png, which also matched N1-tampered-amount-p1-s.png; see the follow-up report.
 $R/.venv/bin/python -I $R/scripts/otsl.py $R/outputs/ocr0-page-view.json $R/outputs/ocr0-page.json
 $R/.venv/bin/python -I $R/scripts/score.py $R/corpus/ground-truth.json $R/outputs/score-page.json docling=… rapidocr=… xiaomi-ocr-0=…
 $R/.venv/bin/python -I $R/scripts/build_inputs.py $R/corpus $R/outputs/ocr0-page.json $R/outputs/inputs-page
