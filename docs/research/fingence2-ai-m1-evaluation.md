@@ -127,3 +127,65 @@ allowed. Making `representation` a discriminated union in the strict JSON schema
 branch requires exactly its own money fields and, for `AMOUNT_AND_DIRECTION`, non-empty tokens) would
 make these proposals impossible at decode time. The gates are unchanged. This needs a prompt-revision bump
 and a re-run of the full set.
+
+## v2 contract: three-repeat comparison (2 November 2026)
+
+Two changes came first:
+- *File name:* the gates stopped reading the file name.
+- *v2 contract:* `representation` became a discriminated union keyed by role (`lib/interpretation/contracts.ts`, prompt revision `layout-interpretation-2`).
+
+**Runs.** Both models were run on the same nine no-balance fixtures (the eight above plus `bank-ambiguous-debit-credit.csv`), **three times each**, at `low` reasoning with models alternating. The four public layouts were run once more as a regression check, and two extra 20B calls identified its provider error.
+
+**Calls:** 64 live, $0.044 in total.
+
+**Raw data:**
+[`2026-11-02-v2-hard-3x.json`](fingence2-ai-m1-eval/2026-11-02-v2-hard-3x.json),
+[`2026-11-02-v2-public-1x.json`](fingence2-ai-m1-eval/2026-11-02-v2-public-1x.json),
+[`2026-11-02-v2-20b-provider-400-probe.json`](fingence2-ai-m1-eval/2026-11-02-v2-20b-provider-400-probe.json).
+
+| Measure (v2) | `gpt-oss-120b` | `gpt-oss-20b` |
+| --- | --- | --- |
+| Hard acceptable layouts accepted exact (2 docs × 3) | **6 / 6** (v1: 1 / 4) | **6 / 6** (v1: 1 / 4) |
+| Hard must-quarantine quarantined (7 docs × 3) | 21 / 21, every one by a gate | 21 / 21: 18 by a gate and 3 by provider failure (no proposal) |
+| Public layouts accepted exact (4 docs × 1) | **4 / 4** | 3 / 4 (Malay `1.234,56` read as `1,234.56`; caught by `amounts`) |
+| False acceptances | **0** | **0** |
+| Calls that produced no proposal (`HTTP 400 json_validate_failed`) | **0 / 31** | **4 / 33** (12%) |
+| Median / p90 latency | 2.1 s / 2.3 s | 1.1 s / 1.3 s |
+| Mean tokens in / out | 4,349 / 595 | 4,283 / 377 |
+| Mean cost per call | $0.0010 | $0.0004 |
+
+**Gates that fired** were the same for both models on every run:
+
+| Fixture | Gate |
+| --- | --- |
+| Reversed signed column (bank) | `direction` |
+| Opaque signed column (ledger) | `direction` |
+| Multi-account ledger | `account` |
+| Sales-account ledger | `account` |
+| Bank-loan-account ledger | `account` |
+| Ledger naming no account | `account` |
+| Ambiguous statement | `role-evidence` |
+
+The ambiguous statement was proposed honestly as a bank statement and still refused, because its content does not say so.
+
+**What changed with the v2 contract.**
+- *Acceptance:* hard acceptable layouts went from 1/4 to 6/6 for both models. Every v1 miss had been a contradictory money mapping that the union schema now makes impossible to emit.
+- *Cost of the schema:* it is longer and is counted as input, so input grew by about 1.2k tokens per call (≈ +$0.0002).
+
+**Default: keep `openai/gpt-oss-120b`.** This reverses the tentative recommendation above, on evidence:
+
+- *Reliability:* 120B produced a valid proposal on every call and was exact on everything acceptable (10/10 across both sets).
+  - 20B failed strict decoding on 12% of calls. Groq returns `json_validate_failed` when the model cannot satisfy the union schema, so those calls produce no proposal.
+  - 20B also mis-read the number format of the public Malay sample, which the demo uses.
+  - The gates made both failure kinds safe, but each one is a document the user cannot process.
+- *Speed and cost:* 20B's advantages (≈ 1 s faster, ≈ $0.0006 cheaper per call) are real but small.
+  - At the default $0.50 daily cap, 120B still allows about 500 interpretations a day.
+  - A provider-failed call is counted against the budget at its full reserved cost (unknown outcome), so failures also erode 20B's cost advantage.
+- *Correctness:* this is unchanged by the choice. Both models had 0 false acceptances in 64 v2 calls; across all 146 live M1 calls (142 with a proposal) there were none.
+
+20B remains a configured option (`FINGENCE_AI_INTERPRET_MODEL`). It would become the better default if its strict-decoding failure rate falls, which is worth re-measuring when Groq updates the model.
+
+**Free-tier interaction.** At about 4.9k tokens per call, two documents in one minute exceed the free tier's 8k tokens per minute.
+- *Per-minute limit:* the second call is refused with an unbilled 429, and the browser makes its one designed retry after Retry-After.
+- *Daily cap:* after a full day of evaluation, Groq's daily token cap refused every call with Retry-After ≈ 22 min. The browser walkthrough recorded the fail-safe: both documents quarantined, no figures, rule-based banner.
+- *Production:* a dedicated paid key, which hosted activation already requires, removes both limits.

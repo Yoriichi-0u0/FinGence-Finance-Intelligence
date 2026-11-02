@@ -7,8 +7,9 @@
 proposes the layout of unfamiliar bank statements and cash-account ledgers (strict JSON schema;
 it never supplies amounts). `lib/interpretation/gates.ts` accepts a proposal only when every row of the
 original bytes re-derives it; the canonical Phase 1 pipeline then runs unchanged. The role, a signed
-column's convention and a ledger's cash account must be stated by the document itself, never taken on
-the model's word. The gateway `/api/ai/interpret` is 404 unless `FINGENCE_AI_GATEWAY=1` and
+column's convention and a ledger's cash account must be stated by the document's content, never taken on
+the model's word or from the file name. The model emits the v2 union contract (`modelProposalSchema`);
+`parseProposal` flattens it (legacy flat proposals still accepted for replays). The gateway `/api/ai/interpret` is 404 unless `FINGENCE_AI_GATEWAY=1` and
 `GROQ_API_KEY` are set, and on Vercel also a durable budget store (`FINGENCE_AI_BUDGET_REST_URL`/`_TOKEN`,
 `lib/server/ai/budget.ts`: per-client, global and daily-USD limits, fail-closed); without it the app is
 exactly Phase 1. Production enablement is an owner decision.

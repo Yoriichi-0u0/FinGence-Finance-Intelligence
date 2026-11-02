@@ -123,11 +123,45 @@ Each gate is computed from the original bytes, independently of the model:
 
 | # | Milestone | Definition of done |
 | --- | --- | --- |
-| **M1 (built)** | **AI layout interpretation with deterministic acceptance** | Server Groq gateway; proposal schema; gates; canonical materialization; pipeline + UI integration with receipts; unfamiliar-layout public samples; recorded-proposal tests (positive and adversarial); live evaluation harness with accuracy, false-acceptance, latency and cost report; positive variants reproduce the exact Phase 1 figures (difference MYR −2,692.92). |
+| **M1 (built)** | **AI layout interpretation with deterministic acceptance** | Server Groq gateway behind a durable fail-closed spend budget; v2 discriminated-union proposal schema; gates that take role, signed convention and cash account from document content only (never the file name); canonical materialization; pipeline + UI integration with receipts; unfamiliar-layout public samples; recorded-proposal tests (positive and adversarial); live evaluation harness with accuracy, false-acceptance, latency and cost report; positive variants reproduce the exact Phase 1 figures (difference MYR −2,692.92). |
 | M2 | Grounded AI Finance Q&A + narrated report | Tool-calling planner over deterministic tools; numeric-citation gate; refusal of unsupported questions; answer evaluation set (supported, unsupported, adversarial); AI narrative clearly separated from verified figures. |
 | M3 | Images/scanned PDFs via vision | `qwen3.8-27b` transcription to rows → arithmetic anchor gates (running balance, stated totals) → same materializer; Docling/OCR-0 as an optional local reader for comparison. |
 | M4 | Intelligent exception matching and forecasting choice | LLM/E5 candidate ranking for BANK_ONLY/LEDGER_ONLY/REFERENCE_REVIEW with an exact-money/date gate, shown as suggestions; backtest-selected forecasting model. |
 | M5 | Backend jobs + Supabase persistence | `ProcessingRunner` backend implementation on Celester's DB04/AI06 contracts: content-addressed sources, stage records, receipts, quarantine inbox, audit. |
+
+### Next: M2 grounded Finance Q&A, then broader document understanding (lessons from M1)
+
+**M2: grounded AI Finance Q&A.** Do this first; it reuses the gateway, the budget and the evaluation harness.
+
+- **Contract.**
+  - The model answers only through a union-typed *answer plan* in a strict schema. Each step is one of a fixed set of tools that read the verified processing context: totals, reconciliation counts, exceptions, anomalies, forecast, transactions by filter.
+  - The final text cites tool results by ID.
+  - As in M1, the schema makes contradictory plans impossible to emit, and nothing the model writes is trusted.
+- **Gates.**
+  - *Numeric citation:* every number, date and identifier in the answer must equal a cited tool output, after normalising MYR formatting. Otherwise the answer is withheld and the deterministic rule-based answer is shown.
+  - *Scope:* questions about other businesses, periods, currencies or advice are refused before any call.
+  - *Content-only:* as in M1, evidence comes from the verified context, never from user-supplied names or labels.
+- **Operations.**
+  - The same opt-in flag and durable budget, with its own per-client counters.
+  - Default `gpt-oss-120b`; re-measure 20B's strict-decoding failure rate on the M2 schema.
+  - Plan for ≥ 5k tokens per call on the free tier.
+- **Evaluation.**
+  - A fixed question set: supported, unsupported, ambiguous and adversarial (prompt injection in transaction text, requests for figures that do not exist).
+  - Three repeats per model, scored on grounded-answer rate, withheld rate, false-grounding count (target 0), latency and cost.
+
+**Broader document understanding (M3), in order of risk.**
+
+1. **XLSX.** Deterministic sheet → table extraction, then the M1 interpreter and gates unchanged.
+2. **Text PDFs.** Docling (local) table extraction into the same evidence window. Running-balance and stated-total anchors become mandatory where the layout is extracted rather than read.
+3. **Scans and images.** Vision transcription (`qwen3.8-27b`; Xiaomi-OCR-0 as a local comparison) proposes *rows*, not just layout.
+   - That is a larger trust step, so acceptance requires a passing running balance or stated opening/closing totals.
+   - Opaque scans without such anchors are quarantined.
+4. **Scope widening.** Multi-month documents, then other currencies, each behind its own gates and fixtures.
+
+**Open activation conditions for M1** (unchanged by M2):
+- an owner-provisioned durable budget store, with a real integration test against it;
+- a dedicated Groq key with a provider-side spend limit;
+- verified spending controls.
 
 ### Production
 
