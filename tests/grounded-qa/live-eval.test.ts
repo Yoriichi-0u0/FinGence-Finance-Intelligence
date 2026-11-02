@@ -1,7 +1,7 @@
 /**
  * LIVE grounded Q&A evaluation (opt-in, billable): FINGENCE_QA_LIVE_EVAL=1 with GROQ_API_KEY in the environment.
  * FINGENCE_QA_EVAL_MODELS (comma list), FINGENCE_QA_EVAL_IDS (comma list of question IDs), FINGENCE_QA_EVAL_REPEATS (default 1),
- * FINGENCE_QA_EVAL_OUT (JSON path, written after every question), FINGENCE_QA_EVAL_MAX_WAIT (s, default 900), FINGENCE_QA_EVAL_TIMEOUT_MS.
+ * FINGENCE_QA_EVAL_FIRST_RUN (run label to start from), FINGENCE_QA_EVAL_OUT (JSON path, written after every question), FINGENCE_QA_EVAL_MAX_WAIT (s, default 900), FINGENCE_QA_EVAL_TIMEOUT_MS.
  * Each question runs the real browser orchestration (pre-check, plan gate, tools, answer gate) against the server's
  * model call, and is scored only against figures computed from the verified records.
  */
@@ -12,7 +12,7 @@ vi.mock('server-only', () => ({}));
 import { askGrounded, type QaModel } from '../../lib/grounded-qa/client';
 import { groundingIndex } from '../../lib/grounded-qa/tools';
 import { InterpreterUnavailable } from '../../lib/interpretation/contracts';
-import { askModel } from '../../lib/server/ai/grounded-qa';
+import { askModel, QA_PROMPT_REVISION } from '../../lib/server/ai/grounded-qa';
 import { phase1 } from './fixtures';
 import { QUESTIONS, score } from './eval-set';
 
@@ -26,7 +26,8 @@ describe.skipIf(!LIVE)('live grounded Q&A evaluation', () => {
     it('answers every question with every model; zero fabricated figures', async () => {
         const index = groundingIndex(await phase1())!, rows: Record<string, unknown>[] = [], nextAllowed = new Map<string, number>();
         const repeats = Math.max(1, Number(process.env.FINGENCE_QA_EVAL_REPEATS ?? 1)), out = process.env.FINGENCE_QA_EVAL_OUT;
-        for (let run = 1; run <= repeats; run++) for (const q of QUESTIONS.filter(x => !IDS || IDS.includes(x.id))) for (const modelName of MODELS) {
+        const first = Math.max(1, Number(process.env.FINGENCE_QA_EVAL_FIRST_RUN ?? 1));
+        for (let run = first; run < first + repeats; run++) for (const q of QUESTIONS.filter(x => !IDS || IDS.includes(x.id))) for (const modelName of MODELS) {
             // Each stage waits for its own model's per-minute budget; an unbilled 429 is waited out and asked again (not a sample).
             const model: QaModel = {
                 async call(req) {
@@ -47,7 +48,7 @@ describe.skipIf(!LIVE)('live grounded Q&A evaluation', () => {
             };
             const result = await askGrounded(index, q.question, model), s = score(q, index, result);
             rows.push({
-                run, model: modelName, id: q.id, category: q.category, expected: q.expect, question: q.question, status: result.status, outcome: s.outcome, meets: s.meets,
+                run, model: modelName, promptRevision: QA_PROMPT_REVISION, id: q.id, category: q.category, expected: q.expect, question: q.question, status: result.status, outcome: s.outcome, meets: s.meets,
                 rendered: s.rendered, missingKeys: s.missing, refusal: result.refusal, queries: result.queries, error: result.error,
                 failedChecks: [...result.planChecks, ...(result.verdict?.checks ?? [])].filter(c => !c.passed).map(c => `${c.id}: ${c.detail}`),
                 receipts: result.receipts, calls: result.receipts.length,
