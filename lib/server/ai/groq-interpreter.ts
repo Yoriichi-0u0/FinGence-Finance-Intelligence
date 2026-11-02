@@ -1,14 +1,11 @@
 import 'server-only';
-import { z } from 'zod';
-import { modelProposalSchema, type InterpretationResult, type LayoutEvidence, InterpreterUnavailable } from '../../interpretation/contracts';
+import { modelProposalSchema, type InterpretationResult, type LayoutEvidence } from '../../interpretation/contracts';
 import { budgetStore } from './budget';
+import { DEFAULT_GROQ_MODEL, GROQ_MODELS, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from './groq';
 
-/** Published Groq prices (USD per million tokens, 2 Nov 2026) for the receipt's cost estimate. */
-export const GROQ_PRICES: Record<string, [number, number]> = {
-    'openai/gpt-oss-120b': [0.15, 0.6], 'openai/gpt-oss-20b': [0.075, 0.3], 'qwen/qwen3.8-27b': [0.8, 4],
-};
-export const INTERPRETER_MODELS = Object.keys(GROQ_PRICES);
-export const DEFAULT_INTERPRETER_MODEL = 'openai/gpt-oss-120b';
+export { GROQ_PRICES, type GroqTransport } from './groq';
+export const INTERPRETER_MODELS = GROQ_MODELS;
+export const DEFAULT_INTERPRETER_MODEL = DEFAULT_GROQ_MODEL;
 export const PROMPT_REVISION = 'layout-interpretation-2';
 
 /**
@@ -82,36 +79,13 @@ Use null when the document does not state it. Never invent values.
 
 rationale: one or two short sentences. unresolved: anything ambiguous or missing.`;
 
-/** Strict-mode JSON schema (v2 union contract): drop the draft marker and write `const` as a one-value enum. */
-export function proposalJsonSchema() {
-    const portable = (node: unknown): unknown => Array.isArray(node) ? node.map(portable) : node && typeof node === 'object'
-        ? Object.fromEntries(Object.entries(node).filter(([k]) => k !== '$schema').map(([k, v]) => k === 'const' ? ['enum', [v]] : [k, portable(v)]))
-        : node;
-    return portable(z.toJSONSchema(modelProposalSchema)) as Record<string, unknown>;
-}
-
-const responseSchema = z.object({
-    id: z.string().optional(), model: z.string(),
-    choices: z.array(z.object({ finish_reason: z.string().nullable().optional(), message: z.object({ content: z.string().nullable() }) })).min(1),
-    usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).optional(),
-});
-
-export type GroqTransport = (body: Record<string, unknown>, signal: AbortSignal) => Promise<{ status: number; json: unknown; retryAfterSeconds?: number }>;
-const defaultTransport: GroqTransport = async (body, signal) => {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST', signal, redirect: 'error',
-        headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-    });
-    const retryAfter = Number(response.headers.get('retry-after'));
-    return { status: response.status, json: await response.json().catch(() => null), retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined };
-};
+/** Strict-mode JSON schema of the v2 union contract. */
+export function proposalJsonSchema() { return portableJsonSchema(modelProposalSchema); }
 
 const MAX_COMPLETION_TOKENS = 3000, SCHEMA_CHARS = JSON.stringify(proposalJsonSchema()).length;
 /** Upper bound on one call's cost, reserved before dispatch: one token per prompt character plus the full completion budget. */
 export function worstCaseUsd(evidence: LayoutEvidence, model = interpreterModel()) {
-    const [inPrice, outPrice] = GROQ_PRICES[model] ?? GROQ_PRICES[DEFAULT_INTERPRETER_MODEL];
-    return ((SYSTEM_PROMPT.length + SCHEMA_CHARS + JSON.stringify(evidence).length + 64) * inPrice + MAX_COMPLETION_TOKENS * outPrice) / 1_000_000;
+    return worstCaseCompletionUsd(SYSTEM_PROMPT.length + SCHEMA_CHARS + JSON.stringify(evidence).length, MAX_COMPLETION_TOKENS, model);
 }
 
 /**
@@ -120,37 +94,10 @@ export function worstCaseUsd(evidence: LayoutEvidence, model = interpreterModel(
  * The proposal is returned unparsed: the caller's gates decide.
  */
 export async function proposeLayout(evidence: LayoutEvidence, options: { model?: string; reasoningEffort?: 'low' | 'medium' | 'high'; transport?: GroqTransport } = {}): Promise<InterpretationResult> {
-    if (!process.env.GROQ_API_KEY && !options.transport) throw new InterpreterUnavailable('NOT_CONFIGURED');
     const model = options.model && INTERPRETER_MODELS.includes(options.model) ? options.model : interpreterModel();
-    const body: Record<string, unknown> = {
-        model, temperature: 0, max_completion_tokens: MAX_COMPLETION_TOKENS,
-        messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: JSON.stringify(evidence) }],
-        response_format: { type: 'json_schema', json_schema: { name: 'layout_proposal', strict: true, schema: proposalJsonSchema() } },
-        ...(model.startsWith('openai/') ? { reasoning_effort: options.reasoningEffort ?? reasoningEffort() } : { reasoning_effort: 'none' }),
-    };
-    const started = Date.now();
-    let reply: Awaited<ReturnType<GroqTransport>>;
-    try { reply = await (options.transport ?? defaultTransport)(body, AbortSignal.timeout(45_000)); }
-    catch { throw new InterpreterUnavailable('PROVIDER_UNREACHABLE'); }
-    if (reply.status === 429) throw new InterpreterUnavailable('RATE_LIMITED', reply.retryAfterSeconds);
-    if (reply.status !== 200) {
-        // Keep only the provider's machine code (e.g. json_validate_failed when strict decoding could not satisfy the
-        // schema); its message and any failed generation are untrusted text and are not surfaced.
-        const code = (reply.json as { error?: { code?: unknown } } | null)?.error?.code;
-        throw new InterpreterUnavailable(`PROVIDER_HTTP_${reply.status}${typeof code === 'string' && /^[a-z_]{1,40}$/.test(code) ? `_${code.toUpperCase()}` : ''}`);
-    }
-    const parsed = responseSchema.safeParse(reply.json);
-    if (!parsed.success) throw new InterpreterUnavailable('PROVIDER_RESPONSE_INVALID');
-    const r = parsed.data, content = r.choices[0].message.content;
-    let proposal: unknown = null;
-    if (content && content.length <= 32_000) { try { proposal = JSON.parse(content); } catch { proposal = null; } }
-    const [inPrice, outPrice] = GROQ_PRICES[r.model] ?? GROQ_PRICES[model];
-    return {
-        proposal,
-        receipt: {
-            provider: 'GROQ', model: r.model, requestId: r.id ?? null, latencyMs: Date.now() - started, mode: 'LIVE',
-            inputTokens: r.usage?.prompt_tokens ?? null, outputTokens: r.usage?.completion_tokens ?? null,
-            estimatedUsd: r.usage ? (r.usage.prompt_tokens * inPrice + r.usage.completion_tokens * outPrice) / 1_000_000 : null,
-        },
-    };
+    const { content, receipt } = await structuredCompletion({
+        model, system: SYSTEM_PROMPT, user: JSON.stringify(evidence), schemaName: 'layout_proposal', schema: proposalJsonSchema(),
+        maxCompletionTokens: MAX_COMPLETION_TOKENS, reasoningEffort: options.reasoningEffort ?? reasoningEffort(), transport: options.transport,
+    });
+    return { proposal: content, receipt };
 }
