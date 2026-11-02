@@ -8,7 +8,10 @@
 
 `/ask` keeps the Phase 1 rule-based assistant as the default. When the AI gateway is available (`GET /api/ai/ask` → 200), an **AI-assisted (verified)** mode appears. For one question it runs:
 
-1. **Pre-check.** Advice and allegation questions are refused before any call. The pattern is the rule-based answerer's own, and the server enforces it too.
+1. **Pre-check.** Refused before any call, in the browser and on the server:
+   - advice and allegations;
+   - measures cash records cannot establish (the rule-based answerer's patterns, plus *sales* and *turnover*);
+   - roles or payment categories the records do not contain (supplier, customer, employee, ingredients, rent…). A question that names the counterparty itself is still answered.
 2. **Plan call** (`/api/ai/ask`, `stage: plan`).
    - *Input:* the question and a value-free **catalogue**: scope, months, counterparties, statuses and severities. It contains no amounts, dates or records.
    - *Output:* a strict-schema plan of 1–4 queries, whose filter values are enums built from the catalogue, or a typed refusal.
@@ -27,6 +30,7 @@ The gate passes an answer only when all of these hold:
 | No free figures | The free text has no digits, number words, percentages or years. A month name is allowed only for a verified period. |
 | Entities | A named counterparty must be cited; any other proper name must occur in the question or the facts. |
 | Conclusions | No profit, revenue, expense, tax, cause, advice or allegation language. |
+| Classification | No role or payment category the records do not contain. A correctly cited payee is not thereby a "supplier". |
 | Relevance | A counterparty named in the question is what the cited facts are about. |
 
 **Rendering.** Code substitutes every value and lists the facts and source records behind it. "How this was answered" shows the queries the model chose, every check and the receipts.
@@ -76,9 +80,12 @@ FINGENCE_AI_QA_MODEL=openai/gpt-oss-120b
 ## Limitations
 
 - **Scope:** one processing (one business, one month, plus its history) and cash records only. Accounting classifications, causes and advice are refused or withheld by design.
-- **Misgrounding can survive the gates.** A grounded answer can still answer a nearby question.
-  - *Example:* "Which supplier did we pay the most?" is answered with payroll, because the records carry no supplier classification.
-  - *How it is handled:* the evaluation measures it (`MISGROUNDED`), and "How this was answered" always shows the queries used.
+- **Classification is never inferred.** The records name counterparties but do not classify them or categorise payments.
+  - *Before the fix:* "Which supplier did we pay the most?" was answered with Staff Payroll, the largest verified payee. The citation was correct; only the meaning was wrong.
+  - *Now:* such questions are refused with `CLASSIFICATION_NOT_RECORDED`, which explains the limitation, and an answer that introduces such a role is withheld.
+  - *What still works:* a question that names the counterparty ("our supplier Borneo Fresh Supplies") is answered.
+  - *Residual risk:* paraphrases no pattern catches ("Which outside company…") depend on the model's refusal. Evaluation case M08 measures this.
+- **Other misgrounding can still survive the gates.** A grounded answer can still answer a nearby question. The evaluation measures it (`MISGROUNDED`), and "How this was answered" always shows the queries used.
 - **The gates are conservative.**
   - The vocabulary rules (conclusions, proper names) can withhold a correct answer. The rule-based answer is then shown.
   - English and Malay month names only; the conclusion vocabulary is English.
