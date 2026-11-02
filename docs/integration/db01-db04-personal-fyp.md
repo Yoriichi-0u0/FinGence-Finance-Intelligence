@@ -16,6 +16,11 @@ configuration. The ignored `.local/db04-inspection.env` template has now been
 created with a protected Windows ACL limited to the current user and SYSTEM.
 Its existing contents are preserved on repeated initialization. No project
 reference, database name, inspection role or connection URL is configured.
+An expanded workspace search subsequently found two neighbouring FYP-labelled
+`.env.local` files with the same declared project reference. Both URLs identify
+administrator accounts, with no dedicated inspection settings. Their credentials
+were neither copied nor used. Personal-versus-team ownership of that reference
+still requires owner confirmation; no target identity is inferred from names.
 Therefore no hosted connection, catalog query, financial read/write, migration,
 role/grant change or reconnect/security test was executed. Previous claims of
 existing DB01–DB03 work are preserved but not reverified against the hosted target.
