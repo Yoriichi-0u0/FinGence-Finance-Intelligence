@@ -99,7 +99,7 @@ existing Extract → Verify (second parser) → Reconcile → Analyze → Foreca
 - **Processing identity.** The processing ID is `H(version, role:sha256:canonicalSha256prefix)`. It follows the verified canonical content, not the wording of the model's proposal, so two live runs that read the document the same way give the same ID.
 - **Reload.** An accepted proposal and its receipt are kept with the documents in `sessionStorage`. A reload re-runs the gates on the stored proposal instead of calling the model again; the receipt stays marked as the original live call.
 - **Deployment.** The route answers only when `GROQ_API_KEY` and `FINGENCE_AI_GATEWAY=1` are set. Otherwise it returns 404 and the UI behaves exactly like Phase 1.
-- **Request bounds.** Bodies are limited to 48 KB, with a per-instance rate limit and no persistence or logging of content.
+- **Request bounds.** Same-origin only; bodies are limited to 48 KB before buffering; a shared fixed-window budget (per client, global and a daily USD cap with worst-case reservation) is admitted before any provider call and fails closed; no persistence or logging of content. On Vercel the gateway requires a durable budget store.
 
 ## 4. Verification gates (built in M1)
 
@@ -165,7 +165,7 @@ The target is zero false acceptances. Recall on positive layouts is reported, no
 | Model drift or preview removal | The model is configurable, every receipt records the model actually served, and the gates are model-independent. |
 | Prompt injection in cells | Cells are data in a JSON payload. The schema only allows column indices and enums, so injection can at most produce a wrong mapping, which the gates reject. |
 | Privacy | The public demo uses fictional data. The UI states that headings and up to 8 sample rows are sent to Groq when AI interpretation is used. |
-| Cost abuse on a public route | Per-instance rate limit, 48 KB body cap, single small completion budget, no retries. Production enablement is a separate owner decision. |
+| Cost abuse on a public route | Durable shared budget (per-client and global limits, daily USD cap with worst-case reservation, fail-closed), 48 KB bound enforced before buffering, one bounded completion per request; the server never retries and the browser makes at most one re-budgeted request after an unbilled 429. Production enablement is a separate owner decision. |
 
 ## 8. Team coordination
 

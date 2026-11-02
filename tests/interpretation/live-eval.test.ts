@@ -1,6 +1,7 @@
 /**
  * LIVE model evaluation (opt-in, billable): FINGENCE_AI_LIVE_EVAL=1 with GROQ_API_KEY in the environment.
- * Optional FINGENCE_AI_EVAL_MODELS (comma list), FINGENCE_AI_EVAL_DOCS (comma list), FINGENCE_AI_EVAL_OUT (JSON path).
+ * Optional FINGENCE_AI_EVAL_MODELS (comma list), FINGENCE_AI_EVAL_DOCS (comma list), FINGENCE_AI_EVAL_REPEATS (default 1),
+ * FINGENCE_AI_EVAL_OUT (JSON path).
  * Each document is interpreted once per model, then judged ONLY by the deterministic gates and compared with
  * the canonical result of the hand-written correct proposal. Paced for the free tier (8k tokens/minute).
  */
@@ -27,6 +28,15 @@ const DOCS: { name: string; dir: string; expect: Expect; reference: string | nul
     { name: 'mislabelled-withdrawal-deposit.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
     { name: 'usd-statement.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
     { name: 'staff-roster.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
+    // Release-readiness set: no running balance, so direction, role and account rest on headings and wording.
+    { name: 'bank-debit-credit-no-balance.csv', dir: 'tests/fixtures/interpretation', expect: 'ACCEPT', reference: 'bank-debit-credit-no-balance.csv' },
+    { name: 'bank-dr-cr-no-balance.csv', dir: 'tests/fixtures/interpretation', expect: 'ACCEPT', reference: 'bank-dr-cr-no-balance.csv' },
+    { name: 'signed-amount-reversed-no-balance.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
+    { name: 'ledger-signed-opaque-no-balance.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
+    { name: 'ledger-multiple-accounts.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
+    { name: 'ledger-sales-account.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
+    { name: 'ledger-bank-loan-account.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
+    { name: 'ledger-no-account-evidence.csv', dir: 'tests/fixtures/interpretation', expect: 'QUARANTINE', reference: null },
 ];
 const MODELS = (process.env.FINGENCE_AI_EVAL_MODELS ?? 'openai/gpt-oss-120b').split(',');
 const only = process.env.FINGENCE_AI_EVAL_DOCS?.split(',');
@@ -48,10 +58,11 @@ function fieldAccuracy(p: unknown, ref: LayoutProposal) {
 describe.skipIf(!LIVE)('live layout interpretation evaluation', () => {
     it('interprets every document with every model; zero false acceptances', async () => {
         const rows: Record<string, unknown>[] = [];
-        for (const model of MODELS) for (const d of DOCS.filter(x => !only || only.includes(x.name))) {
+        const repeats = Math.max(1, Number(process.env.FINGENCE_AI_EVAL_REPEATS ?? 1));
+        for (let run = 1; run <= repeats; run++) for (const model of MODELS) for (const d of DOCS.filter(x => !only || only.includes(x.name))) {
             const bytes = new Uint8Array(readFileSync(join(d.dir, d.name))), table = readTable(bytes)!;
             const evidence = buildEvidence(table, 'f'.repeat(64), d.name);
-            let row: Record<string, unknown> = { model, document: d.name, expected: d.expect };
+            let row: Record<string, unknown> = { run, model, document: d.name, expected: d.expect };
             try {
                 const { proposal, receipt } = await proposeLayout(evidence, { model, reasoningEffort: (process.env.FINGENCE_AI_EVAL_REASONING as 'low' | 'medium' | 'high' | undefined) ?? 'low' });
                 const verdict = verifyProposal(table, proposal, d.name);
@@ -61,6 +72,8 @@ describe.skipIf(!LIVE)('live layout interpretation evaluation', () => {
                 const falseAcceptance = accepted && !exact;
                 const outcome = falseAcceptance ? 'FALSE_ACCEPTANCE' : accepted ? 'ACCEPTED_EXACT' : 'QUARANTINED';
                 row = { ...row, reasoning: process.env.FINGENCE_AI_EVAL_REASONING ?? 'low', outcome, meetsExpectation: d.expect === 'ACCEPT' ? outcome === 'ACCEPTED_EXACT' : d.expect === 'QUARANTINE' ? outcome === 'QUARANTINED' : !falseAcceptance,
+                    // Whether the MODEL itself recognised the problem (abstained or listed it) before any gate ran.
+                    modelAbstained: (proposal as Partial<LayoutProposal> | null)?.role === 'UNSUPPORTED', unresolved: (proposal as Partial<LayoutProposal> | null)?.unresolved ?? null,
                     failedGates: verdict.checks.filter(c => !c.passed).map(c => `${c.id}: ${c.detail}`), summary: verdict.summary,
                     mapping: d.reference && d.expect !== 'QUARANTINE' ? fieldAccuracy(proposal, CORRECT[d.reference]) : null, receipt, proposal };
                 await sleep(Math.max(8_000, ((receipt.inputTokens ?? 3000) + (receipt.outputTokens ?? 1000)) / 8000 * 60_000 + 2_000));
@@ -69,7 +82,7 @@ describe.skipIf(!LIVE)('live layout interpretation evaluation', () => {
                 await sleep(20_000);
             }
             rows.push(row);
-            console.log(JSON.stringify({ model, document: d.name, outcome: row.outcome, meets: row.meetsExpectation, failed: row.failedGates, mapping: (row.mapping as { correct: number; total: number } | null) ?? null }));
+            console.log(JSON.stringify({ run, model, document: d.name, abstained: row.modelAbstained, outcome: row.outcome, meets: row.meetsExpectation, failed: row.failedGates, mapping: (row.mapping as { correct: number; total: number } | null) ?? null }));
         }
         const out = process.env.FINGENCE_AI_EVAL_OUT;
         if (out) { mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), rows }, null, 2)); }

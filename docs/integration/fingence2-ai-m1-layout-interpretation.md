@@ -18,7 +18,7 @@ same financial content in **unfamiliar layouts**, including:
 The run works like this:
 
 1. The browser builds a bounded **evidence window** (`lib/interpretation/evidence.ts`): up to 18 head lines, 3 tail lines and per-column profiles. It is never the whole file.
-2. `/api/ai/interpret` forwards it once to **Groq `openai/gpt-oss-120b`** with a strict JSON schema (`lib/server/ai/groq-interpreter.ts`). The model returns a *layout proposal*: role, header line, column meanings, formats, sign representation, direction tokens and verbatim scope evidence. It never returns an amount.
+2. `/api/ai/interpret` admits it against the shared spend budget and forwards it once to **Groq `openai/gpt-oss-120b`** with a strict JSON schema (`lib/server/ai/groq-interpreter.ts`). The model returns a *layout proposal*: role, header line, column meanings, formats, sign representation, direction tokens and verbatim scope evidence. It never returns an amount.
 3. `verifyProposal` (`lib/interpretation/gates.ts`) re-reads **every row of the original bytes** under the proposal and runs its gates (roadmap §4).
    - Model confidence and rationale are never inputs.
    - Any failed gate quarantines the document, with the reason shown.
@@ -35,6 +35,14 @@ GROQ_API_KEY=...
 FINGENCE_AI_GATEWAY=1
 # optional: openai/gpt-oss-20b or qwen/qwen3.8-27b
 FINGENCE_AI_INTERPRET_MODEL=openai/gpt-oss-120b
+# hosted deployments ONLY: a durable shared budget store (Redis over HTTPS, Upstash REST protocol).
+# Without both values the gateway does not exist on Vercel (404). Locally an in-process store is used.
+FINGENCE_AI_BUDGET_REST_URL=https://<instance>.upstash.io
+FINGENCE_AI_BUDGET_REST_TOKEN=...
+# optional overrides (clamped): daily USD cap (max 20), calls per client per day (max 200), all calls per day (max 5000)
+FINGENCE_AI_DAILY_BUDGET_USD=0.50
+FINGENCE_AI_CLIENT_DAILY_CALLS=30
+FINGENCE_AI_GLOBAL_DAILY_CALLS=300
 ```
 
 Then run `pnpm dev`, open `/data`, choose **Use unfamiliar-layout samples (AI)** and press **Process Financial Documents**. The results must equal the Phase 1 sample exactly:
@@ -52,15 +60,34 @@ Then run `pnpm dev`, open `/data`, choose **Use unfamiliar-layout samples (AI)**
 
 The Data page states what is sent when the gateway is on. For an unfamiliar document that is its headings, column profiles and a few sample lines; the full file never leaves the browser, and all calculations run there. Nothing is stored or logged server-side.
 
-The gateway has these protections:
+The gateway is public and unauthenticated, so every protection is enforced **before** a billable call:
 
-- **Request limits:** same-origin requests only, a 48 KB body cap and a strict evidence schema.
-- **Rate limit:** 12 calls per minute and 400 per day per server instance.
-- **No retries.**
+| Layer | Control (`app/api/ai/interpret/route.ts`, `lib/server/ai/budget.ts`) |
+| --- | --- |
+| Origin | `Origin` is required, parsed safely (`URL.canParse`), must be http(s) with the request's host; `Sec-Fetch-Site`, when sent, must be `same-origin`. Missing, `null` or malformed → 403, never an exception. This stops other sites' pages, not scripts that forge headers. |
+| Size | `Content-Length` over 48 KB (or not a number) → 413 before reading; otherwise the stream is counted and cancelled once past 48 KB. Invalid UTF-8 → 400. |
+| Shape | Strict evidence schema (≤ 18 head + 3 tail lines, ≤ 24 profiles, 80-character cells). |
+| Per client | 6 calls/minute and 30/day per client address. The address is HMAC-hashed before storage; IPv6 is grouped by /64. On Vercel the platform's `x-vercel-forwarded-for` is used; elsewhere `X-Forwarded-For` can be forged, so per-client limits are advisory there and the global limits are the bound. |
+| Global | 10 calls/minute and 300/day across all clients. A client over its own limit never touches the global counters. |
+| Spend | Daily USD cap (default $0.50). Each call reserves its worst case first (one token per prompt character + the full 3,000-token completion ≈ $0.004 for 120B) and settles to the measured cost. An unknown outcome keeps the reservation; a provider 429 (not billed) refunds it. |
+| Store | Counters live in a shared store so limits hold across serverless instances. On Vercel the gateway **does not exist** without a durable https store; if the store is unreachable admission fails closed (503) and nothing is sent. |
+| Provider | One completion per request (`max_completion_tokens` 3,000, 45 s timeout). The server never retries. |
 
-Each call costs about $0.001–0.002 (see the evaluation).
+**Retries, precisely.** The server makes exactly one provider call per request and never retries. The
+*browser* (`lib/interpretation/client.ts`) may make **one** new request after a refusal that was never
+billed: a provider 429 or the gateway's own per-minute refusal, and only when `Retry-After` ≤ 45 s. That
+second request is admitted and budgeted again like any other.
 
-**Production remains Phase 1 until the owner sets `FINGENCE_AI_GATEWAY=1` on Vercel.** Rollback is to unset it.
+Each call costs about $0.0004–0.0012 (see the evaluation); the default daily cap therefore allows
+roughly 400–600 interpretations a day.
+
+**Recommended extra layers before a public launch** (each needs its own owner approval, none is required by
+the code): a dedicated Groq project key with a spend limit set in the Groq console; a Vercel Firewall
+rate-limit rule on `/api/ai/interpret`; and a bot challenge (e.g. Vercel BotID or Cloudflare Turnstile)
+if abuse is observed.
+
+**Production remains Phase 1 until the owner sets `FINGENCE_AI_GATEWAY=1` and the budget store on Vercel.**
+Rollback is to unset `FINGENCE_AI_GATEWAY`.
 
 ## Evaluation
 
@@ -68,7 +95,7 @@ See [the M1 evaluation](../research/fingence2-ai-m1-evaluation.md) and the repro
 
 ```bash
 FINGENCE_AI_LIVE_EVAL=1 GROQ_API_KEY=... \
-FINGENCE_AI_EVAL_MODELS=openai/gpt-oss-120b,openai/gpt-oss-20b,qwen/qwen3.8-27b \
+FINGENCE_AI_EVAL_MODELS=openai/gpt-oss-120b,openai/gpt-oss-20b,qwen/qwen3.8-27b FINGENCE_AI_EVAL_REPEATS=2 \
 FINGENCE_AI_EVAL_OUT=.local/research/fingence2-ai-m1/eval.json \
 pnpm exec vitest run tests/interpretation/live-eval.test.ts
 ```
@@ -77,16 +104,19 @@ pnpm exec vitest run tests/interpretation/live-eval.test.ts
 
 | Suite | What it covers |
 | --- | --- |
-| `tests/interpretation/gates.test.ts` | Parsers; evidence bounds; 4 correct proposals accepted; 13 wrong proposals and 6 adversarial documents quarantined |
-| `pipeline.test.ts` | Both unfamiliar pairs reproduce every Phase 1 figure; determinism; Phase 1 behaviour without an interpreter; interpreter outage; wrong proposal |
-| `route.test.ts` | Gateway off is 404; no secret in responses; one bounded call; refusals before any provider call; 429/502 mapping; rate limit |
+| `tests/interpretation/gates.test.ts` | Parsers; evidence bounds; correct proposals accepted (4 public layouts + 2 no-balance bank statements); 12 wrong proposals; adversarial documents; sign conventions without a running balance (opaque or one-sided signed columns, bank Debit/Credit perspective, role misdeclared either way, unstated role); ledger account identity (several accounts mapped or unmapped, sales or bank-loan account, no account evidence, single-valued account column) |
+| `pipeline.test.ts` | Both unfamiliar pairs reproduce every Phase 1 figure; determinism; identity follows content; Phase 1 behaviour without an interpreter; interpreter outage; a second bank statement passed off as the ledger never reconciles; wrong proposal |
+| `route.test.ts` | Gateway off is 404; hosted without a durable store is 404; durable store settles to measured cost, stores no raw address and fails closed; malformed/missing/`null` Origin and cross-site fetch → 403; declared and streamed oversize → 413 without buffering; invalid UTF-8; per-client and global limits; daily spend cap; 429/502 mapping without retrying |
+| `budget.test.ts` | Client address extraction (/64 grouping, Vercel header); store selection; override clamps; admission order; reservation and settlement; fail-closed; Redis REST pipeline |
 | `panel.test.ts` | Receipt, mapping and gates are rendered; the rationale is labelled "not evidence" |
 
 ## Limitations
 
 - **Formats:** CSV only. XLSX, PDF and images are later milestones.
 - **Scope:** one month, one business, MYR only, single cash account.
-- **Ledgers without a running balance** rely on heading vocabulary to confirm Dr/Cr. Opaque ledger headings are quarantined.
-- **The heading vocabulary** is a small English/Malay list; other languages quarantine unless a running balance confirms direction.
-- **The rate limit** is per instance, not distributed. Groq's account limits (free tier: 8k tokens/min) are the hard cap; a 429 quarantines with "AI interpretation unavailable".
+- **Without a running balance,** direction rests on vocabulary: Debit/Credit or Withdrawal/Deposit headings, DR/CR tokens, or a signed column whose heading states a signed cash movement ("Net cash movement"). A signed column headed only "Amount" is quarantined, because card-style exports print withdrawals as positive. Opaque headings are quarantined.
+- **Role and account come from the document.** Whose books a document is decides what Debit/Credit and DR/CR mean, so the role must be stated by its title, headings or file name (never by transaction cells); both or neither → quarantined. A ledger must name exactly one cash or bank account (an account column, mapped or not; an "Account" line; or the money headings); a non-cash term such as "sales" or "loan" contradicts. This is deliberately strict: a correct but unlabelled document is quarantined rather than guessed.
+- **The vocabulary** is a small English/Malay list; other languages quarantine unless a running balance confirms direction.
+- **Budget store.** Hosted enablement needs a Redis REST store (Upstash protocol) and its two environment values; this checkout has not been run against a real hosted store (the protocol is covered by recorded tests). Groq's account limits (free tier: 8k tokens/min) remain an outer cap; a provider 429 quarantines with "AI interpretation unavailable".
+- **Model choice.** Both `gpt-oss` sizes equal each other on accuracy; on hard no-balance layouts each accepted only 1 of 4 exactly, by producing internally inconsistent proposals (always quarantined, never accepted wrongly). See the evaluation for the recommended schema fix and the case for `gpt-oss-20b` as the default.
 - **Finance Q&A** is still rule-based (M2).

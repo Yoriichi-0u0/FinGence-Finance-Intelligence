@@ -68,7 +68,7 @@ The default is **`openai/gpt-oss-120b` with `reasoning_effort: low`**:
 
 - **Accuracy:** on this set it equals the other models.
 - **Stability:** it is a production (non-preview) Groq model with documented strict-schema support.
-- **Speed and cost:** it is the fastest of the gpt-oss settings at this accuracy (2.0 s, ~$0.0008).
+- **Speed and cost:** low reasoning is faster and cheaper than medium at equal accuracy (2.0 s, ~$0.0008). *Correction (release review):* `gpt-oss-20b` at low reasoning was faster still (1.3 s, ~$0.0004); this decision is revisited below.
 - **Tier fit:** two documents fit inside the free tier's 8k tokens per minute; medium reasoning (~4.2k tokens per call) does not.
 
 The other models stay configurable:
@@ -80,3 +80,50 @@ The other models stay configurable:
 - **The set is small and easy:** 10 documents, one run per configuration. Every model mapped every field correctly, so it does not separate the models. The next evaluation needs harder layouts: multi-line headers, reverse chronological order, merged Dr/Cr with signs, missing references, and opaque headings *with* a balance. It also needs repeated runs to measure variance.
 - **The strong result is the boundary:** across 50 live proposals and 23 recorded adversarial cases, nothing was accepted with a figure that differs from the ground truth.
 - **What is not shown:** this is not evidence of accuracy on real bank exports, other currencies or languages beyond the English/Malay vocabulary, or documents larger than the 18-line head window can describe.
+
+## Release-readiness evaluation: no running balance (2 November 2026)
+
+The first set did not separate the models, so the release review added eight harder fixtures in which
+**no running balance** can confirm direction. Each was run **twice per model** (`low` reasoning, 32 live
+calls, 0 unavailable). Raw data: [`2026-11-02-hardening-low-reasoning.json`](fingence2-ai-m1-eval/2026-11-02-hardening-low-reasoning.json).
+The gates had been tightened first (role, signed convention and ledger account must come from the document).
+
+| Fixture | Expected | `gpt-oss-120b` (run 1 / 2) | `gpt-oss-20b` (run 1 / 2) |
+| --- | --- | --- | --- |
+| Bank statement, Debit/Credit columns | accept | exact / `mapping` | `mapping` / `mapping` |
+| Bank statement, Amount + DR/CR | accept | `mapping` / `mapping` | `mapping` / exact |
+| Signed "Amount (RM)", withdrawals positive | quarantine | `direction` / `direction` | `direction` / `direction` |
+| Ledger, signed "Amount (MYR)" | quarantine | `direction` / `direction` | `direction` / `direction` |
+| Ledger, three accounts (double entry) | quarantine | `account` / `account` | `account` / `account` |
+| Ledger for "4000 Sales" | quarantine | `account` / `account` | `account` / `account` |
+| Ledger for "2100 Bank loan" | quarantine | `account` / `account` | `account` / `account` |
+| Ledger naming no account | quarantine | `account` / `account` | `account` / `account` |
+
+| Model | Acceptable layouts accepted exact | Must-quarantine quarantined | False acceptances | Median latency | Mean tokens in / out | Mean cost |
+| --- | --- | --- | --- | --- | --- | --- |
+| `openai/gpt-oss-120b` | 1 / 4 | 12 / 12 | 0 | 2.1 s | 3113 / 609 | $0.00083 |
+| `openai/gpt-oss-20b` | 1 / 4 | 12 / 12 | 0 | 1.4 s | 3113 / 420 | $0.00036 |
+
+**What the misses were.** None of the six misses gave a column the wrong *meaning*; each was internally
+inconsistent and failed the `mapping` gate:
+
+- *DR/CR statement:* both models declared `SPLIT_IN_OUT` while mapping `amount` and `direction`, with empty direction tokens.
+- *Debit/Credit statement:* `gpt-oss-20b` mapped columns 5/6 as *both* money out/in *and* debit/credit, twice. `gpt-oss-120b` once used the ledger-only `debit`/`credit` slots for a bank statement.
+
+Both models also changed answers between identical runs at temperature 0.
+
+**Model decision (evidence, not size).**
+
+- *Accuracy:* equal. On all M1 runs at low reasoning, each model accepted 6 of 9 acceptable layouts exactly (5/5 on the first set including the injection case, 1/4 here), quarantined 17 of 17 must-quarantine documents, and had 0 false acceptances.
+- *Speed and cost:* `gpt-oss-20b` is about 35% faster (1.4 s vs 2.1 s) and about 57% cheaper per call.
+- *What the size difference does not change:* both have the same prompt size and the same fit in the free tier's 8k tokens per minute. Correctness is carried by the gates for either model.
+- *Sample size:* 4 hard acceptable cases per model is too few to call a winner.
+- *Recommendation:* `gpt-oss-120b` does **not** need to stay the default for quality reasons. Make **`openai/gpt-oss-20b` the default in the next interpretation revision**, after the schema fix below, if a combined run with ≥ 3 repeats per document confirms parity.
+- *Not flipped in this review:* the owner asked for a recommendation, all release evidence (browser walkthrough, receipts) is at 120B, and the gateway is not being activated.
+- *Switching now:* it is one environment variable (`FINGENCE_AI_INTERPRET_MODEL`), with no code change.
+
+**Highest-value next fix (both models).** Every miss was an inconsistent combination that the schema
+allowed. Making `representation` a discriminated union in the strict JSON schema (`anyOf`, where each
+branch requires exactly its own money fields and, for `AMOUNT_AND_DIRECTION`, non-empty tokens) would
+make these proposals impossible at decode time. The gates are unchanged. This needs a prompt-revision bump
+and a re-run of the full set.
