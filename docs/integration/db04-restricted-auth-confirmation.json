@@ -1,0 +1,35 @@
+{
+  "projectRef": "fhipzomczevbpybezzxu",
+  "results": [
+    {
+      "identity": "RUNTIME",
+      "authenticated": true,
+      "poolMax": 1,
+      "applicationPoolMax": 4,
+      "tlsCertificateValidation": true,
+      "identityVerified": true,
+      "forcedRlsTables": 11,
+      "connectionLimit": 4,
+      "canIssue": false,
+      "stage": "RUNTIME_READ_ONLY_COMPLETE",
+      "category": "SUCCESS"
+    },
+    {
+      "identity": "BROKER",
+      "authenticated": true,
+      "poolMax": 1,
+      "applicationPoolMax": 4,
+      "tlsCertificateValidation": true,
+      "identityVerified": true,
+      "forcedRlsTables": 11,
+      "connectionLimit": 2,
+      "canIssue": true,
+      "stage": "BROKER_READ_ONLY_COMPLETE",
+      "category": "SUCCESS"
+    }
+  ],
+  "hostedChanges": false,
+  "financialRecordsRead": false,
+  "capabilitiesIssued": false,
+  "originalInstallEvidencePreserved": true
+}

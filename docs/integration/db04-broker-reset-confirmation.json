@@ -1,0 +1,6 @@
+{
+  "role": "db04_dev_broker_login",
+  "passwordResetAcknowledged": true,
+  "privateCredentialSaved": true,
+  "status": "BROKER_PASSWORD_RESET_COMPLETE"
+}

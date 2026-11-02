@@ -1,6 +1,10 @@
 import {it,expect,vi} from 'vitest';
 vi.mock('server-only',()=>({}));
-import {isolatedDevelopmentBroker} from '../../lib/server/reconciliation/development-broker';
+import {isolatedDevelopmentBroker,developmentBrokerPoolConfig} from '../../lib/server/reconciliation/development-broker';
+it('caps the broker pool at two while preserving verified TLS',()=>{
+ const c=developmentBrokerPoolConfig({SUPABASE_DATABASE_URL:'postgresql://synthetic:unused@db.aaaaaaaaaaaaaaaaaaaa.supabase.co:5432/postgres?sslmode=require'});
+ expect(c.max).toBe(2);expect(c.ssl).toMatchObject({rejectUnauthorized:true});
+});
 it('rewrites only the two internal broker functions and preserves parameters',async()=>{
  const query=vi.fn(async()=>({rows:[],rowCount:0}));
  const adapter=isolatedDevelopmentBroker({transaction:work=>work({query}),close:async()=>{}});

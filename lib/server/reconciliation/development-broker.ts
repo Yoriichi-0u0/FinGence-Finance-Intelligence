@@ -1,5 +1,14 @@
 import 'server-only';
 import type {TransactionDatabase} from '../db/postgres';
+import {serverPoolConfig,transactionDatabase} from '../db/postgres';
+import {Pool} from 'pg';
+export const developmentBrokerPoolConfig=(env:Readonly<Record<string,string|undefined>>)=>({...serverPoolConfig(env),max:2});
+/** Dedicated broker factory: match the approved role limit without changing the
+ * shared financial adapter's pool policy or weakening certificate validation. */
+export function createDevelopmentBrokerDatabase(env:Readonly<Record<string,string|undefined>>){
+ const pool=new Pool(developmentBrokerPoolConfig(env));pool.on('error',()=>{});
+ return isolatedDevelopmentBroker(transactionDatabase(pool));
+}
 /** Fixed internal adapter for the isolated synthetic lab, never a user-selected
  * namespace. No financial SQL or production identity mapping is rewritten. */
 export function isolatedDevelopmentBroker(db:TransactionDatabase):TransactionDatabase{
