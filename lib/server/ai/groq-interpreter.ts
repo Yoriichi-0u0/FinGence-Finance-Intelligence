@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { proposalSchema, type InterpretationResult, type LayoutEvidence, InterpreterUnavailable } from '../../interpretation/contracts';
+import { budgetStore } from './budget';
 
 /** Published Groq prices (USD per million tokens, 2 Nov 2026) for the receipt's cost estimate. */
 export const GROQ_PRICES: Record<string, [number, number]> = {
@@ -10,8 +11,11 @@ export const INTERPRETER_MODELS = Object.keys(GROQ_PRICES);
 export const DEFAULT_INTERPRETER_MODEL = 'openai/gpt-oss-120b';
 export const PROMPT_REVISION = 'layout-interpretation-1';
 
-/** The hosted gateway answers only when the key is present AND the operator explicitly enabled it. */
-export function aiGatewayEnabled() { return process.env.FINGENCE_AI_GATEWAY === '1' && !!process.env.GROQ_API_KEY; }
+/**
+ * The gateway answers only when the operator explicitly enabled it, the key is present AND a spend budget can be
+ * enforced: on a hosted deployment that means a durable shared store (see ./budget), never per-instance memory.
+ */
+export function aiGatewayEnabled() { return process.env.FINGENCE_AI_GATEWAY === '1' && !!process.env.GROQ_API_KEY && budgetStore() !== null; }
 export function reasoningEffort(): 'low' | 'medium' | 'high' {
     const configured = process.env.FINGENCE_AI_REASONING_EFFORT;
     return configured === 'medium' || configured === 'high' ? configured : 'low';
@@ -92,12 +96,23 @@ const defaultTransport: GroqTransport = async (body, signal) => {
     return { status: response.status, json: await response.json().catch(() => null), retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined };
 };
 
-/** One bounded completion, no retries. The proposal is returned unparsed: the caller's gates decide. */
+const MAX_COMPLETION_TOKENS = 3000;
+/** Upper bound on one call's cost, reserved before dispatch: one token per prompt character plus the full completion budget. */
+export function worstCaseUsd(evidence: LayoutEvidence, model = interpreterModel()) {
+    const [inPrice, outPrice] = GROQ_PRICES[model] ?? GROQ_PRICES[DEFAULT_INTERPRETER_MODEL];
+    return ((SYSTEM_PROMPT.length + JSON.stringify(evidence).length + 64) * inPrice + MAX_COMPLETION_TOKENS * outPrice) / 1_000_000;
+}
+
+/**
+ * One bounded completion; this function never retries. A provider 429 (refused, not billed) is surfaced as
+ * RATE_LIMITED with Retry-After so the BROWSER may make one new, separately budgeted request (lib/interpretation/client.ts).
+ * The proposal is returned unparsed: the caller's gates decide.
+ */
 export async function proposeLayout(evidence: LayoutEvidence, options: { model?: string; reasoningEffort?: 'low' | 'medium' | 'high'; transport?: GroqTransport } = {}): Promise<InterpretationResult> {
     if (!process.env.GROQ_API_KEY && !options.transport) throw new InterpreterUnavailable('NOT_CONFIGURED');
     const model = options.model && INTERPRETER_MODELS.includes(options.model) ? options.model : interpreterModel();
     const body: Record<string, unknown> = {
-        model, temperature: 0, max_completion_tokens: 3000,
+        model, temperature: 0, max_completion_tokens: MAX_COMPLETION_TOKENS,
         messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: JSON.stringify(evidence) }],
         response_format: { type: 'json_schema', json_schema: { name: 'layout_proposal', strict: true, schema: proposalJsonSchema() } },
         ...(model.startsWith('openai/') ? { reasoning_effort: options.reasoningEffort ?? reasoningEffort() } : { reasoning_effort: 'none' }),

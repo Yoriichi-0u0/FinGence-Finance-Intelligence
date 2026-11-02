@@ -19,7 +19,11 @@ async function callGateway(evidence: Parameters<LayoutInterpreter['propose']>[0]
     if (!response.ok || !body?.receipt) throw new InterpreterUnavailable(body?.code ?? `GATEWAY_HTTP_${response.status}`, response.status === 429 ? body?.retryAfterSeconds : undefined);
     return { proposal: body.proposal, receipt: body.receipt };
 }
-/** One retry, only after a rate-limit refusal (never billed) and only when the wait is short. Any other failure is final. */
+/**
+ * At most ONE retry, and only after a refusal that was never billed: a provider 429 (refused before processing) or
+ * the gateway's own budget refusal (before dispatch), and only when Retry-After is 45 s or less. The retry is a new
+ * request that the gateway budgets again. Any other failure is final; the server itself never retries.
+ */
 export const gatewayInterpreter: LayoutInterpreter = {
     async propose(evidence) {
         try { return await callGateway(evidence); }
