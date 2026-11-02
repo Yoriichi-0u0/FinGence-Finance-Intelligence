@@ -65,6 +65,13 @@ describe('answer gate accepts grounded answers and renders every figure from fac
         expect(failed(v)).toEqual([]);
         expect(plain(v.sentences)).toBe('Money in exceeded money out by MYR 28,232.01, and money out was 58.9% of money in.');
     });
+    it('allows the name of a verified month (the processing period or a cited period) but no other', async () => {
+        const { cat, facts } = await setup([...TOP_OUT, { tool: 'cash_summary', period: '2026-02' }]);
+        const ok = verifyAnswer(answered([{ text: 'In March {F1.name} was paid the most, {F1.total}.', cites: ['F1'] }, { text: 'February net cash movement was {F4.net}.', cites: ['F4'] }]), facts, { question: 'Who did we pay the most in March?', catalogue: cat });
+        expect(failed(ok)).toEqual([]);
+        const wrong = verifyAnswer(answered([{ text: 'In January {F1.name} was paid the most, {F1.total}.', cites: ['F1'] }]), facts, { question: 'Who did we pay the most in March?', catalogue: cat });
+        expect(failed(wrong)).toEqual(['no-free-figures']);
+    });
     it('passes through an honest "insufficient" answer without rendering anything', async () => {
         const { cat, facts } = await setup(TOP_OUT);
         expect(verifyAnswer({ answer: { kind: 'INSUFFICIENT', missing: 'Payment terms are not in the records.' } }, facts, { question: 'Which supplier gives the best terms?', catalogue: cat })).toMatchObject({ decision: 'INSUFFICIENT', sentences: null });
@@ -76,7 +83,8 @@ describe('answer gate withholds anything not grounded', () => {
     it.each([
         ['a typed amount', [{ text: '{F1.name} was paid RM 5,000 in total.', cites: ['F1'] }], 'no-free-figures'],
         ['a typed count in words', [{ text: '{F1.name} received three payments.', cites: ['F1'] }], 'no-free-figures'],
-        ['a typed month', [{ text: 'In March {F1.name} was paid {F1.total}.', cites: ['F1'] }], 'no-free-figures'],
+        ['a month that is not a verified period', [{ text: 'In February {F1.name} was paid {F1.total}.', cites: ['F1'] }], 'no-free-figures'],
+        ['a typed year', [{ text: 'In March 2026 {F1.name} was paid {F1.total}.', cites: ['F1'] }], 'no-free-figures'],
         ['a typed percentage', [{ text: '{F1.name} took most of the spending, about half.', cites: ['F1'] }], 'no-free-figures'],
         ['a typed record identifier', [{ text: '{F1.name} includes payment BANK-DEMO-0013.', cites: ['F1'] }], 'no-free-figures'],
         ['a placeholder for a fact that does not exist', [{ text: '{F1.name} was paid {F99}.', cites: ['F1'] }], 'placeholders'],

@@ -39,6 +39,7 @@ export type AnswerVerdict = {
 const PLACEHOLDER = /\{(F\d{1,2}|D[1-4])(?:\.([A-Za-z]{1,24}))?\}/g;
 const NUMBER_WORDS = /\b(zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|dozen|half|twice|double|triple|percent|per cent)\b/i;
 const MONTH_WORDS = /\b(january|february|march|april|june|july|august|september|october|november|december|januari|februari|mac|mei|jun|julai|ogos|oktober|disember)\b/i;
+const MONTH_NAMES = [['january', 'januari'], ['february', 'februari'], ['march', 'mac'], ['april'], ['may', 'mei'], ['june', 'jun'], ['july', 'julai'], ['august', 'ogos'], ['september'], ['october', 'oktober'], ['november'], ['december', 'disember']];
 /** Accounting conclusions, causes, advice and allegations the cash records cannot support. */
 const CONCLUSIONS = /\b(profit\w*|loss[- ]making|revenues?|income|earnings|margins?|ebitda|expenses?|tax(es|ation)?|vat|gst|sst|solven\w*|insolven\w*|bankrupt\w*|liquidity|healthy|unhealthy|fraud\w*|embezzl\w*|launder\w*|theft|stole|steal\w*|illegal|crim(e|es|inal)|guilty|errors?|mistakes?|intentional\w*|deliberate\w*|because|caused|causes?|due to|likely|probably|perhaps|presumably|possibly|should|recommend\w*|advi[cs]e\w*|must|ought|invest\w*)\b/i;
 const VOCABULARY = new Set(['MYR', 'RM', 'I', 'AI', 'The', 'This', 'These', 'There', 'It', 'In', 'Of', 'On', 'At', 'For', 'From', 'To', 'And', 'With', 'Bank', 'Ledger', 'Money', 'Net', 'Total', 'No', 'None', 'Your', 'All', 'Each', 'A', 'An', 'By', 'As', 'Over']);
@@ -91,9 +92,14 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     }
     if (!gate('placeholders', 'Every figure is a placeholder for a cited, verified fact', resolution)) return result('WITHHELD');
 
-    // 3. The free text carries no figure, date, percentage or record identifier of its own.
+    // 3. The free text carries no figure, date, percentage or record identifier of its own. A bare month name is
+    // allowed only when it is the processing period's month or the month of a cited period/date fact (no year: digits stay banned).
     const free = answer.sentences.map(s => s.text.replace(PLACEHOLDER, ' '));
-    const figures = free.flatMap((t, i) => [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(t) ? `sentence ${i + 1}: number word "${t.match(NUMBER_WORDS)![0]}"` : '', MONTH_WORDS.test(t) || /\bMay\b/.test(t) ? `sentence ${i + 1}: month name outside a placeholder` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean));
+    const citedIds = new Set(answer.sentences.flatMap(s => s.cites).flatMap(c => derivedById.get(c)?.from ?? [c]));
+    const verifiedMonths = new Set([+ctx.catalogue.scope.period.slice(5, 7), ...[...citedIds].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? [+v.ym.slice(5, 7)] : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []))]);
+    const allowedMonth = new RegExp(`\\b(${[...verifiedMonths].flatMap(m => MONTH_NAMES[m - 1]).join('|')})\\b`, 'gi');
+    const unverifiedMonth = (t: string) => { const rest = t.replace(allowedMonth, ' '); return MONTH_WORDS.test(rest) || /\bMay\b/.test(rest); };
+    const figures = free.flatMap((t, i) => [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(t) ? `sentence ${i + 1}: number word "${t.match(NUMBER_WORDS)![0]}"` : '', unverifiedMonth(t) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean));
     if (!gate('no-free-figures', 'No amount, count, date, percentage or identifier typed by the model', figures)) return result('WITHHELD');
 
     // 4. Entities: a known name must come from a cited fact; any other proper name must appear in the question or the facts.
