@@ -7,7 +7,10 @@ import {m5LocalEnabled} from '@/lib/server/tenant-admin-m5/flags';
 import FinancialWorkspace from '@/components/financial-m3/workspace';
 import IllustrativePage from './illustrative';
 import { DemoGate } from '@/components/demo/gate';
+import DB04Workspace from '@/components/db04/workspace';
+import {localFinancialReadAllowed} from '@/lib/server/reconciliation/http';
 export default async function Page(){
+ if(process.env.NODE_ENV==='development'&&!process.env.VERCEL&&process.env.FINGENCE_DB04_LOCAL==='1'){const h=await headers();let request:Request;try{request=new Request(`http://${h.get('host')??'invalid'}/analytics`,{headers:h});}catch{notFound();}if(!localFinancialReadAllowed(request))notFound();return <DB04Workspace view="analytics"/>;}
  if(pocLocalEnabled()){const h=await headers();let request:Request;try{request=new Request(`http://${h.get('host')??'invalid'}/analytics`,{headers:h});}catch{notFound();}if(!pocRequestAllowed(request))notFound();return <PocInsightsWorkspace view="analytics"/>;}
  if(m3LocalEnabled()){const h=await headers();let request:Request;try{request=new Request(`http://${h.get('host')??'invalid'}/analytics`,{headers:h});}catch{return <IllustrativePage/>;}if(m3RequestAllowed(request))return <FinancialWorkspace view="analytics" administration={m5LocalEnabled()}/>;}
  return <DemoGate view="analytics" illustrative={<IllustrativePage />} />;

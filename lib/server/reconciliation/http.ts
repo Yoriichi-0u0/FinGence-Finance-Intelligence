@@ -1,5 +1,6 @@
 import 'server-only';
 import type { createFinancialProcessingService } from './service';
+import {financialViews} from './financial-views';
 import { digest, type RegisteredPair } from './processing';
 import { approvedPoCSourceHashes } from '../poc-reconciliation/service';
 export const UPLOAD_LIMIT = 1_050_000;
@@ -60,7 +61,8 @@ export function createProcessingReadHandler(service: Pick<ReturnType<typeof crea
             return Response.json({error:'Access denied'},{status:403,headers});
         try {
             const result = await service.get(token,id);
-            return Response.json({version:'db04-processing-read/1',processingId:id,...result},{headers});
+            const context={version:'db04-processing-read/1',processingId:id,...result};
+            return Response.json({...context,financialViews:financialViews(context,id)},{headers});
         } catch { return Response.json({error:'Access denied'},{status:403,headers}); }
     };
 }

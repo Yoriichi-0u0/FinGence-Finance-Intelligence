@@ -1,4 +1,5 @@
 export interface ProcessingDashboardV1 {
+    financialViews?:import('./server/reconciliation/financial-views').FinancialViewsV1;
     version:'db04-processing-read/1';processingId:string;
     job:Record<string,unknown>;sources:Record<string,unknown>[];
     transactions:Record<string,unknown>[];proposals:Record<string,unknown>[];cases:Record<string,unknown>[];
@@ -12,5 +13,8 @@ export function dashboardContext(input:unknown,expectedId:string):ProcessingDash
     const byKind=new Map(r.sources.map(s=>[s.kind,s.sha256]));
     if(!byKind.has('BANK')||!byKind.has('LEDGER')||r.sources.some(s=>s.organization_id!==r.job.organization_id||typeof s.sha256!=='string'||!/^[a-f0-9]{64}$/.test(s.sha256))
         ||r.transactions.some(t=>t.sha256!==byKind.get(t.kind)||typeof t.signed_amount!=='string'))throw Error('Source lineage mismatch');
+    if(r.financialViews){const v=r.financialViews;
+        if(v.version!=='db04-financial-views/1'||v.processingId!==expectedId||v.organizationId!==r.job.organization_id||!Array.isArray(v.sources)||v.sources.length!==2||v.sources.some(s=>s.sha256!==byKind.get(s.kind))||v.report.processingId!==expectedId||v.report.organizationId!==r.job.organization_id)throw Error('Financial view scope mismatch');
+    }
     return r;
 }

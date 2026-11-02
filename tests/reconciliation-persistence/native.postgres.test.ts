@@ -114,9 +114,11 @@ const s = 'fingence_reconciliation';
             const response=await upload();expect(response.status).toBe(200);const receipt=await response.json();
             expect((await(await upload()).json()).reused).toBe(true);
             const read=await fetch(base+`/api/db04/processing?processingId=${receipt.processingId}`,{headers:{authorization:`Bearer ${token}`}});
-            expect(read.status).toBe(200);expect(dashboardContext(await read.json(),receipt.processingId).transactions).toHaveLength(2);
+            expect(read.status).toBe(200);const payload=await read.json();expect(dashboardContext(payload,receipt.processingId).transactions).toHaveLength(2);
+            expect(payload.financialViews.cashMovement.net).toBe('6380.53');expect(payload.financialViews.processingId).toBe(receipt.processingId);
+            expect(payload.financialViews.report.sources).toEqual(payload.financialViews.sources);expect(payload.financialViews.forecast.forecast.status).toBe('UNAVAILABLE');
             expect((await fetch(base+`/api/db04/processing?processingId=${receipt.processingId}`,{headers:{authorization:`Bearer ${otherToken}`}})).status).toBe(403);
-            for(const path of ['/transactions','/reconciliation','/transactions']){const page=await fetch(base+path);expect(page.status).toBe(200);expect(await page.text()).toContain('Local persisted financial processing');}
+            for(const path of ['/transactions','/reconciliation','/analytics','/forecasting','/reports','/transactions']){const page=await fetch(base+path);expect(page.status).toBe(200);expect(await page.text()).toContain('Local persisted financial processing');}
         } finally {
             if(child.pid){if(process.platform==='win32')execFileSync('taskkill',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});else child.kill('SIGTERM');}
         }
