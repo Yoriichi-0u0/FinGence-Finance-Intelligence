@@ -65,8 +65,8 @@ describe.skipIf(!LIVE)('live layout interpretation evaluation', () => {
             let row: Record<string, unknown> = { run, model, document: d.name, expected: d.expect };
             try {
                 const { proposal, receipt } = await proposeLayout(evidence, { model, reasoningEffort: (process.env.FINGENCE_AI_EVAL_REASONING as 'low' | 'medium' | 'high' | undefined) ?? 'low' });
-                const verdict = verifyProposal(table, proposal, d.name);
-                const reference = d.reference ? verifyProposal(table, CORRECT[d.reference], d.name) : null;
+                const verdict = verifyProposal(table, proposal);
+                const reference = d.reference ? verifyProposal(table, CORRECT[d.reference]) : null;
                 const exact = !!verdict.canonical && !!reference?.canonical && decode(verdict.canonical.bytes) === decode(reference.canonical.bytes);
                 const accepted = verdict.decision === 'AUTO_ACCEPTED';
                 const falseAcceptance = accepted && !exact;

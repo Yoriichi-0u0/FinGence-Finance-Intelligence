@@ -28,10 +28,10 @@ export const CORRECT: Record<string, LayoutProposal> = {
         rationale: 'Recorded test proposal.', unresolved: [],
     },
     'ledger-signed-march-2026.csv': {
-        role: 'GENERAL_LEDGER', headerLine: 3,
+        role: 'GENERAL_LEDGER', headerLine: 4,
         columns: { ...none, recordId: 0, date: 1, reference: 2, description: 3, counterparty: 4, amount: 5 },
         representation: 'SIGNED_AMOUNT', directionTokens: noTokens, dateFormat: 'YYYY-MM-DD', numberFormat: 'PLAIN',
-        scope: { ...noScope, businessId: { line: 0, literal: 'DEMO-001' }, currency: { line: 1, literal: 'MYR' } },
+        scope: { ...noScope, businessId: { line: 1, literal: 'DEMO-001' }, currency: { line: 2, literal: 'MYR' } },
         rationale: 'Recorded test proposal.', unresolved: [],
     },
     // Adversarial fixtures that ARE acceptable: bank statements without a running balance whose headings or tokens state direction.

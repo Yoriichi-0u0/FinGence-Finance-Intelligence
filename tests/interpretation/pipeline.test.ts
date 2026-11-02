@@ -75,6 +75,28 @@ describe('without a usable interpreter the Phase 1 behaviour is unchanged', () =
         expect(c.outputs.reconciliation).toBeNull();
         expect(c.documents[1].interpretation!.checks.filter(k => !k.passed).map(k => k.id)).toEqual(['role-evidence']);
     });
+    it('renaming an ambiguous bank statement as a ledger cannot make it reconcile with inverted signs', async () => {
+        const bytes = new Uint8Array(readFileSync('tests/fixtures/interpretation/bank-ambiguous-debit-credit.csv'));
+        // A model may well follow the name: this interpreter always proposes the sign-inverting ledger reading.
+        const followsName: LayoutInterpreter = { async propose() { const p = structuredClone(CORRECT['bank-debit-credit-no-balance.csv']); Object.assign(p, { role: 'GENERAL_LEDGER', representation: 'DEBIT_CREDIT', headerLine: 7 }); Object.assign(p.columns, { debit: 5, credit: 6, moneyIn: null, moneyOut: null }); p.scope = { businessId: { line: 2, literal: 'DEMO-001' }, businessName: null, currency: { line: 5, literal: 'MYR' }, statementPeriod: { line: 4, literal: '01/03/2026 to 31/03/2026' } }; return { proposal: p, receipt }; } };
+        const verdicts = [];
+        for (const name of ['general-ledger-cash-march-2026.csv', 'GL journal.csv', 'statement.csv', 'export.csv']) {
+            const c = await processDocuments([sample(BANK), { name, bytes, provenance: 'USER_SUPPLIED' }], undefined, undefined, { interpreter: followsName });
+            expect(c.status).toBe('QUARANTINED');
+            expect(c.outputs.reconciliation).toBeNull();
+            verdicts.push(JSON.stringify(c.documents[1].interpretation!.checks));
+        }
+        expect(new Set(verdicts).size).toBe(1); // identical gate outcome whatever the name
+    });
+    it('the same accepted documents give the same processing ID and figures under any file names', async () => {
+        const renamed = (name: string, as: string) => ({ ...unfamiliar(name), name: as });
+        const a = await processDocuments([unfamiliar('penyata-bank-mac-2026.csv'), unfamiliar('ledger-signed-march-2026.csv')], undefined, undefined, { interpreter: recorded });
+        const byName: LayoutInterpreter = { async propose(e) { return recorded.propose({ ...e, fileName: e.fileName === 'a.csv' ? 'penyata-bank-mac-2026.csv' : 'ledger-signed-march-2026.csv' }); } };
+        const b = await processDocuments([renamed('penyata-bank-mac-2026.csv', 'a.csv'), renamed('ledger-signed-march-2026.csv', 'b.csv')], undefined, undefined, { interpreter: byName });
+        expect(a.status).not.toBe('QUARANTINED');
+        expect(b.processingId).toBe(a.processingId);
+        expect(figures(b)).toEqual(figures(a));
+    });
     it('a wrong model proposal quarantines the run with the failed gate visible', async () => {
         const wrong: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); if (p.columns.moneyIn !== null) { p.columns.moneyIn = 5; p.columns.moneyOut = 6; } return { proposal: p, receipt }; } };
         const c = await processDocuments([unfamiliar('bank-statement-march-2026-export.csv'), sample(LEDGER)], undefined, undefined, { interpreter: wrong });

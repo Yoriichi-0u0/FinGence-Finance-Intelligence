@@ -43,8 +43,8 @@
       "bytes": 7294
     },
     "ledger-signed-opaque-no-balance.csv": {
-      "sha256": "ef489fc8a10c6acf9fe41396741a8bea7191b27af8717e478c1aa01444808006",
-      "bytes": 5185
+      "sha256": "e7148cbdbc4363b6feaa0c040c282ad15f289a7cda44e88c98e84ee756ab2698",
+      "bytes": 5238
     },
     "ledger-multiple-accounts.csv": {
       "sha256": "0647bdb522a0c7f7213e1ec7e9149b7219063f3e0fca8a87ed216913c24bc4c9",
@@ -61,6 +61,10 @@
     "ledger-no-account-evidence.csv": {
       "sha256": "8643fc985a5fc06775b780f08ca2de8d30559d395d7467e6bc3b7ebdcfa5538d",
       "bytes": 5425
+    },
+    "bank-ambiguous-debit-credit.csv": {
+      "sha256": "8c33615a8b89b54dc7ae574f91de31e250e3b3d7c408123166e6928f6cb6457e",
+      "bytes": 7165
     }
   }
 }

@@ -52,7 +52,11 @@ function periodMentioned(literal: string, period: string) {
         .some(s => text.includes(s.toLowerCase()));
 }
 
-export function verifyProposal(table: Table, raw: unknown, fileName: string): VerifiedInterpretation {
+/**
+ * Judges a proposal from the document's bytes alone. The file name is deliberately NOT an input: it is metadata
+ * anyone can change, so it may guide a model's proposal (it is in the evidence) but never establishes a role.
+ */
+export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretation {
     const checks: GateCheck[] = [], disclosures: string[] = [], mapping: FieldMapping[] = [];
     const result = (summary: string): VerifiedInterpretation => ({ decision: 'QUARANTINED', role: null, summary, checks, mapping, disclosures, canonical: null, mappingKey: null });
     const gate = (id: string, label: string, passed: boolean, detail: string) => { checks.push({ id, label, passed, detail }); return passed; };
@@ -179,12 +183,13 @@ export function verifyProposal(table: Table, raw: unknown, fileName: string): Ve
     const notStated = counterparties.filter(v => !v).length;
     if (notStated) disclosures.push(`${notStated} rows have no counterparty; recorded as "${COUNTERPARTY_NOT_STATED}".`);
 
-    // 9. Role: whose books these are decides what Debit/Credit and DR/CR mean, so the document must say so itself.
+    // 9. Role: whose books these are decides what Debit/Credit and DR/CR mean, so the document's own content
+    // (preamble and headings, never transaction cells or the file name) must say so.
     const preamble = table.rows.slice(0, p.headerLine).map(r => r.join(' ')).join(' \n ');
-    const roleText = [preamble, header.join(' '), fileName.replace(/[^A-Za-z]+/g, ' ')].join(' \n ');
+    const roleText = [preamble, header.join(' ')].join(' \n ');
     const roleSeen = roleAgreement(roleText, p.role as 'BANK_STATEMENT' | 'GENERAL_LEDGER');
     if (!gate('role-evidence', `The document itself reads as a ${ledger ? 'ledger' : 'bank statement'}`, roleSeen === 'AGREES',
-        roleSeen === 'AGREES' ? 'Title, headings or file name agree' : roleSeen === 'CONTRADICTS' ? `The document reads as a ${ledger ? 'bank statement' : 'ledger'}` : 'Title, headings and file name do not say, or say both')) return result('The document does not confirm the proposed role.');
+        roleSeen === 'AGREES' ? 'Title or headings agree' : roleSeen === 'CONTRADICTS' ? `The document reads as a ${ledger ? 'bank statement' : 'ledger'}` : 'Title and headings do not say, or say both')) return result('The document does not confirm the proposed role.');
 
     // 10. Scope: every value comes from a column with one value, or a literal found verbatim on the cited line.
     const fromColumn = (f: keyof typeof c) => { if (c[f] === null) return null; const values = [...new Set(body.map(r => cell(r.row, f)))]; return values.length === 1 && values[0] ? values[0] : undefined; };

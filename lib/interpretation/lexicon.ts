@@ -56,7 +56,7 @@ const ROLE: Record<'BANK_STATEMENT' | 'GENERAL_LEDGER', string[]> = {
 };
 /**
  * Whose books a document is decides what Debit, Credit, DR and CR mean, so the model's role is checked against
- * the document's own words (preamble, headings, file name; never transaction cells). Both or neither is OPAQUE.
+ * the document's own words (preamble and headings; never transaction cells or the file name). Both or neither is OPAQUE.
  */
 export function roleAgreement(text: string, role: 'BANK_STATEMENT' | 'GENERAL_LEDGER'): Agreement {
     const own = has(text, ROLE[role]), other = has(text, ROLE[role === 'BANK_STATEMENT' ? 'GENERAL_LEDGER' : 'BANK_STATEMENT']);

@@ -55,19 +55,22 @@ function malayStatement() {
 }
 function signedLedger({ heading = 'Net cash movement (MYR)', account = null } = {}) {
     const body = ledger.map(r => [r.LedgerEntryID, r.PostingDate, r.LedgerReference, r.LedgerMemo, r.Counterparty, r.SignedCashMovementMYR]);
-    return lines([['Business', 'DEMO-001'], ['Currency', 'MYR'], ...(account ? [['Account', account]] : []), [], ['Entry', 'Date', 'Reference', 'Description', 'Counterparty', heading], ...body]);
+    // The title states the role: gates read only the content, never the file name.
+    return lines([['Rimba Demo Kitchen (Synthetic) - Cash account ledger'], ['Business', 'DEMO-001'], ['Currency', 'MYR'], ...(account ? [['Account', account]] : []), [], ['Entry', 'Date', 'Reference', 'Description', 'Counterparty', heading], ...body]);
 }
 // Bank statements WITHOUT a running balance: direction rests on headings or tokens alone.
-function bankNoBalance(kind) {
+function bankNoBalance(kind, { ambiguous = false } = {}) {
     const body = bank.map(r => {
         const c = cents(r.SignedCashMovementMYR), base = [dmy(r.ValueDate), r.BankTransactionID, r.BankReference, r.BankDescription, r.Counterparty];
         return kind === 'debit-credit' ? [...base, c < 0 ? grouped(-c) : '', c > 0 ? grouped(c) : ''] : kind === 'dr-cr' ? [...base, grouped(Math.abs(c)), c < 0 ? 'DR' : 'CR'] : [...base, grouped(-c)];
     });
     const money = kind === 'debit-credit' ? ['Debit', 'Credit'] : kind === 'dr-cr' ? ['Amount', 'DR/CR'] : ['Amount (RM)'];
-    return lines([
-        ['Demo Bank Berhad - Current Account Statement'], ['Account holder', 'Rimba Demo Kitchen (Synthetic)'], ['Customer ID', 'DEMO-001'], ['Statement period', '01/03/2026 to 31/03/2026'], ['Currency', 'MYR'], [],
-        ['Date', 'Txn ID', 'Ref No', 'Particulars', 'Payee / Payer', ...money], ...body,
-    ]);
+    // `ambiguous`: nothing in the content says statement or ledger (only the file name could), and an
+    // "Account" line names a current account, so a role read from the name would pass every other gate.
+    const preamble = ambiguous
+        ? [['Demo Bank Berhad'], ['Name', 'Rimba Demo Kitchen (Synthetic)'], ['Customer ID', 'DEMO-001'], ['Account', 'Current Account ****0000'], ['Period', '01/03/2026 to 31/03/2026'], ['Currency', 'MYR'], []]
+        : [['Demo Bank Berhad - Current Account Statement'], ['Account holder', 'Rimba Demo Kitchen (Synthetic)'], ['Customer ID', 'DEMO-001'], ['Statement period', '01/03/2026 to 31/03/2026'], ['Currency', 'MYR'], []];
+    return lines([...preamble, ['Date', 'Txn ID', 'Ref No', 'Particulars', 'Payee / Payer', ...money], ...body]);
 }
 // A double-entry extract: every cash posting has its contra line on a sales or purchases account.
 function ledgerMultipleAccounts() {
@@ -107,6 +110,7 @@ const fixtures = {
     'ledger-sales-account.csv': ledgerExport({ account: '4000 Sales - Food' }),
     'ledger-bank-loan-account.csv': ledgerExport({ account: '2100 Bank loan - Term financing' }),
     'ledger-no-account-evidence.csv': ledgerExport({ account: null }),
+    'bank-ambiguous-debit-credit.csv': bankNoBalance('debit-credit', { ambiguous: true }),
 };
 const manifest = files => JSON.stringify({ generator: 'fingence-unfamiliar-layouts-v1', origin: 'PUBLIC_FICTIONAL_SYNTHETIC', derivedFrom: ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv'],
     files: Object.fromEntries(Object.entries(files).map(([n, t]) => [n, { sha256: createHash('sha256').update(t).digest('hex'), bytes: Buffer.byteLength(t) }])) }, null, 2) + '\n';
