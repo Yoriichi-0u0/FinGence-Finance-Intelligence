@@ -1,0 +1,71 @@
+{
+  "startingCommit": "73d5d15c6cc379228833d557e53dd5bd002b4798",
+  "hostedConnection": "NOT ATTEMPTED",
+  "hostedMigrations": "NOT EXECUTED",
+  "productionModified": false,
+  "runs": [
+    {
+      "report": "outputs/db04-ai06/hosted-readiness-final.json",
+      "passed": 688,
+      "failed": 0,
+      "skipped": 14,
+      "sha256": "943cb8bda997331b2c7d715534e148bab6e95de1f6b843ad8ab6fe82b13a1999"
+    },
+    {
+      "report": "outputs/db04-ai06/readiness-release.json",
+      "passed": 106,
+      "failed": 0,
+      "skipped": 0,
+      "sha256": "f4b4b0aac8ef60b17c3bc796a46548b164d47176c5f5ae8047814e642dded264"
+    }
+  ],
+  "migrations": [
+    {
+      "order": 1,
+      "name": "v2-verified-document-local.sql",
+      "sha256": "a7858ec5c30405309eb026011bb9b1f1fa8f01e6e176ef4369810ba6a09a6c67"
+    },
+    {
+      "order": 2,
+      "name": "v2-m2-local.sql",
+      "sha256": "6a949b1da57d593f3c0b03780bf18787b69132a4454abeeaebf87007404b4b24"
+    },
+    {
+      "order": 3,
+      "name": "v2-m3-local.sql",
+      "sha256": "de66049f86b29f2f6ee8901b7176ce95ef310d195d2a0f338f1254f2933228bd"
+    },
+    {
+      "order": 4,
+      "name": "db04-001-reconciliation.sql",
+      "sha256": "911a0abe2c63f9e60d18f224a795732285b80df1155f19adf9c8d76b89d9d1ef"
+    },
+    {
+      "order": 5,
+      "name": "db04-002-reconciliation-security.sql",
+      "sha256": "d132ac1b200784a180abce94034387d429c08646668b6cf754caae4030325094"
+    },
+    {
+      "order": 6,
+      "name": "db04-003-ranking-evidence.sql",
+      "sha256": "2a811e833f1454a315ad54bbc3cdd1081ee8f2dd8459c9be4128af2976809661"
+    },
+    {
+      "order": 7,
+      "name": "db04-004-proposal-verification.sql",
+      "sha256": "5272f0b3da11510be341403962849440392c698811c9666f3d4511663232595b"
+    }
+  ],
+  "finalNativeTestsPassed": 27,
+  "checks": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "serverBoundary": "PASS"
+  },
+  "notes": [
+    "Broad run preceded final catalog-only/CLI refinements; focused run verifies final source. Counts overlap.",
+    "Initial failed native test report remains local; earlier lint/typecheck failures are recorded in tool output and were corrected before final passing checks.",
+    "Full project suite not rerun; prior 30 unchanged-main baseline failures remain disclosed.",
+    "Local metadata compatibility does not establish Supabase Auth, managed-role grants, remote TLS/network, backups or hosted persistence."
+  ]
+}
