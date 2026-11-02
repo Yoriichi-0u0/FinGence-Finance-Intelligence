@@ -13,6 +13,7 @@ import {createTrustedIngestionService,TRUSTED_INGESTION_VERSION} from '../../lib
 import {normalizeCashSource} from '../../lib/server/poc-reconciliation/normalize';
 import {LocalE5Provider} from '../../lib/server/reconciliation/ai03/model-loader';
 import {financialViews} from '../../lib/server/reconciliation/financial-views';
+import {createReconciliationBackend} from '../../lib/server/reconciliation/backend';
 import {createGroupedPersistenceService} from '../../lib/server/persistence/grouped';
 import {syntheticResult,header,validRow} from '../persistence/fixtures';
 const available=existsSync('C:/Program Files/PostgreSQL/18/bin/initdb.exe');
@@ -67,6 +68,14 @@ const registry={bank:digest(bank.bytes),ledger:digest(ledger.bytes)};
   expect(await run(t=>service().persist(t,bank,ledger))).toMatchObject({processingId:result.processingId,reused:true});
   await expect(run(t=>service().get(t,result.processingId),authority(otherSubject))).rejects.toThrow();
   expect((await owner.query('SELECT count(*)::int n FROM fingence_reconciliation.audit WHERE session_grant_id IS NULL')).rows[0].n).toBe(0);
+  const backend=createReconciliationBackend({financial:runtime,broker,authority:authority(),registry});
+  const connected=await backend.process('synthetic-token',input,provider);
+  expect(connected.supported).toBe(true);if(!connected.supported)throw Error();
+  expect(connected.processingId).toBe(result.processingId);
+  expect(connected.financialViews.cashMovement.net).toBe('6380.53');
+  const retrieved=await backend.get('synthetic-token',connected.processingId);
+  expect(retrieved.sources).toEqual(connected.sources);
+  expect(retrieved.proposalVerifications).toEqual(connected.proposalVerifications);
  },120000);
 
  it('rejects missing authoritative mappings and ignores browser-like organization/role claims',async()=>{
