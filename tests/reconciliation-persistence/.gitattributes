@@ -1,0 +1,2 @@
+fixtures/*.csv -text
+sql/*.sql -text

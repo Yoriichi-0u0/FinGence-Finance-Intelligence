@@ -1,0 +1,515 @@
+{
+  "date": "2026-11-02",
+  "base": "cb5db4625ceca1cb94867a90a8a3edddbcf1e6ba",
+  "source": "901109b9057bfeb927367955bdc69d2e346a09e4",
+  "environment": "DISPOSABLE_LOCAL_POSTGRESQL_18_AND_INSTALLED_OFFLINE_E5",
+  "hostedGroupConnection": false,
+  "hostedGroupWrites": false,
+  "command": "DB04_E5_SMOKE=1 pnpm exec vitest run tests/reconciliation-persistence tests/demo tests/persistence tests/security tests/api tests/financial-m3 tests/poc-reconciliation tests/poc-insights tests/poc-forecast tests/integration --maxWorkers=1 --reporter=json --outputFile=outputs/db04-ai06/group-regressions.json",
+  "db04": {
+    "passed": 80,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checks": {
+    "typecheck": "PASS",
+    "focusedEslintZeroWarnings": "PASS",
+    "serverBoundary": "PASS"
+  },
+  "initialRuns": [
+    {
+      "result": "BLOCKED_BEFORE_TEST_EXECUTION",
+      "reason": "SANDBOX_TEMP_RENAME_EPERM"
+    },
+    {
+      "passed": 79,
+      "failed": 1,
+      "skipped": 0,
+      "reason": "NEW_TEST_EXPECTED_RAW_ACCESS_DENIED_INSTEAD_OF_ADAPTER_SANITIZED_ERROR",
+      "resolved": "Corrected assertion; native RLS assertions retained"
+    }
+  ],
+  "skippedSuites": [
+    {
+      "file": "tests/financial-m3/postgres.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 7
+    },
+    {
+      "file": "tests/demo/pipeline.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "file": "tests/integration/local-session-sum.postgres.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 8
+    },
+    {
+      "file": "tests/poc-forecast/reference.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 3
+    },
+    {
+      "file": "tests/poc-insights/service.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "file": "tests/poc-reconciliation/review-march.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 1
+    }
+  ],
+  "limitations": [
+    "No group hosted access or staging approval",
+    "Local M2 fixture is not Production authentication",
+    "PostgreSQL 18 does not certify an unverified hosted server version",
+    "Full project suite not rerun; previous main baseline failures not reclassified as passing"
+  ],
+  "suites": [
+    {
+      "file": "tests/api/batch-contract.test.ts",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/batch-query.integration.test.ts",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/batch-query.test.ts",
+      "passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/pglite-connection-turnover.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/pglite-protocol-recovery.test.ts",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-contract.test.ts",
+      "passed": 45,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-detail-query.test.ts",
+      "passed": 38,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-query.integration.test.ts",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-query.test.ts",
+      "passed": 35,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/financial-m3/consumers.test.ts",
+      "passed": 12,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/financial-m3/postgres.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 7
+    },
+    {
+      "file": "tests/financial-m3/route.test.ts",
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/financial-m3/selection.test.ts",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/demo/notices.test.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/demo/pipeline.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "file": "tests/integration/backend-security.integration.test.ts",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/connected-financial-flow.integration.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/grounded-answer.integration.test.ts",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/grounded-evidence.integration.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/grouped-consultation.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/ingestion-analytics.test.ts",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/local-session-sum.integration.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/local-session-sum.postgres.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 8
+    },
+    {
+      "file": "tests/integration/scoped-financial-tools.integration.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/synthetic-browser.test.ts",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/synthetic-operation.test.ts",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/integration/team-reuse.test.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/cli.test.ts",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/database-target.test.ts",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/db02.integrity.test.ts",
+      "passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/grouped.integration.test.ts",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/grouped.postgres.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/map.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/postgres.test.ts",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/repository.integration.test.ts",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/repository.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/service.test.ts",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/source-file.test.ts",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/validate.test.ts",
+      "passed": 75,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-forecast/forecast.test.ts",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-forecast/reference.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 3
+    },
+    {
+      "file": "tests/poc-forecast/route.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-forecast/service.test.ts",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-insights/model.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-insights/route.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-insights/selection.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-insights/service.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "file": "tests/poc-reconciliation/matching.test.ts",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-reconciliation/review-march.test.ts",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "file": "tests/poc-reconciliation/reviews-route.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-reconciliation/reviews.test.ts",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-reconciliation/route.test.ts",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/poc-reconciliation/service.test.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/backend.test.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/e5-local.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/financial-views.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/native.postgres.test.ts",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/processing.test.ts",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/proposal-verification.test.ts",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/ranking.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/trusted-ingestion.test.ts",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/audit-store.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/audit.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/authorization.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/secure-cursor.test.ts",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/transaction-guard.test.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "originalRegressionRun": {
+    "passed": 791,
+    "failed": 0,
+    "skipped": 21
+  },
+  "finalDB04": {
+    "passed": 84,
+    "failed": 0,
+    "skipped": 0,
+    "command": "DB04_E5_SMOKE=1 pnpm exec vitest run tests/reconciliation-persistence --maxWorkers=1",
+    "nativePostgresPassed": 24,
+    "actualOfflineE5": true
+  },
+  "additionalNative": {
+    "passed": 14,
+    "failed": 1,
+    "skipped": 0,
+    "command": "FINGENCE_TEST_PG_BIN=<installed PostgreSQL 18 bin> pnpm exec vitest run tests/financial-m3/postgres.test.ts tests/integration/local-session-sum.postgres.test.ts --maxWorkers=1",
+    "failure": {
+      "test": "retains revoked-session denial across a database crash and restart",
+      "code": "ETIMEDOUT",
+      "stage": "pg_ctl restart"
+    }
+  },
+  "unchangedMainBaseline": {
+    "passed": 7,
+    "failed": 1,
+    "skipped": 0,
+    "commit": "cb5db4625ceca1cb94867a90a8a3edddbcf1e6ba",
+    "method": "git archive into ignored separate directory; main was not checked out or modified",
+    "command": "pnpm exec vitest run --root .local/group-main-baseline tests/integration/local-session-sum.postgres.test.ts --maxWorkers=1",
+    "sameFailureReproduced": true
+  },
+  "uniqueLatestOutcomes": {
+    "passed": 809,
+    "failed": 1,
+    "skipped": 6,
+    "method": "Replace DB04 outcomes with final 84-test run and replace 15 originally skipped native checks with supplemental 14 passed/1 failed; do not sum repeated tests",
+    "failureIsUnchangedMainBaseline": true
+  },
+  "remainingSkipReason": "Six optional private synthetic March/full-year dataset tests; dataset path not configured. Fifteen initial macOS-default PostgreSQL path skips were replaced by explicit Windows native execution."
+}
