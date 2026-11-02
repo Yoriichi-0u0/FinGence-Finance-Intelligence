@@ -30,7 +30,8 @@ function writeStored(value: Stored | null) {
     try { if (value) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value)); else sessionStorage.removeItem(STORAGE_KEY); return true; } catch { return false; }
 }
 
-export function DemoProcessingProvider({ enabled, children }: { enabled: boolean; children: React.ReactNode }) {
+/** `aiGateway` is the server's own answer to "is the AI gateway enabled?": when it is false the browser never probes the (404) AI routes. */
+export function DemoProcessingProvider({ enabled, aiGateway = false, children }: { enabled: boolean; aiGateway?: boolean; children: React.ReactNode }) {
     const [status, setStatus] = useState<DemoStatus>('loading');
     const [context, setContext] = useState<ProcessingContext | null>(null);
     const [liveStages, setLiveStages] = useState<Stage[]>([]);
@@ -39,7 +40,7 @@ export function DemoProcessingProvider({ enabled, children }: { enabled: boolean
     const [error, setError] = useState<string | null>(null);
     const [ai, setAi] = useState<GatewayStatus | null>(null);
     const run = useRef(0);
-    useEffect(() => { if (enabled) void gatewayStatus().then(setAi); }, [enabled]);
+    useEffect(() => { if (enabled && aiGateway) void gatewayStatus().then(setAi); }, [enabled, aiGateway]);
 
     useEffect(() => {
         if (!enabled) return;

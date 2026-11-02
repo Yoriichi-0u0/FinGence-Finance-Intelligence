@@ -14,6 +14,7 @@ import { askGrounded, gatewayQaModel, qaGatewayStatus, type GroundedRun, type Qa
 import { groundingIndex } from '@/lib/grounded-qa/tools';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 import { GroundedAnswer } from './grounded-answer';
+import { useDemoProcessing } from './context';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, button, usesOwnDocuments, money, outflow, primaryButton } from './shared';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
@@ -190,7 +191,9 @@ function Ask({ c }: { c: Ready }) {
     const facts = useMemo(() => qaFacts(c), [c]), index = useMemo(() => groundingIndex(c), [c]);
     const [items, setItems] = useState<AskItem[]>([]), [question, setQuestion] = useState(''), [busy, setBusy] = useState(false);
     const [ai, setAi] = useState<QaGatewayStatus>({ available: false }), [mode, setMode] = useState<'RULES' | 'AI'>('RULES'), next = useRef(0);
-    useEffect(() => { let live = true; qaGatewayStatus().then(s => { if (live) setAi(s); }); return () => { live = false; }; }, []);
+    // Probe the Q&A route only when the layout gateway already answered (same switch); otherwise nothing is requested.
+    const gateway = useDemoProcessing().ai?.available ?? false;
+    useEffect(() => { let live = true; if (gateway) qaGatewayStatus().then(s => { if (live) setAi(s); }); return () => { live = false; }; }, [gateway]);
     if (!facts) return <Unavailable title="Questions unavailable" detail="The processing context has no verified facts." />;
     const aiMode = mode === 'AI' && ai.available && !!index;
     const ask = async (q: string) => {
