@@ -1,5 +1,14 @@
 # FinGence — current technical entrypoint
 
+## FinGence 2.0 AI M2 grounded financial Q&A — 2 November 2026 (in progress)
+
+[M2 architecture](../architecture/fingence2-ai-m2-grounded-qa.md) and [runbook](../integration/fingence2-ai-m2-grounded-qa.md),
+branch `claude/fingence2-ai-m2-grounded-qa` stacked on M1 `ef18819`. `/ask` gains an "AI-assisted (verified)"
+mode only when the M1 gateway is available. The model plans catalogue-bound deterministic queries
+(`lib/grounded-qa/tools.ts`) and writes answers whose figures are placeholders filled from verified facts;
+`lib/grounded-qa/gates.ts` withholds anything else, and the rule-based answerer stays the default and fallback.
+`/api/ai/ask` shares M1's switch, budget and request bounds (`lib/server/ai/{groq,request,grounded-qa}.ts`).
+
 ## FinGence 2.0 AI M1 layout interpretation — 2 November 2026
 
 [AI roadmap and model selection](../architecture/fingence2-ai-roadmap.md) and the
