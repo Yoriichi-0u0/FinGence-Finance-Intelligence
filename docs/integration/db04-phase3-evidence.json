@@ -1,0 +1,32 @@
+{
+  "startingCommit": "26caedc965d4de2faaa36ace0bb32e1171c0c278",
+  "target": "disposable local databases only; no hosted target available",
+  "hostedConnection": "NOT ATTEMPTED",
+  "hostedMigrations": "NOT EXECUTED",
+  "hostedWriteRead": "NOT EXECUTED",
+  "hostedSecurity": "NOT VERIFIED",
+  "productionModified": false,
+  "localRegression": {
+    "passed": 586,
+    "failed": 0,
+    "skipped": 10
+  },
+  "nativePostgresTests": {
+    "passed": 18,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checks": {
+    "typecheck": "PASS",
+    "focusedLint": "PASS",
+    "serverBoundary": "PASS",
+    "diffCheck": "PASS"
+  },
+  "rawReport": "outputs/db04-ai06/phase3-local.json",
+  "migrationChecksumsSha256": {
+    "db04-001-reconciliation.sql": "911a0abe2c63f9e60d18f224a795732285b80df1155f19adf9c8d76b89d9d1ef",
+    "db04-002-reconciliation-security.sql": "d132ac1b200784a180abce94034387d429c08646668b6cf754caae4030325094"
+  },
+  "fullSuite": "Not rerun. Prior 30 failures reproduced on unchanged main remain disclosed.",
+  "ai06": "Unchanged deterministic integration; fuzzy/E5 work deferred until hosted persistence verification as requested. No inference claimed."
+}

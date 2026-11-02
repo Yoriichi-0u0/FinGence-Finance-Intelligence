@@ -3,6 +3,21 @@
 The owner confirms there is currently no approved isolated target. Do not use
 FYP A main/Production for this work. No hosted integration has been executed.
 
+Shortest next action: in the Supabase dashboard choose New project, select an
+eligible Free organization, name it `fingence-db04-development`, generate/store
+its database password privately, choose the region and create the project only
+if the confirmation shows no associated cost. If no free capacity is available,
+stop and request cost approval. Do not upgrade or modify FYP A. After provisioning,
+share only the new project reference and isolation approval; credentials stay in
+secure server configuration. See the official billing guidance:
+https://supabase.com/kb/troubleshooting/keeping-free-projects-after-pro-upgrade-Kf9Xm2
+
+Phase 3 catalog preflight now returns prerequisite columns, validated constraint
+definitions, security-function owners/ACLs/search-path settings, installed
+extensions and RLS policy definitions. These are read-only diagnostics for manual
+compatibility review, not automatic deployment approval. DB04 uses built-in
+PostgreSQL SQL/PLpgSQL facilities; no extra extension is installed by its migrations.
+
 1. An authorized project owner opens FYP A in the Supabase dashboard and checks
    branch availability and applicable billing before creating infrastructure.
 2. If available, use the branch selector to create a development preview branch.

@@ -14,5 +14,8 @@ it('inspects real catalogs without manufacturing missing hosted identity depende
         expect(result.prerequisites.every(p => !p.present)).toBe(true);
         expect(result.tables).toEqual([]);
         expect(result.hostedWritesAuthorized).toBe(false);
+        expect(result.functions).toEqual([]);
+        expect(result.policies).toEqual([]);
+        expect(result.extensions.some(e => e.name === 'plpgsql')).toBe(true);
     } finally { await pg.close(); }
 });
