@@ -1,5 +1,10 @@
 # DB04 / AI06 group integration candidate
 
+3 November follow-up: [combined DB01–DB04 deployment review](db01-db04-group-approval.md)
+adds an explicitly separate, owner-review-only synthetic deployment package. It is not
+installed, does not provide real team authentication, and does not supersede the
+Production identity/ingestion requirements below. Original candidate evidence is retained.
+
 2 November 2026. Based on main `cb5db4625ceca1cb94867a90a8a3edddbcf1e6ba`;
 reuses the implementation from `901109b9057bfeb927367955bdc69d2e346a09e4`.
 Branch: `feature/db04-ai06-group-integration`. Personal development PR #57 is
