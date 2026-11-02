@@ -3,14 +3,14 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { processDocuments, type DocumentInput, type ProcessingContext } from '../../lib/demo/pipeline';
 import { InterpreterUnavailable, type LayoutInterpreter } from '../../lib/interpretation/contracts';
-import { CORRECT } from './proposals';
+import { CORRECT, wire } from './proposals';
 
 const doc = (dir: string, name: string): DocumentInput => ({ name, bytes: new Uint8Array(readFileSync(join(dir, name))), provenance: 'USER_SUPPLIED' });
 const sample = (name: string) => doc('public/demo', name), unfamiliar = (name: string) => doc('public/demo/unfamiliar', name);
 const BANK = 'demo-bank-statement-2026-03.csv', LEDGER = 'demo-general-ledger-2026-03.csv', HISTORY = 'demo-bank-history-2025-04-to-2026-03.csv';
 const receipt = { provider: 'GROQ' as const, model: 'recorded-test', requestId: null, latencyMs: 0, inputTokens: null, outputTokens: null, estimatedUsd: null, mode: 'LIVE' as const };
 /** Recorded test double: returns the hand-written correct proposal for the evidence's file. */
-const recorded: LayoutInterpreter = { async propose(evidence) { return { proposal: CORRECT[evidence.fileName] ?? { role: 'UNSUPPORTED' }, receipt }; } };
+const recorded: LayoutInterpreter = { async propose(evidence) { const p = CORRECT[evidence.fileName]; return { proposal: p ? wire(p) : { layout: { role: 'UNSUPPORTED' }, rationale: '', unresolved: [] }, receipt }; } };
 const figures = (c: ProcessingContext) => ({
     status: c.status, scope: c.scope, counts: c.outputs.reconciliation?.counts, cash: c.outputs.reconciliation?.cashMovement, totals: c.outputs.totals,
     anomalies: c.outputs.anomalies.map(a => [a.row.date, a.row.amount, a.severity]), forecast: c.outputs.forecast?.forecast,
@@ -42,7 +42,7 @@ describe('AI-interpreted unfamiliar layouts reproduce the Phase 1 results', () =
 describe('processing identity follows the verified content, not the proposal wording', () => {
     it('two different proposals that read the documents identically give the same processing ID', async () => {
         const inputs = [unfamiliar('bank-statement-march-2026-export.csv'), unfamiliar('general-ledger-cash-march-2026.csv')];
-        const variant: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); p.rationale = 'Different wording.'; p.scope.statementPeriod = null; p.unresolved = ['none']; return { proposal: p, receipt }; } };
+        const variant: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); p.rationale = 'Different wording.'; p.scope.statementPeriod = null; p.unresolved = ['none']; return { proposal: wire(p), receipt }; } };
         const a = await processDocuments(inputs, undefined, undefined, { interpreter: recorded }), b = await processDocuments(inputs, undefined, undefined, { interpreter: variant });
         expect(b.processingId).toBe(a.processingId);
     });
@@ -69,7 +69,7 @@ describe('without a usable interpreter the Phase 1 behaviour is unchanged', () =
     });
     it('a second bank statement passed off as the ledger never yields a reconciliation', async () => {
         const name = 'bank-debit-credit-no-balance.csv';
-        const asLedger: LayoutInterpreter = { async propose() { const p = structuredClone(CORRECT[name]); Object.assign(p, { role: 'GENERAL_LEDGER', representation: 'DEBIT_CREDIT' }); Object.assign(p.columns, { debit: 5, credit: 6, moneyIn: null, moneyOut: null }); return { proposal: p, receipt }; } };
+        const asLedger: LayoutInterpreter = { async propose() { const p = structuredClone(CORRECT[name]); Object.assign(p, { role: 'GENERAL_LEDGER', representation: 'DEBIT_CREDIT' }); Object.assign(p.columns, { debit: 5, credit: 6, moneyIn: null, moneyOut: null }); return { proposal: wire(p), receipt }; } };
         const c = await processDocuments([sample(BANK), doc('tests/fixtures/interpretation', name)], undefined, undefined, { interpreter: asLedger });
         expect(c.status).toBe('QUARANTINED');
         expect(c.outputs.reconciliation).toBeNull();
@@ -78,7 +78,7 @@ describe('without a usable interpreter the Phase 1 behaviour is unchanged', () =
     it('renaming an ambiguous bank statement as a ledger cannot make it reconcile with inverted signs', async () => {
         const bytes = new Uint8Array(readFileSync('tests/fixtures/interpretation/bank-ambiguous-debit-credit.csv'));
         // A model may well follow the name: this interpreter always proposes the sign-inverting ledger reading.
-        const followsName: LayoutInterpreter = { async propose() { const p = structuredClone(CORRECT['bank-debit-credit-no-balance.csv']); Object.assign(p, { role: 'GENERAL_LEDGER', representation: 'DEBIT_CREDIT', headerLine: 7 }); Object.assign(p.columns, { debit: 5, credit: 6, moneyIn: null, moneyOut: null }); p.scope = { businessId: { line: 2, literal: 'DEMO-001' }, businessName: null, currency: { line: 5, literal: 'MYR' }, statementPeriod: { line: 4, literal: '01/03/2026 to 31/03/2026' } }; return { proposal: p, receipt }; } };
+        const followsName: LayoutInterpreter = { async propose() { const p = structuredClone(CORRECT['bank-debit-credit-no-balance.csv']); Object.assign(p, { role: 'GENERAL_LEDGER', representation: 'DEBIT_CREDIT', headerLine: 7 }); Object.assign(p.columns, { debit: 5, credit: 6, moneyIn: null, moneyOut: null }); p.scope = { businessId: { line: 2, literal: 'DEMO-001' }, businessName: null, currency: { line: 5, literal: 'MYR' }, statementPeriod: { line: 4, literal: '01/03/2026 to 31/03/2026' } }; return { proposal: wire(p), receipt }; } };
         const verdicts = [];
         for (const name of ['general-ledger-cash-march-2026.csv', 'GL journal.csv', 'statement.csv', 'export.csv']) {
             const c = await processDocuments([sample(BANK), { name, bytes, provenance: 'USER_SUPPLIED' }], undefined, undefined, { interpreter: followsName });
@@ -98,7 +98,7 @@ describe('without a usable interpreter the Phase 1 behaviour is unchanged', () =
         expect(figures(b)).toEqual(figures(a));
     });
     it('a wrong model proposal quarantines the run with the failed gate visible', async () => {
-        const wrong: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); if (p.columns.moneyIn !== null) { p.columns.moneyIn = 5; p.columns.moneyOut = 6; } return { proposal: p, receipt }; } };
+        const wrong: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); if (p.columns.moneyIn !== null) { p.columns.moneyIn = 5; p.columns.moneyOut = 6; } return { proposal: wire(p), receipt }; } };
         const c = await processDocuments([unfamiliar('bank-statement-march-2026-export.csv'), sample(LEDGER)], undefined, undefined, { interpreter: wrong });
         expect(c.status).toBe('QUARANTINED');
         expect(c.outputs.reconciliation).toBeNull();

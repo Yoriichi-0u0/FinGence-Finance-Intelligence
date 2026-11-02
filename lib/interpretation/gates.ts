@@ -4,7 +4,7 @@
  * when all gates pass, and is then materialized into the Phase 1 canonical CSV layout so the rest of
  * the pipeline (normalizer, second parser, matcher, analytics) runs unchanged.
  */
-import { proposalSchema, type LayoutProposal } from './contracts';
+import { parseProposal, type LayoutProposal } from './contracts';
 import { NUMBER_FORMAT_LIST, MALAY_MONTH_NAMES, MONTH_NAMES, SWAPPED, cents, parseAmount, parseDate, type DateFormat } from './formats';
 import { cashAccountAgreement, headingAgreement, roleAgreement, signedAgreement, tokenAgreement, type Agreement, type Meaning } from './lexicon';
 import type { Table } from './evidence';
@@ -61,9 +61,10 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
     const result = (summary: string): VerifiedInterpretation => ({ decision: 'QUARANTINED', role: null, summary, checks, mapping, disclosures, canonical: null, mappingKey: null });
     const gate = (id: string, label: string, passed: boolean, detail: string) => { checks.push({ id, label, passed, detail }); return passed; };
 
-    const parsed = proposalSchema.safeParse(raw);
-    if (!gate('schema', 'Proposal matches the strict interpretation schema', parsed.success, parsed.success ? 'Valid' : parsed.error.issues.slice(0, 3).map(i => `${i.path.join('.')}: ${i.message}`).join('; '))) return result('The model response was not a valid interpretation proposal.');
-    const p: LayoutProposal = parsed.data!, c = p.columns, ledger = p.role === 'GENERAL_LEDGER';
+    const parsed = parseProposal(raw);
+    gate('schema', 'Proposal matches the strict interpretation schema', parsed.success, parsed.success ? (parsed.version === 'v2' ? 'Valid' : 'Valid (legacy v1 layout)') : parsed.issues.join('; '));
+    if (!parsed.success) return result('The model response was not a valid interpretation proposal.');
+    const p: LayoutProposal = parsed.data, c = p.columns, ledger = p.role === 'GENERAL_LEDGER';
     if (!gate('role', 'Document is a supported bank statement or cash-account ledger', p.role !== 'UNSUPPORTED', p.role === 'UNSUPPORTED' ? `The model abstained: ${p.unresolved.join('; ') || p.rationale || 'unsupported document'}` : p.role)) return result('The model reported that this is not a supported financial document.');
 
     // 1. Table structure.

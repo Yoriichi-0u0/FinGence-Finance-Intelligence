@@ -6,11 +6,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { processDocuments, type DocumentInput } from '../../lib/demo/pipeline';
 import type { LayoutInterpreter } from '../../lib/interpretation/contracts';
 import { InterpretationPanel } from '../../components/demo/interpretation-panel';
-import { CORRECT } from './proposals';
+import { CORRECT, wire } from './proposals';
 
 const doc = (dir: string, name: string): DocumentInput => ({ name, bytes: new Uint8Array(readFileSync(join(dir, name))), provenance: 'PUBLIC_SYNTHETIC_SAMPLE' });
 const receipt = { provider: 'GROQ' as const, model: 'openai/gpt-oss-120b', requestId: 'req', latencyMs: 3200, inputTokens: 3306, outputTokens: 1195, estimatedUsd: 0.0012, mode: 'LIVE' as const };
-const recorded: LayoutInterpreter = { async propose(e) { return { proposal: CORRECT[e.fileName], receipt }; } };
+const recorded: LayoutInterpreter = { async propose(e) { return { proposal: wire(CORRECT[e.fileName]), receipt }; } };
 const text = (html: string) => html.replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/&gt;/g, '>').replace(/\s+/g, ' ');
 
 describe('AI interpretation panel', () => {

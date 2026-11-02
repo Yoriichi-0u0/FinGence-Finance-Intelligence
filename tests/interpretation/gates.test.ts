@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { buildEvidence, readTable } from '../../lib/interpretation/evidence';
 import { verifyProposal } from '../../lib/interpretation/gates';
-import { evidenceSchema, proposalSchema, type LayoutProposal } from '../../lib/interpretation/contracts';
+import { evidenceSchema, modelProposalSchema, parseProposal, proposalSchema, type LayoutProposal } from '../../lib/interpretation/contracts';
 import { parseAmount, parseDate } from '../../lib/interpretation/formats';
-import { CORRECT } from './proposals';
+import { CORRECT, wire } from './proposals';
 
 const unfamiliar = (name: string) => readTable(new Uint8Array(readFileSync(join('public/demo/unfamiliar', name))))!;
 const fixture = (name: string) => readTable(new Uint8Array(readFileSync(join('tests/fixtures/interpretation', name))))!;
@@ -230,5 +230,47 @@ describe('the file name never establishes a financial role', () => {
         const asBank = edit(CORRECT[LEDGER], p => { p.role = 'BANK_STATEMENT'; p.representation = 'SPLIT_IN_OUT'; p.columns.moneyIn = 6; p.columns.moneyOut = 5; p.columns.debit = null; p.columns.credit = null; });
         const r = verifyProposal(stripped, asBank);
         expect([r.decision, failed(r)]).toEqual(['QUARANTINED', ['role-evidence']]);
+    });
+});
+
+describe('v2 model contract: contradictory money mappings cannot be expressed', () => {
+    const ALL = Object.keys(CORRECT);
+    it.each(ALL)('%s round-trips through the v2 wire form and is accepted', name => {
+        const parsed = parseProposal(wire(CORRECT[name]));
+        expect(parsed).toMatchObject({ success: true, version: 'v2' });
+        expect(parsed.success && parsed.data).toEqual(CORRECT[name]);
+    });
+    it('accepts the v2 form under the gates with the same canonical bytes as the flat form', () => {
+        for (const name of [BANK, LEDGER, MALAY, SIGNED]) {
+            const a = verifyProposal(unfamiliar(name), CORRECT[name]), b = verifyProposal(unfamiliar(name), wire(CORRECT[name]));
+            expect(b.checks[0]).toMatchObject({ id: 'schema', detail: 'Valid' });
+            expect(a.checks[0].detail).toBe('Valid (legacy v1 layout)');
+            expect(new TextDecoder().decode(b.canonical!.bytes)).toBe(new TextDecoder().decode(a.canonical!.bytes));
+            expect(b.mappingKey).toBe(a.mappingKey);
+        }
+    });
+    // Each shape below is one the live models actually produced in the release-readiness evaluation.
+    const bank = () => wire(CORRECT['bank-dr-cr-no-balance.csv']) as { layout: Record<string, unknown> };
+    it.each([
+        ['SPLIT_IN_OUT with amount + direction (both models, DR/CR statement)', () => { const p = bank(); p.layout.money = { representation: 'SPLIT_IN_OUT', amount: 5, direction: 6 }; return p; }],
+        ['DR/CR with empty tokens', () => { const p = bank(); p.layout.money = { representation: 'AMOUNT_AND_DIRECTION', amount: 5, direction: 6, inflowTokens: [], outflowTokens: [] }; return p; }],
+        ['one column as both money-in and credit (20B, Debit/Credit statement)', () => { const p = bank(); p.layout.money = { representation: 'SPLIT_IN_OUT', moneyIn: 6, moneyOut: 5, debit: 5, credit: 6 }; return p; }],
+        ['ledger-only debit/credit on a bank statement (120B)', () => { const p = bank(); p.layout.money = { representation: 'DEBIT_CREDIT', debit: 5, credit: 6 }; return p; }],
+        ['SPLIT_IN_OUT on a ledger', () => { const p = wire(CORRECT[LEDGER]) as { layout: Record<string, unknown> }; p.layout.money = { representation: 'SPLIT_IN_OUT', moneyIn: 5, moneyOut: 6 }; return p; }],
+        ['no date column', () => { const p = bank(); p.layout.columns = { ...(p.layout.columns as object), date: null }; return p; }],
+    ])('rejects %s', (_, make) => {
+        const raw = make();
+        expect(modelProposalSchema.safeParse(raw).success).toBe(false);
+        expect(proposalSchema.safeParse(raw).success).toBe(false);
+        const r = verifyProposal(fixture('bank-dr-cr-no-balance.csv'), raw);
+        expect(failed(r)).toEqual(['schema']);
+        expect(r.canonical).toBeNull();
+    });
+    it('an abstention needs no layout fields and stops at the role gate', () => {
+        expect(failed(verifyProposal(fixture('staff-roster.csv'), { layout: { role: 'UNSUPPORTED' }, rationale: 'A staff roster.', unresolved: [] }))).toEqual(['role']);
+    });
+    it('legacy flat proposals (stored before v2) still face every gate', () => {
+        const legacyWrong = edit(CORRECT[BANK], p => { p.columns.moneyIn = 5; p.columns.moneyOut = 6; });
+        expect(failed(verifyProposal(unfamiliar(BANK), legacyWrong))).toEqual(['balance']);
     });
 });

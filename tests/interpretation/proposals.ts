@@ -1,5 +1,19 @@
 /** Hand-written correct proposals for the public unfamiliar-layout samples (recorded-test doubles, not model output). */
-import type { LayoutProposal } from '../../lib/interpretation/contracts';
+import type { LayoutProposal, ModelProposal } from '../../lib/interpretation/contracts';
+
+/** Expresses a flat proposal in the v2 model contract (what a strict-schema model emits). */
+export function wire(p: LayoutProposal): ModelProposal {
+    const { rationale, unresolved } = p;
+    if (p.role === 'UNSUPPORTED') return { layout: { role: 'UNSUPPORTED' }, rationale, unresolved };
+    const c = p.columns, text = { recordId: c.recordId, date: c.date!, reference: c.reference!, description: c.description!, counterparty: c.counterparty, balance: c.balance, currency: c.currency, businessId: c.businessId, businessName: c.businessName };
+    const money = p.representation === 'SIGNED_AMOUNT' ? { representation: 'SIGNED_AMOUNT' as const, amount: c.amount! }
+        : p.representation === 'AMOUNT_AND_DIRECTION' ? { representation: 'AMOUNT_AND_DIRECTION' as const, amount: c.amount!, direction: c.direction!, inflowTokens: p.directionTokens.inflow, outflowTokens: p.directionTokens.outflow }
+            : p.representation === 'SPLIT_IN_OUT' ? { representation: 'SPLIT_IN_OUT' as const, moneyIn: c.moneyIn!, moneyOut: c.moneyOut! } : { representation: 'DEBIT_CREDIT' as const, debit: c.debit!, credit: c.credit! };
+    const table = { headerLine: p.headerLine, dateFormat: p.dateFormat, numberFormat: p.numberFormat, scope: p.scope };
+    return p.role === 'BANK_STATEMENT'
+        ? { layout: { role: 'BANK_STATEMENT', ...table, columns: text, money: money as Extract<typeof money, { representation: 'SIGNED_AMOUNT' | 'AMOUNT_AND_DIRECTION' | 'SPLIT_IN_OUT' }> }, rationale, unresolved }
+        : { layout: { role: 'GENERAL_LEDGER', ...table, columns: { ...text, account: c.account }, money: money as Extract<typeof money, { representation: 'SIGNED_AMOUNT' | 'AMOUNT_AND_DIRECTION' | 'DEBIT_CREDIT' }> }, rationale, unresolved };
+}
 
 const none = { recordId: null, date: null, reference: null, description: null, counterparty: null, amount: null, direction: null, moneyIn: null, moneyOut: null, debit: null, credit: null, balance: null, account: null, currency: null, businessId: null, businessName: null };
 const noTokens = { inflow: [], outflow: [] };

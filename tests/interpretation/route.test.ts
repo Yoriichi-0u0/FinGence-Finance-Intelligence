@@ -2,13 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 vi.mock('server-only', () => ({}));
 import { buildEvidence, readTable } from '../../lib/interpretation/evidence';
-import { CORRECT } from './proposals';
+import { CORRECT, wire } from './proposals';
 
 const NAME = 'bank-statement-march-2026-export.csv';
 const evidence = buildEvidence(readTable(new Uint8Array(readFileSync(`public/demo/unfamiliar/${NAME}`)))!, 'b'.repeat(64), NAME);
 const post = (body: unknown, headers: Record<string, string> = {}) => new Request('http://localhost:3000/api/ai/interpret', { method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost:3000', origin: 'http://localhost:3000', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) });
 const groq = (status: number, json: unknown) => vi.fn(async () => new Response(JSON.stringify(json), { status }));
-const completion = { id: 'chatcmpl-test', model: 'openai/gpt-oss-120b', choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(CORRECT[NAME]) } }], usage: { prompt_tokens: 3300, completion_tokens: 1200 } };
+const completion = { id: 'chatcmpl-test', model: 'openai/gpt-oss-120b', choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(wire(CORRECT[NAME])) } }], usage: { prompt_tokens: 3300, completion_tokens: 1200 } };
 async function route() { vi.resetModules(); return import('../../app/api/ai/interpret/route'); }
 
 describe('AI interpretation gateway', () => {
@@ -64,12 +64,15 @@ describe('AI interpretation gateway', () => {
         const response = await (await route()).POST(post({ evidence }));
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(body.proposal).toEqual(CORRECT[NAME]);
+        expect(body.proposal).toEqual(wire(CORRECT[NAME]));
         expect(body.receipt).toMatchObject({ provider: 'GROQ', model: 'openai/gpt-oss-120b', inputTokens: 3300, outputTokens: 1200, mode: 'LIVE' });
         expect(body.receipt.estimatedUsd).toBeCloseTo((3300 * 0.15 + 1200 * 0.6) / 1e6, 9);
         expect(fetch).toHaveBeenCalledTimes(1);
         const sent = JSON.parse((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
         expect(sent.response_format.json_schema.strict).toBe(true);
+        const schema = JSON.stringify(sent.response_format.json_schema.schema);
+        expect(sent.response_format.json_schema.schema.required).toEqual(['layout', 'rationale', 'unresolved']);
+        expect(schema).not.toMatch(/"const"|"oneOf"|"\$schema"/);
         expect(sent.messages[1].content.length).toBeLessThan(12_000);
     });
     it('refuses cross-origin, oversized, malformed and unbounded requests before any provider call', async () => {
