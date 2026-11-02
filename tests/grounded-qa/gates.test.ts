@@ -95,6 +95,11 @@ describe('answer gate withholds anything not grounded', () => {
     it.each([
         ['a typed amount', [{ text: '{F1.name} was paid RM 5,000 in total.', cites: ['F1'] }], 'no-free-figures'],
         ['a typed count in words', [{ text: '{F1.name} received three payments.', cites: ['F1'] }], 'no-free-figures'],
+        // Owner review: "one" was missing. Staff Payroll (F1) has 2 payments; the cited total is valid but unrelated to the count.
+        ['an unsupported "one" count', [{ text: 'There was one payment to {F1.name}, totalling {F1.total}.', cites: ['F1'] }], 'no-free-figures'],
+        ['an unsupported "once" count', [{ text: '{F1.name} was paid {F1.total} once.', cites: ['F1'] }], 'no-free-figures'],
+        ['a rank the cited fact does not have', [{ text: 'The second-largest payee was {F1.name}, paid {F1.total}.', cites: ['F1'] }], 'ranks'],
+        ['an unsupported "third"', [{ text: 'The third payee was {F1.name}.', cites: ['F1'] }], 'ranks'],
         ['a month that is not a verified period', [{ text: 'In February {F1.name} was paid {F1.total}.', cites: ['F1'] }], 'no-free-figures'],
         ['a typed year', [{ text: 'In March 2026 {F1.name} was paid {F1.total}.', cites: ['F1'] }], 'no-free-figures'],
         ['a typed percentage', [{ text: '{F1.name} took most of the spending, about half.', cites: ['F1'] }], 'no-free-figures'],
@@ -103,7 +108,7 @@ describe('answer gate withholds anything not grounded', () => {
         ['a placeholder its sentence does not cite', [{ text: '{F1.name} was paid more than {F2.name}.', cites: ['F1'] }], 'placeholders'],
         ['a field the fact does not have', [{ text: '{F1.name} has rating {F1.rating}.', cites: ['F1'] }], 'placeholders'],
         ['a derivation it never defined', [{ text: '{F1.name} was paid {D3} more.', cites: ['F1', 'D3'] }], 'placeholders'],
-        ['a known counterparty it does not cite', [{ text: '{F1.name} was paid the most; Kuching Packaging Supply came second.', cites: ['F1'] }], 'entities'],
+        ['a known counterparty it does not cite', [{ text: '{F1.name} was paid the most; Kuching Packaging Supply was also paid.', cites: ['F1'] }], 'entities'],
         ['an invented company', [{ text: '{F1.name} was paid more than Acme Holdings.', cites: ['F1'] }], 'entities'],
         ['a profit conclusion', [{ text: 'Your profit depends on {F1.name}, paid {F1.total}.', cites: ['F1'] }], 'conclusions'],
         ['an expense classification', [{ text: '{F1.name} is the biggest expense at {F1.total}.', cites: ['F1'] }], 'conclusions'],
@@ -141,6 +146,14 @@ describe('answer gate withholds anything not grounded', () => {
         const q = { question: 'What is the difference between the bank statement and the ledger?', catalogue: cat };
         expect(failed(verifyAnswer(answered([{ text: 'The bank statement is lower than the ledger by {F1.difference}.', cites: ['F1'] }]), facts, q))).toEqual(['sign-wording']);
         expect(failed(verifyAnswer(answered([{ text: 'Bank cash movement minus ledger cash movement is {F1.difference}.', cites: ['F1'] }]), facts, q))).toEqual([]);
+    });
+    it('keeps legitimate count idioms and rank words that match the cited fact', async () => {
+        const { cat, facts } = await setup(TOP_OUT);
+        const q = { question: 'Who did we pay the most?', catalogue: cat };
+        expect(failed(verifyAnswer(answered([{ text: '{F2.name} was the second-largest payee, paid {F2.total}.', cites: ['F2'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: 'The first payee by money paid was {F1.name}; {F2.name} is one of the others.', cites: ['F1', 'F2'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: 'No one other than {F1.name} was paid {F1.total}.', cites: ['F1'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: '{F1.name} had {F1.transactions} payments.', cites: ['F1'] }]), facts, q))).toEqual([]);
     });
     it('withholds citations of facts outside this answer (schema-bound)', async () => {
         const { cat, facts } = await setup(TOP_OUT);
