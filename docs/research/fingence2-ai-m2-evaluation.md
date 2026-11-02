@@ -81,7 +81,7 @@ The recorded adversarial gate tests (`gates.test.ts`) withhold, each by the inte
 | Median time per question (two calls) | 2.0 s | — (failed) |
 
 Across all three live files (28 rows, all on supported questions S01–S08):
-- **`gpt-oss-120b`:** 13 of 14 rows grounded-correct and 0 provider failures. The one miss is the pilot's S02, withheld by the month-name over-block that was then fixed. After that fix it is **11 of 11**.
+- **`gpt-oss-120b`:** 13 of 14 rows grounded-correct and 0 provider failures. The one miss is the pilot's S02, withheld by the month-name over-block that was then fixed. After that fix it is **11 of 11**. Including the targeted S04 re-check (§2.3), the totals are 14 of 15, and 12 of 12 after the month fix.
 - **`gpt-oss-20b`:** a valid plan and answer in **1 of 14** rows (the pilot's S02, withheld by the same month rule). The other **13 of 14** were provider failures (`json_validate_failed` and `tool_use_failed`), where Groq could not decode output satisfying the strict union schemas.
 - **Default:** M2 keeps **`gpt-oss-120b`**. This is consistent with the M1 finding, and the gap is larger here because M2's schemas are more constrained.
 
