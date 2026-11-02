@@ -1,0 +1,22 @@
+{
+  "target": "fhipzomczevbpybezzxu",
+  "authority": "SYNTHETIC_TEST_AUTHORITY_NOT_PRODUCTION_AUTH",
+  "checks": [
+    {
+      "name": "fixed_target_tls_db04_dev_runtime",
+      "passed": true
+    },
+    {
+      "name": "fixed_target_tls_db04_dev_broker_login",
+      "passed": true
+    },
+    {
+      "name": "runtime_authenticated_restricted_tls",
+      "passed": true
+    }
+  ],
+  "status": "STOPPED",
+  "hostedFinancialCommit": false,
+  "failedCheck": "BACKEND_OPERATION_FAILED_STOP",
+  "errorClass": "DATABASE_UNAVAILABLE"
+}

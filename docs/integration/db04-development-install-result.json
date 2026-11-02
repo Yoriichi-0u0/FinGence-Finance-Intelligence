@@ -1,0 +1,20 @@
+{
+  "target": "fhipzomczevbpybezzxu",
+  "database": "postgres",
+  "transactions": [
+    {
+      "name": "install-review.sql",
+      "sha256": "3f9617498f5b3df7658d8bf74387b17b18a57ddca35939885628077524b082d8",
+      "submitted": true,
+      "commitAcknowledged": true
+    },
+    {
+      "name": "synthetic-seed-review.sql",
+      "sha256": "749f241da91e70260f1c02ca3a72b8e0ac4f3e52d31bde96a086a260a3e83334",
+      "submitted": true,
+      "commitAcknowledged": true
+    }
+  ],
+  "status": "INSTALL_AND_SEED_COMMITTED_PASSWORDS_PENDING",
+  "publicMetadataUnchanged": true
+}
