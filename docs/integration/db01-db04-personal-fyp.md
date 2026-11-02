@@ -7,6 +7,9 @@ personal FYP A over verified TLS, failed its unsafe-PUBLIC-privileges guard and
 was rolled back. No password or restricted catalog report exists. See the
 [execution evidence and next approval plan](db04-inspector-creation-outcome.md).
 The access findings below describe earlier preparation, not a successful inspection.
+The separately approved one-time ACL diagnostic has since completed; see the
+[sanitized findings and tested revised inspector proposal](db04-statistics-inspector-proposal.md).
+No role or full restricted DB01--DB04 catalog report exists yet.
 
 The owner authorizes catalog-only inspection of personal FYP A, which is a
 development/testing project despite the dashboard's branch label. The separate

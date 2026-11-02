@@ -86,7 +86,7 @@ export async function inspectWithRestrictedIdentity(db:TransactionDatabase,expec
         await tx.query('SET TRANSACTION READ ONLY');
         return (await tx.query<{allowed:boolean}>(`SELECT current_database()=$1 AND current_user=$2
           AND NOT (r.rolsuper OR r.rolbypassrls OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication)
-          AND NOT EXISTS(SELECT 1 FROM pg_roles p WHERE (p.rolsuper OR p.rolbypassrls OR p.rolcreaterole) AND pg_has_role(current_user,p.oid,'MEMBER'))
+          AND NOT EXISTS(SELECT 1 FROM pg_roles p WHERE (p.rolsuper OR p.rolbypassrls OR p.rolcreaterole OR p.rolname IN ('pg_read_all_stats','pg_monitor')) AND pg_has_role(current_user,p.oid,'MEMBER'))
           AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE c.relkind IN ('r','p') AND (n.nspname IN ('fingence_m2','fingence_m3','fingence_reconciliation')
               OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts','security_audit_events'))

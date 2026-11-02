@@ -1,5 +1,10 @@
 # Approved personal FYP A inspector creation: rejected and rolled back
 
+Subsequent update: the owner separately approved the one-time ACL diagnostic.
+It completed read-only and identified two PUBLIC statistics-view SELECT grants.
+See the [sanitized result and new, unexecuted role proposal](db04-statistics-inspector-proposal.md).
+The original rejected role transaction below was not rerun.
+
 On 2 November 2026 the owner approved only the reviewed inspection role SQL,
 private password provisioning and subsequent restricted catalog inspection.
 Starting commit: `011f637472ba5b42467dfdd8213e7a5ce410f89c` on

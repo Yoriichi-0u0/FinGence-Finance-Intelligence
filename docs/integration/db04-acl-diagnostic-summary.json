@@ -1,0 +1,17 @@
+{
+  "projectRef": "fhipzomczevbpybezzxu",
+  "database": "postgres",
+  "reviewedCommit": "abf367d06b45c2eb172b2360255dc1dde7998d27",
+  "sqlSha256": "588b4f2921cfec9fec75798af3e0bed3f222cc52a3223cc35e0059681d9f8837",
+  "diagnosticSubmitted": true,
+  "readOnlyTransactionAcknowledged": true,
+  "hostedChanges": false,
+  "checksumVerified": true,
+  "tlsCertificateValidation": true,
+  "identityVerified": true,
+  "metadataRowCount": 2,
+  "categories": {
+    "PUBLIC_RELATION_PRIVILEGE": 2
+  },
+  "status": "DIAGNOSTIC_COMPLETE"
+}

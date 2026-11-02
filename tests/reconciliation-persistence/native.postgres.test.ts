@@ -38,6 +38,52 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('allows only genuine statistics extension views without changing existing monitoring grants', async () => {
+        await owner.query('CREATE SCHEMA extensions; CREATE EXTENSION pg_stat_statements WITH SCHEMA extensions; GRANT USAGE ON SCHEMA extensions TO PUBLIC');
+        await owner.query('SELECT 42 AS synthetic_application_probe');
+        const sql=readFileSync(resolve('supabase/sql/db04-inspection-role-v2-review.sql'),'utf8').replaceAll('db04_catalog_inspector','db04_stats_inspector');
+        const before=(await owner.query("SELECT relname,relacl::text FROM pg_class WHERE relnamespace='extensions'::regnamespace ORDER BY relname")).rows;
+        await owner.query(sql);
+        const pool=new Pool({host:'127.0.0.1',port,user:'db04_stats_inspector',database:'postgres'});
+        const inspector=transactionDatabase(pool);
+        try {
+            expect((await owner.query("SELECT relname,relacl::text FROM pg_class WHERE relnamespace='extensions'::regnamespace ORDER BY relname")).rows).toEqual(before);
+            expect((await inspectWithRestrictedIdentity(inspector,{role:'db04_stats_inspector',database:'postgres'})).hostedWritesAuthorized).toBe(false);
+            await expect(pool.query(`SELECT * FROM ${s}.transactions`)).rejects.toMatchObject({code:'42501'});
+            expect((await pool.query('SHOW search_path')).rows[0].search_path).toBe('pg_catalog');
+            expect((await pool.query('SELECT count(*)::int n FROM extensions.pg_stat_statements_info')).rows[0].n).toBe(1);
+            const visibility=(await pool.query("SELECT count(*) FILTER (WHERE userid<>(SELECT oid FROM pg_roles WHERE rolname=current_user))::int AS other_count,count(*) FILTER (WHERE userid<>(SELECT oid FROM pg_roles WHERE rolname=current_user) AND query IS NOT NULL AND query<>'<insufficient privilege>')::int AS visible_other_text FROM extensions.pg_stat_statements")).rows[0];
+            expect(visibility.other_count).toBeGreaterThan(0);expect(visibility.visible_other_text).toBe(0);
+            await owner.query('GRANT pg_read_all_stats TO db04_stats_inspector');
+            await expect(inspectWithRestrictedIdentity(inspector,{role:'db04_stats_inspector',database:'postgres'})).rejects.toThrow('READ_ONLY_INSPECTION_IDENTITY_REQUIRED');
+            await owner.query('REVOKE pg_read_all_stats FROM db04_stats_inspector');
+        } finally {
+            await inspector.close();
+            await owner.query('DROP OWNED BY db04_stats_inspector; DROP ROLE db04_stats_inspector; DROP EXTENSION pg_stat_statements; DROP SCHEMA extensions');
+        }
+    });
+    it('rejects monitoring-name spoofs and new financial/elevated PUBLIC rights in the v2 proposal', async () => {
+        await owner.query('CREATE SCHEMA extensions; GRANT USAGE ON SCHEMA extensions TO PUBLIC; CREATE VIEW extensions.pg_stat_statements AS SELECT 1 AS synthetic; GRANT SELECT ON extensions.pg_stat_statements TO PUBLIC');
+        const client=await owner.connect();
+        const sql=readFileSync(resolve('supabase/sql/db04-inspection-role-v2-review.sql'),'utf8').replaceAll('db04_catalog_inspector','db04_rejected_stats_inspector');
+        const rejected=async()=>{
+            await expect(client.query(sql)).rejects.toMatchObject({code:'42501',message:'INSPECTION_ROLE_UNSAFE_PUBLIC_PRIVILEGES'});
+            await client.query('ROLLBACK');
+            expect((await client.query("SELECT 1 FROM pg_roles WHERE rolname='db04_rejected_stats_inspector'")).rows).toHaveLength(0);
+        };
+        try {
+            await rejected();
+            await owner.query('DROP VIEW extensions.pg_stat_statements');
+            await owner.query(`GRANT SELECT (signed_amount) ON ${s}.transactions TO PUBLIC`);
+            await rejected();
+            await owner.query(`REVOKE SELECT (signed_amount) ON ${s}.transactions FROM PUBLIC`);
+            await owner.query("CREATE FUNCTION public.db04_stats_unsafe() RETURNS int LANGUAGE sql SECURITY DEFINER AS 'SELECT 1'");
+            await rejected();
+        } finally {
+            await client.query('ROLLBACK');client.release();
+            await owner.query(`REVOKE SELECT (signed_amount) ON ${s}.transactions FROM PUBLIC; DROP FUNCTION IF EXISTS public.db04_stats_unsafe(); DROP SCHEMA extensions CASCADE`);
+        }
+    });
     it('diagnoses unsafe PUBLIC ACLs using metadata only in a read-only transaction', async () => {
         await owner.query(`GRANT SELECT (signed_amount) ON ${s}.transactions TO PUBLIC`);
         await owner.query(`CREATE FUNCTION public.db04_diagnostic_definer() RETURNS int LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS 'SELECT 1'`);
@@ -245,7 +291,7 @@ const s = 'fingence_reconciliation';
         }).port;
         await new Promise<void>(done => reservation.close(() => done()));
         started = true;
-        execFileSync(executable('pg_ctl'), ['-D', directory, '-l', join(directory, 'postgres.log'), '-o', `-h 127.0.0.1 -p ${port}`, '-w', 'start'], { windowsHide: true, timeout: 35000, stdio: 'ignore' });
+        execFileSync(executable('pg_ctl'), ['-D', directory, '-l', join(directory, 'postgres.log'), '-o', `-h 127.0.0.1 -p ${port} -c shared_preload_libraries=pg_stat_statements`, '-w', 'start'], { windowsHide: true, timeout: 35000, stdio: 'ignore' });
         owner = new Pool({ host: '127.0.0.1', port, user: 'postgres', database: 'postgres' });
         owner.on('error', () => { });
         await owner.query('CREATE ROLE anon;CREATE ROLE authenticated;');
