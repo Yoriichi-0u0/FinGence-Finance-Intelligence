@@ -1,0 +1,400 @@
+{
+  "version": "db04-ai06-evidence/1",
+  "localDate": "2026-11-02",
+  "timezone": "Asia/Singapore",
+  "base": "cb5db4625ceca1cb94867a90a8a3edddbcf1e6ba",
+  "aiBranch": "425b28b",
+  "branch": "feature/db04-ai06-supabase-celester",
+  "environment": {
+    "node": "v24.14.1",
+    "postgres": "18.6",
+    "platform": "win32",
+    "database": "fresh disposable native PostgreSQL; restricted nonowner nonbypass login"
+  },
+  "newTests": {
+    "passed": 32,
+    "failed": 0,
+    "skipped": 0,
+    "nativeDatabasePassed": 18
+  },
+  "runs": [
+    {
+      "report": "outputs/db04-ai06/backend-release.json",
+      "passed": 578,
+      "failed": 0,
+      "skipped": 10,
+      "note": "Final source, including explicit VALUE_DATE correction. Backend, persistence, security, integration, C1 ingestion and PoC reconciliation.",
+      "failures": [],
+      "sha256": "922ed37771df515199fefe7953a379b8e354d3558f564d0dd5305ca18c20d4ed"
+    },
+    {
+      "report": "outputs/db04-ai06/full-byte-exact-final.json",
+      "passed": 1286,
+      "failed": 30,
+      "skipped": 73,
+      "note": "Complete suite before final VALUE_DATE correction; affected services/schema/native suite then reverified in backend-release.",
+      "failures": [
+        {
+          "file": "ai-ingestion/budget.test.ts",
+          "test": "US$5 persistent application inference ceiling rejects corrupt ledgers and a symlinked ledger directory",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\v2-budget-hgzDQ1' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\v2-budget-hgzDQ1\\link'"
+        },
+        {
+          "file": "ai-ingestion-02/extraction.test.ts",
+          "test": "0.2 source integrity and extraction boundary does not discard unrepresented financial text inside a table's outer boundary",
+          "error": "AssertionError: expected 'Traceback (most recent call last):\\r\\…' to be '' // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations fails closed on corrupt/symlink ledger or unbounded reservation",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-1PPn8O\\quota.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-Nrpofl\\quota.json'"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink ledger before reading or changing its target",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-zbo7Ft\\quota.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-OgNrKX\\quota.json'"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink lock before reading or changing its target",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-bSr8uj\\quota.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-lYiYCU\\quota.lock'"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink directory before reading or changing its target",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-DOx8qL' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-7TFk6T\\linked'"
+        },
+        {
+          "file": "ai-ingestion-i2/one-shot.test.ts",
+          "test": "durable one-shot reservation consumes the source-bound authorization once, including after a completed reservation",
+          "error": "Error: ONE_SHOT_INVALID"
+        },
+        {
+          "file": "ai-ingestion-i2/one-shot.test.ts",
+          "test": "durable one-shot reservation rejects symlinked authorization files",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg-i2-approval-qhPepF\\i2-authorizations\\36ce79c7-fcb7-4784-bbf8-a1a8bde3dec2.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg-i2-approval-qhPepF\\i2-authorizations\\a08684e4-5e92-4cd1-b916-3e5f986d56dc.json'"
+        },
+        {
+          "file": "ai-ingestion-i2/pipeline.test.ts",
+          "test": "offline I2 pipeline and provider boundary dispatches at most once with the same local authorization using an injected transport",
+          "error": "Error: ONE_SHOT_INVALID"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports creates parseable owner-only reports",
+          "error": "AssertionError: expected 1 to be +0 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports rejects a symlinked private state directory",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fingence-i2-report-1qDX1O\\.ai-local'"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports preflights and rejects an unsafe directory before any dispatch is attempted",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fingence-i2-report-XUEgEp\\.ai-local'"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "retains a durable unknown/crash fence across service instances and clears only acknowledged own completion",
+          "error": "Error: UNSAFE_DISPATCH_STORAGE"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "rejects symlinked or public authorization files",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\m4-owner-test-W310Qx\\m4-authorizations\\acc5c7d5-f592-459e-a4a0-da6067fb7c48.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\m4-owner-test-W310Qx\\m4-authorizations\\b7c82670-d95e-4e18-9c0e-5f5dcf8612f7.json'"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "blocks unresolved shared quota before constructing a dispatch",
+          "error": "AssertionError: expected [Function] to throw error including 'PREVIOUS_DISPATCH_UNRESOLVED' but got 'UNSAFE_DISPATCH_STORAGE'"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/local-db.test.ts",
+          "test": "local file-backed synthetic database survives a close and reopen without changing financial records",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/local-db.test.ts",
+          "test": "local file-backed synthetic database rejects symlink database directories and paths outside the local workspace",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\Downloads\\COS40005 FYP\\FinGence-DB04-AI06\\.local\\v2-i1-test-nt5XTE' -> 'C:\\Users\\celes\\Downloads\\COS40005 FYP\\FinGence-DB04-AI06\\.local\\v2-i1-test-nt5XTE\\symlink'"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "local V2 HTTP boundary runs a registered synthetic source, then prevents another capability from retrieving it",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers a committed operation after the POST response is lost without processing it twice",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "survives a database restart and never processes a duplicate operation",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "fences a never-received operation and rejects a delayed submission",
+          "error": "AssertionError: expected undefined to be 'UNRESOLVED' // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "does not reveal another tenant's operation or allow cancellation",
+          "error": "AssertionError: expected undefined to be 'UNRESOLVED' // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the PERSISTENCE_FAILED classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the COMMIT_OUTCOME_UNKNOWN classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the ROLLBACK_UNCONFIRMED classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the UNCLASSIFIED_FAILURE classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers the actual committed result after a lost response without another execution",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers the actual committed result after a truncated response without another execution",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "keeps an interrupted claimed operation unresolved after database restart",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "classifies a rejected non-synthetic upload as a known pre-commit failure",
+          "error": "AssertionError: expected { error: 'Not found' } to match object { outcome: 'KNOWN_FAILURE', …(1) }"
+        }
+      ],
+      "sha256": "f45da4be3f5a1f5842d07cabca45e078aa2cdf25c7fbcacd4842131f2b636779"
+    },
+    {
+      "report": "outputs/db04-ai06/unchanged-main-baseline.json",
+      "passed": 1254,
+      "failed": 30,
+      "skipped": 73,
+      "note": "Detached unchanged main, same lockfile dependencies, Git-byte-exact fixtures; no DB04/AI06 files.",
+      "failures": [
+        {
+          "file": "ai-ingestion/budget.test.ts",
+          "test": "US$5 persistent application inference ceiling rejects corrupt ledgers and a symlinked ledger directory",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\v2-budget-I84EQD' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\v2-budget-I84EQD\\link'"
+        },
+        {
+          "file": "ai-ingestion-i2/one-shot.test.ts",
+          "test": "durable one-shot reservation consumes the source-bound authorization once, including after a completed reservation",
+          "error": "Error: ONE_SHOT_INVALID"
+        },
+        {
+          "file": "ai-ingestion-i2/one-shot.test.ts",
+          "test": "durable one-shot reservation rejects symlinked authorization files",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg-i2-approval-XEE2s3\\i2-authorizations\\9cda7b04-6061-4af5-b3e7-b7495499f289.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg-i2-approval-XEE2s3\\i2-authorizations\\90e74ca6-e541-4a42-a4d6-a727d47f9d29.json'"
+        },
+        {
+          "file": "ai-ingestion-i2/pipeline.test.ts",
+          "test": "offline I2 pipeline and provider boundary dispatches at most once with the same local authorization using an injected transport",
+          "error": "Error: ONE_SHOT_INVALID"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports creates parseable owner-only reports",
+          "error": "AssertionError: expected 1 to be +0 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports rejects a symlinked private state directory",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fingence-i2-report-L7ZJsM\\.ai-local'"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports preflights and rejects an unsafe directory before any dispatch is attempted",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fingence-i2-report-OqkGge\\.ai-local'"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations fails closed on corrupt/symlink ledger or unbounded reservation",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-S0gcSp\\quota.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-dlOCXc\\quota.json'"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink ledger before reading or changing its target",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-VAsON3\\quota.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-D0bTwg\\quota.json'"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink lock before reading or changing its target",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-kdHCtz\\quota.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-zpWB7G\\quota.lock'"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink directory before reading or changing its target",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-EFDmIf' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\fg03-quota-Goj7QH\\linked'"
+        },
+        {
+          "file": "ai-ingestion-02/extraction.test.ts",
+          "test": "0.2 source integrity and extraction boundary does not discard unrepresented financial text inside a table's outer boundary",
+          "error": "AssertionError: expected 'Traceback (most recent call last):\\r\\…' to be '' // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "retains a durable unknown/crash fence across service instances and clears only acknowledged own completion",
+          "error": "Error: UNSAFE_DISPATCH_STORAGE"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "rejects symlinked or public authorization files",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\AppData\\Local\\Temp\\m4-owner-test-iOekuw\\m4-authorizations\\bf6b9150-5c83-42af-a240-f5434c12a81d.json' -> 'C:\\Users\\celes\\AppData\\Local\\Temp\\m4-owner-test-iOekuw\\m4-authorizations\\16454f39-e9a4-46f2-ad11-068be9528a09.json'"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "blocks unresolved shared quota before constructing a dispatch",
+          "error": "AssertionError: expected [Function] to throw error including 'PREVIOUS_DISPATCH_UNRESOLVED' but got 'UNSAFE_DISPATCH_STORAGE'"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/local-db.test.ts",
+          "test": "local file-backed synthetic database survives a close and reopen without changing financial records",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/local-db.test.ts",
+          "test": "local file-backed synthetic database rejects symlink database directories and paths outside the local workspace",
+          "error": "Error: EPERM: operation not permitted, symlink 'C:\\Users\\celes\\Downloads\\COS40005 FYP\\FinGence-DB04-main-baseline\\.local\\v2-i1-test-sKBZe1' -> 'C:\\Users\\celes\\Downloads\\COS40005 FYP\\FinGence-DB04-main-baseline\\.local\\v2-i1-test-sKBZe1\\symlink'"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "local V2 HTTP boundary runs a registered synthetic source, then prevents another capability from retrieving it",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers a committed operation after the POST response is lost without processing it twice",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "survives a database restart and never processes a duplicate operation",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "fences a never-received operation and rejects a delayed submission",
+          "error": "AssertionError: expected undefined to be 'UNRESOLVED' // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "does not reveal another tenant's operation or allow cancellation",
+          "error": "AssertionError: expected undefined to be 'UNRESOLVED' // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the PERSISTENCE_FAILED classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the COMMIT_OUTCOME_UNKNOWN classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the ROLLBACK_UNCONFIRMED classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the UNCLASSIFIED_FAILURE classification in durable operation status",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers the actual committed result after a lost response without another execution",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers the actual committed result after a truncated response without another execution",
+          "error": "AssertionError: expected 422 to be 200 // Object.is equality"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "keeps an interrupted claimed operation unresolved after database restart",
+          "error": "Error: LOCAL_DATABASE_PATH"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "classifies a rejected non-synthetic upload as a known pre-commit failure",
+          "error": "AssertionError: expected { error: 'Not found' } to match object { outcome: 'KNOWN_FAILURE', …(1) }"
+        }
+      ],
+      "sha256": "e1c9796d849f541492aa6973d55aa01d61a11134abf00a37b059f954d002d61c"
+    },
+    {
+      "report": "outputs/db04-ai06/ai-branch-regressions.json",
+      "passed": 380,
+      "failed": 0,
+      "skipped": 3,
+      "note": "Existing AI branch CI profile: no live inference, official predictions or heldout evaluation. Three existing opt-in skips.",
+      "failures": [],
+      "sha256": "29dbc709ba532fddd7ea758e419ef8d3bb23f341b0b8e04a9a8d42f702ceddc1"
+    }
+  ],
+  "baselineComparison": {
+    "identicalFailedTests": true,
+    "newFailedTests": [],
+    "note": "All 30 full-suite failures reproduce on unchanged main. Symlink permission failures, POSIX local-storage/one-shot guards and Python extraction probe failure remain outside this increment."
+  },
+  "checks": {
+    "typecheck": "PASS: pnpm typecheck (after date correction)",
+    "lint": "PASS: pnpm lint (after date correction)",
+    "serverBoundary": "PASS: pnpm check:server-boundary",
+    "whitespace": "PASS: git diff --check",
+    "build": "NOT RUN"
+  },
+  "fixtureSha256": {
+    "bank": "d496b00bcc826e6833770d373c8977fd4ff4163416e2c4e2e1c50938a9b9c2ec",
+    "ledger": "d71e68cb8aae56e87c86b9106fe8ff96f674d08f31111f79117640d1dbbf6be4"
+  },
+  "files": [
+    "lib/server/reconciliation/processing.ts",
+    "lib/server/reconciliation/service.ts",
+    "supabase/sql/db04-001-reconciliation.sql",
+    "supabase/sql/db04-002-reconciliation-security.sql",
+    "tests/reconciliation-persistence/.gitattributes",
+    "tests/reconciliation-persistence/fixtures/bank.csv",
+    "tests/reconciliation-persistence/fixtures/ledger.csv",
+    "tests/reconciliation-persistence/processing.test.ts",
+    "tests/reconciliation-persistence/native.postgres.test.ts",
+    "docs/integration/db04-ai06-supabase.md",
+    "docs/integration/db04-ai06-test-results.json"
+  ],
+  "remaining": [
+    "Reviewed hosted identity/session/membership and deployment boundary",
+    "Approved nonproduction target and migration/runtime-role ownership",
+    "Client accounting/date/retention rules",
+    "Fuzzy/E5 document-evidence adapter and actual inference validation",
+    "Explicit economic replacement/supersession policy"
+  ],
+  "hostedProductionModified": false,
+  "publicApiAdded": false,
+  "frozenResearchModified": false,
+  "priorRuns": "Earlier raw JSON reports remain in outputs/db04-ai06, including CRLF-checkout failures. No failed run is represented as a pass."
+}
