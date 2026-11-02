@@ -148,7 +148,7 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
             const record: InterpretationRecord = { method: 'AI_LAYOUT_PROPOSAL', receipt: null, proposal: null, error: null, decision: 'QUARANTINED', summary: '', checks: [], mapping: [], disclosures: [], canonicalSha256: null, canonicalNet: null, mappingHash: null };
             try {
                 const { proposal, receipt } = await options.interpreter!.propose(buildEvidence(table, sha256, name));
-                const verdict = verifyProposal(table, proposal);
+                const verdict = verifyProposal(table, proposal, name);
                 Object.assign(record, { proposal, receipt, decision: verdict.decision, summary: verdict.summary, checks: verdict.checks, mapping: verdict.mapping, disclosures: verdict.disclosures });
                 if (verdict.canonical && verdict.mappingKey) {
                     bytes = verdict.canonical.bytes;

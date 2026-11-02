@@ -8,7 +8,7 @@ const FIELD: Record<string, string> = {
     recordId: 'Record ID', date: 'Date', reference: 'Reference', description: 'Description', counterparty: 'Counterparty', amount: 'Amount', direction: 'Direction',
     moneyIn: 'Money in', moneyOut: 'Money out', debit: 'Debit (cash in)', credit: 'Credit (cash out)', balance: 'Running balance', account: 'Account', currency: 'Currency', businessId: 'Business ID', businessName: 'Business name',
 };
-const AGREEMENT: Record<string, string> = { AGREES: 'Heading agrees', CONTRADICTS: 'Heading contradicts', OPAQUE: 'Heading unclear', CONVENTION: 'Sign convention' };
+const AGREEMENT: Record<string, string> = { AGREES: 'Heading agrees', CONTRADICTS: 'Heading contradicts', OPAQUE: 'Heading unclear' };
 const usd = (n: number | null) => n === null ? '—' : n < 0.01 ? `$${n.toFixed(4)}` : `$${n.toFixed(3)}`;
 
 /** What the model proposed for each unfamiliar document, what it cost, and what the deterministic gates concluded. */

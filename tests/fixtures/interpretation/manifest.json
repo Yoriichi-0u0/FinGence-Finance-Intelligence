@@ -29,6 +29,38 @@
     "staff-roster.csv": {
       "sha256": "b669b6a0aa350ed543483a3e9dae11930c7e6452d58b0f95a58f15e9d08bcfff",
       "bytes": 586
+    },
+    "signed-amount-reversed-no-balance.csv": {
+      "sha256": "b6d1fb8bb1e0d4430cf711e0614b51edf141573d11b862a2cdad5312fa5542bf",
+      "bytes": 7154
+    },
+    "bank-debit-credit-no-balance.csv": {
+      "sha256": "b008b801ac2b4ca3bd7ab4ddaf495b0fbe009f3946e68a8b98cad3941cf31bcf",
+      "bytes": 7180
+    },
+    "bank-dr-cr-no-balance.csv": {
+      "sha256": "1fe5fd04d7664292122edc56be70ea76203cd9abf63722f4525324a5f52faafb",
+      "bytes": 7294
+    },
+    "ledger-signed-opaque-no-balance.csv": {
+      "sha256": "ef489fc8a10c6acf9fe41396741a8bea7191b27af8717e478c1aa01444808006",
+      "bytes": 5185
+    },
+    "ledger-multiple-accounts.csv": {
+      "sha256": "0647bdb522a0c7f7213e1ec7e9149b7219063f3e0fca8a87ed216913c24bc4c9",
+      "bytes": 12210
+    },
+    "ledger-sales-account.csv": {
+      "sha256": "49c431e844d2e665a65d5e2dc94919efed2a5df46c06c3d214d1ebf071995d3d",
+      "bytes": 5451
+    },
+    "ledger-bank-loan-account.csv": {
+      "sha256": "375467c97b0110de9af5d0cece096ad2b83df4ee5a00eaf789bf86c935cbda8f",
+      "bytes": 5465
+    },
+    "ledger-no-account-evidence.csv": {
+      "sha256": "8643fc985a5fc06775b780f08ca2de8d30559d395d7467e6bc3b7ebdcfa5538d",
+      "bytes": 5425
     }
   }
 }

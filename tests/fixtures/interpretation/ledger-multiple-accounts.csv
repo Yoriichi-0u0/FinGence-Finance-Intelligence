@@ -1,0 +1,120 @@
+Rimba Demo Kitchen (Synthetic) - General Ledger Detail
+Entity code,DEMO-001
+Period,March 2026
+Amounts in RM
+
+Journal Date,Voucher No,Ref,Narration,Party,Account,Dr (RM),Cr (RM)
+02-Mar-2026,GL-DEMO-0001-1,F8TAEWZCCLQV,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,"1,567.26",
+02-Mar-2026,GL-DEMO-0001-2,F8TAEWZCCLQV,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,"1,567.26"
+03-Mar-2026,GL-DEMO-0002-1,29TPR9UKHD7J,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,615.15",
+03-Mar-2026,GL-DEMO-0002-2,29TPR9UKHD7J,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,615.15"
+03-Mar-2026,GL-DEMO-0003-1,TYQXDMRHVE4U,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,778.57
+03-Mar-2026,GL-DEMO-0003-2,TYQXDMRHVE4U,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,778.57,
+03-Mar-2026,GL-DEMO-0004-1,UBBVNKHA9U9W,Packaging purchase,Kuching Packaging Supply,1000 Bank,,235.94
+03-Mar-2026,GL-DEMO-0004-2,UBBVNKHA9U9W,Packaging purchase,Kuching Packaging Supply,5000 Purchases,235.94,
+05-Mar-2026,GL-DEMO-0005-1,77GU84UDG5UL,Catering invoice receipt,Hartanah Events Catering,1000 Bank,"2,569.94",
+05-Mar-2026,GL-DEMO-0005-2,77GU84UDG5UL,Catering invoice receipt,Hartanah Events Catering,4000 Sales,,"2,569.94"
+05-Mar-2026,GL-DEMO-0006-1,77GU84UDG5UL,Catering invoice receipt (duplicate posting),Hartanah Events Catering,1000 Bank,"2,569.94",
+05-Mar-2026,GL-DEMO-0006-2,77GU84UDG5UL,Catering invoice receipt (duplicate posting),Hartanah Events Catering,4000 Sales,,"2,569.94"
+05-Mar-2026,GL-DEMO-0007-1,GLWP6CKB88H8,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,712.28
+05-Mar-2026,GL-DEMO-0007-2,GLWP6CKB88H8,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,712.28,
+05-Mar-2026,GL-DEMO-0008-1,KJBWCPYSJZLX,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,231.48",
+05-Mar-2026,GL-DEMO-0008-2,KJBWCPYSJZLX,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,231.48"
+05-Mar-2026,GL-DEMO-0009-1,PPX6NKKMKSWW,Daily POS settlement,POS Sales Settlement,1000 Bank,"1,852.50",
+05-Mar-2026,GL-DEMO-0009-2,PPX6NKKMKSWW,Daily POS settlement,POS Sales Settlement,4000 Sales,,"1,852.50"
+06-Mar-2026,GL-DEMO-0010-1,CRYXRNFB2NGG,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,"1,297.88",
+06-Mar-2026,GL-DEMO-0010-2,CRYXRNFB2NGG,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,"1,297.88"
+06-Mar-2026,GL-DEMO-0011-1,NMB665QBX6L8,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,204.02",
+06-Mar-2026,GL-DEMO-0011-2,NMB665QBX6L8,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,204.02"
+07-Mar-2026,GL-DEMO-0012-1,FBBVRYD2WJZX,Packaging purchase,Kuching Packaging Supply,1000 Bank,,190.12
+07-Mar-2026,GL-DEMO-0012-2,FBBVRYD2WJZX,Packaging purchase,Kuching Packaging Supply,5000 Purchases,190.12,
+07-Mar-2026,GL-DEMO-0013-1,LBQQ2Y7SY33Z,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,413.72",
+07-Mar-2026,GL-DEMO-0013-2,LBQQ2Y7SY33Z,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,413.72"
+07-Mar-2026,GL-DEMO-0014-1,SQPRVG4XJC8N,Payroll transfer,Staff Payroll,1000 Bank,,"9,405.37"
+07-Mar-2026,GL-DEMO-0014-2,SQPRVG4XJC8N,Payroll transfer,Staff Payroll,5000 Purchases,"9,405.37",
+07-Mar-2026,GL-DEMO-0015-1,T6PZPSLNALJM,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,454.76
+07-Mar-2026,GL-DEMO-0015-2,T6PZPSLNALJM,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,454.76,
+08-Mar-2026,GL-DEMO-0016-1,XCB3ECHRCECU,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,398.93",
+08-Mar-2026,GL-DEMO-0016-2,XCB3ECHRCECU,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,398.93"
+09-Mar-2026,GL-DEMO-0017-1,BKHUT9PEA6AG,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,"1,279.47",
+09-Mar-2026,GL-DEMO-0017-2,BKHUT9PEA6AG,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,"1,279.47"
+09-Mar-2026,GL-DEMO-0018-1,USQKNP7W3B43,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,616.54",
+09-Mar-2026,GL-DEMO-0018-2,USQKNP7W3B43,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,616.54"
+10-Mar-2026,GL-DEMO-0019-1,WVCWU85ATWGN,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,445.97
+10-Mar-2026,GL-DEMO-0019-2,WVCWU85ATWGN,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,445.97,
+11-Mar-2026,GL-DEMO-0020-1,MQEBSJTZM29Z,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,702.55",
+11-Mar-2026,GL-DEMO-0020-2,MQEBSJTZM29Z,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,702.55"
+12-Mar-2026,GL-DEMO-0021-1,9BWPN4BHRLTT,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,303.44",
+12-Mar-2026,GL-DEMO-0021-2,9BWPN4BHRLTT,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,303.44"
+12-Mar-2026,GL-DEMO-0022-1,HY57BKVPRA9G,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,"1,310.52",
+12-Mar-2026,GL-DEMO-0022-2,HY57BKVPRA9G,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,"1,310.52"
+12-Mar-2026,GL-DEMO-0023-1,WLX4CB7QGJ6Q,Packaging purchase,Kuching Packaging Supply,1000 Bank,,264.50
+12-Mar-2026,GL-DEMO-0023-2,WLX4CB7QGJ6Q,Packaging purchase,Kuching Packaging Supply,5000 Purchases,264.50,
+13-Mar-2026,GL-DEMO-0024-1,TDY7R4L4G95A,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,816.36",
+13-Mar-2026,GL-DEMO-0024-2,TDY7R4L4G95A,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,816.36"
+13-Mar-2026,GL-DEMO-0025-1,YR5G89R3MJM4,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,598.14
+13-Mar-2026,GL-DEMO-0025-2,YR5G89R3MJM4,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,598.14,
+14-Mar-2026,GL-DEMO-0026-1,7ZKWTZS3CWJ8,Shoplot rent,Jalan Demo Properties,1000 Bank,,"4,200.00"
+14-Mar-2026,GL-DEMO-0026-2,7ZKWTZS3CWJ8,Shoplot rent,Jalan Demo Properties,5000 Purchases,"4,200.00",
+14-Mar-2026,GL-DEMO-0027-1,89AEXPZBW5XD,Electricity bill,Sarawak Energy,1000 Bank,,700.30
+14-Mar-2026,GL-DEMO-0027-2,89AEXPZBW5XD,Electricity bill,Sarawak Energy,5000 Purchases,700.30,
+14-Mar-2026,GL-DEMO-0028-1,GUFR2M6C3529,Catering invoice receipt,Hartanah Events Catering,1000 Bank,"2,650.84",
+14-Mar-2026,GL-DEMO-0028-2,GUFR2M6C3529,Catering invoice receipt,Hartanah Events Catering,4000 Sales,,"2,650.84"
+15-Mar-2026,GL-DEMO-0029-1,DJQNUZ9LSL8H,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,547.18
+15-Mar-2026,GL-DEMO-0029-2,DJQNUZ9LSL8H,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,547.18,
+15-Mar-2026,GL-DEMO-0030-1,W4U9MBT824HX,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,220.57",
+15-Mar-2026,GL-DEMO-0030-2,W4U9MBT824HX,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,220.57"
+16-Mar-2026,GL-DEMO-0031-1,DMQ494JYLS8G,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,251.42",
+16-Mar-2026,GL-DEMO-0031-2,DMQ494JYLS8G,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,251.42"
+16-Mar-2026,GL-DEMO-0032-1,KXNY7GY9V4F9,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,977.38,
+16-Mar-2026,GL-DEMO-0032-2,KXNY7GY9V4F9,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,977.38
+16-Mar-2026,GL-DEMO-0033-1,SGT3ZQHHJALD,Packaging purchase,Kuching Packaging Supply,1000 Bank,,247.12
+16-Mar-2026,GL-DEMO-0033-2,SGT3ZQHHJALD,Packaging purchase,Kuching Packaging Supply,5000 Purchases,247.12,
+17-Mar-2026,GL-DEMO-0034-1,QT6RVA2UKS8W,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,665.16",
+17-Mar-2026,GL-DEMO-0034-2,QT6RVA2UKS8W,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,665.16"
+18-Mar-2026,GL-DEMO-0035-1,5YFPYWMM8H4C,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,"6,850.00"
+18-Mar-2026,GL-DEMO-0035-2,5YFPYWMM8H4C,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,"6,850.00",
+18-Mar-2026,GL-DEMO-0036-1,A4VGJHPVK4LW,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,540.98
+18-Mar-2026,GL-DEMO-0036-2,A4VGJHPVK4LW,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,540.98,
+19-Mar-2026,GL-DEMO-0037-1,B95GN68P2FVT,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,"1,216.94",
+19-Mar-2026,GL-DEMO-0037-2,B95GN68P2FVT,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,"1,216.94"
+19-Mar-2026,GL-DEMO-0038-1,U2JKSMEHXEF6,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,448.65",
+19-Mar-2026,GL-DEMO-0038-2,U2JKSMEHXEF6,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,448.65"
+20-Mar-2026,GL-DEMO-0039-1,DPX6X3RQYJSQ,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,479.80",
+20-Mar-2026,GL-DEMO-0039-2,DPX6X3RQYJSQ,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,479.80"
+21-Mar-2026,GL-DEMO-0040-1,2559G3TGZGZA,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,503.63
+21-Mar-2026,GL-DEMO-0040-2,2559G3TGZGZA,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,503.63,
+21-Mar-2026,GL-DEMO-0041-1,8CJQDS5K7A7C,Supplier payment,Ace Niaga Trading,1000 Bank,,"2,480.00"
+21-Mar-2026,GL-DEMO-0041-2,8CJQDS5K7A7C,Supplier payment,Ace Niaga Trading,5000 Purchases,"2,480.00",
+21-Mar-2026,GL-DEMO-0042-1,EE8MXJ5VGD9V,Packaging purchase,Kuching Packaging Supply,1000 Bank,,175.87
+21-Mar-2026,GL-DEMO-0042-2,EE8MXJ5VGD9V,Packaging purchase,Kuching Packaging Supply,5000 Purchases,175.87,
+21-Mar-2026,GL-DEMO-0043-1,EV6NH92F4ESG,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,917.32",
+21-Mar-2026,GL-DEMO-0043-2,EV6NH92F4ESG,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,917.32"
+21-Mar-2026,GL-DEMO-0044-1,NQR6KXNVT9Q4,Payroll transfer,Staff Payroll,1000 Bank,,"9,142.81"
+21-Mar-2026,GL-DEMO-0044-2,NQR6KXNVT9Q4,Payroll transfer,Staff Payroll,5000 Purchases,"9,142.81",
+22-Mar-2026,GL-DEMO-0045-1,6DXZ8Y3C7VXW,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,988.05,
+22-Mar-2026,GL-DEMO-0045-2,6DXZ8Y3C7VXW,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,988.05
+23-Mar-2026,GL-DEMO-0046-1,3BZV9A5JTYAK,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,098.29",
+23-Mar-2026,GL-DEMO-0046-2,3BZV9A5JTYAK,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,098.29"
+23-Mar-2026,GL-DEMO-0047-1,LYGW3V48BY7Q,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,866.33
+23-Mar-2026,GL-DEMO-0047-2,LYGW3V48BY7Q,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,866.33,
+23-Mar-2026,GL-DEMO-0048-1,PDTNCYC6RSK2,Catering invoice receipt,Hartanah Events Catering,1000 Bank,"2,723.68",
+23-Mar-2026,GL-DEMO-0048-2,PDTNCYC6RSK2,Catering invoice receipt,Hartanah Events Catering,4000 Sales,,"2,723.68"
+24-Mar-2026,GL-DEMO-0049-1,KX89GMG6W5TF,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,749.24",
+24-Mar-2026,GL-DEMO-0049-2,KX89GMG6W5TF,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,749.24"
+24-Mar-2026,GL-DEMO-0050-1,ZT6UDXCZ4ZJK,Packaging purchase,Kuching Packaging Supply,1000 Bank,,214.50
+24-Mar-2026,GL-DEMO-0050-2,ZT6UDXCZ4ZJK,Packaging purchase,Kuching Packaging Supply,5000 Purchases,214.50,
+25-Mar-2026,GL-DEMO-0051-1,9PYJBVR2JHHX,Daily POS settlement,POS Sales Settlement,1000 Bank,"3,097.70",
+25-Mar-2026,GL-DEMO-0051-2,9PYJBVR2JHHX,Daily POS settlement,POS Sales Settlement,4000 Sales,,"3,097.70"
+25-Mar-2026,GL-DEMO-0052-1,LXMNHRHJ8858,Packaging purchase,Kuching Packaging Supply,1000 Bank,,214.82
+25-Mar-2026,GL-DEMO-0052-2,LXMNHRHJ8858,Packaging purchase,Kuching Packaging Supply,5000 Purchases,214.82,
+26-Mar-2026,GL-DEMO-0053-1,8EDVWNGZ4RZ6,Marketplace payout,GrabFood Marketplace Payout,1000 Bank,"1,540.83",
+26-Mar-2026,GL-DEMO-0053-2,8EDVWNGZ4RZ6,Marketplace payout,GrabFood Marketplace Payout,4000 Sales,,"1,540.83"
+26-Mar-2026,GL-DEMO-0054-1,LAR47XE8KLT2,Ingredient purchase,Borneo Fresh Supplies,1000 Bank,,601.77
+26-Mar-2026,GL-DEMO-0054-2,LAR47XE8KLT2,Ingredient purchase,Borneo Fresh Supplies,5000 Purchases,601.77,
+27-Mar-2026,GL-DEMO-0055-1,NMETF5M33G7Z,Daily POS settlement,POS Sales Settlement,1000 Bank,"2,107.92",
+27-Mar-2026,GL-DEMO-0055-2,NMETF5M33G7Z,Daily POS settlement,POS Sales Settlement,4000 Sales,,"2,107.92"
+29-Mar-2026,GL-DEMO-0056-1,Q35W4CZSQYGK,Cheque 000431 to Borneo Fresh Supplies (unpresented),Borneo Fresh Supplies,1000 Bank,,733.20
+29-Mar-2026,GL-DEMO-0056-2,Q35W4CZSQYGK,Cheque 000431 to Borneo Fresh Supplies (unpresented),Borneo Fresh Supplies,5000 Purchases,733.20,
+31-Mar-2026,GL-DEMO-0057-1,E3DJ236GZZD7,Cash deposit in transit,POS Sales Settlement,1000 Bank,"2,145.60",
+31-Mar-2026,GL-DEMO-0057-2,E3DJ236GZZD7,Cash deposit in transit,POS Sales Settlement,4000 Sales,,"2,145.60"

@@ -6,11 +6,11 @@
  */
 import { proposalSchema, type LayoutProposal } from './contracts';
 import { NUMBER_FORMAT_LIST, MALAY_MONTH_NAMES, MONTH_NAMES, SWAPPED, cents, parseAmount, parseDate, type DateFormat } from './formats';
-import { headingAgreement, tokenAgreement, type Agreement, type Meaning } from './lexicon';
+import { cashAccountAgreement, headingAgreement, roleAgreement, signedAgreement, tokenAgreement, type Agreement, type Meaning } from './lexicon';
 import type { Table } from './evidence';
 
 export type GateCheck = { id: string; label: string; passed: boolean; detail: string };
-export type FieldMapping = { field: string; column: number; heading: string; agreement: Agreement | 'CONVENTION' | null };
+export type FieldMapping = { field: string; column: number; heading: string; agreement: Agreement | null };
 export type VerifiedInterpretation = {
     decision: 'AUTO_ACCEPTED' | 'QUARANTINED';
     role: 'BANK_STATEMENT' | 'GENERAL_LEDGER' | null;
@@ -25,6 +25,7 @@ export type VerifiedInterpretation = {
 };
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const ACCOUNT_HEADING = /^\s*(account|acct|akaun|gl account|account code|account no\.?|kod akaun)\b/i;
 const BALANCE_LINE = /\b(opening|closing|brought forward|carried forward|b\/f|c\/f|baki awal|baki akhir|baki dibawa)\b/i;
 const csvCell = (v: string) => /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 const csv = (header: string[], rows: Record<string, string>[]) => [header.join(','), ...rows.map(r => header.map(h => csvCell(r[h] ?? '')).join(','))].join('\n') + '\n';
@@ -51,7 +52,7 @@ function periodMentioned(literal: string, period: string) {
         .some(s => text.includes(s.toLowerCase()));
 }
 
-export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretation {
+export function verifyProposal(table: Table, raw: unknown, fileName: string): VerifiedInterpretation {
     const checks: GateCheck[] = [], disclosures: string[] = [], mapping: FieldMapping[] = [];
     const result = (summary: string): VerifiedInterpretation => ({ decision: 'QUARANTINED', role: null, summary, checks, mapping, disclosures, canonical: null, mappingKey: null });
     const gate = (id: string, label: string, passed: boolean, detail: string) => { checks.push({ id, label, passed, detail }); return passed; };
@@ -158,13 +159,14 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
         agreements.push(...t);
         const m = mapping.find(x => x.field === 'direction')!; m.agreement = t.every(a => a === 'AGREES') ? 'AGREES' : t.includes('CONTRADICTS') ? 'CONTRADICTS' : 'OPAQUE';
     }
-    if (rep === 'SIGNED_AMOUNT') { const m = mapping.find(x => x.field === 'amount')!; m.agreement = 'CONVENTION'; }
+    // A signed column's convention (+ = cash in) is not assumed: card-style exports print withdrawals as positive.
+    if (rep === 'SIGNED_AMOUNT') { const m = mapping.find(x => x.field === 'amount')!; m.agreement = signedAgreement(m.heading); agreements.push(m.agreement); }
     const contradiction = agreements.includes('CONTRADICTS'), vocabulary = agreements.length > 0 && agreements.every(a => a === 'AGREES');
-    const signed_ok = !contradiction && (vocabulary || balanceStatus === 'PASSED' || rep === 'SIGNED_AMOUNT');
+    const signed_ok = !contradiction && (vocabulary || balanceStatus === 'PASSED');
     if (!gate('direction', 'Cash direction independently confirmed', signed_ok,
         contradiction ? `A heading or token names the opposite side${balanceStatus === 'PASSED' ? ' although the running balance agrees: the document is internally inconsistent' : ''}`
             : vocabulary ? `Headings/tokens agree${balanceStatus === 'PASSED' ? ' and the running balance agrees' : ''}` : balanceStatus === 'PASSED' ? 'Opaque headings; confirmed by the running balance'
-                : rep === 'SIGNED_AMOUNT' ? 'Signed amounts: negative = cash out (standard convention)' : 'Opaque headings and no running balance: direction cannot be confirmed')) return result('Cash direction could not be confirmed independently.');
+                : rep === 'SIGNED_AMOUNT' ? 'The heading does not state which sign is cash in, and there is no running balance' : 'Opaque headings and no running balance: direction cannot be confirmed')) return result('Cash direction could not be confirmed independently.');
 
     // 8. Identity and text fields.
     const ids = c.recordId !== null ? body.map(r => cell(r.row, 'recordId')) : body.map(r => `L${r.line + 1}`);
@@ -177,7 +179,14 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
     const notStated = counterparties.filter(v => !v).length;
     if (notStated) disclosures.push(`${notStated} rows have no counterparty; recorded as "${COUNTERPARTY_NOT_STATED}".`);
 
-    // 9. Scope: every value comes from a column with one value, or a literal found verbatim on the cited line.
+    // 9. Role: whose books these are decides what Debit/Credit and DR/CR mean, so the document must say so itself.
+    const preamble = table.rows.slice(0, p.headerLine).map(r => r.join(' ')).join(' \n ');
+    const roleText = [preamble, header.join(' '), fileName.replace(/[^A-Za-z]+/g, ' ')].join(' \n ');
+    const roleSeen = roleAgreement(roleText, p.role as 'BANK_STATEMENT' | 'GENERAL_LEDGER');
+    if (!gate('role-evidence', `The document itself reads as a ${ledger ? 'ledger' : 'bank statement'}`, roleSeen === 'AGREES',
+        roleSeen === 'AGREES' ? 'Title, headings or file name agree' : roleSeen === 'CONTRADICTS' ? `The document reads as a ${ledger ? 'bank statement' : 'ledger'}` : 'Title, headings and file name do not say, or say both')) return result('The document does not confirm the proposed role.');
+
+    // 10. Scope: every value comes from a column with one value, or a literal found verbatim on the cited line.
     const fromColumn = (f: keyof typeof c) => { if (c[f] === null) return null; const values = [...new Set(body.map(r => cell(r.row, f)))]; return values.length === 1 && values[0] ? values[0] : undefined; };
     const fromEvidence = (e: LayoutProposal['scope']['businessId']) => e && lineText(table, e.line).includes(e.literal) ? e.literal.trim() : e ? undefined : null;
     const scopeValue = (f: 'businessId' | 'businessName' | 'currency') => { const col = fromColumn(f); return col !== null ? col : fromEvidence(p.scope[f]); };
@@ -191,13 +200,22 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
         periodLiteral === undefined ? 'statement period evidence not found verbatim' : periodLiteral && !periodMentioned(periodLiteral, period) ? `stated period "${periodLiteral}" does not match ${period}` : '',
     ].filter(Boolean);
     if (!gate('scope', 'Business, currency and period come from the document', !scopeProblems.length, scopeProblems.length ? scopeProblems.join('; ') : `${businessId} · ${period} · ${currency}${periodLiteral ? ` · stated "${periodLiteral}"` : ''}`)) return result('Business, currency or period could not be established from the document.');
-    if (ledger && c.account !== null) {
-        const accounts = [...new Set(body.map(r => cell(r.row, 'account')))];
-        if (!gate('account', 'Ledger covers a single cash account', accounts.length === 1, accounts.slice(0, 3).join(', '))) return result('The ledger mixes accounts; only a single cash-account ledger is supported.');
-        disclosures.push(`Cash account "${accounts[0]}" recorded as 1000-BANK.`);
-    } else if (ledger) disclosures.push('No account column; the whole ledger is treated as the cash account, as its role states.');
+    // 11. Ledger account identity: one account, and the document names it as cash or bank. An account column the
+    // model left unmapped still counts, and without one an "Account" line or the headings must name a cash account.
+    if (ledger) {
+        const unmapped = header.findIndex((h, i) => !indices.includes(i) && ACCOUNT_HEADING.test(h));
+        const column = c.account ?? (unmapped >= 0 ? unmapped : null);
+        const accountLines = table.rows.slice(0, p.headerLine).filter(r => ACCOUNT_HEADING.test(r[0] ?? '')).map(r => r.filter(Boolean).join(' '));
+        const named = column !== null ? [...new Set(body.map(r => (r.row[column] ?? '').trim()))] : accountLines.length ? accountLines : [];
+        const fallback = column === null && !named.length ? cashAccountAgreement([preamble, ...repFields.map(f => header[c[f as keyof typeof c]!] ?? '')].join(' \n ')) : null;
+        const verdict = named.length === 1 ? cashAccountAgreement(named[0]) : named.length > 1 ? 'MIXED' : fallback === 'AGREES' ? 'AGREES' : 'OPAQUE';
+        if (!gate('account', 'Ledger covers one cash or bank account', verdict === 'AGREES',
+            verdict === 'MIXED' ? `${named.length} accounts${column !== null && c.account === null ? ` in unmapped column "${header[column]}"` : ''}: ${named.slice(0, 3).join(', ')}`
+                : verdict === 'CONTRADICTS' ? `"${named[0]}" is not a cash or bank account` : verdict === 'AGREES' ? (named[0] ?? 'Headings name a cash movement') : named.length ? `"${named[0]}" is not named as a cash or bank account` : 'The document does not name the account')) return result('The ledger is not evidenced as a single cash-account ledger.');
+        disclosures.push(`Cash account ${named.length ? `"${named[0]}"` : 'named by the headings'} recorded as 1000-BANK.`);
+    }
 
-    // 10. Materialize the Phase 1 canonical layout.
+    // 12. Materialize the Phase 1 canonical layout.
     const net = signed.reduce((n, v) => n + v, 0n);
     const rows = body.map((r, i): Record<string, string> => {
         const s = signed[i], abs = s < 0n ? -s : s;

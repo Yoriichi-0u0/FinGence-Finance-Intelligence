@@ -34,4 +34,19 @@ export const CORRECT: Record<string, LayoutProposal> = {
         scope: { ...noScope, businessId: { line: 0, literal: 'DEMO-001' }, currency: { line: 1, literal: 'MYR' } },
         rationale: 'Recorded test proposal.', unresolved: [],
     },
+    // Adversarial fixtures that ARE acceptable: bank statements without a running balance whose headings or tokens state direction.
+    'bank-debit-credit-no-balance.csv': {
+        role: 'BANK_STATEMENT', headerLine: 6,
+        columns: { ...none, date: 0, recordId: 1, reference: 2, description: 3, counterparty: 4, moneyOut: 5, moneyIn: 6 },
+        representation: 'SPLIT_IN_OUT', directionTokens: noTokens, dateFormat: 'DD/MM/YYYY', numberFormat: 'COMMA_THOUSANDS_DOT_DECIMAL',
+        scope: { businessId: { line: 2, literal: 'DEMO-001' }, businessName: { line: 1, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 4, literal: 'MYR' }, statementPeriod: { line: 3, literal: '01/03/2026 to 31/03/2026' } },
+        rationale: 'Recorded test proposal.', unresolved: [],
+    },
+    'bank-dr-cr-no-balance.csv': {
+        role: 'BANK_STATEMENT', headerLine: 6,
+        columns: { ...none, date: 0, recordId: 1, reference: 2, description: 3, counterparty: 4, amount: 5, direction: 6 },
+        representation: 'AMOUNT_AND_DIRECTION', directionTokens: { inflow: ['CR'], outflow: ['DR'] }, dateFormat: 'DD/MM/YYYY', numberFormat: 'COMMA_THOUSANDS_DOT_DECIMAL',
+        scope: { businessId: { line: 2, literal: 'DEMO-001' }, businessName: { line: 1, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 4, literal: 'MYR' }, statementPeriod: { line: 3, literal: '01/03/2026 to 31/03/2026' } },
+        rationale: 'Recorded test proposal.', unresolved: [],
+    },
 };

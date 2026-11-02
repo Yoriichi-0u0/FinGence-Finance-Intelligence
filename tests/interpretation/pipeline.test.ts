@@ -67,6 +67,14 @@ describe('without a usable interpreter the Phase 1 behaviour is unchanged', () =
         expect(seen).toEqual(['general-ledger-cash-march-2026.csv']);
         expect(c.status).toBe('QUARANTINED'); // two ledgers: ambiguous, as in Phase 1
     });
+    it('a second bank statement passed off as the ledger never yields a reconciliation', async () => {
+        const name = 'bank-debit-credit-no-balance.csv';
+        const asLedger: LayoutInterpreter = { async propose() { const p = structuredClone(CORRECT[name]); Object.assign(p, { role: 'GENERAL_LEDGER', representation: 'DEBIT_CREDIT' }); Object.assign(p.columns, { debit: 5, credit: 6, moneyIn: null, moneyOut: null }); return { proposal: p, receipt }; } };
+        const c = await processDocuments([sample(BANK), doc('tests/fixtures/interpretation', name)], undefined, undefined, { interpreter: asLedger });
+        expect(c.status).toBe('QUARANTINED');
+        expect(c.outputs.reconciliation).toBeNull();
+        expect(c.documents[1].interpretation!.checks.filter(k => !k.passed).map(k => k.id)).toEqual(['role-evidence']);
+    });
     it('a wrong model proposal quarantines the run with the failed gate visible', async () => {
         const wrong: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); if (p.columns.moneyIn !== null) { p.columns.moneyIn = 5; p.columns.moneyOut = 6; } return { proposal: p, receipt }; } };
         const c = await processDocuments([unfamiliar('bank-statement-march-2026-export.csv'), sample(LEDGER)], undefined, undefined, { interpreter: wrong });

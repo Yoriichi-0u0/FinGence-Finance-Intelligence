@@ -38,10 +38,10 @@ function bankExport({ mislabel = false, corrupt = false, injection = false, curr
         ['Total withdrawals', grouped(out)], ['Total deposits', grouped(inn)], ['Closing balance', grouped(balance)],
     ]);
 }
-function ledgerExport() {
+function ledgerExport({ account = '1000 Bank - Current Account' } = {}) {
     const body = ledger.map(r => [dMonY(r.PostingDate), r.LedgerEntryID, r.LedgerReference, r.LedgerMemo, r.Counterparty, cents(r.CashAccountDebitMYR) ? grouped(cents(r.CashAccountDebitMYR)) : '', cents(r.CashAccountCreditMYR) ? grouped(cents(r.CashAccountCreditMYR)) : '']);
     return lines([
-        ['Rimba Demo Kitchen (Synthetic) - General Ledger Detail'], ['Entity code', 'DEMO-001'], ['Account', '1000 Bank - Current Account'], ['Period', 'March 2026'], ['Amounts in RM'], [],
+        ['Rimba Demo Kitchen (Synthetic) - General Ledger Detail'], ['Entity code', 'DEMO-001'], ...(account ? [['Account', account]] : []), ['Period', 'March 2026'], ['Amounts in RM'], [],
         ['Journal Date', 'Voucher No', 'Ref', 'Narration', 'Party', 'Dr (RM)', 'Cr (RM)'], ...body,
     ]);
 }
@@ -53,9 +53,30 @@ function malayStatement() {
         ['Tarikh', 'Rujukan', 'Keterangan', 'Pihak', 'Jumlah (RM)', 'Dr/Cr', 'Baki (RM)'], ...body,
     ], ';');
 }
-function signedLedger() {
+function signedLedger({ heading = 'Net cash movement (MYR)', account = null } = {}) {
     const body = ledger.map(r => [r.LedgerEntryID, r.PostingDate, r.LedgerReference, r.LedgerMemo, r.Counterparty, r.SignedCashMovementMYR]);
-    return lines([['Business', 'DEMO-001'], ['Currency', 'MYR'], [], ['Entry', 'Date', 'Reference', 'Description', 'Counterparty', 'Net cash movement (MYR)'], ...body]);
+    return lines([['Business', 'DEMO-001'], ['Currency', 'MYR'], ...(account ? [['Account', account]] : []), [], ['Entry', 'Date', 'Reference', 'Description', 'Counterparty', heading], ...body]);
+}
+// Bank statements WITHOUT a running balance: direction rests on headings or tokens alone.
+function bankNoBalance(kind) {
+    const body = bank.map(r => {
+        const c = cents(r.SignedCashMovementMYR), base = [dmy(r.ValueDate), r.BankTransactionID, r.BankReference, r.BankDescription, r.Counterparty];
+        return kind === 'debit-credit' ? [...base, c < 0 ? grouped(-c) : '', c > 0 ? grouped(c) : ''] : kind === 'dr-cr' ? [...base, grouped(Math.abs(c)), c < 0 ? 'DR' : 'CR'] : [...base, grouped(-c)];
+    });
+    const money = kind === 'debit-credit' ? ['Debit', 'Credit'] : kind === 'dr-cr' ? ['Amount', 'DR/CR'] : ['Amount (RM)'];
+    return lines([
+        ['Demo Bank Berhad - Current Account Statement'], ['Account holder', 'Rimba Demo Kitchen (Synthetic)'], ['Customer ID', 'DEMO-001'], ['Statement period', '01/03/2026 to 31/03/2026'], ['Currency', 'MYR'], [],
+        ['Date', 'Txn ID', 'Ref No', 'Particulars', 'Payee / Payer', ...money], ...body,
+    ]);
+}
+// A double-entry extract: every cash posting has its contra line on a sales or purchases account.
+function ledgerMultipleAccounts() {
+    const body = ledger.flatMap(r => {
+        const d = cents(r.CashAccountDebitMYR), k = cents(r.CashAccountCreditMYR), amount = grouped(d || k), contra = d ? '4000 Sales' : '5000 Purchases';
+        return [[dMonY(r.PostingDate), `${r.LedgerEntryID}-1`, r.LedgerReference, r.LedgerMemo, r.Counterparty, '1000 Bank', d ? amount : '', k ? amount : ''],
+            [dMonY(r.PostingDate), `${r.LedgerEntryID}-2`, r.LedgerReference, r.LedgerMemo, r.Counterparty, contra, k ? amount : '', d ? amount : '']];
+    });
+    return lines([['Rimba Demo Kitchen (Synthetic) - General Ledger Detail'], ['Entity code', 'DEMO-001'], ['Period', 'March 2026'], ['Amounts in RM'], [], ['Journal Date', 'Voucher No', 'Ref', 'Narration', 'Party', 'Account', 'Dr (RM)', 'Cr (RM)'], ...body]);
 }
 function opaqueNoBalance() {
     const body = bank.map(r => { const c = cents(r.SignedCashMovementMYR); return [dmy(r.ValueDate), r.BankTransactionID, r.BankReference, r.BankDescription, r.Counterparty, c < 0 ? grouped(-c) : '', c > 0 ? grouped(c) : '']; });
@@ -78,6 +99,14 @@ const fixtures = {
     'prompt-injection-in-cell.csv': bankExport({ injection: true }),
     'usd-statement.csv': bankExport({ currency: 'USD' }),
     'staff-roster.csv': staffRoster(),
+    'signed-amount-reversed-no-balance.csv': bankNoBalance('reversed'),
+    'bank-debit-credit-no-balance.csv': bankNoBalance('debit-credit'),
+    'bank-dr-cr-no-balance.csv': bankNoBalance('dr-cr'),
+    'ledger-signed-opaque-no-balance.csv': signedLedger({ heading: 'Amount (MYR)', account: '1000 Bank - Current Account' }),
+    'ledger-multiple-accounts.csv': ledgerMultipleAccounts(),
+    'ledger-sales-account.csv': ledgerExport({ account: '4000 Sales - Food' }),
+    'ledger-bank-loan-account.csv': ledgerExport({ account: '2100 Bank loan - Term financing' }),
+    'ledger-no-account-evidence.csv': ledgerExport({ account: null }),
 };
 const manifest = files => JSON.stringify({ generator: 'fingence-unfamiliar-layouts-v1', origin: 'PUBLIC_FICTIONAL_SYNTHETIC', derivedFrom: ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv'],
     files: Object.fromEntries(Object.entries(files).map(([n, t]) => [n, { sha256: createHash('sha256').update(t).digest('hex'), bytes: Buffer.byteLength(t) }])) }, null, 2) + '\n';
