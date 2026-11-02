@@ -1,4 +1,6 @@
 import 'server-only';
+import {verifyPersistedProposals,PROPOSAL_POLICY} from './proposal-verification';
+import {digest} from './processing';
 import {rankPersistedCash,RANKING_VERSION,rankPersistedE5,E5_RANKING_VERSION} from './ranking';
 import type {Provider} from './ai03/types';
 import type { SqlConnection, TransactionDatabase } from '../db/postgres';
@@ -29,6 +31,25 @@ async function audit(tx: SqlConnection, p: {
 export function createFinancialProcessingService(db: TransactionDatabase, registered: RegisteredPair = approvedPoCSourceHashes, policyInput: VerificationPolicy = SAME_DAY_POLICY) {
     const registry = Object.freeze({ ...registered }), policy = supportedPolicy(policyInput);
     const service = {
+        async verifyRankings(token:string,id:string) {
+            if(!/^[a-f0-9]{64}$/.test(id))throw new PersistenceError('INVALID_INPUT');
+            return db.transaction(async tx=>{
+                const p=await principal(tx,token),args=[p.organization_id,id];
+                await tx.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))',[p.organization_id+':verify:'+id]);
+                const job=(await tx.query(`SELECT * FROM ${schema}.jobs WHERE organization_id=$1 AND processing_id=$2`,args)).rows[0];
+                if(!job)throw Error('ACCESS_DENIED');
+                const ranks=(await tx.query(`SELECT version,evidence FROM ${schema}.rankings WHERE organization_id=$1 AND processing_id=$2 ORDER BY version`,args)).rows;
+                if(!ranks.length)throw new PersistenceError('INVALID_INPUT');
+                const snapshot=digest(JSON.stringify(ranks));
+                const records=(await tx.query(`SELECT *,signed_amount::text AS signed_amount,canonical_date::text AS canonical_date,value_date::text AS value_date,posting_date::text AS posting_date,transaction_date::text AS transaction_date FROM ${schema}.transactions WHERE organization_id=$1 AND processing_id=$2`,args)).rows;
+                const sources=(await tx.query(`SELECT * FROM ${schema}.job_sources WHERE organization_id=$1 AND processing_id=$2`,args)).rows;
+                const deterministic=(await tx.query(`SELECT p.bank_record_id,p.ledger_record_id,d.decision FROM ${schema}.proposals p JOIN ${schema}.decisions d USING(organization_id,processing_id,ordinal) WHERE organization_id=$1 AND processing_id=$2`,args)).rows;
+                const evidence=verifyPersistedProposals(p.organization_id,id,job,sources,records,ranks,deterministic);
+                await tx.query(`INSERT INTO ${schema}.proposal_verifications(organization_id,processing_id,snapshot_sha256,policy_version,created_by,outcome,evidence) VALUES($1,$2,$3,$4,$5,'UNRESOLVED',$6::jsonb) ON CONFLICT DO NOTHING`,[...args,snapshot,PROPOSAL_POLICY,p.user_id,JSON.stringify(evidence)]);
+                await audit(tx,p,id,'READ');
+                return (await tx.query(`SELECT snapshot_sha256,policy_version,outcome,evidence FROM ${schema}.proposal_verifications WHERE organization_id=$1 AND processing_id=$2 AND snapshot_sha256=$3 AND policy_version=$4`,[...args,snapshot,PROPOSAL_POLICY])).rows[0];
+            },{isolationLevel:'READ COMMITTED'});
+        },
         async rankE5(token:string,id:string,provider:Provider) {
             const context=await service.get(token,id);
             const evidence=await rankPersistedE5({version:'db04-processing-read/1',processingId:id,...context},id,provider);
@@ -96,8 +117,10 @@ export function createFinancialProcessingService(db: TransactionDatabase, regist
                 const reviews = (await tx.query(`SELECT case_ordinal,version,state,rationale,actor_id,created_at FROM ${schema}.reviews WHERE organization_id=$1 AND processing_id=$2 ORDER BY case_ordinal,version`, args)).rows;
                 const installed=(await tx.query<{present:boolean}>("SELECT to_regclass('fingence_reconciliation.rankings') IS NOT NULL present")).rows[0].present;
                 const rankings=installed?(await tx.query(`SELECT version,evidence,created_by,created_at FROM ${schema}.rankings WHERE organization_id=$1 AND processing_id=$2 ORDER BY version`,args)).rows:[];
+                const verified=(await tx.query<{present:boolean}>("SELECT to_regclass('fingence_reconciliation.proposal_verifications') IS NOT NULL present")).rows[0].present;
+                const proposalVerifications=verified?(await tx.query(`SELECT snapshot_sha256,policy_version,outcome,evidence,created_at FROM ${schema}.proposal_verifications WHERE organization_id=$1 AND processing_id=$2 ORDER BY created_at,snapshot_sha256`,args)).rows:[];
                 await audit(tx, p, id, 'READ');
-                return { job, sources, transactions, proposals, cases, reviews, rankings };
+                return { job, sources, transactions, proposals, cases, reviews, rankings,proposalVerifications };
             }, { isolationLevel: 'READ COMMITTED' });
         },
         async review(token: string, id: string, ordinal: number, expectedVersion: number, state: 'OPEN' | 'INVESTIGATING' | 'EXPLAINED' | 'ESCALATED', rationale: string) {

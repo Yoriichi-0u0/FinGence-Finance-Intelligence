@@ -2,6 +2,7 @@ export interface ProcessingDashboardV1 {
     version:'db04-processing-read/1';processingId:string;
     job:Record<string,unknown>;sources:Record<string,unknown>[];
     transactions:Record<string,unknown>[];proposals:Record<string,unknown>[];cases:Record<string,unknown>[];
+    rankings?:Record<string,unknown>[];proposalVerifications?:Record<string,unknown>[];
 }
 /** Bind both views to the same server context, without inventing missing financial values. */
 export function dashboardContext(input:unknown,expectedId:string):ProcessingDashboardV1 {

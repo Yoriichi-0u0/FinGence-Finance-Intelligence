@@ -34,10 +34,35 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('independently verifies persisted candidates concurrently and returns immutable snapshots',async()=>{
+        await expect(service().verifyRankings(token,'invalid')).rejects.toMatchObject({code:'INVALID_INPUT'});
+        const first=await service().persist(token,b,l);await service().rankFuzzy(token,first.processingId);
+        const results=await Promise.all([service().verifyRankings(token,first.processingId),service().verifyRankings(token,first.processingId)]);
+        expect(results[0]).toEqual(results[1]);
+        const evidence=results[0].evidence as Array<Record<string,unknown>>;
+        expect(evidence[0]).toMatchObject({financialEligible:true,outcome:'UNRESOLVED',rankingLineage:true});
+        expect(evidence[0].reasons).toContain('ASSIGNMENT_POLICY_NOT_APPROVED');
+        expect((await service().get(token,first.processingId)).proposalVerifications).toHaveLength(1);
+        expect((await service().get(token,first.processingId)).proposals[0].decision).toBe('VERIFIED_SUGGESTION');
+        await expect(service().verifyRankings(otherToken,first.processingId)).rejects.toThrow();
+        expect((await scoped(otherToken,`SELECT * FROM ${s}.proposal_verifications`)).rows).toEqual([]);
+        await expect(scoped(token,`UPDATE ${s}.proposal_verifications SET outcome='VERIFIED_SUGGESTION'`)).rejects.toMatchObject({code:'42501'});
+        await expect(owner.query(`UPDATE ${s}.proposal_verifications SET outcome='UNRESOLVED'`)).rejects.toMatchObject({code:'23514'});
+        await expect(owner.query(`INSERT INTO ${s}.proposal_verifications SELECT organization_id,processing_id,repeat('e',64),policy_version,created_by,created_at,'VERIFIED_SUGGESTION',evidence FROM ${s}.proposal_verifications LIMIT 1`)).rejects.toMatchObject({code:'23514'});
+        await expect(owner.query(`INSERT INTO ${s}.proposal_verifications SELECT organization_id,processing_id,repeat('e',64),policy_version,created_by,created_at,'UNRESOLVED','[{"outcome":"VERIFIED_SUGGESTION"}]'::jsonb FROM ${s}.proposal_verifications LIMIT 1`)).rejects.toMatchObject({code:'23514'});
+    });
+    it('rolls back verification evidence when the atomic read audit fails',async()=>{
+        const first=await service().persist(token,b,l);await service().rankFuzzy(token,first.processingId);
+        await owner.query(`CREATE FUNCTION public.verify_fail() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic verification audit failure' USING ERRCODE='23514'; END $$;CREATE TRIGGER verify_fail BEFORE INSERT ON ${s}.audit FOR EACH ROW EXECUTE FUNCTION public.verify_fail()`);
+        try {await expect(service().verifyRankings(token,first.processingId)).rejects.toMatchObject({code:'PERSISTENCE_FAILED'});expect((await owner.query(`SELECT count(*)::int n FROM ${s}.proposal_verifications`)).rows[0].n).toBe(0);}
+        finally{await owner.query(`DROP TRIGGER verify_fail ON ${s}.audit;DROP FUNCTION public.verify_fail()`);}
+    });
     it.skipIf(process.env.DB04_E5_SMOKE!=='1')('persists actual offline E5 rankings as unresolved evidence',async()=>{
         const first=await service().persist(token,b,l);
         const provider=new LocalE5Provider(resolve('../ai03-runtime'),resolve('../ai03-models/761b726dd34fb83930e26aab4e9ac3899aa1fa78'));
         const ranked=await service().rankE5(token,first.processingId,provider);
+        const independentlyVerified=await service().verifyRankings(token,first.processingId);
+        expect((independentlyVerified.evidence as Array<Record<string,unknown>>)[0]).toMatchObject({algorithm:'db04-e5-proposals/1',financialEligible:true,outcome:'UNRESOLVED'});
         const evidence=ranked?.evidence as Array<Record<string,unknown>>;
         expect(ranked?.version).toBe('db04-e5-proposals/1');expect(evidence).toHaveLength(1);
         expect(evidence[0].decision).toBe('UNRESOLVED');expect(Number.isFinite(evidence[0].score)).toBe(true);
@@ -119,7 +144,7 @@ const s = 'fingence_reconciliation';
         owner = new Pool({ host: '127.0.0.1', port, user: 'postgres', database: 'postgres' });
         owner.on('error', () => { });
         await owner.query('CREATE ROLE anon;CREATE ROLE authenticated;');
-        for (const file of ['phase1-clean-setup.sql', 'c3b1-grouped-persistence-upgrade.sql', 'db02-001-warning-mutation-fence.sql', 'v2-verified-document-local.sql', 'v2-m2-local.sql', 'v2-m3-local.sql', 'db04-001-reconciliation.sql', 'db04-002-reconciliation-security.sql','db04-003-ranking-evidence.sql'])
+        for (const file of ['phase1-clean-setup.sql', 'c3b1-grouped-persistence-upgrade.sql', 'db02-001-warning-mutation-fence.sql', 'v2-verified-document-local.sql', 'v2-m2-local.sql', 'v2-m3-local.sql', 'db04-001-reconciliation.sql', 'db04-002-reconciliation-security.sql','db04-003-ranking-evidence.sql','db04-004-proposal-verification.sql'])
             await owner.query(readFileSync(join('supabase/sql', file), 'utf8'));
         await owner.query('CREATE ROLE db04_test LOGIN NOSUPERUSER NOBYPASSRLS IN ROLE fingence_reconciliation_runtime;');
         await owner.query('INSERT INTO fingence_m2.organizations VALUES($1,\'synthetic\'),($2,\'other\')', [org, otherOrg]);
@@ -131,7 +156,7 @@ const s = 'fingence_reconciliation';
         runtimeDatabase();
     }, 60000);
     beforeEach(async () => {
-        await owner.query(`TRUNCATE ${s}.rankings,${s}.audit,${s}.reviews,${s}.cases,${s}.decisions,${s}.proposals,${s}.transactions,${s}.job_sources,${s}.jobs,${s}.documents`);
+        await owner.query(`TRUNCATE ${s}.proposal_verifications,${s}.rankings,${s}.audit,${s}.reviews,${s}.cases,${s}.decisions,${s}.proposals,${s}.transactions,${s}.job_sources,${s}.jobs,${s}.documents`);
     });
     afterAll(async () => {
         await runtime?.end();
@@ -164,8 +189,8 @@ const s = 'fingence_reconciliation';
     }
     it('applies additive migrations and exercises a nonowner, nonbypass login', async () => {
         expect((await runtime.query('SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0]).toEqual({ rolsuper: false, rolbypassrls: false });
-        expect((await owner.query("SELECT count(*)::int n FROM pg_tables WHERE schemaname=$1", [s])).rows[0].n).toBe(10);
-        expect((await owner.query("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=$1 AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity", [s])).rows[0].n).toBe(10);
+        expect((await owner.query("SELECT count(*)::int n FROM pg_tables WHERE schemaname=$1", [s])).rows[0].n).toBe(11);
+        expect((await owner.query("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=$1 AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity", [s])).rows[0].n).toBe(11);
     });
     it('persists and reads exact financial rows, source fingerprints and independent evidence', async () => {
         const first = await service().persist(token, b, l), read = await service().get(token, first.processingId);

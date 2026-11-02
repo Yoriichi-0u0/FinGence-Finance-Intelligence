@@ -1,6 +1,7 @@
 'use client';
 import {useState} from 'react';
 import {dashboardContext,type ProcessingDashboardV1} from '@/lib/reconciliation-dashboard';
+import ProposalEvidence from './proposal-evidence';
 export default function DB04Workspace({view}:{view:'transactions'|'reconciliation'}) {
  const [token,setToken]=useState(''),[result,setResult]=useState<ProcessingDashboardV1|null>(null),[message,setMessage]=useState(''),[busy,setBusy]=useState(false),[tab,setTab]=useState(view),[uncertain,setUncertain]=useState(false);
  async function upload(form:FormData){
@@ -23,5 +24,6 @@ export default function DB04Workspace({view}:{view:'transactions'|'reconciliatio
  {result&&<><p>Processing ID: {result.processingId}</p>{result.sources.map(s=><p key={String(s.kind)}>{String(s.kind)} SHA256: {String(s.sha256)}</p>)}
  <button onClick={()=>setTab('transactions')}>Transactions</button><button onClick={()=>setTab('reconciliation')}>Reconciliation</button>
  {tab==='transactions'?<table><thead><tr><th>Source</th><th>Record</th><th>Date basis</th><th>Date</th><th>Amount</th><th>Currency</th></tr></thead><tbody>{result.transactions.map(t=><tr key={`${t.kind}:${t.record_id}`}><td>{String(t.kind)}</td><td>{String(t.record_id)}</td><td>{String(t.date_basis)}</td><td>{String(t.canonical_date)}</td><td>{String(t.signed_amount)}</td><td>{String(t.currency)}</td></tr>)}</tbody></table>:<><table><thead><tr><th>BANK record</th><th>LEDGER record</th><th>Decision</th></tr></thead><tbody>{result.proposals.map((p,i)=><tr key={i}><td>{String(p.bank_record_id)}</td><td>{String(p.ledger_record_id)}</td><td>{String(p.decision)}</td></tr>)}</tbody></table><p>Unresolved cases: {result.cases.length}</p></>}
+ {tab==='reconciliation'&&<ProposalEvidence context={result}/>}
  </> }</section>;
 }
