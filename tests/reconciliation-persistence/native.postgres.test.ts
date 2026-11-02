@@ -8,6 +8,7 @@ import { createServer } from 'node:net';
 import { Pool } from 'pg';
 import { transactionDatabase, type TransactionDatabase } from '../../lib/server/db/postgres';
 import { createFinancialProcessingService } from '../../lib/server/reconciliation/service';
+import { createProcessingReadHandler } from '../../lib/server/reconciliation/http';
 import { tokenHash } from '../../lib/server/ai-ingestion/m2/identity';
 import { bank, ledger, csv } from '../poc-reconciliation/fixtures';
 import { digest, RESEARCH_TWO_DAY_POLICY } from '../../lib/server/reconciliation/processing';
@@ -31,6 +32,21 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('delivers one persisted context through the protected local HTTP handler', async () => {
+        vi.stubEnv('NODE_ENV','development'); vi.stubEnv('FINGENCE_DB04_LOCAL','1'); vi.stubEnv('VERCEL','');
+        try {
+            const first=await service().persist(token,b,l), handler=createProcessingReadHandler(service());
+            const request=(session:string)=>new Request(`http://localhost:3000/api/db04/processing?processingId=${first.processingId}`,{headers:{host:'localhost:3000',authorization:`Bearer ${session}`}});
+            const response=await handler(request(token));
+            expect(response.status).toBe(200); expect(response.headers.get('cache-control')).toBe('no-store');
+            const body=await response.json();
+            expect(body.processingId).toBe(first.processingId); expect(body.transactions).toHaveLength(2);
+            expect(body.transactions[0].signed_amount).toBe('6380.53');
+            expect(body.proposals[0].decision).toBe('VERIFIED_SUGGESTION');
+            expect((await handler(request(otherToken))).status).toBe(403);
+            expect((await handler(request('invalid'))).status).toBe(403);
+        } finally {vi.unstubAllEnvs();}
+    });
     beforeAll(async () => {
         directory = mkdtempSync(join(tmpdir(), 'fingence-db04-pg-'));
         execFileSync(executable('initdb'), ['-D', directory, '-U', 'postgres', '-A', 'trust', '--no-locale', '-E', 'UTF8'], { windowsHide: true, timeout: 30000, stdio: 'pipe' });
