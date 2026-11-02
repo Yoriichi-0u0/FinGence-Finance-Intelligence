@@ -1,0 +1,32 @@
+{
+  "projectRef": "fhipzomczevbpybezzxu",
+  "results": [
+    {
+      "identity": "RUNTIME",
+      "authenticated": true,
+      "poolMax": 1,
+      "applicationPoolMax": 4,
+      "tlsCertificateValidation": true,
+      "identityVerified": true,
+      "forcedRlsTables": 11,
+      "connectionLimit": 4,
+      "canIssue": false,
+      "stage": "RUNTIME_READ_ONLY_COMPLETE",
+      "category": "SUCCESS"
+    },
+    {
+      "identity": "BROKER",
+      "authenticated": false,
+      "poolMax": 1,
+      "applicationPoolMax": 4,
+      "tlsCertificateValidation": true,
+      "stage": "BROKER_POOL_ACQUISITION_AUTHENTICATION",
+      "code": "28P01",
+      "category": "AUTHENTICATION_REJECTED"
+    }
+  ],
+  "hostedChanges": false,
+  "financialRecordsRead": false,
+  "capabilitiesIssued": false,
+  "originalInstallEvidencePreserved": true
+}

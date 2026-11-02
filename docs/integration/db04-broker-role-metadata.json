@@ -1,0 +1,29 @@
+{
+  "projectRef": "fhipzomczevbpybezzxu",
+  "results": [
+    {
+      "identity": "RUNTIME",
+      "authenticated": true,
+      "poolMax": 1,
+      "applicationPoolMax": 4,
+      "tlsCertificateValidation": true,
+      "identityVerified": true,
+      "forcedRlsTables": 11,
+      "brokerRole": {
+        "rolcanlogin": true,
+        "rolvaliduntil": null,
+        "rolconnlimit": 2,
+        "rolsuper": false,
+        "rolbypassrls": false
+      },
+      "connectionLimit": 4,
+      "canIssue": false,
+      "stage": "RUNTIME_READ_ONLY_COMPLETE",
+      "category": "SUCCESS"
+    }
+  ],
+  "hostedChanges": false,
+  "financialRecordsRead": false,
+  "capabilitiesIssued": false,
+  "originalInstallEvidencePreserved": true
+}
