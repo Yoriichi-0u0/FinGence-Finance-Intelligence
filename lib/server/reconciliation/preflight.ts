@@ -90,11 +90,12 @@ export async function inspectWithRestrictedIdentity(db:TransactionDatabase,expec
           AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE c.relkind IN ('r','p') AND (n.nspname IN ('fingence_m2','fingence_m3','fingence_reconciliation')
               OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts','security_audit_events'))
-            AND has_table_privilege(current_user,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER')) AS allowed
+            AND (has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER')
+              OR has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE'))) AS allowed
           FROM pg_roles r WHERE r.rolname=current_user`,[expected.database,expected.role])).rows[0]?.allowed===true;
     });
     if(!gate)throw Error('READ_ONLY_INSPECTION_IDENTITY_REQUIRED');
     const report=await inspectReconciliationPrerequisites(db),r=report.identity;
-    if(!r||r.database!==expected.database||r.role!==expected.role||r.rolsuper||r.rolbypassrls||r.rolcreatedb||r.rolcreaterole||r.rolreplication||r.privileged_membership||r.transaction_read_only!=='on'||report.permissions.some(p=>p.can_write))throw Error('READ_ONLY_INSPECTION_IDENTITY_REQUIRED');
+    if(!r||r.database!==expected.database||r.role!==expected.role||r.rolsuper||r.rolbypassrls||r.rolcreatedb||r.rolcreaterole||r.rolreplication||r.privileged_membership||r.transaction_read_only!=='on'||report.permissions.some(p=>p.can_write||p.can_select))throw Error('READ_ONLY_INSPECTION_IDENTITY_REQUIRED');
     return report;
 }

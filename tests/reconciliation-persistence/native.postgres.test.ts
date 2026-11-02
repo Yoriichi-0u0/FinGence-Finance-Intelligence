@@ -48,7 +48,36 @@ const s = 'fingence_reconciliation';
             expect(report.permissions.every(p => !p.can_write && !p.can_select)).toBe(true);
             await expect(pool.query(`SELECT * FROM ${s}.transactions`)).rejects.toMatchObject({code:'42501'});
             await expect(pool.query('CREATE TABLE public.inspector_must_not_write (id int)')).rejects.toMatchObject({code:'25006'});
+            await owner.query(`GRANT SELECT (signed_amount) ON ${s}.transactions TO db04_catalog_inspector`);
+            await expect(inspectWithRestrictedIdentity(inspector, {role:'db04_catalog_inspector', database:'postgres'})).rejects.toThrow('READ_ONLY_INSPECTION_IDENTITY_REQUIRED');
+            await owner.query(`REVOKE SELECT (signed_amount) ON ${s}.transactions FROM db04_catalog_inspector`);
         } finally { await inspector.close(); }
+    });
+    it('rolls back the inspector proposal when PUBLIC can read financial columns', async () => {
+        await owner.query(`GRANT SELECT (signed_amount) ON ${s}.transactions TO PUBLIC`);
+        const client = await owner.connect();
+        try {
+            const sql = readFileSync(resolve('supabase/sql/db04-inspection-role-review.sql'), 'utf8').replaceAll('db04_catalog_inspector','db04_unsafe_inspector');
+            await expect(client.query(sql)).rejects.toMatchObject({code:'42501',message:'INSPECTION_ROLE_UNSAFE_PUBLIC_PRIVILEGES'});
+            await client.query('ROLLBACK');
+            expect((await client.query("SELECT 1 FROM pg_roles WHERE rolname='db04_unsafe_inspector'")).rows).toHaveLength(0);
+        } finally {
+            await client.query('ROLLBACK'); client.release();
+            await owner.query(`REVOKE SELECT (signed_amount) ON ${s}.transactions FROM PUBLIC`);
+        }
+    });
+    it('rolls back the inspector proposal when PUBLIC can invoke an elevated data function', async () => {
+        await owner.query(`CREATE FUNCTION public.db04_unsafe_reader() RETURNS int LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS 'SELECT 1'`);
+        const client = await owner.connect();
+        try {
+            const sql = readFileSync(resolve('supabase/sql/db04-inspection-role-review.sql'), 'utf8').replaceAll('db04_catalog_inspector','db04_unsafe_function_inspector');
+            await expect(client.query(sql)).rejects.toMatchObject({code:'42501',message:'INSPECTION_ROLE_UNSAFE_PUBLIC_PRIVILEGES'});
+            await client.query('ROLLBACK');
+            expect((await client.query("SELECT 1 FROM pg_roles WHERE rolname='db04_unsafe_function_inspector'")).rows).toHaveLength(0);
+        } finally {
+            await client.query('ROLLBACK'); client.release();
+            await owner.query('DROP FUNCTION public.db04_unsafe_reader()');
+        }
     });
     it('performs native read-only metadata inspection without financial SELECT privileges',async()=>{
         await owner.query('CREATE ROLE db04_inspector LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE');

@@ -14,13 +14,16 @@ The current process has no Supabase/database/inspection variables, Supabase CLI
 or connector. Neither this worktree nor the known original checkout has .env
 configuration. The ignored `.local/db04-inspection.env` template has now been
 created with a protected Windows ACL limited to the current user and SYSTEM.
-Its existing contents are preserved on repeated initialization. No project
-reference, database name, inspection role or connection URL is configured.
+Its existing contents are preserved on repeated initialization. No
+database name, inspection role or connection URL is configured. The owner has now
+confirmed project reference `fhipzomczevbpybezzxu`; it is prepared in the private file.
 An expanded workspace search subsequently found two neighbouring FYP-labelled
 `.env.local` files with the same declared project reference. Both URLs identify
 administrator accounts, with no dedicated inspection settings. Their credentials
 were neither copied nor used. Personal-versus-team ownership of that reference
-still requires owner confirmation; no target identity is inferred from names.
+was subsequently confirmed by the owner. The open personal dashboard was inspected:
+four foundation tables were visible in the schema diagram and no custom inspector
+was listed in All roles. See [the target-specific approval plan](db04-personal-inspector-approval.md).
 Therefore no hosted connection, catalog query, financial read/write, migration,
 role/grant change or reconnect/security test was executed. Previous claims of
 existing DB01–DB03 work are preserved but not reverified against the hosted target.
@@ -56,8 +59,8 @@ node --conditions=react-server scripts/db04-readiness.mjs plan
 
 The first command is for use once the secure configuration is available, not a
 record of a hosted run. If the inspection login does not exist, first provide the
-verified personal reference and confirm that fact. A scoped role/CONNECT plan can
-then be prepared for approval; this task does not create a hosted login or fall
+confirmed role absence. A target-specific role/CONNECT plan is now prepared
+for approval; this task does not create a hosted login or fall
 back to privileged/application credentials. No financial SELECT or private-schema
 USAGE grant is needed by the locally tested catalog inspector. The exact proposed
 SQL is `supabase/sql/db04-inspection-role-review.sql`, a review template rather
