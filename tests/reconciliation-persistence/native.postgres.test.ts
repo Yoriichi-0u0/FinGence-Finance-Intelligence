@@ -159,7 +159,7 @@ const s = 'fingence_reconciliation';
             expect(report.foundationCompatibility.exactNumericColumns).toContain('source_amount');
             expect(report.foundationCompatibility.c1ToDb04.supported).toBe(false);
             expect(report.foundationCompatibility.db03Recovery).toContain('NOT_PROVEN_BY_CATALOGS');
-            expect(assessHostedReadiness(report).blockers).toEqual(['HOSTED_IDENTITY_CONTRACT_REQUIRED','EXPLICIT_MIGRATION_APPROVAL_REQUIRED','VERIFIED_BACKUP_RESTORE_REQUIRED']);
+            expect(assessHostedReadiness(report).blockers).toEqual(['HOSTED_IDENTITY_CONTRACT_REQUIRED','EXPLICIT_MIGRATION_APPROVAL_REQUIRED','VERIFIED_BACKUP_RESTORE_REQUIRED','FOUNDATION_CONSTRAINT_NOT_VALIDATED:financial_records.financial_records_source_file_safe']);
             const cli=execFileSync(process.execPath,['--conditions=react-server','scripts/db04-readiness.mjs','inspect'],{encoding:'utf8',windowsHide:true,timeout:30000,env:{...process.env,DB04_INSPECTION_DATABASE_URL:`postgresql://db04_inspector@127.0.0.1:${port}/postgres?sslmode=disable`,DB04_INSPECTION_ROLE:'db04_inspector',DB04_INSPECTION_DATABASE:'postgres'}});
             const inspected=JSON.parse(cli);expect(inspected.target.environment).toBe('LOCAL');expect(inspected.report.identity.role).toBe('db04_inspector');expect(inspected.readiness.hostedDeploymentAuthorized).toBe(false);
             await expect(inspectorPool.query(`SELECT * FROM ${s}.transactions`)).rejects.toMatchObject({code:'42501'});

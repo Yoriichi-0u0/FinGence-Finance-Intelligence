@@ -1,5 +1,10 @@
 # Personal FYP A ACL diagnostic and revised inspector proposal
 
+Historical proposal below: the owner subsequently approved the exact v2 SQL and
+private password setup. Role creation and restricted inspection succeeded; see
+[the actual hosted catalog result and next plan](db04-hosted-catalog-and-next-plan.md).
+No DB04 migration or financial write was included in that approval or execution.
+
 ## Authorized execution, 2 November 2026
 
 Started on `feature/db04-ai06-supabase-celester` at

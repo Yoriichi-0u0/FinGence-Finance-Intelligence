@@ -21,6 +21,10 @@ it('inspects real catalogs without manufacturing missing hosted identity depende
         const readiness=assessHostedReadiness(result);expect(readiness.hostedDeploymentAuthorized).toBe(false);
         expect(readiness.blockers).toContain('IDENTITY_COLUMN_MISSING_OR_INCOMPATIBLE:fingence_m2.sessions.token_hash');
         expect(readiness.blockers).toContain('HOSTED_IDENTITY_CONTRACT_REQUIRED');
+        expect(readiness.blockers).toContain('DB01_FOUNDATION_TABLE_ABSENT:financial_records');
+        expect(readiness.blockers).toContain('DB02_WARNING_FENCE_MISSING_OR_DISABLED');
+        const pending={...result,foundation:{...result.foundation,constraints:[{relation:'financial_records',name:'financial_records_source_file_safe',validated:false}]}};
+        expect(assessHostedReadiness(pending).blockers).toContain('FOUNDATION_CONSTRAINT_NOT_VALIDATED:financial_records.financial_records_source_file_safe');
         expect(result.foundationCompatibility.missingFoundationTables).toHaveLength(4);
         expect(result.foundationCompatibility.hostedWritesAuthorized).toBe(false);
     } finally { await pg.close(); }

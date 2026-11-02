@@ -16,6 +16,9 @@ export const HOSTED_IDENTITY_REQUIREMENTS=[
 /** Evidence-based diagnostic only. Local M2/M3 compatibility never approves Supabase Auth. */
 export function assessHostedReadiness(report:Awaited<ReturnType<typeof inspectReconciliationPrerequisites>>) {
  const blockers:string[]=['HOSTED_IDENTITY_CONTRACT_REQUIRED','EXPLICIT_MIGRATION_APPROVAL_REQUIRED','VERIFIED_BACKUP_RESTORE_REQUIRED'];
+ for(const name of report.foundationCompatibility.missingFoundationTables)blockers.push(`DB01_FOUNDATION_TABLE_ABSENT:${name}`);
+ if(!report.foundationCompatibility.warningFenceEnabled)blockers.push('DB02_WARNING_FENCE_MISSING_OR_DISABLED');
+ for(const c of report.foundation.constraints)if(c.validated===false)blockers.push(`FOUNDATION_CONSTRAINT_NOT_VALIDATED:${c.relation}.${c.name}`);
  for(const [relation,columns] of Object.entries(identityColumns))for(const [name,type] of Object.entries(columns)) {
   const found=report.columns.find(c=>`${c.table_schema}.${c.table_name}`===relation&&c.column_name===name);
   if(!found||found.data_type!==type)blockers.push(`IDENTITY_COLUMN_MISSING_OR_INCOMPATIBLE:${relation}.${name}`);

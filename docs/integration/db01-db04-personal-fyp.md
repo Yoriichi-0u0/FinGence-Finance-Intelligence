@@ -2,6 +2,12 @@
 
 Start: 569d5df0598387e559b9fd7de8e811db493b8904.
 
+**Current status:** the separately approved v2 role creation committed, its password
+was provisioned privately, and restricted hosted catalog inspection completed.
+See [actual findings and the next gated migration plan](db04-hosted-catalog-and-next-plan.md).
+Earlier access/blocker history below is preserved; it no longer means credentials
+or a restricted report are missing. Hosted financial persistence is still untested.
+
 Latest update: the separately approved inspector creation transaction reached
 personal FYP A over verified TLS, failed its unsafe-PUBLIC-privileges guard and
 was rolled back. No password or restricted catalog report exists. See the

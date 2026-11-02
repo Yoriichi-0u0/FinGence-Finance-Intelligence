@@ -1,0 +1,118 @@
+{
+  "projectRef": "fhipzomczevbpybezzxu",
+  "database": "postgres",
+  "role": "db04_catalog_inspector",
+  "roleCreation": {
+    "sqlSha256": "d33a46090603bb4a39767b00d7e4d86cd950514d3211d0a83faa44a5499da437",
+    "commitAcknowledged": true,
+    "approvedCommit": "72589d12797a887bd152b3b7ea3ca2dae51271ab",
+    "tlsCertificateValidation": true
+  },
+  "passwordProvisioned": true,
+  "privateConfigurationComplete": true,
+  "restrictedCatalogComplete": true,
+  "restrictedRole": {
+    "rolname": "db04_catalog_inspector",
+    "rolsuper": false,
+    "rolbypassrls": false,
+    "rolcreatedb": false,
+    "rolcreaterole": false,
+    "rolreplication": false,
+    "rolinherit": false,
+    "rolconnlimit": 1,
+    "rolconfig": [
+      "default_transaction_read_only=on",
+      "statement_timeout=10s",
+      "lock_timeout=3s",
+      "search_path=pg_catalog"
+    ],
+    "database": "postgres",
+    "transaction_read_only": "on",
+    "ssl": true,
+    "stats_membership": false
+  },
+  "applicationPrivileges": {
+    "writeCount": 0,
+    "selectCount": 0
+  },
+  "foundation": {
+    "columnCount": 63,
+    "indexCount": 13,
+    "constraintCount": 52,
+    "groupedPersistenceMarkers": {
+      "attemptTable": true,
+      "batchLink": true
+    },
+    "warningFenceEnabled": false,
+    "numericDeclarations": [
+      {
+        "name": "debit",
+        "type": "numeric"
+      },
+      {
+        "name": "credit",
+        "type": "numeric"
+      },
+      {
+        "name": "source_amount",
+        "type": "numeric"
+      },
+      {
+        "name": "derived_ledger_net",
+        "type": "numeric"
+      },
+      {
+        "name": "balance",
+        "type": "numeric"
+      }
+    ],
+    "rlsEnabledOnAll": true,
+    "tables": [
+      "financial_records",
+      "ingestion_batches",
+      "persistence_attempts",
+      "validation_issues"
+    ],
+    "unvalidatedConstraints": [
+      {
+        "relation": "financial_records",
+        "name": "financial_records_source_file_safe",
+        "type": "c"
+      }
+    ],
+    "warningFunctionNameConflict": false,
+    "forceRlsEnabledOnAll": false,
+    "policyCount": 0
+  },
+  "identityPrerequisites": [
+    {
+      "relation": "fingence_m2.organizations",
+      "present": false
+    },
+    {
+      "relation": "fingence_m2.users",
+      "present": false
+    },
+    {
+      "relation": "fingence_m2.memberships",
+      "present": false
+    },
+    {
+      "relation": "fingence_m2.sessions",
+      "present": false
+    },
+    {
+      "relation": "fingence_m3.organization_states",
+      "present": false
+    }
+  ],
+  "db04TableCount": 0,
+  "runtimeRolePresent": false,
+  "db03RecoveryVerified": false,
+  "financialRowsRead": false,
+  "financialPersistenceTested": false,
+  "db04MigrationsApplied": false,
+  "existingGrantsRlsOrTablesModified": false,
+  "teamProductionTouched": false,
+  "privateCatalogSha256": "7b6d8d0a09353cfa9071365d33c1950a26f0f8b24aae482f736ae84fb7f1ac3b"
+}

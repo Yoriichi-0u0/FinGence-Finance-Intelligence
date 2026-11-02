@@ -1,0 +1,46 @@
+{
+  "identityBootstrapApproved": false,
+  "references": [
+    {
+      "name": "db02-001-warning-mutation-fence.sql",
+      "sha256": "8a991309f2f4d4192ac9a782cc369348c93c0f098ce31c370424940897a33089",
+      "execution": "REFERENCE_ONLY_NOT_AN_EXECUTION_SEQUENCE"
+    },
+    {
+      "order": 4,
+      "name": "db04-001-reconciliation.sql",
+      "sha256": "911a0abe2c63f9e60d18f224a795732285b80df1155f19adf9c8d76b89d9d1ef",
+      "purpose": "ADDITIVE_SQL_REQUIRES_TARGET_REVIEW_AND_APPROVAL"
+    },
+    {
+      "order": 5,
+      "name": "db04-002-reconciliation-security.sql",
+      "sha256": "d132ac1b200784a180abce94034387d429c08646668b6cf754caae4030325094",
+      "purpose": "ADDITIVE_SQL_REQUIRES_TARGET_REVIEW_AND_APPROVAL"
+    },
+    {
+      "order": 6,
+      "name": "db04-003-ranking-evidence.sql",
+      "sha256": "2a811e833f1454a315ad54bbc3cdd1081ee8f2dd8459c9be4128af2976809661",
+      "purpose": "ADDITIVE_SQL_REQUIRES_TARGET_REVIEW_AND_APPROVAL"
+    },
+    {
+      "order": 7,
+      "name": "db04-004-proposal-verification.sql",
+      "sha256": "5272f0b3da11510be341403962849440392c698811c9666f3d4511663232595b",
+      "purpose": "ADDITIVE_SQL_REQUIRES_TARGET_REVIEW_AND_APPROVAL"
+    }
+  ],
+  "backupRestoreVerified": false,
+  "target": "fhipzomczevbpybezzxu/postgres",
+  "executionAuthorized": false,
+  "referenceOrderMeaning": "Existing local dependency-reference ordering; not an approved hosted execution sequence.",
+  "targetPlan": [
+    "Verified backup and restore evidence",
+    "Owner review of NOT VALID source-file constraint without unauthorized row inspection",
+    "Separate approval of exact DB02 additive fence SQL",
+    "Approved hosted identity contract and exact migration",
+    "Separate approval of DB04 001,002,003,004 in that order",
+    "Separately authorized hosted synthetic persistence/security/API verification"
+  ]
+}
