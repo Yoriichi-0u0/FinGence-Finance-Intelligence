@@ -1,4 +1,6 @@
 import 'server-only';
+import {rankPersistedCash,RANKING_VERSION,rankPersistedE5,E5_RANKING_VERSION} from './ranking';
+import type {Provider} from './ai03/types';
 import type { SqlConnection, TransactionDatabase } from '../db/postgres';
 import { PersistenceError } from '../persistence/contracts';
 import { tokenHash } from '../ai-ingestion/m2/identity';
@@ -26,7 +28,25 @@ async function audit(tx: SqlConnection, p: {
 /** Internal/local only. Runtime requires restricted role; no environment credentials or schema auto-install. */
 export function createFinancialProcessingService(db: TransactionDatabase, registered: RegisteredPair = approvedPoCSourceHashes, policyInput: VerificationPolicy = SAME_DAY_POLICY) {
     const registry = Object.freeze({ ...registered }), policy = supportedPolicy(policyInput);
-    return {
+    const service = {
+        async rankE5(token:string,id:string,provider:Provider) {
+            const context=await service.get(token,id);
+            const evidence=await rankPersistedE5({version:'db04-processing-read/1',processingId:id,...context},id,provider);
+            return db.transaction(async tx=>{
+                const p=await principal(tx,token);
+                await tx.query(`INSERT INTO ${schema}.rankings(organization_id,processing_id,version,created_by,evidence) VALUES($1,$2,$3,$4,$5::jsonb) ON CONFLICT DO NOTHING`,[p.organization_id,id,E5_RANKING_VERSION,p.user_id,JSON.stringify(evidence)]);
+                return (await tx.query(`SELECT version,evidence FROM ${schema}.rankings WHERE organization_id=$1 AND processing_id=$2 AND version=$3`,[p.organization_id,id,E5_RANKING_VERSION])).rows[0];
+            });
+        },
+        async rankFuzzy(token:string,id:string) {
+            const context=await service.get(token,id);
+            const evidence=rankPersistedCash({version:'db04-processing-read/1',processingId:id,...context},id);
+            return db.transaction(async tx=>{
+                const p=await principal(tx,token);
+                await tx.query(`INSERT INTO ${schema}.rankings(organization_id,processing_id,version,created_by,evidence) VALUES($1,$2,$3,$4,$5::jsonb) ON CONFLICT DO NOTHING`,[p.organization_id,id,RANKING_VERSION,p.user_id,JSON.stringify(evidence)]);
+                return (await tx.query(`SELECT version,evidence FROM ${schema}.rankings WHERE organization_id=$1 AND processing_id=$2 AND version=$3`,[p.organization_id,id,RANKING_VERSION])).rows[0];
+            });
+        },
         async persist(token: string, bank: SourceInput, ledger: SourceInput) {
             return db.transaction(async (tx) => {
                 const p = await principal(tx, token);
@@ -74,8 +94,10 @@ export function createFinancialProcessingService(db: TransactionDatabase, regist
                 const proposals = (await tx.query(`SELECT p.*,d.policy_version,d.decision,d.checks FROM ${schema}.proposals p JOIN ${schema}.decisions d USING(organization_id,processing_id,ordinal) WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
                 const cases = (await tx.query(`SELECT ordinal,reason,evidence FROM ${schema}.cases WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
                 const reviews = (await tx.query(`SELECT case_ordinal,version,state,rationale,actor_id,created_at FROM ${schema}.reviews WHERE organization_id=$1 AND processing_id=$2 ORDER BY case_ordinal,version`, args)).rows;
+                const installed=(await tx.query<{present:boolean}>("SELECT to_regclass('fingence_reconciliation.rankings') IS NOT NULL present")).rows[0].present;
+                const rankings=installed?(await tx.query(`SELECT version,evidence,created_by,created_at FROM ${schema}.rankings WHERE organization_id=$1 AND processing_id=$2 ORDER BY version`,args)).rows:[];
                 await audit(tx, p, id, 'READ');
-                return { job, sources, transactions, proposals, cases, reviews };
+                return { job, sources, transactions, proposals, cases, reviews, rankings };
             }, { isolationLevel: 'READ COMMITTED' });
         },
         async review(token: string, id: string, ordinal: number, expectedVersion: number, state: 'OPEN' | 'INVESTIGATING' | 'EXPLAINED' | 'ESCALATED', rationale: string) {
@@ -97,4 +119,5 @@ export function createFinancialProcessingService(db: TransactionDatabase, regist
             }, { isolationLevel: 'READ COMMITTED' });
         }
     };
+    return service;
 }

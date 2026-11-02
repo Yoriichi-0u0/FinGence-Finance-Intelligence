@@ -40,10 +40,14 @@ export function createProcessingUploadHandler(service: Pick<ReturnType<typeof cr
 export function localFinancialReadAllowed(request: Request, env: Readonly<Record<string,string|undefined>> = process.env) {
     if (env.NODE_ENV !== 'development' || env.VERCEL || env.FINGENCE_DB04_LOCAL !== '1') return false;
     const url = new URL(request.url);
+    const host=request.headers.get('host');if(!host)return false;
+    let authority:URL;try{authority=new URL(`${url.protocol}//${host}`);}catch{return false;}
+    // Next normalizes request URLs and adds forwarding headers even on a direct local listener.
     return ['localhost','127.0.0.1','[::1]'].includes(url.hostname)
-        && request.headers.get('host') === url.host
-        && !request.headers.has('x-forwarded-host')
-        && (!request.headers.has('origin') || request.headers.get('origin') === url.origin);
+        && ['localhost','127.0.0.1','[::1]'].includes(authority.hostname)
+        && authority.host===host && !authority.username && !authority.password && authority.port===url.port
+        && (!request.headers.has('x-forwarded-host') || request.headers.get('x-forwarded-host')===host)
+        && (!request.headers.has('origin') || request.headers.get('origin') === authority.origin);
 }
 /** One authenticated, audited context for Transactions and Reconciliation consumers. */
 export function createProcessingReadHandler(service: Pick<ReturnType<typeof createFinancialProcessingService>,'get'>) {

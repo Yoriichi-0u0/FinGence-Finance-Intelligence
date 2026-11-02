@@ -1,5 +1,6 @@
 import { createPostgresDatabase, serverPoolConfig } from '@/lib/server/db/postgres';
 import { createFinancialProcessingService } from '@/lib/server/reconciliation/service';
+import {runtimeSyntheticRegistry} from '@/lib/server/reconciliation/local-fixtures';
 import { createProcessingReadHandler, createProcessingUploadHandler, localFinancialReadAllowed } from '@/lib/server/reconciliation/http';
 export const runtime = 'nodejs';
 async function handle(request: Request, upload: boolean) {
@@ -15,8 +16,8 @@ async function handle(request: Request, upload: boolean) {
             AND n.nspowner<>r.oid AS allowed FROM pg_roles r
             JOIN pg_namespace n ON n.nspname='fingence_reconciliation' WHERE r.rolname=current_user`)).rows[0]?.allowed);
         if (!safe) return Response.json({error:'Access denied'},{status:403});
-        const service=createFinancialProcessingService(db);
-        return await (upload?createProcessingUploadHandler(service):createProcessingReadHandler(service))(request);
+        const registry=runtimeSyntheticRegistry(),service=createFinancialProcessingService(db,registry);
+        return await (upload?createProcessingUploadHandler(service,registry):createProcessingReadHandler(service))(request);
     } catch { return Response.json({error:'Access denied'},{status:403}); }
     finally { await db.close(); }
 }

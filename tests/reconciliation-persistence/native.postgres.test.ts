@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, afterAll, describe, it, expect, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { execFileSync,spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join, resolve, relative } from 'node:path';
 import { createServer } from 'node:net';
@@ -10,6 +10,7 @@ import { transactionDatabase, type TransactionDatabase } from '../../lib/server/
 import { createFinancialProcessingService } from '../../lib/server/reconciliation/service';
 import { createProcessingReadHandler,createProcessingUploadHandler } from '../../lib/server/reconciliation/http';
 import {dashboardContext} from '../../lib/reconciliation-dashboard';
+import {LocalE5Provider} from '../../lib/server/reconciliation/ai03/model-loader';
 import { tokenHash } from '../../lib/server/ai-ingestion/m2/identity';
 import { bank, ledger, csv } from '../poc-reconciliation/fixtures';
 import { digest, RESEARCH_TWO_DAY_POLICY } from '../../lib/server/reconciliation/processing';
@@ -33,6 +34,49 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it.skipIf(process.env.DB04_E5_SMOKE!=='1')('persists actual offline E5 rankings as unresolved evidence',async()=>{
+        const first=await service().persist(token,b,l);
+        const provider=new LocalE5Provider(resolve('../ai03-runtime'),resolve('../ai03-models/761b726dd34fb83930e26aab4e9ac3899aa1fa78'));
+        const ranked=await service().rankE5(token,first.processingId,provider);
+        const evidence=ranked?.evidence as Array<Record<string,unknown>>;
+        expect(ranked?.version).toBe('db04-e5-proposals/1');expect(evidence).toHaveLength(1);
+        expect(evidence[0].decision).toBe('UNRESOLVED');expect(Number.isFinite(evidence[0].score)).toBe(true);
+        expect((await service().get(token,first.processingId)).proposals[0].decision).toBe('VERIFIED_SUGGESTION');
+    },120000);
+    it('persists fuzzy proposal evidence without changing deterministic decisions',async()=>{
+        const first=await service().persist(token,b,l);
+        const ranked=await service().rankFuzzy(token,first.processingId);
+        expect(ranked?.version).toBe('db04-fuzzy-proposals/1');
+        const evidence=ranked?.evidence as Array<Record<string,unknown>>;
+        expect(evidence).toHaveLength(1);expect(evidence[0].decision).toBe('UNRESOLVED');
+        expect(evidence[0].amount).toBe('6380.53');expect(evidence[0].bankDateBasis).toBe('VALUE_DATE');
+        expect(await service().rankFuzzy(token,first.processingId)).toEqual(ranked);
+        expect((await service().get(token,first.processingId)).rankings).toHaveLength(1);
+        expect((await service().get(token,first.processingId)).proposals[0].decision).toBe('VERIFIED_SUGGESTION');
+        await expect(service().rankFuzzy(otherToken,first.processingId)).rejects.toThrow();
+        expect((await scoped(otherToken,`SELECT * FROM ${s}.rankings`)).rows).toEqual([]);
+    });
+    it('runs the real Next server: upload, retrieve, revisit and deny another organization',async()=>{
+        const reservation=createServer();await new Promise<void>(done=>reservation.listen(0,'127.0.0.1',done));
+        const webPort=(reservation.address() as {port:number}).port;await new Promise<void>(done=>reservation.close(()=>done()));
+        const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','--hostname','127.0.0.1','--port',String(webPort)],{windowsHide:true,stdio:['ignore','pipe','pipe'],env:{...process.env,NODE_ENV:'development',VERCEL:'',FINGENCE_DB04_LOCAL:'1',FINGENCE_DB04_TEST_FIXTURES:'1',SUPABASE_DATABASE_URL:`postgresql://db04_test@127.0.0.1:${port}/postgres?sslmode=disable`}});
+        let diagnostics='';for(const stream of [child.stdout,child.stderr])stream?.on('data',chunk=>{diagnostics=(diagnostics+String(chunk)).slice(-4000).replace(/postgres(?:ql)?:\/\/\S+/g,'[redacted]');});
+        const base=`http://127.0.0.1:${webPort}`;
+        try {
+            let ready=false;const deadline=Date.now()+120000;
+            while(Date.now()<deadline){try{const r=await fetch(base+'/api/db04/processing',{signal:AbortSignal.timeout(10000)});if(r.status===403){ready=true;break;}}catch{}if(child.exitCode!==null)break;await new Promise(done=>setTimeout(done,500));}
+            if(!ready)throw Error('Live server not ready: '+diagnostics);
+            const upload=()=>{const form=new FormData();form.append('documents',new File([b.bytes],'bank.csv',{type:'text/csv'}));form.append('documents',new File([l.bytes],'ledger.csv',{type:'text/csv'}));return fetch(base+'/api/db04/processing',{method:'POST',headers:{authorization:`Bearer ${token}`},body:form});};
+            const response=await upload();expect(response.status).toBe(200);const receipt=await response.json();
+            expect((await(await upload()).json()).reused).toBe(true);
+            const read=await fetch(base+`/api/db04/processing?processingId=${receipt.processingId}`,{headers:{authorization:`Bearer ${token}`}});
+            expect(read.status).toBe(200);expect(dashboardContext(await read.json(),receipt.processingId).transactions).toHaveLength(2);
+            expect((await fetch(base+`/api/db04/processing?processingId=${receipt.processingId}`,{headers:{authorization:`Bearer ${otherToken}`}})).status).toBe(403);
+            for(const path of ['/transactions','/reconciliation','/transactions']){const page=await fetch(base+path);expect(page.status).toBe(200);expect(await page.text()).toContain('Local persisted financial processing');}
+        } finally {
+            if(child.pid){if(process.platform==='win32')execFileSync('taskkill',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});else child.kill('SIGTERM');}
+        }
+    },180000);
     it('uploads registered documents then binds both dashboard views to persisted GET evidence',async()=>{
         vi.stubEnv('NODE_ENV','development');vi.stubEnv('FINGENCE_DB04_LOCAL','1');vi.stubEnv('VERCEL','');
         try {
@@ -75,7 +119,7 @@ const s = 'fingence_reconciliation';
         owner = new Pool({ host: '127.0.0.1', port, user: 'postgres', database: 'postgres' });
         owner.on('error', () => { });
         await owner.query('CREATE ROLE anon;CREATE ROLE authenticated;');
-        for (const file of ['phase1-clean-setup.sql', 'c3b1-grouped-persistence-upgrade.sql', 'db02-001-warning-mutation-fence.sql', 'v2-verified-document-local.sql', 'v2-m2-local.sql', 'v2-m3-local.sql', 'db04-001-reconciliation.sql', 'db04-002-reconciliation-security.sql'])
+        for (const file of ['phase1-clean-setup.sql', 'c3b1-grouped-persistence-upgrade.sql', 'db02-001-warning-mutation-fence.sql', 'v2-verified-document-local.sql', 'v2-m2-local.sql', 'v2-m3-local.sql', 'db04-001-reconciliation.sql', 'db04-002-reconciliation-security.sql','db04-003-ranking-evidence.sql'])
             await owner.query(readFileSync(join('supabase/sql', file), 'utf8'));
         await owner.query('CREATE ROLE db04_test LOGIN NOSUPERUSER NOBYPASSRLS IN ROLE fingence_reconciliation_runtime;');
         await owner.query('INSERT INTO fingence_m2.organizations VALUES($1,\'synthetic\'),($2,\'other\')', [org, otherOrg]);
@@ -87,7 +131,7 @@ const s = 'fingence_reconciliation';
         runtimeDatabase();
     }, 60000);
     beforeEach(async () => {
-        await owner.query(`TRUNCATE ${s}.audit,${s}.reviews,${s}.cases,${s}.decisions,${s}.proposals,${s}.transactions,${s}.job_sources,${s}.jobs,${s}.documents`);
+        await owner.query(`TRUNCATE ${s}.rankings,${s}.audit,${s}.reviews,${s}.cases,${s}.decisions,${s}.proposals,${s}.transactions,${s}.job_sources,${s}.jobs,${s}.documents`);
     });
     afterAll(async () => {
         await runtime?.end();
@@ -120,8 +164,8 @@ const s = 'fingence_reconciliation';
     }
     it('applies additive migrations and exercises a nonowner, nonbypass login', async () => {
         expect((await runtime.query('SELECT rolsuper,rolbypassrls FROM pg_roles WHERE rolname=current_user')).rows[0]).toEqual({ rolsuper: false, rolbypassrls: false });
-        expect((await owner.query("SELECT count(*)::int n FROM pg_tables WHERE schemaname=$1", [s])).rows[0].n).toBe(9);
-        expect((await owner.query("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=$1 AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity", [s])).rows[0].n).toBe(9);
+        expect((await owner.query("SELECT count(*)::int n FROM pg_tables WHERE schemaname=$1", [s])).rows[0].n).toBe(10);
+        expect((await owner.query("SELECT count(*)::int n FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname=$1 AND c.relkind='r' AND c.relrowsecurity AND c.relforcerowsecurity", [s])).rows[0].n).toBe(10);
     });
     it('persists and reads exact financial rows, source fingerprints and independent evidence', async () => {
         const first = await service().persist(token, b, l), read = await service().get(token, first.processingId);
