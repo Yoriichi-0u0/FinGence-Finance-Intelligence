@@ -4,6 +4,7 @@
  */
 import type { ProcessingContext } from '../demo/pipeline';
 import { RULES } from '../poc-anomalies/detector';
+import { reconciliationStatuses } from '../poc-reconciliation/contracts';
 import { toCents, type SourceRow } from '../poc-anomalies/source';
 import { QA_VERSION, MAX_FACTS, type Catalogue, type ToolCall } from './contracts';
 import { count, money, text, type Fact, type SourceRef, type Value } from './facts';
@@ -34,7 +35,7 @@ export function catalogue(index: GroundingIndex): Catalogue {
     return {
         version: QA_VERSION, scope: index.scope, months: index.months,
         counterparties: [...new Set(index.rows.map(r => r.counterparty))].sort(),
-        reconciliationStatuses: o.reconciliation ? ['ALL_EXCEPTIONS', ...Object.entries(o.reconciliation.counts).filter(([, n]) => n > 0).map(([s]) => s)] : [],
+        reconciliationStatuses: o.reconciliation ? ['ALL_EXCEPTIONS', ...reconciliationStatuses.filter(s => o.reconciliation!.counts[s] > 0)] : [],
         anomalySeverities: [...new Set(o.anomalies.map(a => a.severity))].sort(),
     };
 }

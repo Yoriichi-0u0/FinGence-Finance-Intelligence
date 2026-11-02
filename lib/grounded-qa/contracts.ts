@@ -19,13 +19,6 @@ export const REFUSALS = ['ADVICE', 'ALLEGATION', 'CAUSE_NOT_RECORDED', 'OUTSIDE_
 export type Refusal = typeof REFUSALS[number];
 export const RECONCILIATION_FILTERS = ['ALL_EXCEPTIONS', ...reconciliationStatuses] as const;
 
-/** Everything the PLAN call may see: scope and allowed filter values. No amounts, dates or records. */
-export type Catalogue = {
-    version: typeof QA_VERSION;
-    scope: { businessId: string; businessName: string; period: string; currency: string };
-    months: string[]; counterparties: string[];
-    reconciliationStatuses: string[]; anomalySeverities: string[];
-};
 const PERIOD = /^\d{4}-(0[1-9]|1[0-2])$/;
 export const catalogueSchema = z.strictObject({
     version: z.literal(QA_VERSION),
@@ -35,6 +28,8 @@ export const catalogueSchema = z.strictObject({
     reconciliationStatuses: z.array(z.enum(RECONCILIATION_FILTERS)).max(8),
     anomalySeverities: z.array(z.enum(['HIGH', 'MEDIUM'])).max(2),
 });
+/** Everything the PLAN call may see: scope and allowed filter values. No amounts, dates or records. */
+export type Catalogue = z.infer<typeof catalogueSchema>;
 
 const enumOf = (values: readonly string[]) => z.enum(values as [string, ...string[]]);
 /** The tool-call union, with catalogue members as enums. */
