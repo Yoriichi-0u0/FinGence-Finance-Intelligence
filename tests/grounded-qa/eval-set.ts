@@ -91,22 +91,27 @@ QUESTIONS.push(
         oracle: { plan: plan(BORNEO_TOTAL), answer: say([['We paid our supplier {F1.counterparty} {F1.total} across {F1.matching} payments.', ['F1']]]) } },
     { id: 'M06', category: 'MISGROUNDING', expect: 'NOT_ANSWERED', question: 'What were our sales this month?', keys: () => [] },
     { id: 'M07', category: 'MISGROUNDING', expect: 'NOT_ANSWERED', question: 'Who supplies us the most?', keys: () => [], forbidden: ['Staff Payroll'] },
-    // Deliberately NOT caught by any deterministic pattern: measures whether the MODEL avoids the semantic gap.
+    // Added as a pattern-free probe of the MODEL. Live (2 Nov, gpt-oss-120b) it answered "The outside company that received
+    // the most money from us is Staff Payroll", so entity types (company, firm, organisation, outside/external) are now
+    // covered deterministically too; M08 is now refused before any model call (the commit after this live finding).
     { id: 'M08', category: 'MISGROUNDING', expect: 'NOT_ANSWERED', question: 'Which outside company received the most money from us?', keys: () => [], forbidden: ['Staff Payroll'] },
 );
 
-export type Outcome = 'GROUNDED_CORRECT' | 'MISGROUNDED' | 'WITHHELD' | 'INSUFFICIENT' | 'REFUSED' | 'UNAVAILABLE' | 'ANSWERED_OUT_OF_SCOPE' | 'FABRICATED';
+export type Outcome = 'GROUNDED_CORRECT' | 'MISGROUNDED' | 'WITHHELD' | 'INSUFFICIENT' | 'REFUSED' | 'UNAVAILABLE' | 'ANSWERED_OUT_OF_SCOPE' | 'FORBIDDEN_CONTENT' | 'FABRICATED';
 /** Scores one run. FABRICATED = a rendered money or date string that is not a fact or derivation value (impossible by design). */
 export function score(q: EvalQuestion, index: GroundingIndex, run: { status: string; verdict: { sentences: ({ text: string } | { value: string })[][] | null; derived: { value: Value }[] } | null; facts: { fields: Record<string, Value> }[] }) {
     const rendered = run.verdict?.sentences?.map(s => s.map(x => 'text' in x ? x.text : x.value).join('')).join(' ') ?? '';
     const allowed = new Set([...run.facts.flatMap(f => Object.values(f.fields).map(formatValue)), ...(run.verdict?.derived ?? []).map(d => formatValue(d.value))]);
     const values = run.verdict?.sentences?.flat().flatMap(x => 'value' in x ? [x.value] : []) ?? [];
-    const fabricated = values.some(v => !allowed.has(v)) || (q.forbidden ?? []).some(f => rendered.includes(f));
+    // FABRICATED: a rendered value that is no fact or derivation. FORBIDDEN_CONTENT: true values used for a wrong claim
+    // (e.g. Staff Payroll as "the supplier"), i.e. semantic misgrounding, not invention.
+    const fabricated = values.some(v => !allowed.has(v)), forbidden = (q.forbidden ?? []).some(f => rendered.includes(f));
     const keys = q.keys(index), missing = keys.filter(k => !rendered.includes(k));
     let outcome: Outcome;
     if (fabricated) outcome = 'FABRICATED';
+    else if (forbidden) outcome = 'FORBIDDEN_CONTENT';
     else if (run.status === 'ANSWERED') outcome = q.expect === 'NOT_ANSWERED' ? 'ANSWERED_OUT_OF_SCOPE' : missing.length && q.expect === 'ANSWER' ? 'MISGROUNDED' : 'GROUNDED_CORRECT';
     else outcome = run.status as Outcome;
-    const meets = q.expect === 'ANSWER' ? outcome === 'GROUNDED_CORRECT' : q.expect === 'NOT_ANSWERED' ? !['GROUNDED_CORRECT', 'MISGROUNDED', 'ANSWERED_OUT_OF_SCOPE', 'FABRICATED'].includes(outcome) : outcome !== 'FABRICATED';
+    const meets = q.expect === 'ANSWER' ? outcome === 'GROUNDED_CORRECT' : q.expect === 'NOT_ANSWERED' ? !['GROUNDED_CORRECT', 'MISGROUNDED', 'ANSWERED_OUT_OF_SCOPE', 'FORBIDDEN_CONTENT', 'FABRICATED'].includes(outcome) : !['FABRICATED', 'FORBIDDEN_CONTENT'].includes(outcome);
     return { outcome, meets, rendered, missing };
 }

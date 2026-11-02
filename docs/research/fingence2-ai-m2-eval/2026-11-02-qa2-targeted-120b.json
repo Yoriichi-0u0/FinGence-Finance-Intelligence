@@ -1,0 +1,103 @@
+{
+  "date": "2026-11-02T13:59:28.555Z",
+  "complete": true,
+  "rows": [
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S04",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "What is the difference between the bank statement and the ledger?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "The reconciliation shows a difference of −MYR 2,692.92 between the bank statement and the ledger.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "reconciliation",
+          "status": "ALL_EXCEPTIONS"
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-4aeda984-f8b4-4953-97f2-3436134f5502",
+          "latencyMs": 831,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 123,
+          "estimatedUsd": 0.0003162
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-551d898f-347d-49f5-bc60-bbe739de4da3",
+          "latencyMs": 930,
+          "mode": "LIVE",
+          "inputTokens": 1874,
+          "outputTokens": 123,
+          "estimatedUsd": 0.00035489999999999995
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 1761,
+      "estimatedUsd": 0.0006711
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "M08",
+      "category": "MISGROUNDING",
+      "expected": "NOT_ANSWERED",
+      "question": "Which outside company received the most money from us?",
+      "status": "ANSWERED",
+      "outcome": "FABRICATED",
+      "meets": false,
+      "rendered": "The outside company that received the most money from us is Staff Payroll.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "counterparties",
+          "direction": "OUT",
+          "limit": 1
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-375315c2-14ee-44cf-a889-7a5539250fa4",
+          "latencyMs": 904,
+          "mode": "LIVE",
+          "inputTokens": 1614,
+          "outputTokens": 121,
+          "estimatedUsd": 0.0003147
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-8261e655-fe84-479f-b6a6-2bae0d5ed65e",
+          "latencyMs": 1144,
+          "mode": "LIVE",
+          "inputTokens": 977,
+          "outputTokens": 140,
+          "estimatedUsd": 0.00023055
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 2048,
+      "estimatedUsd": 0.0005452499999999999
+    }
+  ]
+}

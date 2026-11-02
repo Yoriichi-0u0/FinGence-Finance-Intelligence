@@ -25,6 +25,7 @@ describe('pre-check refuses red lines before any model call', () => {
             ['Which supplier did we pay the most?', 'CLASSIFICATION_NOT_RECORDED'], ['Who is our biggest customer?', 'CLASSIFICATION_NOT_RECORDED'],
             ['How much did we pay our employees?', 'CLASSIFICATION_NOT_RECORDED'], ['How much did we spend on ingredients?', 'CLASSIFICATION_NOT_RECORDED'],
             ['Which vendor received the largest single payment?', 'CLASSIFICATION_NOT_RECORDED'], ['Who supplies us the most?', 'CLASSIFICATION_NOT_RECORDED'],
+            ['Which outside company received the most money from us?', 'CLASSIFICATION_NOT_RECORDED'], ['Which company did we pay the most?', 'CLASSIFICATION_NOT_RECORDED'],
             ['How much did we pay our supplier Borneo Fresh Supplies?', null], ['How much did POS Sales Settlement pay us?', null], ['How much did Borneo get from us?', null],
         ];
         for (const [q, expected] of cases) expect([q, preCheck(q, names)]).toEqual([q, expected]);
@@ -123,6 +124,9 @@ describe('answer gate withholds anything not grounded', () => {
         expect(failed(v)).toEqual(['classification']);
         const customer = verifyAnswer(answered([{ text: '{F1.name} is our main customer, paid {F1.total}.', cites: ['F1'] }]), facts, { question: 'Who did we pay the most?', catalogue: cat });
         expect(failed(customer)).toEqual(['classification']);
+        // Live M08 (gpt-oss-120b): payroll presented as an outside company.
+        const company = verifyAnswer(answered([{ text: 'The outside company that received the most money from us is {F1.name}.', cites: ['F1'] }]), facts, { question: 'Who did we pay the most?', catalogue: cat });
+        expect(failed(company)).toEqual(['classification']);
     });
     it('keeps the user\'s own description of a counterparty they named, and a counterparty name containing such a word', async () => {
         const { cat, facts } = await setup([{ tool: 'transactions', direction: 'OUT', counterparty: 'Borneo Fresh Supplies', sort: 'LARGEST', limit: 1 }]);

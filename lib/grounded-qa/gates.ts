@@ -11,10 +11,12 @@ import { formatValue, type Fact, type SourceRef, type Value } from './facts';
 export type GateCheck = { id: string; label: string; passed: boolean; detail: string };
 const ALLEGATION = /\b(fraud\w*|embezzl\w*|launder\w*|theft|steal\w*|stole|crim(e|es|inal)|guilty)\b/;
 /**
- * Roles and payment categories the records do NOT contain: counterparties are named, never classified, and payments
- * are not categorised. "The largest payee" is verified; "the largest supplier" is not, even when the citation is correct.
+ * Roles, entity types and payment categories the records do NOT contain: counterparties are named, never classified
+ * (not even as companies: one payee is payroll), and payments are not categorised. "The largest payee" is verified;
+ * "the largest supplier" or "the outside company paid the most" is not, even when the citation is correct.
+ * Live finding (M08, gpt-oss-120b): "Which outside company received the most money?" was answered with Staff Payroll.
  */
-export const CLASSIFICATION = /\b(suppliers?|suppl(y|ies|ied) us|vendors?|contractors?|customers?|clients?|employees?|landlords?|tenants?|creditors?|debtors?|shareholders?|directors?|ingredients?|utilit(y|ies)|rents?|rental|salar(y|ies)|wages?|marketing|insurance|inventory|sales|turnover)\b/i;
+export const CLASSIFICATION = /\b(outside compan(y|ies)|compan(y|ies)|firms?|organi[sz]ations?|external|third[- ]part(y|ies)|suppliers?|suppl(y|ies|ied) us|vendors?|contractors?|customers?|clients?|employees?|landlords?|tenants?|creditors?|debtors?|shareholders?|directors?|ingredients?|utilit(y|ies)|rents?|rental|salar(y|ies)|wages?|marketing|insurance|inventory|sales|turnover)\b/i;
 
 /** Catalogue counterparties a text names, by full name or by its distinctive first word (e.g. "Borneo", "GrabFood"). */
 export function namedCounterparties(text: string, counterparties: string[]): string[] {

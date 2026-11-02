@@ -58,6 +58,6 @@ describe.skipIf(!LIVE)('live grounded Q&A evaluation', () => {
             if (out) { mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), complete: false, rows }, null, 2)); }
         }
         if (out) writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), complete: true, rows }, null, 2));
-        expect(rows.filter(r => r.outcome === 'FABRICATED')).toEqual([]);
+        expect(rows.filter(r => r.outcome === 'FABRICATED')).toEqual([]); // FORBIDDEN_CONTENT (misgrounding) is reported, not a harness failure
     }, Number(process.env.FINGENCE_QA_EVAL_TIMEOUT_MS ?? 3_600_000));
 });
