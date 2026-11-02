@@ -1,5 +1,6 @@
 import 'server-only';
 import type { TransactionDatabase } from '../db/postgres';
+import {inspectFoundationCatalog,assessFoundationCompatibility} from './foundation-catalog';
 
 /** Catalog-only inspection. Never installs local identity schemas on a hosted target. */
 export async function inspectReconciliationPrerequisites(db: TransactionDatabase) {
@@ -33,7 +34,7 @@ export async function inspectReconciliationPrerequisites(db: TransactionDatabase
             FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE a.attnum>0 AND NOT a.attisdropped AND c.relkind IN ('r','p')
             AND (n.nspname IN ('fingence_m2','fingence_m3','fingence_reconciliation')
-              OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts'))
+              OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts','security_audit_events'))
             ORDER BY n.nspname,c.relname,a.attnum`)).rows;
         const constraints = (await tx.query(`SELECT n.nspname AS schema,c.relname AS relation,
             x.conname AS name,x.contype AS type,x.convalidated AS validated,
@@ -56,7 +57,7 @@ export async function inspectReconciliationPrerequisites(db: TransactionDatabase
             has_table_privilege(current_user,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER') AS can_write
             FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE c.relkind IN ('r','p') AND (n.nspname IN ('fingence_m2','fingence_m3','fingence_reconciliation')
-              OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts'))
+              OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts','security_audit_events'))
             ORDER BY n.nspname,c.relname`)).rows;
         const triggers=(await tx.query(`SELECT c.relname AS relation,t.tgname AS name,t.tgenabled AS enabled,
             pg_get_triggerdef(t.oid) AS definition FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
@@ -71,7 +72,8 @@ export async function inspectReconciliationPrerequisites(db: TransactionDatabase
             has_table_privilege(r.oid,c.oid,'UPDATE,DELETE,TRUNCATE,TRIGGER') AS excess_mutation
             FROM pg_roles r CROSS JOIN pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE r.rolname='fingence_reconciliation_runtime' AND n.nspname='fingence_reconciliation' AND c.relkind='r' ORDER BY c.relname`)).rows;
-        return { identity, prerequisites, tables, columns, constraints, functions, extensions, policies,permissions,triggers,indexes,runtimeRole,runtimePermissions,
+        const foundation=await inspectFoundationCatalog(tx);
+        return { identity, prerequisites, tables, columns, constraints, functions, extensions, policies,permissions,triggers,indexes,runtimeRole,runtimePermissions,foundation,foundationCompatibility:assessFoundationCompatibility(foundation),
             // Catalog existence alone never proves hosted identity or target approval.
             hostedWritesAuthorized: false as const };
     });
@@ -87,7 +89,7 @@ export async function inspectWithRestrictedIdentity(db:TransactionDatabase,expec
           AND NOT EXISTS(SELECT 1 FROM pg_roles p WHERE (p.rolsuper OR p.rolbypassrls OR p.rolcreaterole) AND pg_has_role(current_user,p.oid,'MEMBER'))
           AND NOT EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
             WHERE c.relkind IN ('r','p') AND (n.nspname IN ('fingence_m2','fingence_m3','fingence_reconciliation')
-              OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts'))
+              OR n.nspname='public' AND c.relname IN ('ingestion_batches','financial_records','validation_issues','persistence_attempts','security_audit_events'))
             AND has_table_privilege(current_user,c.oid,'INSERT,UPDATE,DELETE,TRUNCATE,TRIGGER')) AS allowed
           FROM pg_roles r WHERE r.rolname=current_user`,[expected.database,expected.role])).rows[0]?.allowed===true;
     });

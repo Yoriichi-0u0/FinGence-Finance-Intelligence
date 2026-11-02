@@ -6,6 +6,8 @@ const run=(mode:string,env:Readonly<Record<string,string|undefined>>={})=>spawnS
 it('emits an executable ordered checksum plan without claiming deployment approval',()=>{
  const result=run('plan');expect(result.status).toBe(0);const plan=JSON.parse(result.stdout);
  expect(plan.hostedDeploymentAuthorized).toBe(false);expect(plan.migrations).toHaveLength(7);
+ expect(plan.teamProjectAccess).toBe('FORBIDDEN');expect(plan.foundationReferences).toHaveLength(6);
+ expect(plan.foundationReferences.every((r:{execution:string})=>r.execution==='REFERENCE_ONLY_NOT_AN_EXECUTION_SEQUENCE')).toBe(true);
  for(const migration of plan.migrations)expect(migration.sha256).toBe(createHash('sha256').update(readFileSync('supabase/sql/'+migration.name)).digest('hex'));
 });
 it('never falls back to the application database URL for inspection',()=>{

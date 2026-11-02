@@ -21,5 +21,7 @@ it('inspects real catalogs without manufacturing missing hosted identity depende
         const readiness=assessHostedReadiness(result);expect(readiness.hostedDeploymentAuthorized).toBe(false);
         expect(readiness.blockers).toContain('IDENTITY_COLUMN_MISSING_OR_INCOMPATIBLE:fingence_m2.sessions.token_hash');
         expect(readiness.blockers).toContain('HOSTED_IDENTITY_CONTRACT_REQUIRED');
+        expect(result.foundationCompatibility.missingFoundationTables).toHaveLength(4);
+        expect(result.foundationCompatibility.hostedWritesAuthorized).toBe(false);
     } finally { await pg.close(); }
 });

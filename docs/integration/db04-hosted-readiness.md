@@ -1,9 +1,14 @@
 # Controlled hosted readiness procedure
 
 Starting HEAD: 73d5d15c6cc379228833d557e53dd5bd002b4798.
-This task authorizes local implementation/testing only. FYP A project reference,
-hosted schema and hosted identity are unverified. No hosted connection, migration,
+Current owner clarification: personal FYP A is the development/testing project,
+not the team's separate Production project. Catalog-only inspection is authorized;
+the exact project reference, secure connection, schema and identity remain
+unverified because access is not configured. No hosted connection, migration,
 financial write, role/auth change, backup operation or paid branching was executed.
+All hosted changes still require a target-specific plan and separate approval.
+Do not access the team project or create another project. Current setup details:
+db01-db04-personal-fyp.md.
 
 ## Executable entry points
 
@@ -24,9 +29,10 @@ and connection strings are never printed. There is intentionally no `apply` mode
 
 ### Future explicitly approved read-only FYP A inspection
 
-1. Owner verifies the exact FYP A project reference in the dashboard and explicitly
-   authorizes catalog-only inspection. A configured variable is not independent
-   proof of approval or project name. Record that approval outside source control.
+1. The owner's current instruction authorizes catalog-only personal FYP A inspection.
+   Verify the exact personal project reference before connecting. A configured
+   variable is not independent proof of project identity. Record the authorization
+   outside source control; do not request the same inspection approval again.
 2. Arrange an existing dedicated inspection login with CONNECT and normal system
    catalog access, no superuser/BYPASSRLS/role/database creation, no privileged
    memberships or mutation privileges on the approved M2/M3/DB04/C1 tables. The

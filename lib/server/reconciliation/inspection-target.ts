@@ -1,6 +1,6 @@
 import 'server-only';
 import type {PoolConfig} from 'pg';
-/** Future operator approval declaration. This task does not authorize or execute hosted inspection. */
+/** Operator declaration under the owner's current inspection authorization; never authorizes hosted changes. */
 export function assertInspectionTarget(config:PoolConfig,env:Readonly<Record<string,string|undefined>>) {
  const role=env.DB04_INSPECTION_ROLE,database=env.DB04_INSPECTION_DATABASE;
  if(!role||!database||config.user!==role||config.database!==database||['postgres','supabase_admin','service_role'].includes(role))throw Error('DEDICATED_INSPECTION_IDENTITY_REQUIRED');

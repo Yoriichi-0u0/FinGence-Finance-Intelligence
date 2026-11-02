@@ -38,6 +38,18 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('validates the unapproved inspection role template only in disposable PostgreSQL', async () => {
+        await owner.query(readFileSync(resolve('supabase/sql/db04-inspection-role-review.sql'), 'utf8'));
+        const pool = new Pool({host:'127.0.0.1', port, user:'db04_catalog_inspector', database:'postgres'});
+        const inspector = transactionDatabase(pool);
+        try {
+            expect((await pool.query('SHOW default_transaction_read_only')).rows[0].default_transaction_read_only).toBe('on');
+            const report = await inspectWithRestrictedIdentity(inspector, {role:'db04_catalog_inspector', database:'postgres'});
+            expect(report.permissions.every(p => !p.can_write && !p.can_select)).toBe(true);
+            await expect(pool.query(`SELECT * FROM ${s}.transactions`)).rejects.toMatchObject({code:'42501'});
+            await expect(pool.query('CREATE TABLE public.inspector_must_not_write (id int)')).rejects.toMatchObject({code:'25006'});
+        } finally { await inspector.close(); }
+    });
     it('performs native read-only metadata inspection without financial SELECT privileges',async()=>{
         await owner.query('CREATE ROLE db04_inspector LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE');
         const inspectorPool=new Pool({host:'127.0.0.1',port,user:'db04_inspector',database:'postgres'}),inspector=transactionDatabase(inspectorPool);
@@ -47,6 +59,12 @@ const s = 'fingence_reconciliation';
             expect(report.columns.some(c=>c.table_name==='transactions'&&c.column_name==='signed_amount'&&c.data_type==='numeric')).toBe(true);
             expect(report.permissions.every(p=>p.can_write===false&&p.can_select===false)).toBe(true);
             expect(report.triggers).toHaveLength(11);expect(report.hostedWritesAuthorized).toBe(false);
+            expect(report.foundationCompatibility.missingFoundationTables).toEqual([]);
+            expect(report.foundationCompatibility.warningFenceMarkers).toEqual({trigger:true,function:true});
+            expect(report.foundationCompatibility.warningFenceEnabled).toBe(true);
+            expect(report.foundationCompatibility.exactNumericColumns).toContain('source_amount');
+            expect(report.foundationCompatibility.c1ToDb04.supported).toBe(false);
+            expect(report.foundationCompatibility.db03Recovery).toContain('NOT_PROVEN_BY_CATALOGS');
             expect(assessHostedReadiness(report).blockers).toEqual(['HOSTED_IDENTITY_CONTRACT_REQUIRED','EXPLICIT_MIGRATION_APPROVAL_REQUIRED','VERIFIED_BACKUP_RESTORE_REQUIRED']);
             const cli=execFileSync(process.execPath,['--conditions=react-server','scripts/db04-readiness.mjs','inspect'],{encoding:'utf8',windowsHide:true,timeout:30000,env:{...process.env,DB04_INSPECTION_DATABASE_URL:`postgresql://db04_inspector@127.0.0.1:${port}/postgres?sslmode=disable`,DB04_INSPECTION_ROLE:'db04_inspector',DB04_INSPECTION_DATABASE:'postgres'}});
             const inspected=JSON.parse(cli);expect(inspected.target.environment).toBe('LOCAL');expect(inspected.report.identity.role).toBe('db04_inspector');expect(inspected.readiness.hostedDeploymentAuthorized).toBe(false);
