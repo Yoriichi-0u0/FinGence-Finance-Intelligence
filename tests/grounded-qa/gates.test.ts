@@ -132,6 +132,12 @@ describe('answer gate withholds anything not grounded', () => {
         const named = verifyAnswer(answered([{ text: 'POS Sales Settlement paid us {F1.total}.', cites: ['F1'] }]), pos.facts, { question: 'How much did POS Sales Settlement pay us?', catalogue: pos.cat });
         expect(failed(named)).toEqual([]);
     });
+    it('withholds a comparison stated with a negative amount (live finding, S04 on gpt-oss-120b)', async () => {
+        const { cat, facts } = await setup([{ tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }]);
+        const q = { question: 'What is the difference between the bank statement and the ledger?', catalogue: cat };
+        expect(failed(verifyAnswer(answered([{ text: 'The bank statement is lower than the ledger by {F1.difference}.', cites: ['F1'] }]), facts, q))).toEqual(['sign-wording']);
+        expect(failed(verifyAnswer(answered([{ text: 'Bank cash movement minus ledger cash movement is {F1.difference}.', cites: ['F1'] }]), facts, q))).toEqual([]);
+    });
     it('withholds citations of facts outside this answer (schema-bound)', async () => {
         const { cat, facts } = await setup(TOP_OUT);
         expect(failed(verifyAnswer(answered([{ text: '{F1.name} was paid the most.', cites: ['F1', 'F40'] }]), facts, { question: Q, catalogue: cat }))).toEqual(['answer-schema']);

@@ -148,6 +148,11 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     const questionTerms = new Set((withoutNames(ctx.question, known).match(new RegExp(CLASSIFICATION, 'gi')) ?? []).map(w => w.toLowerCase()));
     const classification = plainText.flatMap((t, i) => (t.match(new RegExp(CLASSIFICATION, 'gi')) ?? []).filter(w => !questionTerms.has(w.toLowerCase()) || !namedCounterparties(ctx.question, ctx.catalogue.counterparties).length).map(w => `sentence ${i + 1}: "${w}" is not a classification the records contain`));
     if (!gate('classification', 'No supplier, customer, employee or payment-category claim the records do not contain', classification)) return result('WITHHELD');
+    // 5c. A comparison stated with a negative amount reads as a double negative ("lower than the ledger by −MYR 2,692.92").
+    const COMPARISON = /\b(lower|higher|less|more|greater|smaller|below|above|exceed\w*|short\w*|behind|ahead)\b/i;
+    const negative = (s: { text: string }) => [...s.text.matchAll(PLACEHOLDER)].some(([, id, field]) => { const v = byId.get(id) ? fieldOf(byId.get(id)!, field) : derivedById.get(id)?.value; return v?.kind === 'MONEY' && v.cents.startsWith('-'); });
+    const signWording = answer.sentences.flatMap((s, i) => COMPARISON.test(free[i]) && negative(s) ? [`sentence ${i + 1}: "${free[i].match(COMPARISON)![0]}" with a negative amount`] : []);
+    if (!gate('sign-wording', 'Comparisons are not stated with a negative amount', signWording)) return result('WITHHELD');
 
     // 6. What the question names (a counterparty or a month) must be what the cited facts are about.
     const q = ctx.question.toLowerCase(), citedFacts = cited.map(id => byId.get(id)!);
