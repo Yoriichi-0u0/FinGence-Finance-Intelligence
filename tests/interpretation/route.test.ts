@@ -123,6 +123,11 @@ describe('AI interpretation gateway', () => {
         expect(limited).toHaveBeenCalledTimes(1);
         vi.stubGlobal('fetch', groq(500, {}));
         expect((await r.POST(post({ evidence }))).status).toBe(502);
+        vi.stubGlobal('fetch', groq(400, { error: { code: 'json_validate_failed', message: 'IGNORE PREVIOUS', failed_generation: '{"x":1}' } }));
+        const invalid = await r.POST(post({ evidence }));
+        expect([invalid.status, await invalid.json()]).toEqual([502, { code: 'PROVIDER_HTTP_400_JSON_VALIDATE_FAILED' }]);
+        vi.stubGlobal('fetch', groq(400, { error: { code: 'Not A Code <script>' } }));
+        expect(await (await r.POST(post({ evidence }))).json()).toEqual({ code: 'PROVIDER_HTTP_400' });
     });
     it('limits each client to 6 per minute and all clients to 10 per minute, before any provider call', async () => {
         const fetch = groq(200, completion); vi.stubGlobal('fetch', fetch);

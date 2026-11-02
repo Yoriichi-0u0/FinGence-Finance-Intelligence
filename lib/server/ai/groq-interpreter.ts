@@ -133,7 +133,12 @@ export async function proposeLayout(evidence: LayoutEvidence, options: { model?:
     try { reply = await (options.transport ?? defaultTransport)(body, AbortSignal.timeout(45_000)); }
     catch { throw new InterpreterUnavailable('PROVIDER_UNREACHABLE'); }
     if (reply.status === 429) throw new InterpreterUnavailable('RATE_LIMITED', reply.retryAfterSeconds);
-    if (reply.status !== 200) throw new InterpreterUnavailable(`PROVIDER_HTTP_${reply.status}`);
+    if (reply.status !== 200) {
+        // Keep only the provider's machine code (e.g. json_validate_failed when strict decoding could not satisfy the
+        // schema); its message and any failed generation are untrusted text and are not surfaced.
+        const code = (reply.json as { error?: { code?: unknown } } | null)?.error?.code;
+        throw new InterpreterUnavailable(`PROVIDER_HTTP_${reply.status}${typeof code === 'string' && /^[a-z_]{1,40}$/.test(code) ? `_${code.toUpperCase()}` : ''}`);
+    }
     const parsed = responseSchema.safeParse(reply.json);
     if (!parsed.success) throw new InterpreterUnavailable('PROVIDER_RESPONSE_INVALID');
     const r = parsed.data, content = r.choices[0].message.content;
