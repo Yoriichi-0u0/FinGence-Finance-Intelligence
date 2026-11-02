@@ -13,6 +13,8 @@ import {dashboardContext} from '../../lib/reconciliation-dashboard';
 import {LocalE5Provider} from '../../lib/server/reconciliation/ai03/model-loader';
 import {normalizeCashSource} from '../../lib/server/poc-reconciliation/normalize';
 import {createTrustedIngestionService,TRUSTED_INGESTION_VERSION} from '../../lib/server/reconciliation/trusted-ingestion';
+import {inspectWithRestrictedIdentity} from '../../lib/server/reconciliation/preflight';
+import {assessHostedReadiness} from '../../lib/server/reconciliation/hosted-readiness';
 import { tokenHash } from '../../lib/server/ai-ingestion/m2/identity';
 import { bank, ledger, csv } from '../poc-reconciliation/fixtures';
 import { digest, RESEARCH_TWO_DAY_POLICY } from '../../lib/server/reconciliation/processing';
@@ -36,6 +38,22 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('performs native read-only metadata inspection without financial SELECT privileges',async()=>{
+        await owner.query('CREATE ROLE db04_inspector LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE');
+        const inspectorPool=new Pool({host:'127.0.0.1',port,user:'db04_inspector',database:'postgres'}),inspector=transactionDatabase(inspectorPool);
+        try {
+            const report=await inspectWithRestrictedIdentity(inspector,{role:'db04_inspector',database:'postgres'});
+            expect(report.identity.transaction_read_only).toBe('on');expect(report.tables).toHaveLength(11);
+            expect(report.columns.some(c=>c.table_name==='transactions'&&c.column_name==='signed_amount'&&c.data_type==='numeric')).toBe(true);
+            expect(report.permissions.every(p=>p.can_write===false&&p.can_select===false)).toBe(true);
+            expect(report.triggers).toHaveLength(11);expect(report.hostedWritesAuthorized).toBe(false);
+            expect(assessHostedReadiness(report).blockers).toEqual(['HOSTED_IDENTITY_CONTRACT_REQUIRED','EXPLICIT_MIGRATION_APPROVAL_REQUIRED','VERIFIED_BACKUP_RESTORE_REQUIRED']);
+            const cli=execFileSync(process.execPath,['--conditions=react-server','scripts/db04-readiness.mjs','inspect'],{encoding:'utf8',windowsHide:true,timeout:30000,env:{...process.env,DB04_INSPECTION_DATABASE_URL:`postgresql://db04_inspector@127.0.0.1:${port}/postgres?sslmode=disable`,DB04_INSPECTION_ROLE:'db04_inspector',DB04_INSPECTION_DATABASE:'postgres'}});
+            const inspected=JSON.parse(cli);expect(inspected.target.environment).toBe('LOCAL');expect(inspected.report.identity.role).toBe('db04_inspector');expect(inspected.readiness.hostedDeploymentAuthorized).toBe(false);
+            await expect(inspectorPool.query(`SELECT * FROM ${s}.transactions`)).rejects.toMatchObject({code:'42501'});
+            await expect(inspectWithRestrictedIdentity(db,{role:'db04_test',database:'postgres'})).rejects.toThrow('READ_ONLY_INSPECTION_IDENTITY_REQUIRED');
+        }finally{await inspector.close();}
+    });
     it('connects trusted ingestion outputs through persistence, ranking, independent verification and retrieval',async()=>{
         const input={version:TRUSTED_INGESTION_VERSION,contract:'cash-source-v1' as const,documents:[{document:b,verified:normalizeCashSource(b.bytes,'bank',b.filename)},{document:l,verified:normalizeCashSource(l.bytes,'ledger',l.filename)}]};
         const pipeline=createTrustedIngestionService(db,registered);
