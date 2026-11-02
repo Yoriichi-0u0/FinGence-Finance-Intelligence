@@ -59,7 +59,7 @@ const normalize = (q: string) => q.toLowerCase().replace(/[-_/]/g, ' ').replace(
 
 /** Checked before any intent so that, for example, "net profit" never falls through to net cash movement. */
 const UNSUPPORTED = /\b(profit\w*|revenues?|income|earnings|ebitda|margins?|expenses?|ratios?|roi|return on|tax(es)?|valuation|balance sheet|cash flow statement|equity|assets?|liabilit\w*|budget\w*)\b/;
-const ADVICE = /\b(fraud\w*|embezzl\w*|launder\w*|theft|steal\w*|stole|crim(e|es|inal)|guilty|should (i|we)|recommend\w*|advi[cs]e\w*|invest\w*|buy|sell|loans?|lend\w*|credit ?score|creditworth\w*)\b/;
+export const ADVICE = /\b(fraud\w*|embezzl\w*|launder\w*|theft|steal\w*|stole|crim(e|es|inal)|guilty|should (i|we)|recommend\w*|advi[cs]e\w*|invest\w*|buy|sell|loans?|lend\w*|credit ?score|creditworth\w*)\b/;
 const CAUSE = /\b(why|causes?|caused|reasons? for|explain\w*|because)\b/;
 /** First match wins; the order puts specific intents ahead of the generic words they contain. */
 const ROUTES: [Intent, RegExp][] = [
