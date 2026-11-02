@@ -1,0 +1,23 @@
+{
+  "projectRef": "fhipzomczevbpybezzxu",
+  "database": "postgres",
+  "approvedCommit": "011f637472ba5b42467dfdd8213e7a5ce410f89c",
+  "sqlSha256": "8bf65033a1114de4daaf8f314792750d81dde41072bcd20d80f442e7c357514e",
+  "sqlSubmitted": true,
+  "commitAcknowledged": false,
+  "passwordProvisioned": false,
+  "inspectionPerformed": false,
+  "checksumVerified": true,
+  "targetConfigurationVerified": true,
+  "tlsCertificateValidation": true,
+  "identity": {
+    "database": "postgres",
+    "role": "postgres",
+    "ssl": true,
+    "inspectorExists": false
+  },
+  "sqlState": "42501",
+  "reason": "INSPECTION_ROLE_UNSAFE_PUBLIC_PRIVILEGES",
+  "rollbackAcknowledged": true,
+  "status": "SQL_REJECTED_STOP"
+}

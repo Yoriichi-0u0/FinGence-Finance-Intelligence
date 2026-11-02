@@ -38,6 +38,25 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('diagnoses unsafe PUBLIC ACLs using metadata only in a read-only transaction', async () => {
+        await owner.query(`GRANT SELECT (signed_amount) ON ${s}.transactions TO PUBLIC`);
+        await owner.query(`CREATE FUNCTION public.db04_diagnostic_definer() RETURNS int LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS 'SELECT 1'`);
+        const client = await owner.connect();
+        try {
+            const results = await client.query(readFileSync(resolve('supabase/sql/db04-inspector-public-diagnostic.sql'),'utf8'));
+            const findings = (results as unknown as Array<{command:string;rows:Record<string,unknown>[]}>)
+                .find(result => result.command==='SELECT')?.rows;
+            expect(findings).toEqual(expect.arrayContaining([
+                expect.objectContaining({category:'PUBLIC_COLUMN_PRIVILEGE',schema_name:s,object_name:'transactions',column_name:'signed_amount',privilege_type:'SELECT'}),
+                expect.objectContaining({category:'PUBLIC_ELEVATED_FUNCTION',schema_name:'public',object_name:'db04_diagnostic_definer()',privilege_type:'EXECUTE'}),
+            ]));
+            expect(findings?.every(row => Object.keys(row).sort().join(',')==='category,column_name,object_name,privilege_type,schema_name')).toBe(true);
+        } finally {
+            await client.query('ROLLBACK'); client.release();
+            await owner.query(`REVOKE SELECT (signed_amount) ON ${s}.transactions FROM PUBLIC`);
+            await owner.query('DROP FUNCTION public.db04_diagnostic_definer()');
+        }
+    });
     it('validates the unapproved inspection role template only in disposable PostgreSQL', async () => {
         await owner.query(readFileSync(resolve('supabase/sql/db04-inspection-role-review.sql'), 'utf8'));
         const pool = new Pool({host:'127.0.0.1', port, user:'db04_catalog_inspector', database:'postgres'});

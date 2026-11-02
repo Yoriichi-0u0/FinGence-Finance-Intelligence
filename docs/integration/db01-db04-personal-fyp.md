@@ -2,6 +2,12 @@
 
 Start: 569d5df0598387e559b9fd7de8e811db493b8904.
 
+Latest update: the separately approved inspector creation transaction reached
+personal FYP A over verified TLS, failed its unsafe-PUBLIC-privileges guard and
+was rolled back. No password or restricted catalog report exists. See the
+[execution evidence and next approval plan](db04-inspector-creation-outcome.md).
+The access findings below describe earlier preparation, not a successful inspection.
+
 The owner authorizes catalog-only inspection of personal FYP A, which is a
 development/testing project despite the dashboard's branch label. The separate
 team Production project must not be accessed. No new project or paid service is

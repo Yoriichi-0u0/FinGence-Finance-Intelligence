@@ -1,5 +1,10 @@
 # Personal FYP A inspection login: pending approval
 
+Historical proposal below. The owner subsequently approved the exact SQL, but
+its hosted execution was rejected by the safety guard and rolled back. See the
+[actual execution outcome and next approval boundary](db04-inspector-creation-outcome.md).
+The approved SQL/checksum below is unchanged; no inspection login was committed.
+
 Target confirmed by the owner: FYP A, project `fhipzomczevbpybezzxu`.
 Observed in the already-open Supabase dashboard on 2 November 2026. The role
 list's All roles filter showed the protected Supabase roles and only `postgres`
