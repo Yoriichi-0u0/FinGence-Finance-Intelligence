@@ -8,7 +8,8 @@ import { createServer } from 'node:net';
 import { Pool } from 'pg';
 import { transactionDatabase, type TransactionDatabase } from '../../lib/server/db/postgres';
 import { createFinancialProcessingService } from '../../lib/server/reconciliation/service';
-import { createProcessingReadHandler } from '../../lib/server/reconciliation/http';
+import { createProcessingReadHandler,createProcessingUploadHandler } from '../../lib/server/reconciliation/http';
+import {dashboardContext} from '../../lib/reconciliation-dashboard';
 import { tokenHash } from '../../lib/server/ai-ingestion/m2/identity';
 import { bank, ledger, csv } from '../poc-reconciliation/fixtures';
 import { digest, RESEARCH_TWO_DAY_POLICY } from '../../lib/server/reconciliation/processing';
@@ -32,6 +33,19 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('uploads registered documents then binds both dashboard views to persisted GET evidence',async()=>{
+        vi.stubEnv('NODE_ENV','development');vi.stubEnv('FINGENCE_DB04_LOCAL','1');vi.stubEnv('VERCEL','');
+        try {
+            const upload=createProcessingUploadHandler(service(),registered),get=createProcessingReadHandler(service());
+            const request=()=>{const form=new FormData();form.append('documents',new File([b.bytes],'bank.csv',{type:'text/csv'}));form.append('documents',new File([l.bytes],'ledger.csv',{type:'text/csv'}));return new Request('http://localhost:3000/api/db04/processing',{method:'POST',headers:{host:'localhost:3000',authorization:`Bearer ${token}`},body:form});};
+            const first=await upload(request());expect(first.status).toBe(200);const receipt=await first.json();
+            expect((await (await upload(request())).json()).reused).toBe(true);
+            const response=await get(new Request(`http://localhost:3000/api/db04/processing?processingId=${receipt.processingId}`,{headers:{host:'localhost:3000',authorization:`Bearer ${token}`}}));
+            const context=dashboardContext(await response.json(),receipt.processingId);
+            expect(context.transactions).toHaveLength(2);expect(context.proposals[0].decision).toBe('VERIFIED_SUGGESTION');
+            expect(()=>dashboardContext({...context,processingId:'0'.repeat(64)},receipt.processingId)).toThrow();
+        }finally{vi.unstubAllEnvs();}
+    });
     it('delivers one persisted context through the protected local HTTP handler', async () => {
         vi.stubEnv('NODE_ENV','development'); vi.stubEnv('FINGENCE_DB04_LOCAL','1'); vi.stubEnv('VERCEL','');
         try {
