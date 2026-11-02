@@ -11,6 +11,8 @@ import { createFinancialProcessingService } from '../../lib/server/reconciliatio
 import { createProcessingReadHandler,createProcessingUploadHandler } from '../../lib/server/reconciliation/http';
 import {dashboardContext} from '../../lib/reconciliation-dashboard';
 import {LocalE5Provider} from '../../lib/server/reconciliation/ai03/model-loader';
+import {normalizeCashSource} from '../../lib/server/poc-reconciliation/normalize';
+import {createTrustedIngestionService,TRUSTED_INGESTION_VERSION} from '../../lib/server/reconciliation/trusted-ingestion';
 import { tokenHash } from '../../lib/server/ai-ingestion/m2/identity';
 import { bank, ledger, csv } from '../poc-reconciliation/fixtures';
 import { digest, RESEARCH_TWO_DAY_POLICY } from '../../lib/server/reconciliation/processing';
@@ -34,6 +36,23 @@ const s = 'fingence_reconciliation';
         return db;
     }
     const service = () => createFinancialProcessingService(db, registered);
+    it('connects trusted ingestion outputs through persistence, ranking, independent verification and retrieval',async()=>{
+        const input={version:TRUSTED_INGESTION_VERSION,contract:'cash-source-v1' as const,documents:[{document:b,verified:normalizeCashSource(b.bytes,'bank',b.filename)},{document:l,verified:normalizeCashSource(l.bytes,'ledger',l.filename)}]};
+        const pipeline=createTrustedIngestionService(db,registered);
+        const provider=process.env.DB04_E5_SMOKE==='1'?new LocalE5Provider(resolve('../ai03-runtime'),resolve('../ai03-models/761b726dd34fb83930e26aab4e9ac3899aa1fa78')):undefined;
+        const first=await pipeline.process(token,input,provider);if(!first.supported)throw Error('Expected supported contract');
+        expect(first.context.transactions).toHaveLength(2);expect(first.context.transactions[0]).toMatchObject({record_id:'BANK-BUS-001-V2-00458',original_amount:'06380.53',date_basis:'VALUE_DATE'});
+        expect(first.context.proposalVerifications).toHaveLength(1);
+        expect((first.context.proposalVerifications[0].evidence as Array<Record<string,unknown>>).every(e=>e.outcome==='UNRESOLVED')).toBe(true);
+        const unnecessary={kind:'PRETRAINED_E5' as const,initialize:vi.fn(async()=>{throw Error('Unnecessary inference');}),embed:vi.fn(async()=>{throw Error('Unnecessary inference');}),terminate:vi.fn(),dispose:async()=>{}};
+        const second=await pipeline.process(token,input,provider?unnecessary:undefined);if(!second.supported)throw Error();
+        expect(unnecessary.initialize).not.toHaveBeenCalled();
+        expect(second.processingId).toBe(first.processingId);expect(second.reused).toBe(true);expect(second.context.proposalVerifications).toHaveLength(1);
+        await expect(service().get(otherToken,first.processingId)).rejects.toThrow();
+        const forged=structuredClone(input);forged.documents[0].verified.rows[0].signedCents='1';
+        expect(await pipeline.process(token,forged)).toMatchObject({supported:false});
+        expect((await owner.query(`SELECT count(*)::int n FROM ${s}.jobs`)).rows[0].n).toBe(1);
+    },120000);
     it('independently verifies persisted candidates concurrently and returns immutable snapshots',async()=>{
         await expect(service().verifyRankings(token,'invalid')).rejects.toMatchObject({code:'INVALID_INPUT'});
         const first=await service().persist(token,b,l);await service().rankFuzzy(token,first.processingId);
