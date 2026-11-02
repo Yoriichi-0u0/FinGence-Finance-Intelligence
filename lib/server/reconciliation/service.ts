@@ -48,8 +48,8 @@ export function createFinancialProcessingService(db: TransactionDatabase, regist
                     await tx.query(`INSERT INTO ${schema}.job_sources VALUES($1,$2,$3,$4)`, [org, id, s.sha256, s.kind.toUpperCase()]);
                 for (const r of plan.transactions)
                     await tx.query(`INSERT INTO ${schema}.transactions
-     (organization_id,processing_id,sha256,kind,record_id,source_row,status,canonical_date,transaction_date,posting_date,date_basis,currency,signed_amount,original_amount,reference,evidence)
-     VALUES($1,$2,$3,$4,$5,$6,'VALID',$7,$8,$9,$10,'MYR',$11::numeric,$12,$13,$14::jsonb)`, [org, id, r.sha256, r.kind, r.recordId, r.row, r.date, r.kind === 'BANK' ? r.date : null, r.kind === 'LEDGER' ? r.date : null, r.kind === 'BANK' ? 'TRANSACTION_DATE' : 'POSTING_DATE', r.signedAmount, r.originalAmount, r.reference, JSON.stringify(r.evidence)]);
+     (organization_id,processing_id,sha256,kind,record_id,source_row,status,canonical_date,transaction_date,value_date,posting_date,date_basis,currency,signed_amount,original_amount,reference,evidence)
+     VALUES($1,$2,$3,$4,$5,$6,'VALID',$7,NULL,$8,$9,$10,'MYR',$11::numeric,$12,$13,$14::jsonb)`, [org, id, r.sha256, r.kind, r.recordId, r.row, r.date, r.kind === 'BANK' ? r.date : null, r.kind === 'LEDGER' ? r.date : null, r.kind === 'BANK' ? 'VALUE_DATE' : 'POSTING_DATE', r.signedAmount, r.originalAmount, r.reference, JSON.stringify(r.evidence)]);
                 for (const [i, r] of plan.proposals.entries()) {
                     await tx.query(`INSERT INTO ${schema}.proposals(organization_id,processing_id,ordinal,bank_record_id,ledger_record_id,algorithm_version,proposal_type) VALUES($1,$2,$3,$4,$5,'cash-rules-v1','ONE_TO_ONE')`, [org, id, i, r.bankRecordId, r.ledgerRecordId]);
                     await tx.query(`INSERT INTO ${schema}.decisions VALUES($1,$2,$3,$4,$5,$6::jsonb)`, [org, id, i, policy.version, r.decision, JSON.stringify(r.checks)]);
@@ -70,7 +70,7 @@ export function createFinancialProcessingService(db: TransactionDatabase, regist
                     throw Error('ACCESS_DENIED');
                 const sources = (await tx.query(`SELECT d.* FROM ${schema}.job_sources s JOIN ${schema}.documents d USING(organization_id,sha256,kind) WHERE s.organization_id=$1 AND s.processing_id=$2 ORDER BY kind`, args)).rows;
                 // Explicit text projections avoid pg NUMERIC and DATE parser mutation by any other consumer.
-                const transactions = (await tx.query(`SELECT kind,record_id,source_row,sha256,status,canonical_date::text,transaction_date::text,posting_date::text,date_basis,currency,signed_amount::text,original_amount,reference,evidence FROM ${schema}.transactions WHERE organization_id=$1 AND processing_id=$2 ORDER BY kind,source_row`, args)).rows;
+                const transactions = (await tx.query(`SELECT kind,record_id,source_row,sha256,status,canonical_date::text,transaction_date::text,value_date::text,posting_date::text,date_basis,currency,signed_amount::text,original_amount,reference,evidence FROM ${schema}.transactions WHERE organization_id=$1 AND processing_id=$2 ORDER BY kind,source_row`, args)).rows;
                 const proposals = (await tx.query(`SELECT p.*,d.policy_version,d.decision,d.checks FROM ${schema}.proposals p JOIN ${schema}.decisions d USING(organization_id,processing_id,ordinal) WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
                 const cases = (await tx.query(`SELECT ordinal,reason,evidence FROM ${schema}.cases WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
                 const reviews = (await tx.query(`SELECT case_ordinal,version,state,rationale,actor_id,created_at FROM ${schema}.reviews WHERE organization_id=$1 AND processing_id=$2 ORDER BY case_ordinal,version`, args)).rows;

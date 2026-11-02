@@ -38,8 +38,8 @@ CREATE TABLE fingence_reconciliation.transactions (
  record_id text NOT NULL CHECK (length(record_id)>0),
  source_row integer NOT NULL CHECK (source_row>=2),
  status text NOT NULL CHECK (status IN ('VALID','WARNING')),
- canonical_date date NOT NULL, transaction_date date, posting_date date,
- date_basis text NOT NULL CHECK (date_basis IN ('TRANSACTION_DATE','POSTING_DATE')),
+ canonical_date date NOT NULL, transaction_date date, value_date date, posting_date date,
+ date_basis text NOT NULL CHECK (date_basis IN ('VALUE_DATE','POSTING_DATE')),
  currency text NOT NULL CHECK (currency='MYR'),
  signed_amount numeric NOT NULL CHECK (signed_amount::text NOT IN ('NaN','Infinity','-Infinity')),
  original_amount text NOT NULL CHECK (original_amount ~ '^-?[0-9]{1,16}(\.[0-9]{1,2})?$' AND original_amount::numeric=signed_amount),
@@ -48,8 +48,9 @@ CREATE TABLE fingence_reconciliation.transactions (
  PRIMARY KEY(organization_id,processing_id,kind,record_id),
  UNIQUE(organization_id,processing_id,kind,source_row),
  FOREIGN KEY(organization_id,processing_id,sha256,kind) REFERENCES fingence_reconciliation.job_sources(organization_id,processing_id,sha256,kind),
- CHECK ((kind='BANK' AND date_basis='TRANSACTION_DATE' AND transaction_date IS NOT NULL AND canonical_date=transaction_date AND posting_date IS NULL)
- OR (kind='LEDGER' AND date_basis='POSTING_DATE' AND posting_date IS NOT NULL AND canonical_date=posting_date AND transaction_date IS NULL))
+ CHECK (transaction_date IS NULL),
+ CHECK ((kind='BANK' AND date_basis='VALUE_DATE' AND value_date IS NOT NULL AND canonical_date=value_date AND posting_date IS NULL)
+ OR (kind='LEDGER' AND date_basis='POSTING_DATE' AND posting_date IS NOT NULL AND canonical_date=posting_date AND value_date IS NULL))
 );
 CREATE TABLE fingence_reconciliation.proposals (
  organization_id uuid NOT NULL, processing_id text NOT NULL, ordinal integer NOT NULL CHECK (ordinal>=0),
