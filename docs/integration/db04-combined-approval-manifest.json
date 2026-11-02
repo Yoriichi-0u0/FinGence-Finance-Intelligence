@@ -1,0 +1,62 @@
+{
+  "version": "db04-combined-preparation/1",
+  "target": {
+    "projectRef": "fhipzomczevbpybezzxu",
+    "database": "postgres"
+  },
+  "hostedExecutionAuthorized": false,
+  "blockers": [
+    "VERIFIED_HOSTED_BACKUP_RESTORE",
+    "EXPLICIT_LEGACY_VALIDATION_SCAN_APPROVAL",
+    "JASON_IDENTITY_AUTHORITY_AND_REVOCATION_SLA",
+    "APPROVED_SUBJECT_ORGANIZATION_MAPPING",
+    "SEPARATE_HOSTED_CHANGE_APPROVAL"
+  ],
+  "sequence": [
+    {
+      "order": 1,
+      "name": "db04-source-file-validation-review.sql",
+      "sha256": "5c07d7c6477875a3b31353c1f3fa2eaa98768055b7ab43d009abd1f01c2930da"
+    },
+    {
+      "order": 2,
+      "name": "db02-001-warning-mutation-fence.sql",
+      "sha256": "8a991309f2f4d4192ac9a782cc369348c93c0f098ce31c370424940897a33089"
+    },
+    {
+      "order": 3,
+      "name": "db04-hosted-identity-v1-review.sql",
+      "sha256": "798e7e6c9cf0d4e8c36aa6207339d6c10155ac96bb8ef76a7431b752a6f73463"
+    },
+    {
+      "order": 4,
+      "name": "db04-001-reconciliation.sql",
+      "sha256": "911a0abe2c63f9e60d18f224a795732285b80df1155f19adf9c8d76b89d9d1ef"
+    },
+    {
+      "order": 5,
+      "name": "db04-002-reconciliation-security.sql",
+      "sha256": "d132ac1b200784a180abce94034387d429c08646668b6cf754caae4030325094"
+    },
+    {
+      "order": 6,
+      "name": "db04-003-ranking-evidence.sql",
+      "sha256": "2a811e833f1454a315ad54bbc3cdd1081ee8f2dd8459c9be4128af2976809661"
+    },
+    {
+      "order": 7,
+      "name": "db04-004-proposal-verification.sql",
+      "sha256": "5272f0b3da11510be341403962849440392c698811c9666f3d4511663232595b"
+    },
+    {
+      "order": 8,
+      "name": "db04-hosted-principal-v1-review.sql",
+      "sha256": "b496f713cd71ae07bec038d85216354cba3b14a7276d7580deb2f8981d92ada6"
+    }
+  ],
+  "warnings": [
+    "Proposal identity is locally tested with a synthetic authority, not hosted Supabase Auth.",
+    "No schema reset, local password bootstrap, financial data repair or C1/V2 cash-contract cast.",
+    "Role/function owners and provider-managed default grants require deployment review."
+  ]
+}

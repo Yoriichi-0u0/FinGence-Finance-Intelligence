@@ -1,0 +1,13 @@
+{
+  "status": "READ_ONLY_PREDICATE_CHECK_COMPLETE",
+  "projectRef": "fhipzomczevbpybezzxu",
+  "function": "public.is_safe_source_file(text)",
+  "owner": "postgres",
+  "securityDefiner": false,
+  "configuration": [
+    "search_path=pg_catalog"
+  ],
+  "predicateMatchesLocalAfterWhitespaceNormalization": true,
+  "financialRowsRead": false,
+  "hostedChanges": false
+}

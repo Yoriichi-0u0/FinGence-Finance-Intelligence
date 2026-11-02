@@ -1,0 +1,67 @@
+{
+  "previousBaselineFailures": 30,
+  "hosted": {
+    "changesThisCycle": false,
+    "authVerified": false,
+    "backupVerified": false,
+    "backupExported": false,
+    "financialRowsRead": false,
+    "predicateCatalogOnly": "MATCHES_LOCAL_SOURCE_AFTER_WHITESPACE_NORMALIZATION"
+  },
+  "finalExpandedRestoreAndIdentitySubset": {
+    "reportSha256": "36d46afee62515539f5081f52a6c28b23043e694f3f5a6eb15117820b48b900a",
+    "overlapsAffectedSuite": true,
+    "failed": 0,
+    "nativeSubset": 25,
+    "skipped": 0,
+    "passed": 28
+  },
+  "initialRun": {
+    "failed": 1,
+    "reason": "Raw default ACL representation compared instead of effective ACL; corrected without changing restored data/privileges",
+    "skipped": 0,
+    "passed": 18
+  },
+  "startCommit": "c98494a571c2b7992a50bef842b1695275077ba3",
+  "recovery": {
+    "localSyntheticOnly": true,
+    "hostedBackupVerified": false,
+    "authority": "SYNTHETIC_TEST_AUTHORITY",
+    "logical": {
+      "archiveSha256": "a541185e684d2b9b2c05e8121938f37b51170aa443a41df1fe26bad0ef620984",
+      "bytes": 117519,
+      "rowTextSha256": "7da378f563e88a3b8d417eb8c533eb94f1140c805566867d7b2ced265d9082e4",
+      "schemaAndAclSha256": "856af8d15397e691ce3f7e9ca221d8c36514943bce8cbeec2af8882ae010af1e",
+      "dataAndAclEquality": true,
+      "checksumCorruptionRejected": true
+    },
+    "physical": {
+      "manifestSha256": "2583cff7fe61532e97bebf99a0c5bc8d9ae01f42fc340224dd6c3bda237569ae",
+      "verifyBackupExitCode": 0,
+      "recoveredIndependently": true,
+      "db04ForcedRlsTables": 11,
+      "financialRows": 2,
+      "recoveryDurationMs": 5035.308499999996
+    },
+    "cleanup": {
+      "removed": true,
+      "failures": []
+    },
+    "testsFailed": false
+  },
+  "affectedSuite": {
+    "reportSha256": "1a63d3cd4359711f43ba50bbf13b41f328b28efa12948c18035ef006e15f6ffc",
+    "failed": 0,
+    "nativeSubset": 58,
+    "skipped": 0,
+    "command": "DB04_E5_SMOKE=1 pnpm exec vitest run tests/reconciliation-persistence tests/persistence/db02.integrity.test.ts --maxWorkers=1",
+    "passed": 174
+  },
+  "fullProjectRerun": false,
+  "checks": {
+    "serverBoundary": "PASS",
+    "lint": "PASS",
+    "whitespace": "PASS",
+    "typecheck": "PASS"
+  }
+}
