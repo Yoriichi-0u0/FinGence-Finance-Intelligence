@@ -6,7 +6,7 @@ import { groundingIndex } from '../../lib/grounded-qa/tools';
 import type { AskRequest } from '../../lib/grounded-qa/contracts';
 import { InterpreterUnavailable } from '../../lib/interpretation/contracts';
 import { GroundedAnswer } from '../../components/demo/grounded-answer';
-import { phase1 } from './tools.test';
+import { phase1 } from './fixtures';
 
 const receipt = { provider: 'GROQ' as const, model: 'openai/gpt-oss-120b', requestId: null, latencyMs: 900, inputTokens: 1800, outputTokens: 250, estimatedUsd: 0.0004, mode: 'LIVE' as const };
 /** Recorded model double: answers each stage with the given content and records what it was sent. */

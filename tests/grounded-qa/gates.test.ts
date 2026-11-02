@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { catalogue, groundingIndex, runQueries } from '../../lib/grounded-qa/tools';
 import { preCheck, verifyAnswer, verifyPlan, type Segment } from '../../lib/grounded-qa/gates';
 import type { ToolCall } from '../../lib/grounded-qa/contracts';
-import { phase1 } from './tools.test';
+import { phase1 } from './fixtures';
 
 async function setup(queries: ToolCall[]) {
     const index = groundingIndex(await phase1())!, cat = catalogue(index);

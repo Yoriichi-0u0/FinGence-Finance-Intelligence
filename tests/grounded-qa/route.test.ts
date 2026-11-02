@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { catalogue, groundingIndex, runQueries } from '../../lib/grounded-qa/tools';
 import { modelView } from '../../lib/grounded-qa/facts';
-import { phase1 } from './tools.test';
+import { phase1 } from './fixtures';
 
 const post = (body: unknown, headers: Record<string, string> = {}) => new Request('http://localhost:3000/api/ai/ask', { method: 'POST', headers: { 'content-type': 'application/json', host: 'localhost:3000', origin: 'http://localhost:3000', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) });
 const completion = (content: unknown) => ({ id: 'chatcmpl-qa', model: 'openai/gpt-oss-120b', choices: [{ finish_reason: 'stop', message: { content: JSON.stringify(content) } }], usage: { prompt_tokens: 1800, completion_tokens: 300 } });

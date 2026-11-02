@@ -1,14 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { processDocuments, type ProcessingContext } from '../../lib/demo/pipeline';
+import { processDocuments } from '../../lib/demo/pipeline';
+import { doc, phase1 } from './fixtures';
 import { catalogue, groundingIndex, runQueries } from '../../lib/grounded-qa/tools';
 import { formatValue, modelView } from '../../lib/grounded-qa/facts';
 import { catalogueSchema, toolCallSchema } from '../../lib/grounded-qa/contracts';
 
-const doc = (name: string) => ({ name, bytes: new Uint8Array(readFileSync(`public/demo/${name}`)), provenance: 'PUBLIC_SYNTHETIC_SAMPLE' as const });
-export async function phase1(): Promise<ProcessingContext> {
-    return processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv'), doc('demo-bank-history-2025-04-to-2026-03.csv')]);
-}
 const show = (f: { fields: Record<string, Parameters<typeof formatValue>[0]> }, field: string) => formatValue(f.fields[field]);
 
 describe('grounding index and catalogue', () => {
