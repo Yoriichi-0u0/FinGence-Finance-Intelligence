@@ -20,9 +20,8 @@ export type GroundedRun = {
 
 export async function askGrounded(index: GroundingIndex, question: string, model: QaModel): Promise<GroundedRun> {
     const run: GroundedRun = { question, status: 'UNAVAILABLE', refusal: null, queries: [], planChecks: [], facts: [], verdict: null, receipts: [], error: null };
-    const red = preCheck(question);
+    const cat = catalogue(index), red = preCheck(question, cat.counterparties);
     if (red) return { ...run, status: 'REFUSED', refusal: { reason: red, by: 'PRE_CHECK' } };
-    const cat = catalogue(index);
     try {
         const planned = await model.call({ stage: 'plan', question, catalogue: cat });
         run.receipts.push(planned.receipt);

@@ -15,7 +15,7 @@ export const MAX_QUESTION = 300;
 export const MAX_QUERIES = 4;
 export const MAX_FACTS = 48;
 export const DERIVED_IDS = ['D1', 'D2', 'D3', 'D4'] as const;
-export const REFUSALS = ['ADVICE', 'ALLEGATION', 'CAUSE_NOT_RECORDED', 'OUTSIDE_SCOPE', 'UNSUPPORTED_MEASURE', 'NOT_A_FINANCE_QUESTION'] as const;
+export const REFUSALS = ['ADVICE', 'ALLEGATION', 'CAUSE_NOT_RECORDED', 'CLASSIFICATION_NOT_RECORDED', 'OUTSIDE_SCOPE', 'UNSUPPORTED_MEASURE', 'NOT_A_FINANCE_QUESTION'] as const;
 export type Refusal = typeof REFUSALS[number];
 export const RECONCILIATION_FILTERS = ['ALL_EXCEPTIONS', ...reconciliationStatuses] as const;
 

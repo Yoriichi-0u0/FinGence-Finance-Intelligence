@@ -7,7 +7,8 @@ import { DecisionBadge } from './shared';
 
 const REFUSAL: Record<Refusal, string> = {
     ADVICE: 'Advice is outside what verified cash records can support.', ALLEGATION: 'Allegations such as fraud or theft cannot be established from cash records.',
-    CAUSE_NOT_RECORDED: 'The records do not state why this happened.', OUTSIDE_SCOPE: 'The question is about a business, period or currency that is not in this processing.',
+    CAUSE_NOT_RECORDED: 'The records do not state why this happened.',
+    CLASSIFICATION_NOT_RECORDED: 'The records name counterparties but do not classify them (for example as suppliers, customers or employees) or record what a payment was for, so FinGence will not say which counterparty is one. Ask about a named counterparty, or about money paid or received by counterparty.', OUTSIDE_SCOPE: 'The question is about a business, period or currency that is not in this processing.',
     UNSUPPORTED_MEASURE: 'Profit, revenue, accounting expenses, tax and ratios are not established by cash records.', NOT_A_FINANCE_QUESTION: 'This is not a question about these financial records.',
 };
 const STATUS = {

@@ -39,11 +39,19 @@ describe('grounded question orchestration', () => {
         expect(model.sent).toEqual([]);
     });
     it('passes a model refusal through without an answer call', async () => {
-        const model = recorded({ plan: { kind: 'REFUSE', reason: 'UNSUPPORTED_MEASURE' }, rationale: 'Profit is not in cash records.' });
-        const run = await askGrounded(groundingIndex(await phase1())!, 'What was our profit margin?', model);
-        expect(run).toMatchObject({ status: 'REFUSED', refusal: { reason: 'UNSUPPORTED_MEASURE', by: 'MODEL' } });
+        const model = recorded({ plan: { kind: 'REFUSE', reason: 'CAUSE_NOT_RECORDED' }, rationale: 'The records do not say why.' });
+        const run = await askGrounded(groundingIndex(await phase1())!, 'Why did our cash position change so much?', model);
+        expect(run).toMatchObject({ status: 'REFUSED', refusal: { reason: 'CAUSE_NOT_RECORDED', by: 'MODEL' } });
         expect(model.sent).toHaveLength(1);
-        expect(text(renderToStaticMarkup(createElement(GroundedAnswer, { run })))).toContain('Profit, revenue, accounting expenses, tax and ratios are not established by cash records.');
+        expect(text(renderToStaticMarkup(createElement(GroundedAnswer, { run })))).toContain('The records do not state why this happened. The model declined to plan an answer.');
+    });
+    it('explains the supplier limitation instead of naming the largest payee, before any model call', async () => {
+        const model = recorded(PLAN, GOOD), run = await askGrounded(groundingIndex(await phase1())!, 'Which supplier did we pay the most?', model);
+        expect(run).toMatchObject({ status: 'REFUSED', refusal: { reason: 'CLASSIFICATION_NOT_RECORDED', by: 'PRE_CHECK' } });
+        expect(model.sent).toEqual([]);
+        const html = text(renderToStaticMarkup(createElement(GroundedAnswer, { run })));
+        expect(html).toContain('do not classify them (for example as suppliers, customers or employees)');
+        expect(html).not.toContain('Staff Payroll');
     });
     it('withholds an invalid plan and never calls the answer stage', async () => {
         const model = recorded({ plan: { kind: 'QUERY', queries: [{ tool: 'transactions', direction: 'OUT', counterparty: 'Acme Holdings', sort: 'LARGEST', limit: 3 }] }, rationale: '' });

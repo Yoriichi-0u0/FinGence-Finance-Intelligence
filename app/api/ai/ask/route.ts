@@ -27,7 +27,9 @@ export async function POST(request: Request) {
     if ('refusal' in read) return read.refusal;
     const parsed = askRequestSchema.safeParse(read.body);
     if (!parsed.success) return json({ code: 'INVALID_REQUEST' }, 400);
-    const refusal = preCheck(parsed.data.question);
+    // The same deterministic refusals as the browser; counterparties come from the catalogue (plan) or the facts (answer).
+    const names = parsed.data.stage === 'plan' ? parsed.data.catalogue.counterparties : [...new Set(parsed.data.facts.flatMap(f => Object.values(f.fields)))];
+    const refusal = preCheck(parsed.data.question, names);
     if (refusal) return json({ code: 'REFUSED_BEFORE_MODEL', reason: refusal }, 422);
     const admission = await admit({ client: clientAddress(request.headers), worstCaseUsd: worstCaseQaUsd(parsed.data) });
     if (!admission.admitted) return json({ code: admission.code, ...(admission.retryAfterSeconds ? { retryAfterSeconds: admission.retryAfterSeconds } : {}) }, admission.status);

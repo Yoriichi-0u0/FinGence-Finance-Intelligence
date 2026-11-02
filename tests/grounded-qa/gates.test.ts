@@ -16,8 +16,19 @@ const TOP_OUT: ToolCall[] = [{ tool: 'counterparties', direction: 'OUT', limit: 
 describe('pre-check refuses red lines before any model call', () => {
     it.each([
         ['Should we invest the surplus cash?', 'ADVICE'], ['Is Borneo Fresh Supplies committing fraud?', 'ALLEGATION'], ['Did a staff member steal money?', 'ALLEGATION'],
-        ['Which supplier did we pay the most?', null], ['Why were these payments flagged?', null],
+        ['Who did we pay the most?', null], ['Why were these payments flagged?', null],
     ])('%s → %s', (q, expected) => expect(preCheck(q)).toBe(expected));
+    it('refuses measures and classifications the records do not contain, unless the question names the counterparty', async () => {
+        const names = catalogue(groundingIndex(await phase1())!).counterparties;
+        const cases: [string, string | null][] = [
+            ['What was our net profit for March?', 'UNSUPPORTED_MEASURE'], ['What were our sales this month?', 'UNSUPPORTED_MEASURE'], ['What is our tax liability?', 'UNSUPPORTED_MEASURE'],
+            ['Which supplier did we pay the most?', 'CLASSIFICATION_NOT_RECORDED'], ['Who is our biggest customer?', 'CLASSIFICATION_NOT_RECORDED'],
+            ['How much did we pay our employees?', 'CLASSIFICATION_NOT_RECORDED'], ['How much did we spend on ingredients?', 'CLASSIFICATION_NOT_RECORDED'],
+            ['Which vendor received the largest single payment?', 'CLASSIFICATION_NOT_RECORDED'], ['Who supplies us the most?', 'CLASSIFICATION_NOT_RECORDED'],
+            ['How much did we pay our supplier Borneo Fresh Supplies?', null], ['How much did POS Sales Settlement pay us?', null], ['How much did Borneo get from us?', null],
+        ];
+        for (const [q, expected] of cases) expect([q, preCheck(q, names)]).toEqual([q, expected]);
+    });
 });
 
 describe('plan gate', () => {
@@ -104,6 +115,22 @@ describe('answer gate withholds anything not grounded', () => {
         expect(v.decision).toBe('WITHHELD');
         expect(v.sentences).toBeNull();
         expect(failed(v)).toEqual([gate]);
+    });
+    it('withholds a correctly cited payee presented as a role the records do not contain', async () => {
+        const { cat, facts } = await setup(TOP_OUT);
+        // Staff Payroll IS the largest payee, and the citation is correct; calling it a supplier is the unsupported part.
+        const v = verifyAnswer(answered([{ text: 'Our largest supplier was {F1.name}, paid {F1.total}.', cites: ['F1'] }]), facts, { question: 'Who did we pay the most?', catalogue: cat });
+        expect(failed(v)).toEqual(['classification']);
+        const customer = verifyAnswer(answered([{ text: '{F1.name} is our main customer, paid {F1.total}.', cites: ['F1'] }]), facts, { question: 'Who did we pay the most?', catalogue: cat });
+        expect(failed(customer)).toEqual(['classification']);
+    });
+    it('keeps the user\'s own description of a counterparty they named, and a counterparty name containing such a word', async () => {
+        const { cat, facts } = await setup([{ tool: 'transactions', direction: 'OUT', counterparty: 'Borneo Fresh Supplies', sort: 'LARGEST', limit: 1 }]);
+        const v = verifyAnswer(answered([{ text: 'We paid our supplier {F1.counterparty} {F1.total} in total.', cites: ['F1'] }]), facts, { question: 'How much did we pay our supplier Borneo Fresh Supplies?', catalogue: cat });
+        expect(failed(v)).toEqual([]);
+        const pos = await setup([{ tool: 'transactions', direction: 'IN', counterparty: 'POS Sales Settlement', sort: 'LARGEST', limit: 1 }]);
+        const named = verifyAnswer(answered([{ text: 'POS Sales Settlement paid us {F1.total}.', cites: ['F1'] }]), pos.facts, { question: 'How much did POS Sales Settlement pay us?', catalogue: pos.cat });
+        expect(failed(named)).toEqual([]);
     });
     it('withholds citations of facts outside this answer (schema-bound)', async () => {
         const { cat, facts } = await setup(TOP_OUT);

@@ -4,18 +4,42 @@
  * placeholder that resolves to a verified fact, its free text carries no figure of its own, every entity it
  * names is cited, and it draws no conclusion the cash records cannot support. Anything else is withheld.
  */
-import { ADVICE } from '../poc-finance-qa/answer';
+import { ADVICE, UNSUPPORTED } from '../poc-finance-qa/answer';
 import { answerSchema, planSchema, type Answer, type Catalogue, type Refusal, type ToolCall } from './contracts';
 import { formatValue, type Fact, type SourceRef, type Value } from './facts';
 
 export type GateCheck = { id: string; label: string; passed: boolean; detail: string };
 const ALLEGATION = /\b(fraud\w*|embezzl\w*|launder\w*|theft|steal\w*|stole|crim(e|es|inal)|guilty)\b/;
+/**
+ * Roles and payment categories the records do NOT contain: counterparties are named, never classified, and payments
+ * are not categorised. "The largest payee" is verified; "the largest supplier" is not, even when the citation is correct.
+ */
+export const CLASSIFICATION = /\b(suppliers?|suppl(y|ies|ied) us|vendors?|contractors?|customers?|clients?|employees?|landlords?|tenants?|creditors?|debtors?|shareholders?|directors?|ingredients?|utilit(y|ies)|rents?|rental|salar(y|ies)|wages?|marketing|insurance|inventory|sales|turnover)\b/i;
 
-/** Red lines refused before any model call, with the same pattern the rule-based answerer uses. */
-export function preCheck(question: string): Refusal | null {
+/** Catalogue counterparties a text names, by full name or by its distinctive first word (e.g. "Borneo", "GrabFood"). */
+export function namedCounterparties(text: string, counterparties: string[]): string[] {
+    const t = text.toLowerCase(), first = (n: string) => n.toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
+    return counterparties.filter(n => t.includes(n.toLowerCase()) || (first(n).length > 3 && new RegExp(`\\b${first(n)}\\b`).test(t)));
+}
+/** The text with every named counterparty removed, so a name like "POS Sales Settlement" is never read as a claim. */
+function withoutNames(text: string, counterparties: string[]) {
+    return [...counterparties].sort((a, b) => b.length - a.length).reduce((t, n) => t.replace(new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), ' '), text);
+}
+
+/**
+ * Refused before any model call:
+ * - advice and allegations (the rule-based answerer's own pattern);
+ * - measures cash records cannot establish (its UNSUPPORTED pattern, plus sales and turnover);
+ * - classifications the records do not contain, unless the question itself names the counterparty
+ *   ("How much did we pay our supplier Borneo Fresh Supplies?" is answerable; "Which supplier…" is not).
+ */
+export function preCheck(question: string, counterparties: string[] = []): Refusal | null {
     const q = question.toLowerCase().replace(/[-_/]/g, ' ');
-    if (!ADVICE.test(q)) return null;
-    return ALLEGATION.test(q) ? 'ALLEGATION' : 'ADVICE';
+    if (ADVICE.test(q)) return ALLEGATION.test(q) ? 'ALLEGATION' : 'ADVICE';
+    const rest = withoutNames(q, counterparties);
+    if (UNSUPPORTED.test(rest) || /\b(sales|turnover)\b/.test(rest)) return 'UNSUPPORTED_MEASURE';
+    if (CLASSIFICATION.test(rest) && !namedCounterparties(q, counterparties).length) return 'CLASSIFICATION_NOT_RECORDED';
+    return null;
 }
 
 export type PlanVerdict = { kind: 'QUERIES'; queries: ToolCall[]; checks: GateCheck[] } | { kind: 'REFUSED'; reason: Refusal; checks: GateCheck[] } | { kind: 'INVALID'; checks: GateCheck[] };
@@ -116,15 +140,19 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     if (!gate('entities', 'Every named counterparty or entity comes from a cited fact', entityProblems)) return result('WITHHELD');
 
     // 5. No conclusion the cash records cannot support (accounting classification, cause, advice, allegation).
-    const conclusions = free.flatMap((t, i) => { const m = t.match(CONCLUSIONS); return m ? [`sentence ${i + 1}: "${m[0]}"`] : []; });
+    const plainText = free.map(t => withoutNames(t, known));
+    const conclusions = plainText.flatMap((t, i) => { const m = t.match(CONCLUSIONS); return m ? [`sentence ${i + 1}: "${m[0]}"`] : []; });
     if (!gate('conclusions', 'No unsupported accounting conclusion, cause, advice or allegation', conclusions)) return result('WITHHELD');
+    // 5b. No role or category the records do not contain (a correctly cited payee is not thereby a "supplier"),
+    // unless the question itself used that word about a counterparty it named.
+    const questionTerms = new Set((withoutNames(ctx.question, known).match(new RegExp(CLASSIFICATION, 'gi')) ?? []).map(w => w.toLowerCase()));
+    const classification = plainText.flatMap((t, i) => (t.match(new RegExp(CLASSIFICATION, 'gi')) ?? []).filter(w => !questionTerms.has(w.toLowerCase()) || !namedCounterparties(ctx.question, ctx.catalogue.counterparties).length).map(w => `sentence ${i + 1}: "${w}" is not a classification the records contain`));
+    if (!gate('classification', 'No supplier, customer, employee or payment-category claim the records do not contain', classification)) return result('WITHHELD');
 
     // 6. What the question names (a counterparty or a month) must be what the cited facts are about.
     const q = ctx.question.toLowerCase(), citedFacts = cited.map(id => byId.get(id)!);
     const about = (needle: string) => citedFacts.some(f => f.label.toLowerCase().includes(needle) || Object.values(f.fields).some(v => formatValue(v).toLowerCase().includes(needle)));
-    // A counterparty is "named" by its full name or its distinctive first word (e.g. "Borneo", "GrabFood").
-    const first = (n: string) => n.toLowerCase().split(/\s+/)[0];
-    const asked = ctx.catalogue.counterparties.filter(n => q.includes(n.toLowerCase()) || (first(n).length > 3 && new RegExp(`\\b${first(n).replace(/[^a-z0-9]/g, '')}\\b`).test(q))).map(n => n.toLowerCase());
+    const asked = namedCounterparties(q, ctx.catalogue.counterparties).map(n => n.toLowerCase());
     const relevance = asked.filter(n => !about(n)).map(n => `the question names ${n} but no cited fact is about it`);
     if (!gate('relevance', 'Cited facts are about what the question names', relevance)) return result('WITHHELD');
 
