@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import { OverviewHeader } from '@/components/overview/dashboard';
+import { CompactDemoNotice } from './banner';
 import { ArrowRight, LoaderCircle } from 'lucide-react';
 import { useDemoProcessing } from './context';
 import { DemoModule, isReady, type DemoView } from './modules';
@@ -19,7 +21,7 @@ export function DemoGate({ view, illustrative }: { view: DemoView; illustrative?
     if (isReady(context)) return <DemoModule key={context.processingId} view={view} context={context} />;
     const quarantined = status === 'ready' && context;
     return <>
-        <header className="mb-5"><h1 className="text-[27px] font-semibold tracking-[-0.035em] sm:text-[30px]">{TITLES[view]}</h1></header>
+        {view === 'overview' ? <OverviewHeader notice={<CompactDemoNotice context={context} />} /> : <header className="mb-5"><h1 className="text-[27px] font-semibold tracking-[-0.035em] sm:text-[30px]">{TITLES[view]}</h1></header>}
         <section className="panel-shadow rounded-xl border border-[var(--border)] bg-white p-5 sm:p-6">
             {status === 'loading' || status === 'processing' ? <p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin" size={16} />{status === 'processing' ? 'Processing documents…' : 'Loading the processing context…'}</p> : <>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--teal)]">Synthetic demo · no sign-in</p>

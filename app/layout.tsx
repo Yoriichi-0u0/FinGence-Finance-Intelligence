@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Script from "next/script";
+import { themeInitialization } from "@/components/overview/theme-preference";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
@@ -31,10 +33,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <Script id="fingence-theme-preference" strategy="beforeInteractive">{themeInitialization}</Script>
         <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()}>{children}</AppShell>
       </body>
     </html>

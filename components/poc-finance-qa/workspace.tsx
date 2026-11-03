@@ -1,4 +1,5 @@
 'use client';
+import { useNavigationRole } from '@/components/navigation/context';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { LogOut, MessageSquareText, RefreshCw, Send } from 'lucide-react';
@@ -27,6 +28,7 @@ export default function FinanceQuestionsWorkspace() {
     const [sources, setSources] = useState<PocSource[] | null>(null), [context, setContext] = useState<QaContext | null>(null), [answers, setAnswers] = useState<Asked[]>([]);
     const [loading, setLoading] = useState(false), [asking, setAsking] = useState(false), [error, setError] = useState<string | null>(null), [draft, setDraft] = useState('');
     // Any principal, session or selection change drops every displayed figure and in-flight response.
+    useNavigationRole(principal?.role ?? null);
     const clear = useCallback(() => { request.current.sequence++; setSources(null); setContext(null); setAnswers([]); setLoading(false); setAsking(false); }, []);
     const invalidate = useCallback(() => { forgetSelection(browserSelectionStorage, fence.current.principal); fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
     const load = useCallback(async (next: PocSelection) => {

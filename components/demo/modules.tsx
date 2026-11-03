@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import { OverviewDashboard, workspaceDescription } from '@/components/overview/dashboard';
+import { CompactDemoNotice } from './banner';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Printer, Send } from 'lucide-react';
 import { LineChart } from '@/components/charts';
@@ -30,34 +32,9 @@ function Pager({ page, total, onPage }: { page: number; total: number; onPage: (
 }
 
 function Overview({ c }: { c: Ready }) {
-    const { scope: s, outputs: o } = c, r = o.reconciliation, f = o.forecast.forecast;
-    const checks = c.stages.flatMap(x => x.checks), exceptions = c.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length;
-    return <>
-        <PageHeader title="Overview" description={`Verified results for ${s.businessName}, ${s.period}, from one processing of your documents.`} />
-        <SourceStrip context={c} />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat label="Net signed bank movement" value={money(s.currency, o.totals.net)} detail={`In ${money(s.currency, o.totals.credits)} · out ${outflow(s.currency, o.totals.debits)}`} />
-            <Stat label="Bank − ledger difference" value={money(s.currency, r.cashMovement.signedDifference)} detail={`Ledger cash account ${money(s.currency, r.cashMovement.ledger)}`} />
-            <Stat label="Reconciled automatically" value={`${r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT} of ${r.results.length}`} detail={`${exceptions} exceptions quarantined, none cleared`} />
-            <Stat label="Next-month cash baseline" value={f.status === 'AVAILABLE' ? money(s.currency, f.net) : 'Unavailable'} detail={f.status === 'AVAILABLE' ? `${f.period} net · six-month mean, not AI` : f.detail} />
-        </div>
-        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-2">
-            <Panel title="Automated verification" eyebrow="Trust model">
-                <div className="space-y-3 p-4 text-sm sm:p-5">
-                    <p><strong>{checks.filter(k => k.passed).length} of {checks.length}</strong> automated checks passed across {c.stages.length} stages. No routine manual approval was needed.</p>
-                    <p><strong>{c.quarantine.length}</strong> items are quarantined for exception handling: {exceptions} reconciliation exceptions, {o.anomalies.length} anomaly candidates{c.quarantine.some(q => q.kind === 'DOCUMENT' || q.kind === 'HISTORY') ? ' and quarantined documents' : ''}. Quarantined items are never treated as established facts.</p>
-                    <ul className="grid gap-2 sm:grid-cols-2">{c.stages.map(x => <li key={x.id} className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-[var(--border)] px-3 py-2"><span className="min-w-0 text-xs font-medium">{x.title}</span><DecisionBadge decision={x.decision} label={x.decision === 'AUTO_ACCEPTED' ? 'Verified' : undefined} /></li>)}</ul>
-                </div>
-            </Panel>
-            <Panel title="Connected results" eyebrow="Same processing context">
-                <ul className="divide-y divide-[var(--border)] text-sm">
-                    {[['/transactions', 'Transactions', `${o.totals.rows} bank records · ${o.ledger?.rows.length ?? 0} ledger entries`], ['/reconciliation', 'Reconciliation', `${reconciliationStatuses.filter(k => r.counts[k]).length} outcome categories`], ['/analytics', 'Analytics', o.history.accepted ? `${o.history.months.length} months of bank history` : 'Statement month only'], ['/anomalies', 'Anomalies', `${o.anomalies.length} rule-based candidates`], ['/forecasting', 'Forecasting', f.status === 'AVAILABLE' ? `${f.period} baseline` : 'Unavailable for this input'], ['/reports', 'Reports', 'Management summary and JSON evidence'], ['/ask', 'Finance Q&A', 'Rule-based answers from these figures']].map(([href, label, detail]) =>
-                        <li key={href}><Link href={href} className="flex min-h-11 items-center justify-between gap-3 px-4 py-2.5 hover:bg-slate-50 sm:px-5"><span className="font-semibold">{label}</span><span className="text-right text-xs text-[var(--muted)]">{detail}</span></Link></li>)}
-                </ul>
-            </Panel>
-        </div>
-        <p className="mt-5 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>
-    </>;
+    const o = c.outputs;
+    const months = o.history.accepted ? o.history.months.map(period => ({ period, ...cashTotals(o.history.rows.filter(r => r.period === period)) })) : [];
+    return <OverviewDashboard currency={c.scope.currency} description={workspaceDescription(c.scope.businessName, c.scope.period)} notice={<CompactDemoNotice context={c} />} processing={<SourceStrip compact context={c} />} bank={o.totals.net} reconciliation={o.reconciliation} months={months} anomalies={o.anomalies.length} />;
 }
 
 function Transactions({ c }: { c: Ready }) {

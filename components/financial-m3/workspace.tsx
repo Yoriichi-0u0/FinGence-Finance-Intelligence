@@ -1,4 +1,5 @@
 'use client';
+import { useNavigationRole } from '@/components/navigation/context';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PageHeader, Panel } from '@/components/ui';
@@ -29,6 +30,7 @@ export default function FinancialWorkspace({ view, administration = false }: {
         id: string;
         state: string;
     }[]>([]), [selected, setSelected] = useState<FinancialSelection | null>(null), [snapshot, setSnapshot] = useState<FinancialSnapshot | null>(null), [overview, setOverview] = useState<Overview | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState(''), [email, setEmail] = useState(''), [password, setPassword] = useState(''), [question, setQuestion] = useState(''), [answer, setAnswer] = useState('');
+    useNavigationRole(principal?.role ?? null);
     const clear = useCallback(() => { request.current++; setJobs([]); setSelected(null); setSnapshot(null); setOverview(null); questionRequests.current.invalidate(); setAnswer(''); setQuestion(''); setBusy(false); }, []);
     const invalidate = useCallback(() => { fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
     const load = useCallback(async (selection: FinancialSelection) => {

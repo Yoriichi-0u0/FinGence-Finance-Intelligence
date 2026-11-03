@@ -1,4 +1,5 @@
 'use client';
+import { useNavigationRole } from '@/components/navigation/context';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowDownLeft, ArrowUpRight, Search, RefreshCw, LogOut } from 'lucide-react';
@@ -24,6 +25,7 @@ export default function PocInsightsWorkspace({ view }: { view: 'transactions' | 
     const [principal, setPrincipal] = useState<M2ClientPrincipal | null>(null), [checked, setChecked] = useState(false);
     const [sources, setSources] = useState<PocSource[] | null>(null), [data, setData] = useState<PocInsights | null>(null);
     const [query, setQuery] = useState<Query | null>(null), [loading, setLoading] = useState(false), [error, setError] = useState<string | null>(null);
+    useNavigationRole(principal?.role ?? null);
     const clear = useCallback(() => { request.current.sequence++; setSources(null); setData(null); setQuery(null); setLoading(false); }, []);
     const invalidate = useCallback(() => {
         forgetSelection(browserSelectionStorage, fence.current.principal); fence.current.invalidate(); clear(); setPrincipal(null);

@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { ProcessingDetails } from '@/components/overview/processing-details';
 import { CheckCircle2, CircleDashed, CircleSlash, Fingerprint, ShieldAlert } from 'lucide-react';
 import { groupDigits } from '@/lib/poc-anomalies/format';
 import type { Decision, ProcessingContext } from '@/lib/demo/pipeline';
@@ -34,8 +35,9 @@ export function Stat({ label, value, detail }: { label: string; value: string; d
 }
 
 /** Where every figure on a page comes from: one processing ID and its source fingerprints. */
-export function SourceStrip({ context }: { context: ProcessingContext }) {
+export function SourceStrip({ context, compact = false }: { context: ProcessingContext; compact?: boolean }) {
     const s = context.scope;
+    if (compact && s) return <ProcessingDetails business={s.businessName} period={s.period} currency={s.currency} processingId={context.processingId} fingerprints={context.documents.filter(d => d.decision === 'AUTO_ACCEPTED').map(d => ({ label: d.role === 'BANK_STATEMENT' ? 'Bank source' : d.role === 'GENERAL_LEDGER' ? 'Ledger source' : 'History source', value: d.sha256 }))} />;
     return <div className="mb-5 flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--border)] bg-white p-3 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
         <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--teal-dark)]"><Fingerprint aria-hidden="true" size={15} />Processing {context.processingId}</span>
         {s ? <span>{s.businessName} ({s.businessId}) · {s.period} · {s.currency}</span> : null}
