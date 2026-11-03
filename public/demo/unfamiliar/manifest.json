@@ -21,6 +21,10 @@
     "ledger-signed-march-2026.csv": {
       "sha256": "8ccce19b298cccc668f5517443bd9cd86c45a4fcd5f7e6c27319d81c90afb644",
       "bytes": 5213
+    },
+    "rimba-demo-kitchen-march-2026.xlsx": {
+      "sha256": "1c85a1295c8d3e5b763010600db3b46b72b172fef69cf698b97f4916ebae41cb",
+      "bytes": 10423
     }
   }
 }

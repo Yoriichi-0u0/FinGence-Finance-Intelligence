@@ -48,6 +48,21 @@ export const CORRECT: Record<string, LayoutProposal> = {
         scope: { ...noScope, businessId: { line: 1, literal: 'DEMO-001' }, currency: { line: 2, literal: 'MYR' } },
         rationale: 'Recorded test proposal.', unresolved: [],
     },
+    // Worksheets of the public Excel workbook: the same layouts with typed cells, so ISO dates and plain stored numbers.
+    'rimba-demo-kitchen-march-2026.xlsx › Bank statement': {
+        role: 'BANK_STATEMENT', headerLine: 8,
+        columns: { ...none, date: 0, recordId: 1, reference: 2, description: 3, counterparty: 4, moneyOut: 5, moneyIn: 6, balance: 7 },
+        representation: 'SPLIT_IN_OUT', directionTokens: noTokens, dateFormat: 'YYYY-MM-DD', numberFormat: 'PLAIN',
+        scope: { businessId: { line: 2, literal: 'DEMO-001' }, businessName: { line: 1, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 5, literal: 'MYR' }, statementPeriod: { line: 4, literal: '01/03/2026 to 31/03/2026' } },
+        rationale: 'Recorded test proposal.', unresolved: [],
+    },
+    'rimba-demo-kitchen-march-2026.xlsx › Cash ledger': {
+        role: 'GENERAL_LEDGER', headerLine: 6,
+        columns: { ...none, date: 0, recordId: 1, reference: 2, description: 3, counterparty: 4, debit: 5, credit: 6 },
+        representation: 'DEBIT_CREDIT', directionTokens: noTokens, dateFormat: 'YYYY-MM-DD', numberFormat: 'PLAIN',
+        scope: { businessId: { line: 1, literal: 'DEMO-001' }, businessName: { line: 0, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 4, literal: 'RM' }, statementPeriod: { line: 3, literal: 'March 2026' } },
+        rationale: 'Recorded test proposal.', unresolved: [],
+    },
     // Adversarial fixtures that ARE acceptable: bank statements without a running balance whose headings or tokens state direction.
     'bank-debit-credit-no-balance.csv': {
         role: 'BANK_STATEMENT', headerLine: 6,

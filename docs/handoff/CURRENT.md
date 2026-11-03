@@ -1,5 +1,19 @@
 # FinGence — current technical entrypoint
 
+## FinGence 2.0 AI M3 step 1: Excel workbooks — 4 November 2026
+
+`/data` accepts `.xlsx` files. Each worksheet holding a table becomes one document, converted to text deterministically by
+`lib/interpretation/workbook.ts`:
+
+- verbatim text;
+- stored number digits, at Excel's 15-significant-digit precision;
+- ISO dates;
+- blocks padded as in a CSV export.
+
+It then goes through the unchanged exact-signature, M1 interpreter and gate path. `ProcessedDocument.source` records the
+workbook's SHA-256, worksheet number and conversion notes. Sample: `public/demo/unfamiliar/rimba-demo-kitchen-march-2026.xlsx`.
+Details are in the [M1 runbook, "Excel workbooks"](../integration/fingence2-ai-m1-layout-interpretation.md).
+
 ## FinGence 2.0 AI M2 grounded financial Q&A — 2 November 2026 (in progress)
 
 [M2 architecture](../architecture/fingence2-ai-m2-grounded-qa.md) and [runbook](../integration/fingence2-ai-m2-grounded-qa.md),
