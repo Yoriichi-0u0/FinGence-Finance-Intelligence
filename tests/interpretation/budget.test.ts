@@ -46,6 +46,19 @@ describe('store selection fails closed on hosted deployments', () => {
         vi.stubEnv('UPSTASH_REDIS_REST_URL', 'http://insecure.example');
         expect(budgetStore()).toBeNull(); // first complete pair is not https: fail closed, no fallback
     });
+    it('accepts exactly one custom-prefixed integration store, with its read/write token only', () => {
+        for (const k of Object.keys(process.env).filter(k => /KV_REST_API|UPSTASH|FINGENCE_AI_BUDGET_REST/.test(k))) vi.stubEnv(k, '');
+        vi.stubEnv('VERCEL', '1');
+        vi.stubEnv('UPSTASH_FOR_REDIS_FREE_KV_REST_API_URL', 'https://free.example.upstash.io');
+        vi.stubEnv('UPSTASH_FOR_REDIS_FREE_KV_REST_API_READ_ONLY_TOKEN', 'read-only');
+        expect(budgetStore()).toBeNull(); // a read-only token cannot hold a budget
+        vi.stubEnv('UPSTASH_FOR_REDIS_FREE_KV_REST_API_TOKEN', 'read-write');
+        expect(budgetStore()).toMatchObject({ secret: 'read-write', store: { durable: true } });
+        vi.stubEnv('OTHER_STORE_KV_REST_API_URL', 'https://other.example.upstash.io'); vi.stubEnv('OTHER_STORE_KV_REST_API_TOKEN', 'other');
+        expect(budgetStore()).toBeNull(); // two prefixed stores: ambiguous, fail closed
+        vi.stubEnv('FINGENCE_AI_BUDGET_REST_URL', 'https://explicit.example'); vi.stubEnv('FINGENCE_AI_BUDGET_REST_TOKEN', 'explicit');
+        expect(budgetStore()).toMatchObject({ secret: 'explicit' }); // explicit names resolve the ambiguity
+    });
     it('clamps operator overrides', () => {
         vi.stubEnv('FINGENCE_AI_DAILY_BUDGET_USD', '1000'); vi.stubEnv('FINGENCE_AI_CLIENT_DAILY_CALLS', '-5');
         expect(budgetPolicy()).toMatchObject({ dailyUsd: 20, clientPerDay: DEFAULT_BUDGET.clientPerDay });
