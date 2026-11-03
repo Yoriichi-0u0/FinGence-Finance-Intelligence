@@ -37,6 +37,16 @@ The gate passes an answer only when all of these hold:
 
 **Every other outcome** (refused, withheld, insufficient, unavailable) says why and shows the rule-based answer. Model text is never shown unless it passed.
 
+## AI management commentary on Reports (4 November 2026)
+
+When the gateway is on, Reports shows an **AI management commentary** panel above the deterministic management summary (`lib/grounded-qa/commentary.ts`, `components/demo/commentary.tsx`).
+
+1. **FinGence chooses the queries, not the model.** It runs a fixed set: the period's cash summary, all reconciliation exceptions, all anomaly candidates and the forecast.
+2. **One answer-stage call.** The call goes through the same `/api/ai/ask` route, budget and request bounds. It sends only those facts and a fixed commentary request; there is no plan call.
+3. **The same `verifyAnswer` gates decide.** Every figure is a placeholder that code fills, and the vocabulary rules apply (no accounting conclusion, cause, advice, allegation or classification). Anything that fails is withheld with the failed check shown.
+4. **The summary never depends on it.** The deterministic management summary below the panel is unchanged and does not depend on the commentary.
+5. **Export.** An accepted commentary is included in the JSON evidence as `aiCommentary`: the rendered sentences, the cited fact labels and the receipts. It also prints with the page; the button does not.
+
 ## How to run
 
 The same switch, budget and request bounds as M1 apply (see the [M1 runbook](fingence2-ai-m1-layout-interpretation.md)).
@@ -75,6 +85,7 @@ FINGENCE_AI_QA_MODEL=openai/gpt-oss-120b
 | `route.test.ts` | 404 when off or unbudgeted. A value-free plan request with catalogue-bound enums. A bounded answer request. Refusal before budget or provider use. Schema-bounded requests. Shared request bounds. Per-client budget. Provider error mapping. |
 | `client.test.ts` | Full orchestration with a recorded model: answered, pre-check, model refusal, invalid plan, fabricated answer (none of its text rendered), outage. |
 | `oracle.test.ts` | All 24 evaluation questions with hand-written ideal answers meet their expectation and are never withheld. Scoring of fabrication and misgrounding. |
+| `commentary.test.ts` | Fixed queries; one answer-stage call; a faithful commentary renders the exact Phase 1 figures; a typed figure, "profit", advice and an uncited fact are each withheld by the intended gate; an outage leaves only the summary. |
 | `live-eval.test.ts` | Opt-in, billable live evaluation (3 repeats, both models). |
 
 ## Limitations
