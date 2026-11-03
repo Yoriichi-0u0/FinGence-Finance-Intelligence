@@ -1,5 +1,10 @@
 # DB04 / AI06 group integration candidate
 
+3 November hosted progress: [actual installation and seed acknowledgements](db04-group-hosted-installation.md)
+confirm the group schemas are now installed. Both restricted test roles remain disabled;
+AI06 hosted processing awaits private password provisioning. The earlier preparation and
+local-test statements below retain their original scope.
+
 3 November follow-up: [combined DB01–DB04 deployment review](db01-db04-group-approval.md)
 adds an explicitly separate, owner-review-only synthetic deployment package. It is not
 installed, does not provide real team authentication, and does not supersede the

@@ -1,0 +1,239 @@
+{
+  "date": "2026-11-03",
+  "target": {
+    "project": "FinGence-Production",
+    "projectRef": "zmtdozblpvtjniehwjrw",
+    "database": "postgres"
+  },
+  "reviewedCommit": "9fba183831f7a93325f4196c53d25495a7155342",
+  "access": "AUTHORIZED_CHROME_SUPABASE_SQL_EDITOR",
+  "databaseRole": "postgres",
+  "postgresVersion": "17.11",
+  "approval": {
+    "basis": "USER_ATTESTATION_OF_GROUP_OWNER_APPROVAL",
+    "sourceQuote": "The group owner has approved proceeding with my DB01 to DB04 and AI06 deployment into FinGence Production.",
+    "independentlySignedOwnerDocumentVerified": false,
+    "exactArtifactsMatched": true,
+    "restrictedSyntheticIdentities": true,
+    "privatePasswordProvisioning": true,
+    "syntheticBankLedgerScope": true,
+    "documentedRecoveryLimitations": true
+  },
+  "migrations": [
+    {
+      "file": "supabase/sql/db04-group-review/install-review.sql",
+      "sha256": "21ea11b4eaf63897e9379ee0cb6cefb3cc973662cdc65c733a3eb84ec60b6df9",
+      "status": "ACKNOWLEDGED_COMMITTED_AND_CATALOG_VERIFIED"
+    },
+    {
+      "file": "supabase/sql/db04-group-review/synthetic-seed-review.sql",
+      "sha256": "77ff0daa71cb64513d22b40244a6017081a821739905a5e466720d4148741e46",
+      "status": "ACKNOWLEDGED_COMMITTED_AND_CATALOG_VERIFIED"
+    },
+    {
+      "file": "supabase/sql/db04-group-review/activate-logins-review.sql",
+      "sha256": "f323717dbec88e6ef2ba2cc488a4ca9bac623919648c069d892fdc29ba56661e",
+      "status": "NOT_EXECUTED_PASSWORD_PROVISIONING_REQUIRED"
+    }
+  ],
+  "catalog": {
+    "reconciliationForcedRls": 11,
+    "immutableTriggers": 11,
+    "reconciliationTables": 11,
+    "wrongNumericTypes": 0,
+    "publicTables": 4,
+    "publicFinancialGrants": 0,
+    "indexes": 17,
+    "reconciliationRls": 11,
+    "foreignKeys": 23,
+    "unvalidatedConstraints": 0,
+    "syntheticTables": 5,
+    "unsafeSecurityDefiners": 0
+  },
+  "seed": {
+    "organizations": 2,
+    "users": 2,
+    "memberships": 2,
+    "organizationStates": 2,
+    "disabledRestrictedLogins": 2,
+    "brokerFinancialGrants": 0,
+    "runtimeFoundationGrants": 0
+  },
+  "hostedInstallationCatalogChecks": {
+    "passed": 23,
+    "failed": 0,
+    "checks": [
+      {
+        "id": "INSTALL_COMMIT_ACKNOWLEDGED",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "id": "PUBLIC_TABLES",
+        "expected": 4,
+        "observed": 4,
+        "passed": true
+      },
+      {
+        "id": "SYNTHETIC_TABLES",
+        "expected": 5,
+        "observed": 5,
+        "passed": true
+      },
+      {
+        "id": "RECONCILIATION_TABLES",
+        "expected": 11,
+        "observed": 11,
+        "passed": true
+      },
+      {
+        "id": "PUBLIC_RLS_ENABLED",
+        "expected": 4,
+        "observed": 4,
+        "passed": true
+      },
+      {
+        "id": "SYNTHETIC_RLS_ENABLED",
+        "expected": 5,
+        "observed": 5,
+        "passed": true
+      },
+      {
+        "id": "RECONCILIATION_RLS_ENABLED",
+        "expected": 11,
+        "observed": 11,
+        "passed": true
+      },
+      {
+        "id": "RECONCILIATION_RLS_FORCED",
+        "expected": 11,
+        "observed": 11,
+        "passed": true
+      },
+      {
+        "id": "UNVALIDATED_CONSTRAINTS",
+        "expected": 0,
+        "observed": 0,
+        "passed": true
+      },
+      {
+        "id": "RECONCILIATION_FOREIGN_KEYS",
+        "expected": 23,
+        "observed": 23,
+        "passed": true
+      },
+      {
+        "id": "RECONCILIATION_INDEXES",
+        "expected": 17,
+        "observed": 17,
+        "passed": true
+      },
+      {
+        "id": "IMMUTABLE_TRIGGERS",
+        "expected": 11,
+        "observed": 11,
+        "passed": true
+      },
+      {
+        "id": "PUBLIC_FINANCIAL_GRANTS",
+        "expected": 0,
+        "observed": 0,
+        "passed": true
+      },
+      {
+        "id": "UNSAFE_SECURITY_DEFINER_SEARCH_PATHS",
+        "expected": 0,
+        "observed": 0,
+        "passed": true
+      },
+      {
+        "id": "WRONG_NUMERIC_TYPES",
+        "expected": 0,
+        "observed": 0,
+        "passed": true
+      },
+      {
+        "id": "SEED_COMMIT_ACKNOWLEDGED",
+        "expected": true,
+        "observed": true,
+        "passed": true
+      },
+      {
+        "id": "SYNTHETIC_ORGANIZATIONS",
+        "expected": 2,
+        "observed": 2,
+        "passed": true
+      },
+      {
+        "id": "SYNTHETIC_USERS",
+        "expected": 2,
+        "observed": 2,
+        "passed": true
+      },
+      {
+        "id": "SYNTHETIC_MEMBERSHIPS",
+        "expected": 2,
+        "observed": 2,
+        "passed": true
+      },
+      {
+        "id": "SYNTHETIC_ORGANIZATION_STATES",
+        "expected": 2,
+        "observed": 2,
+        "passed": true
+      },
+      {
+        "id": "DISABLED_RESTRICTED_LOGINS",
+        "expected": 2,
+        "observed": 2,
+        "passed": true
+      },
+      {
+        "id": "BROKER_FINANCIAL_GRANTS",
+        "expected": 0,
+        "observed": 0,
+        "passed": true
+      },
+      {
+        "id": "RUNTIME_FOUNDATION_GRANTS",
+        "expected": 0,
+        "observed": 0,
+        "passed": true
+      }
+    ]
+  },
+  "hostedFinancialWorkflowChecksExecuted": 0,
+  "applicationRuntimeAuthentication": "NOT_TESTED_NOLOGIN",
+  "passwordProvisioning": "BLOCKED_OWNER_DATABASE_PASSWORD_UNAVAILABLE_OR_REJECTED",
+  "passwordProvisioningCompletionMarkerPresent": false,
+  "restrictedRuntimeConfigurationPresent": false,
+  "financialProcessing": "NOT_STARTED",
+  "bankLedgerFinancialWrites": 0,
+  "hostedE5InferenceExecuted": false,
+  "hostedOrganizationIsolationRuntimeTestExecuted": false,
+  "db01": "FOUNDATION_SCHEMA_INSTALLED",
+  "db02": "PERSISTENCE_SCHEMA_INSTALLED_PUBLIC_RUNTIME_ACCESS_CLOSED",
+  "db04": "ELEVEN_FORCED_RLS_TABLES_INSTALLED",
+  "ai06": "BLOCKED_RESTRICTED_CREDENTIALS_NOT_PROVISIONED",
+  "db03": {
+    "groupVersionVerified": "17.11",
+    "hostedBackupExportPerformed": false,
+    "hostedRestorePerformed": false,
+    "hostedRecoveryVerified": false,
+    "localReference": "PostgreSQL 18.6 recovery of all 20 synthetic tables; not proof of PostgreSQL 17.11 recovery"
+  },
+  "retryPolicy": "DO_NOT_RERUN_COMMITTED_INSTALL_OR_SEED; NO_UNCERTAIN_TRANSACTION_RETRY",
+  "unchanged": [
+    "Supabase Auth",
+    "Jason M2/M3 cybersecurity namespaces",
+    "frontend",
+    "Vercel",
+    "main",
+    "teammate branches",
+    "frozen AI01–AI05 evidence"
+  ],
+  "localTestReference": "db04-group-package-results.json: 641 passed / 0 failed / 1 skipped; historical local evidence, not hosted tests",
+  "verificationQueries": "db04-group-hosted-catalog-queries.sql",
+  "note": "RLS editor warning was reviewed against official Supabase source and the approved SQL; re-review allowed execution of the unchanged script. No DISABLE RLS statement was executed."
+}
