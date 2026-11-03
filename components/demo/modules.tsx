@@ -12,10 +12,15 @@ import { answerQuestion, suggestions, MAX_QUESTION, type QaAnswer } from '@/lib/
 import { qaFacts } from '@/lib/demo/questions';
 import { askGrounded, gatewayQaModel, qaGatewayStatus, type GroundedRun, type QaGatewayStatus } from '@/lib/grounded-qa/client';
 import { groundingIndex } from '@/lib/grounded-qa/tools';
+import { renderedText } from '@/lib/grounded-qa/commentary';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 import { GroundedAnswer } from './grounded-answer';
+<<<<<<< HEAD
 import { ReconciliationStatementPanel } from './reconciliation-statement';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
+=======
+import { AiCommentary } from './commentary';
+>>>>>>> origin/main
 import { useDemoProcessing } from './context';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, button, usesOwnDocuments, money, outflow, primaryButton } from './shared';
 
@@ -157,13 +162,18 @@ function Forecasting({ c }: { c: Ready }) {
 
 function Reports({ c }: { c: Ready }) {
     const s = c.scope, rep = c.outputs.report, r = c.outputs.reconciliation;
+    const [accepted, setAccepted] = useState<{ processingId: string; run: GroundedRun } | null>(null);
     function download() {
-        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
+        // An accepted AI commentary is included as rendered text with its citations and receipt; it is never a source of the figures.
+        const commentary = accepted?.processingId === c.processingId ? accepted.run : null;
+        const aiCommentary = commentary?.verdict?.sentences ? { model: commentary.receipts[0]?.model ?? null, sentences: renderedText(commentary.verdict.sentences), cites: commentary.verdict.cited.map(id => ({ id, label: commentary.facts.find(f => f.id === id)?.label ?? id })), receipts: commentary.receipts } : null;
+        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, ...(aiCommentary ? { aiCommentary } : {}), ...(c.outputs.statement ? { reconciliationStatement: c.outputs.statement } : {}), stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
         const a = document.createElement('a'); a.href = url; a.download = `fingence-summary-${c.processingId}.json`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     return <>
         <PageHeader title="Reports" description="Management summary generated from the same processing context as every other page." actions={<div className="flex flex-wrap gap-2 print:hidden"><button type="button" className={button} onClick={download}><Download aria-hidden="true" size={16} />JSON evidence</button><button type="button" className={primaryButton} onClick={() => window.print()}><Printer aria-hidden="true" size={16} />Print or save PDF</button></div>} />
         <SourceStrip context={c} />
+        <AiCommentary key={c.processingId} context={c} onResult={run => setAccepted(run ? { processingId: c.processingId, run } : null)} />
         <Panel title={`Management summary · ${s.businessName} · ${s.period}`} eyebrow={`${usesOwnDocuments(c) ? 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
             <div className="space-y-5 p-4 text-sm sm:p-5">
                 <section><h3 className="font-semibold">Sources</h3><ul className="mt-1 space-y-1 text-xs">{rep.sources.map(x => <li key={x.sha256} className="break-all">{x.role.replace('_', ' ').toLowerCase()}: {x.name} · SHA-256 {x.sha256}</li>)}</ul></section>

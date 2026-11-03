@@ -18,7 +18,7 @@ const bin = process.env.FINGENCE_TEST_PG_BIN ?? '/opt/homebrew/opt/postgresql@18
 describe.skipIf(!existsSync(exe('initdb')) || !existsSync(exe('pg_ctl')))('M5 native account administration concurrency', () => {
     let folder: string, pool: Pool, db: TransactionDatabase, started = false;
     let org: string, admin1: string, admin1Id: string, admin2: string, admin2Id: string, finance: string, financeId: string, batch: string, otherAdmin: string;
-    const password = 'Synthetic-native-M5-password', control = (...args: string[]) => execFileSync(exe('pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore' });
+    const password = 'Synthetic-native-M5-password', control = (...args: string[]) => execFileSync(exe('pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore', env: { ...process.env, LC_ALL: 'C' } }); // macOS postmaster refuses to start with no locale in the environment ("became multithreaded during startup").
     const service = () => createTenantAdministration(db), identity = () => createM2Identity(db);
     const login = async (email: string) => (await identity().login(email, password)).token;
     const version = async (userId: string) => (await pool.query<{ version: number }>('SELECT version FROM fingence_m2.memberships WHERE user_id=$1', [userId])).rows[0].version;

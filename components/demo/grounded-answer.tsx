@@ -38,16 +38,16 @@ function Sentence({ segments }: { segments: Segment[] }) {
 }
 
 /** One model-assisted answer. Anything but an accepted answer shows why, and the caller shows the rule-based answer. */
-export function GroundedAnswer({ run }: { run: GroundedRun }) {
+export function GroundedAnswer({ run, heading, fallback = 'The rule-based answer is shown below.' }: { run: GroundedRun; heading?: string; fallback?: string }) {
     const st = STATUS[run.status], v = run.verdict, sources = v?.sentences ? [...new Map(v.sentences.flat().flatMap(s => 'value' in s ? [[s.ref, s] as const] : [])).values()] : [];
     const cost = run.receipts.reduce((n, r) => n + (r.estimatedUsd ?? 0), 0), latency = run.receipts.reduce((n, r) => n + r.latencyMs, 0);
     return <div className="space-y-3">
-        <header className="flex flex-wrap items-center justify-between gap-2"><p className="text-[var(--muted)]">{run.question}</p><DecisionBadge decision={st.decision} label={st.label} /></header>
+        <header className="flex flex-wrap items-center justify-between gap-2"><p className="text-[var(--muted)]">{heading ?? run.question}</p><DecisionBadge decision={st.decision} label={st.label} /></header>
         {run.status === 'ANSWERED' && v?.sentences ? <p className="text-base leading-relaxed">{v.sentences.map((s, i) => <Sentence key={i} segments={s} />)}</p>
             : <p className="text-sm text-[var(--muted-strong)]">{run.status === 'REFUSED' && run.refusal ? `${REFUSAL[run.refusal.reason]} ${run.refusal.by === 'PRE_CHECK' ? 'Refused before any model call.' : 'The model declined to plan an answer.'}`
                 : run.status === 'INSUFFICIENT' ? `The verified facts do not answer this${v?.missing ? `: ${v.missing}` : '.'}`
                     : run.status === 'WITHHELD' ? `The model's answer did not pass the checks below, so it is not shown.`
-                        : `The AI service did not answer (${run.error ?? 'unavailable'}).`} The rule-based answer is shown below.</p>}
+                        : `The AI service did not answer (${run.error ?? 'unavailable'}).`} {fallback}</p>}
         {sources.length ? <div className="text-xs">
             <p className="font-semibold">Every highlighted figure was filled in by FinGence from these verified facts:</p>
             <ul className="mt-1 space-y-0.5 text-[var(--muted)]">{sources.map(s => <li key={s.ref}><strong className="text-[var(--muted-strong)]">{s.value}</strong> — {s.label}; source: {s.sources.slice(0, 4).map(x => x.id).join(', ')}{s.sources.length > 4 ? ` and ${s.sources.length - 4} more` : ''}</li>)}</ul>
@@ -55,7 +55,7 @@ export function GroundedAnswer({ run }: { run: GroundedRun }) {
         <details className="text-xs">
             <summary className="cursor-pointer font-semibold text-[var(--teal-dark)]"><Sparkles aria-hidden="true" size={12} className="mr-1 inline" />How this was answered</summary>
             <div className="mt-2 space-y-2">
-                {run.queries.length ? <p><span className="font-semibold">The model asked for:</span> {run.queries.map(describeQuery).join('; ')}.</p> : null}
+                {run.queries.length ? <p><span className="font-semibold">{run.planChecks.some(k => k.id === 'fixed-queries') ? 'FinGence ran:' : 'The model asked for:'}</span> {run.queries.map(describeQuery).join('; ')}.</p> : null}
                 <ul className="space-y-1">{[...run.planChecks, ...(v?.checks ?? [])].map(k => <li key={k.id} className="flex gap-2"><span aria-hidden="true" className={k.passed ? 'text-[var(--green)]' : 'text-amber-700'}>{k.passed ? '✓' : '!'}</span><span><strong>{k.label}</strong> <span className="sr-only">{k.passed ? 'passed' : 'not passed'}</span>· {k.detail}</span></li>)}</ul>
                 {run.receipts.length ? <p className="text-[var(--muted)]">{run.receipts.length} call{run.receipts.length === 1 ? '' : 's'} to {run.receipts[0].model} on Groq · {(latency / 1000).toFixed(1)} s · {run.receipts.map(r => `${r.inputTokens ?? '—'}/${r.outputTokens ?? '—'}`).join(' + ')} tokens · {usd(cost)}</p> : null}
             </div>
