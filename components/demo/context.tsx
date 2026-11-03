@@ -39,8 +39,8 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, children }:
     const [persisted, setPersisted] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [ai, setAi] = useState<GatewayStatus | null>(null);
-    const run = useRef(0);
-    useEffect(() => { if (enabled && aiGateway) void gatewayStatus().then(setAi); }, [enabled, aiGateway]);
+    const run = useRef(0), probe = useRef<Promise<GatewayStatus> | null>(null);
+    useEffect(() => { if (enabled && aiGateway) { probe.current = gatewayStatus(); void probe.current.then(setAi); } }, [enabled, aiGateway]);
 
     useEffect(() => {
         if (!enabled) return;
@@ -56,11 +56,14 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, children }:
         const current = ++run.current;
         writeStored(null); setContext(null); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
         try {
+            // If the server says AI is on but the browser's status check has not answered yet (a fast click after a
+            // fresh load), wait for it, so an unfamiliar document is never processed without the interpreter by accident.
+            const status = ai ?? (probe.current ? await probe.current : null);
             const result = await browserDemoRunner.run(inputs, async stage => {
                 if (current !== run.current) return;
                 setLiveStages(stages => [...stages, stage]);
                 await new Promise(resolve => setTimeout(resolve, 0));
-            }, { interpreter: ai?.available ? gatewayInterpreter : null });
+            }, { interpreter: status?.available ? gatewayInterpreter : null });
             if (current !== run.current) return null;
             const at = new Date().toISOString();
             const interpretations = Object.fromEntries(result.documents.flatMap(d => d.interpretation?.receipt ? [[d.sha256, { proposal: d.interpretation.proposal, receipt: d.interpretation.receipt }]] : []));
