@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { QaModel } from '../../lib/grounded-qa/client';
 import { COMMENTARY_QUESTION, commentaryQueries, renderedText, writeCommentary } from '../../lib/grounded-qa/commentary';
-import type { AskRequest } from '../../lib/grounded-qa/contracts';
+import { askRequestSchema, MAX_QUESTION, type AskRequest } from '../../lib/grounded-qa/contracts';
 import { preCheck } from '../../lib/grounded-qa/gates';
 import { groundingIndex, runQueries, type GroundingIndex } from '../../lib/grounded-qa/tools';
 import { InterpreterUnavailable } from '../../lib/interpretation/contracts';
@@ -16,7 +16,8 @@ beforeAll(async () => {
     id = label => facts.find(f => label.test(f.label))!.id;
 });
 /** A recorded model that writes the given sentences (built once the fact IDs are known). */
-const writes = (sentences: () => Sentence[], seen: AskRequest[] = []): QaModel => ({ async call(req) { seen.push(req); return { content: { answer: { kind: 'ANSWERED', sentences: sentences(), derived: [] } }, receipt }; } });
+// Every request must pass the gateway's own validation, exactly as `/api/ai/ask` applies it (a live call was refused once for a long question).
+const writes = (sentences: () => Sentence[], seen: AskRequest[] = []): QaModel => ({ async call(req) { if (!askRequestSchema.safeParse(req).success) throw Error('request the gateway would refuse'); seen.push(req); return { content: { answer: { kind: 'ANSWERED', sentences: sentences(), derived: [] } }, receipt }; } });
 const ideal = (): Sentence[] => {
     const cash = id(/^Cash summary/), rec = id(/^Reconciliation of/), anomalies = id(/^Anomaly review candidates/), forecast = id(/^Next-month cash baseline/);
     return [
@@ -31,6 +32,7 @@ describe('AI management commentary over verified facts', () => {
     it('FinGence chooses the queries; the question itself is never refused', () => {
         expect(commentaryQueries(index).map(q => q.tool)).toEqual(['cash_summary', 'reconciliation', 'anomalies', 'forecast']);
         expect(preCheck(COMMENTARY_QUESTION, [])).toBeNull();
+        expect(COMMENTARY_QUESTION.length).toBeLessThanOrEqual(MAX_QUESTION);
     });
     it('a faithful commentary is accepted and every figure is rendered by FinGence from the records', async () => {
         const seen: AskRequest[] = [];

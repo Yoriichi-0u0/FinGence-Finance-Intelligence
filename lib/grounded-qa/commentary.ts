@@ -11,7 +11,8 @@ import { verifyAnswer, type Segment } from './gates';
 import { catalogue, runQueries, type GroundingIndex } from './tools';
 import type { ToolCall } from './contracts';
 
-export const COMMENTARY_QUESTION = 'Write a short management commentary on this statement period for the business owner: the net cash movement with money in and money out, the bank-versus-ledger difference with how many items were matched and how many remain exceptions, how many anomaly review candidates there are, and the next-month cash baseline.';
+/** Sent as the answer-stage question, so it must fit the gateway's question bound (MAX_QUESTION). */
+export const COMMENTARY_QUESTION = 'Write a short management commentary on this period: net cash movement with money in and out, the bank-versus-ledger difference with matched and exception counts, the number of anomaly review candidates, and the next-month cash baseline.';
 
 export function commentaryQueries(index: GroundingIndex): ToolCall[] {
     return [
