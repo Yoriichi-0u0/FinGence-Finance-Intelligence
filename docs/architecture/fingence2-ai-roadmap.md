@@ -116,7 +116,7 @@ Each gate is computed from the original bytes, independently of the model:
 | Running balance | When a balance column exists, `balance[i] − balance[i−1] = signed[i]` for every row. This independently confirms amounts and direction. |
 | Sign confirmation | Each document's direction must be confirmed by the heading lexicon or by the running balance. If both exist and disagree → fail. |
 | Scope evidence | Every cited scope literal (business ID, name, currency, period) appears verbatim in the cited source line. Currency must be supported; the stated period must agree with the dates. |
-| Uniqueness | Record IDs are unique, or line-derived IDs are used, as disclosed. |
+| Uniqueness | Record IDs are unique, or line-derived IDs are used, as disclosed. If the proposal leaves the ID column unmapped, code adopts exactly one unmapped column whose heading names an identifier (Txn ID, Voucher No, Entry, No. Baucar…) and whose every value is a unique identifier, and discloses it. It never chooses between two candidates. This keeps the processing ID stable across live runs: on 3 Nov 2026 the model sometimes omitted the ledger's "Voucher No". |
 | Canonical round trip | The materialized canonical CSV goes through the Phase 1 normalizer and second parser, and its totals equal the totals computed directly from the source. |
 
 ## 5. Milestones

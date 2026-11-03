@@ -25,6 +25,8 @@ export type VerifiedInterpretation = {
 };
 
 const ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+/** Headings that name a record identifier (not a reference or cheque number, which are separate fields). */
+const ID_HEADING = /^\s*(?:(?:txn|transaction|trans|entry|voucher|journal|jv|record|line|posting)(?:\s*(?:id|no\.?|number|#))?|id|id transaksi|no\.?\s*(?:baucar|rekod|transaksi|kemasukan))\s*$/i;
 const ACCOUNT_HEADING = /^\s*(account|acct|akaun|gl account|account code|account no\.?|kod akaun)\b/i;
 const BALANCE_LINE = /\b(opening|closing|brought forward|carried forward|b\/f|c\/f|baki awal|baki akhir|baki dibawa)\b/i;
 const csvCell = (v: string) => /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
@@ -173,10 +175,20 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
             : vocabulary ? `Headings/tokens agree${balanceStatus === 'PASSED' ? ' and the running balance agrees' : ''}` : balanceStatus === 'PASSED' ? 'Opaque headings; confirmed by the running balance'
                 : rep === 'SIGNED_AMOUNT' ? 'The heading does not state which sign is cash in, and there is no running balance' : 'Opaque headings and no running balance: direction cannot be confirmed')) return result('Cash direction could not be confirmed independently.');
 
-    // 8. Identity and text fields.
-    const ids = c.recordId !== null ? body.map(r => cell(r.row, 'recordId')) : body.map(r => `L${r.line + 1}`);
-    if (c.recordId === null) disclosures.push('No record ID column; IDs are derived from source line numbers (L<line>).');
-    if (!gate('ids', 'Record identifiers are present and unique', ids.every(i => ID.test(i)) && new Set(ids).size === ids.length, c.recordId === null ? `${ids.length} line-derived IDs` : `${new Set(ids).size} unique of ${ids.length}`)) return result('Record identifiers are missing or duplicated.');
+    // 8. Identity and text fields. Record identity must not depend on whether the model noticed the ID column: an
+    // unmapped column whose heading names an identifier and whose every value is a unique identifier is adopted, so
+    // reprocessing the same document gives the same canonical rows (and processing ID) whichever proposal was made.
+    const columnValues = (i: number) => body.map(r => (r.row[i] ?? '').trim());
+    const evidentIds = c.recordId !== null ? [] : header.map((h, i) => i).filter(i => !indices.includes(i) && ID_HEADING.test(header[i] ?? ''))
+        .filter(i => { const v = columnValues(i); return v.every(x => ID.test(x)) && new Set(v).size === v.length; });
+    const recordId = c.recordId ?? (evidentIds.length === 1 ? evidentIds[0] : null);
+    if (c.recordId === null && recordId !== null) {
+        mapping.push({ field: 'recordId', column: recordId, heading: header[recordId], agreement: null });
+        disclosures.push(`Record ID column "${header[recordId]}" was not in the proposal; adopted because its heading names an identifier and all ${body.length} values are unique.`);
+    }
+    const ids = recordId !== null ? columnValues(recordId) : body.map(r => `L${r.line + 1}`);
+    if (recordId === null) disclosures.push(evidentIds.length > 1 ? `${evidentIds.length} columns could be the record ID (${evidentIds.map(i => `"${header[i]}"`).join(', ')}); IDs are derived from source line numbers (L<line>).` : 'No record ID column; IDs are derived from source line numbers (L<line>).');
+    if (!gate('ids', 'Record identifiers are present and unique', ids.every(i => ID.test(i)) && new Set(ids).size === ids.length, recordId === null ? `${ids.length} line-derived IDs` : `${new Set(ids).size} unique of ${ids.length}${c.recordId === null ? ` in adopted column "${header[recordId]}"` : ''}`)) return result('Record identifiers are missing or duplicated.');
     const references = body.map(r => cell(r.row, 'reference')), descriptions = body.map(r => cell(r.row, 'description'));
     const textOk = ledger ? references.every(v => v.length <= 64) && descriptions.every(v => v.length <= 300) : references.every(v => v && v.length <= 64) && descriptions.every(v => v && v.length <= 300);
     if (!gate('text', 'References and descriptions are usable', textOk, `${references.filter(Boolean).length} references, ${descriptions.filter(Boolean).length} descriptions`)) return result('References or descriptions are missing.');
@@ -230,7 +242,7 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
             : { BankTransactionID: ids[i], BusinessID: businessId!, BusinessName: (businessName ?? businessId!).slice(0, 120), AccountNumber: '', Currency: 'MYR', ValueDate: dates[i]!, StatementMonth: period, BankReference: references[i], BankDescription: descriptions[i], BankDirection: s < 0n ? 'Debit' : 'Credit', BankAmountMYR: cents(abs), SignedCashMovementMYR: cents(s), Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, SourceTransactionID: '' };
     });
     const bytes = new TextEncoder().encode(csv(ledger ? CANONICAL_LEDGER_HEADER : CANONICAL_BANK_HEADER, rows));
-    const mappingKey = JSON.stringify({ role: p.role, headerLine: p.headerLine, columns: c, representation: rep, tokens: { inflow: [...tokens.inflow].sort(), outflow: [...tokens.outflow].sort() }, dateFormat, numberFormat, businessId, currency, period });
+    const mappingKey = JSON.stringify({ role: p.role, headerLine: p.headerLine, columns: { ...c, recordId }, representation: rep, tokens: { inflow: [...tokens.inflow].sort(), outflow: [...tokens.outflow].sort() }, dateFormat, numberFormat, businessId, currency, period });
     return {
         decision: 'AUTO_ACCEPTED', role: p.role as 'BANK_STATEMENT' | 'GENERAL_LEDGER', checks, mapping, disclosures, mappingKey,
         summary: `${ledger ? 'Cash-account ledger' : 'Bank statement'}: ${body.length} transactions, ${businessId} · ${period} · MYR, net ${cents(net)}; ${checks.length} independent checks passed.`,
