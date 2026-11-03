@@ -46,6 +46,14 @@ describe('processing identity follows the verified content, not the proposal wor
         const a = await processDocuments(inputs, undefined, undefined, { interpreter: recorded }), b = await processDocuments(inputs, undefined, undefined, { interpreter: variant });
         expect(b.processingId).toBe(a.processingId);
     });
+    it('a proposal that leaves the record ID column unmapped gives the same processing ID (live M1 variance)', async () => {
+        const inputs = [unfamiliar('bank-statement-march-2026-export.csv'), unfamiliar('general-ledger-cash-march-2026.csv')];
+        const noIds: LayoutInterpreter = { async propose(e) { const p = structuredClone(CORRECT[e.fileName]); p.columns.recordId = null; return { proposal: wire(p), receipt }; } };
+        const a = await processDocuments(inputs, undefined, undefined, { interpreter: recorded }), b = await processDocuments(inputs, undefined, undefined, { interpreter: noIds });
+        expect(b.status).toBe(a.status);
+        expect(b.processingId).toBe(a.processingId);
+        expect(figures(b)).toEqual(figures(a));
+    });
 });
 
 describe('without a usable interpreter the Phase 1 behaviour is unchanged', () => {
