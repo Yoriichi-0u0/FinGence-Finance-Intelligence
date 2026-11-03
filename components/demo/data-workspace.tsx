@@ -23,7 +23,7 @@ async function hex(bytes: Uint8Array) {
 
 /** Phase 1 Data experience: select documents once, process once, inspect every stage's evidence. */
 export default function DemoDataWorkspace() {
-    const { status, context, liveStages, processedAt, persisted, error, process, clear, ai } = useDemoProcessing();
+    const { status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait } = useDemoProcessing();
     const [selected, setSelected] = useState<DocumentInput[]>([]);
     const [notice, setNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -96,6 +96,7 @@ export default function DemoDataWorkspace() {
                         </details> : null}
                     </li>)}
                 </ol>
+                {aiWait && status === 'processing' ? <p role="status" className="m-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-[var(--amber-soft)] p-3 text-sm"><LoaderCircle aria-hidden="true" className="shrink-0 animate-spin" size={16} />Waiting about {aiWait} s for the AI provider&apos;s per-minute limit before interpreting the next document.</p> : null}
                 {error ? <p role="alert" className="m-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p> : null}
             </Panel>
         </div>

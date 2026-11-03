@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { browserDemoRunner, type DocumentInput, type ProcessingContext, type Stage } from '@/lib/demo/pipeline';
-import { gatewayInterpreter, gatewayStatus, replayInterpreter, type GatewayStatus } from '@/lib/interpretation/client';
+import { createGatewayInterpreter, gatewayStatus, replayInterpreter, type GatewayStatus } from '@/lib/interpretation/client';
 import type { InterpretationResult } from '@/lib/interpretation/contracts';
 
 /**
@@ -18,6 +18,8 @@ type Value = {
     process: (inputs: DocumentInput[]) => Promise<ProcessingContext | null>; clear: () => void;
     /** The AI layout gateway, when the server has it enabled; null while unknown. */
     ai: GatewayStatus | null;
+    /** Seconds the browser is waiting for the AI provider's per-minute limit before retrying, or null. */
+    aiWait: number | null;
 };
 const DemoContext = createContext<Value | null>(null);
 
@@ -39,6 +41,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, children }:
     const [persisted, setPersisted] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [ai, setAi] = useState<GatewayStatus | null>(null);
+    const [aiWait, setAiWait] = useState<number | null>(null);
     const run = useRef(0), probe = useRef<Promise<GatewayStatus> | null>(null);
     useEffect(() => { if (enabled && aiGateway) { probe.current = gatewayStatus(); void probe.current.then(setAi); } }, [enabled, aiGateway]);
 
@@ -63,7 +66,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, children }:
                 if (current !== run.current) return;
                 setLiveStages(stages => [...stages, stage]);
                 await new Promise(resolve => setTimeout(resolve, 0));
-            }, { interpreter: status?.available ? gatewayInterpreter : null });
+            }, { interpreter: status?.available ? createGatewayInterpreter({ onWait: seconds => { if (current === run.current) setAiWait(seconds); } }) : null });
             if (current !== run.current) return null;
             const at = new Date().toISOString();
             const interpretations = Object.fromEntries(result.documents.flatMap(d => d.interpretation?.receipt ? [[d.sha256, { proposal: d.interpretation.proposal, receipt: d.interpretation.receipt }]] : []));
@@ -76,7 +79,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, children }:
         }
     }, [ai]);
     const clear = useCallback(() => { run.current++; writeStored(null); setContext(null); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
-    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null }), [enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai]);
+    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null, aiWait }), [enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait]);
     return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
 
