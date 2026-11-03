@@ -1,5 +1,15 @@
 # FinGence — current technical entrypoint
 
+## AI management commentary on Reports — 4 November 2026
+
+With the gateway on, Reports offers an AI-written commentary, built in `lib/grounded-qa/commentary.ts`:
+
+- FinGence runs fixed queries over the verified records;
+- one M2 answer-stage call words up to five sentences;
+- the M2 `verifyAnswer` gates fill every figure or withhold the text.
+
+The deterministic summary is unchanged. See the [M2 runbook](../integration/fingence2-ai-m2-grounded-qa.md).
+
 ## FinGence 2.0 AI M3 step 1: Excel workbooks — 4 November 2026
 
 `/data` accepts `.xlsx` files. Each worksheet holding a table becomes one document, converted to text deterministically by
