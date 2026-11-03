@@ -15,12 +15,9 @@ import { groundingIndex } from '@/lib/grounded-qa/tools';
 import { renderedText } from '@/lib/grounded-qa/commentary';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 import { GroundedAnswer } from './grounded-answer';
-<<<<<<< HEAD
 import { ReconciliationStatementPanel } from './reconciliation-statement';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
-=======
 import { AiCommentary } from './commentary';
->>>>>>> origin/main
 import { useDemoProcessing } from './context';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, button, usesOwnDocuments, money, outflow, primaryButton } from './shared';
 

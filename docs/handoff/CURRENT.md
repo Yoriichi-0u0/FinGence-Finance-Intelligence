@@ -1,6 +1,5 @@
 # FinGence — current technical entrypoint
 
-<<<<<<< HEAD
 ## Proposed bank reconciliation statement — 4 November 2026
 
 `lib/poc-reconciliation/statement.ts` (`buildStatement`, exposed as `ProcessingContext.outputs.statement`) classifies every open
@@ -18,7 +17,7 @@ Each item goes on the bank or ledger side, and three identities are proven: the 
 each record is listed once, and adjusted bank − adjusted ledger = unexplained. Matcher outcomes are unchanged and nothing is
 cleared or posted. On the Phase 1 sample both adjusted movements are MYR 29,644.41, with MYR 0.00 unexplained. The statement is
 shown on Reconciliation and in Reports.
-=======
+
 ## AI management commentary on Reports — 4 November 2026
 
 With the gateway on, Reports offers an AI-written commentary, built in `lib/grounded-qa/commentary.ts`:
@@ -28,7 +27,6 @@ With the gateway on, Reports offers an AI-written commentary, built in `lib/grou
 - the M2 `verifyAnswer` gates fill every figure or withhold the text.
 
 The deterministic summary is unchanged. See the [M2 runbook](../integration/fingence2-ai-m2-grounded-qa.md).
->>>>>>> origin/main
 
 ## FinGence 2.0 AI M3 step 1: Excel workbooks — 4 November 2026
 
