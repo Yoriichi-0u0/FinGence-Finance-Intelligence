@@ -60,12 +60,21 @@ let memory: MemoryCounterStore | null = null, memorySecret: string | null = null
 /** URL/token pairs, in precedence order: explicit FinGence names, then what Vercel's Upstash integration injects. */
 const STORE_ENV = [['FINGENCE_AI_BUDGET_REST_URL', 'FINGENCE_AI_BUDGET_REST_TOKEN'], ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'], ['KV_REST_API_URL', 'KV_REST_API_TOKEN']] as const;
 /**
+ * Vercel's Upstash integration can add a custom prefix (e.g. UPSTASH_FOR_REDIS_FREE_KV_REST_API_URL). Accept such a pair
+ * only when it is the ONLY prefixed store, and only its read/write token (never ..._KV_REST_API_READ_ONLY_TOKEN).
+ */
+function prefixedPair(): readonly [string, string] | undefined {
+    const pairs = Object.keys(process.env).filter(k => k.endsWith('_KV_REST_API_URL') && k !== 'KV_REST_API_URL')
+        .map(u => [u, `${u.slice(0, -'_KV_REST_API_URL'.length)}_KV_REST_API_TOKEN`] as const).filter(([u, t]) => process.env[u] && process.env[t]);
+    return pairs.length === 1 ? pairs[0] : undefined;
+}
+/**
  * The configured store: Redis REST from the first COMPLETE url+token pair (never a url from one pair with another's
  * token), https only; otherwise an in-process store, but only off Vercel. On a hosted deployment without a durable
  * store there is no gateway.
  */
 export function budgetStore(): { store: CounterStore; secret: string } | null {
-    const pair = STORE_ENV.find(([u, t]) => process.env[u] && process.env[t]);
+    const pair = STORE_ENV.find(([u, t]) => process.env[u] && process.env[t]) ?? prefixedPair();
     const url = pair ? process.env[pair[0]] : undefined, token = pair ? process.env[pair[1]] : undefined;
     if (url && token) return url.startsWith('https://') ? { store: new RedisRestCounterStore(url, token), secret: token } : null;
     if (process.env.VERCEL) return null;
