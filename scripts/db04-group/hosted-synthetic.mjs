@@ -5,6 +5,7 @@ import {resolve,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
+import {parseEnv} from 'node:util';
 import {Pool} from 'pg';
 import ts from 'typescript';
 let stage='APPROVAL';
@@ -21,16 +22,21 @@ try{
         ||approval.approved!==true||typeof approval.ownerApprovalReference!=='string'||!approval.ownerApprovalReference.trim()
         ||JSON.stringify(approval.sql)!==JSON.stringify(manifest.sql))throw Error('EXACT_OWNER_TEST_APPROVAL_REQUIRED');
     for(const file of manifest.sql)if(createHash('sha256').update(readFileSync(file.file)).digest('hex')!==file.sha256)throw Error('SQL_CHECKSUM_MISMATCH');
-    stage='PRIVATE_CONFIGURATION';process.loadEnvFile(configFile);
+    stage='PRIVATE_CONFIGURATION';
+    // Read the selected file explicitly: inherited values cannot replace its credentials.
+    // Do not copy owner credentials or unrelated variables into process.env/E5 children.
+    const privateConfig=parseEnv(readFileSync(configFile,'utf8'));
+    if(!privateConfig.DB04_GROUP_RUNTIME_URL||!privateConfig.DB04_GROUP_BROKER_URL||!privateConfig.DB04_GROUP_CA_FILE)
+        throw Error('RESTRICTED_CONFIGURATION_REQUIRED');
     registerHooks({resolve(specifier,context,next){if(specifier.startsWith('.')&&context.parentURL){const file=new URL(`${specifier}.ts`,context.parentURL);if(existsSync(file))return next(file.href,context);}return next(specifier,context);},
         load(url,context,next){if(url.endsWith('.ts'))return {format:'module',shortCircuit:true,source:ts.transpileModule(readFileSync(fileURLToPath(url),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText};return next(url,context);}});
     const {serverPoolConfig,transactionDatabase}=await import('../../lib/server/db/postgres.ts');
     const {assertGroupSyntheticTarget}=await import('../../lib/server/reconciliation/group-synthetic.ts');
     const {exerciseGroupSynthetic}=await import('../../lib/server/reconciliation/group-synthetic-scenario.ts');
     const {LocalE5Provider}=await import('../../lib/server/reconciliation/ai03/model-loader.ts');
-    const ca=process.env.DB04_GROUP_CA_FILE?readFileSync(process.env.DB04_GROUP_CA_FILE,'utf8'):undefined;
-    const financial=serverPoolConfig({SUPABASE_DATABASE_URL:process.env.DB04_GROUP_RUNTIME_URL,SUPABASE_DATABASE_CA_CERT:ca});
-    const broker={...serverPoolConfig({SUPABASE_DATABASE_URL:process.env.DB04_GROUP_BROKER_URL,SUPABASE_DATABASE_CA_CERT:ca}),max:2};
+    const ca=readFileSync(privateConfig.DB04_GROUP_CA_FILE,'utf8');
+    const financial=serverPoolConfig({SUPABASE_DATABASE_URL:privateConfig.DB04_GROUP_RUNTIME_URL,SUPABASE_DATABASE_CA_CERT:ca});
+    const broker={...serverPoolConfig({SUPABASE_DATABASE_URL:privateConfig.DB04_GROUP_BROKER_URL,SUPABASE_DATABASE_CA_CERT:ca}),max:2};
     assertGroupSyntheticTarget(financial,'runtime');assertGroupSyntheticTarget(broker,'broker');
     const runtimeRoot=resolve(process.env.DB04_E5_RUNTIME??'../ai03-runtime'),modelRoot=resolve(process.env.DB04_E5_MODEL??'../ai03-models/761b726dd34fb83930e26aab4e9ac3899aa1fa78');
     if(!existsSync(resolve(runtimeRoot,'node_modules/@huggingface/transformers/package.json'))||!existsSync(resolve(modelRoot,'onnx/model.onnx')))throw Error('OFFLINE_E5_UNAVAILABLE');

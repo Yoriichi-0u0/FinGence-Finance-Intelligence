@@ -69,6 +69,28 @@ const available=existsSync(join(process.env.DB03_PG_BIN??'C:/Program Files/Postg
         expect(r.proposals[0].decision).toBe('VERIFIED_SUGGESTION');expect(r.rankings).toHaveLength(1);expect(r.proposalVerifications).toHaveLength(1);
         expect(r.financialViews).toMatchObject({processingId:id,cashMovement:{net:'6380.53'},aiProposals:{approvedTransactions:0},forecast:{forecast:{status:'UNAVAILABLE'}},report:{processingId:id}});
     });
+    it.each([0,86400000,-86400000])('uses database-time admission with application clock offset %i ms',async offset=>{
+        const actualNow=Date.now.bind(Date),spy=vi.spyOn(Date,'now').mockImplementation(()=>actualNow()+offset);
+        try{await createGroupSyntheticAdmission(broker).withFinance('PRIMARY',async token=>{
+            const row=(await owner.query(`SELECT expires_at>clock_timestamp() AS live,
+              expires_at<=clock_timestamp()+interval '30 seconds' AS bounded,revoked
+              FROM fingence_db04_group_synthetic.sessions WHERE token_hash=$1`,[digest(token)])).rows[0];
+            expect(row).toEqual({live:true,bounded:true,revoked:false});
+        });}finally{spy.mockRestore();}
+    });
+    it.each([
+        ["clock_timestamp()+interval '30 seconds'",true],
+        ["clock_timestamp()+interval '31 seconds'",false],
+        ["clock_timestamp()-interval '1 second'",false],
+    ] as const)('enforces the unchanged database deadline boundary: %s',async(expression,accepted)=>{
+        const p=pool('db04_group_test_broker');const c=await p.connect();
+        try{await c.query('BEGIN');
+            const query=c.query(`SELECT * FROM fingence_db04_group_synthetic.issue_hosted_grant($1,$2,$3,$4,$5,${expression})`,
+                [digest(randomUUID()),randomUUID(),'urn:fingence:db04:group-synthetic:1','00000000-0000-4000-8000-000000000005',randomUUID()]);
+            if(accepted)expect((await query).rows).toHaveLength(1);
+            else await expect(query).rejects.toMatchObject({code:'42501'});
+        }finally{await c.query('ROLLBACK');c.release();await p.end();}
+    });
     it.skipIf(process.env.DB04_E5_SMOKE!=='1')('stores actual pinned offline E5 rankings and independent verification via the backend',async()=>{
         const e5=new LocalE5Provider(resolve('../ai03-runtime'),resolve('../ai03-models/761b726dd34fb83930e26aab4e9ac3899aa1fa78'));
         const r=await backend().process('PRIMARY',documents,e5);if(!r.supported)throw Error('Fixture unsupported');

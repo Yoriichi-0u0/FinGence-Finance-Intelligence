@@ -9,18 +9,23 @@ export const SYNTHETIC_ISSUER='urn:fingence:db04:group-synthetic:1';
 export const SYNTHETIC_ROLES={runtime:'db04_group_test_runtime',broker:'db04_group_test_broker'} as const;
 const subjects={PRIMARY:'00000000-0000-4000-8000-000000000005',OTHER:'00000000-0000-4000-8000-000000000006'} as const;
 export type SyntheticActor=keyof typeof subjects;
+const issueGrantSql="SELECT * FROM fingence_db04_group_synthetic.issue_hosted_grant($1,$2,$3,$4,$5,clock_timestamp()+interval '30 seconds')";
 
 /** Operator-only fixed target check. Does not establish approval or authenticate.
- * No pooler fallback, personal credentials or environment-name trust. */
+ * Exact Direct or Session endpoints only; no connection fallback. */
 export function assertGroupSyntheticTarget(config:PoolConfig,kind:keyof typeof SYNTHETIC_ROLES){
-    if(config.host!==`db.${GROUP_PROJECT}.supabase.co`||config.port!==5432||config.database!=='postgres'
-        ||config.user!==SYNTHETIC_ROLES[kind]||typeof config.ssl!=='object'||!config.ssl||config.ssl.rejectUnauthorized!==true)
+    const direct=config.host===`db.${GROUP_PROJECT}.supabase.co`&&config.user===SYNTHETIC_ROLES[kind];
+    const session=config.host==='aws-0-ap-southeast-1.pooler.supabase.com'&&config.user===`${SYNTHETIC_ROLES[kind]}.${GROUP_PROJECT}`;
+    if((!direct&&!session)||config.port!==5432||config.database!=='postgres'
+        ||typeof config.ssl!=='object'||!config.ssl||config.ssl.rejectUnauthorized!==true
+        ||!config.ssl.ca||config.ssl.checkServerIdentity!==undefined
+        ||(config.ssl.servername!==undefined&&config.ssl.servername!==config.host))
         throw Error('APPROVED_GROUP_SYNTHETIC_TARGET_REQUIRED');
 }
 /** No caller can select the identity schema or issue financial SQL through this adapter. */
 export function restrictedSyntheticBroker(db:TransactionDatabase):TransactionDatabase{
     return {close:()=>db.close(),transaction:(work,options)=>db.transaction(tx=>work({query:(sql,values)=>{
-        if(!['SELECT * FROM fingence_db04_group_synthetic.issue_hosted_grant($1,$2,$3,$4,$5,$6)',
+        if(![issueGrantSql,
             'SELECT fingence_db04_group_synthetic.revoke_hosted_grant($1)'].includes(sql))throw Error('SYNTHETIC_BROKER_OPERATION_DENIED');
         return tx.query(sql,values);
     }}),options)};
@@ -38,8 +43,10 @@ export function createGroupSyntheticAdmission(broker:TransactionDatabase):Financ
     return {async withFinance(actor,operation){
         if(!Object.hasOwn(subjects,actor))throw Error('SYNTHETIC_ACTOR_DENIED');
         const token=randomBytes(32).toString('base64url'),hash=createHash('sha256').update(token).digest('hex');
-        await broker.transaction(tx=>tx.query('SELECT * FROM fingence_db04_group_synthetic.issue_hosted_grant($1,$2,$3,$4,$5,$6)',
-            [hash,randomUUID(),SYNTHETIC_ISSUER,subjects[actor],randomUUID(),new Date(Date.now()+30000).toISOString()]));
+        // Evaluate expiry on the same database clock used by the unchanged guard.
+        // The caller cannot supply a deadline or extend the 30-second maximum.
+        await broker.transaction(tx=>tx.query(issueGrantSql,
+            [hash,randomUUID(),SYNTHETIC_ISSUER,subjects[actor],randomUUID()]));
         let failed=false;
         try{return await operation(token);}catch(error){failed=true;throw error;}
         finally{try{await broker.transaction(tx=>tx.query('SELECT fingence_db04_group_synthetic.revoke_hosted_grant($1)',[hash]));}
