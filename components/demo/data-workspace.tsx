@@ -1,13 +1,16 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { FileSpreadsheet, LoaderCircle, Play, RotateCcw, Upload } from 'lucide-react';
+import { FileSpreadsheet, LoaderCircle, Play, RotateCcw, Sparkles, Upload } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
 import { STAGE_TITLES, type DocumentInput, type StageId } from '@/lib/demo/pipeline';
 import { useDemoProcessing } from './context';
+import { InterpretationPanel } from './interpretation-panel';
 import { DecisionBadge, PendingBadge, Stat, Table, button, money, primaryButton } from './shared';
 
 const SAMPLE = ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
+/** The same fictional transactions in unfamiliar layouts (needs the AI gateway), plus the canonical history for the forecast. */
+const UNFAMILIAR = ['unfamiliar/bank-statement-march-2026-export.csv', 'unfamiliar/general-ledger-cash-march-2026.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
 const ROLE: Record<string, string> = { BANK_STATEMENT: 'Bank statement', GENERAL_LEDGER: 'General ledger (cash account)', BANK_HISTORY: 'Bank transaction history' };
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 
@@ -18,20 +21,21 @@ async function hex(bytes: Uint8Array) {
 
 /** Phase 1 Data experience: select documents once, process once, inspect every stage's evidence. */
 export default function DemoDataWorkspace() {
-    const { status, context, liveStages, processedAt, persisted, error, process, clear } = useDemoProcessing();
+    const { status, context, liveStages, processedAt, persisted, error, process, clear, ai } = useDemoProcessing();
     const [selected, setSelected] = useState<DocumentInput[]>([]);
     const [notice, setNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const busy = status === 'processing' || loading;
 
-    async function loadSample() {
+    async function loadSample(paths = SAMPLE) {
         setLoading(true); setNotice(null);
         try {
-            const manifest = await (await fetch('/demo/manifest.json', { cache: 'no-store' })).json() as { files: Record<string, { sha256: string }> };
-            const files = await Promise.all(SAMPLE.map(async name => {
-                const bytes = new Uint8Array(await (await fetch(`/demo/${name}`, { cache: 'no-store' })).arrayBuffer());
+            const manifests = Object.fromEntries(await Promise.all(['', 'unfamiliar/'].map(async dir => [dir, (await (await fetch(`/demo/${dir}manifest.json`, { cache: 'no-store' })).json() as { files: Record<string, { sha256: string }> }).files] as const)));
+            const files = await Promise.all(paths.map(async path => {
+                const bytes = new Uint8Array(await (await fetch(`/demo/${path}`, { cache: 'no-store' })).arrayBuffer());
+                const [dir, name] = path.includes('/') ? [path.slice(0, path.lastIndexOf('/') + 1), path.slice(path.lastIndexOf('/') + 1)] : ['', path];
                 // The published manifest pins each sample's bytes; a mismatch is reported instead of processed as the sample.
-                if (manifest.files[name]?.sha256 !== await hex(bytes)) throw Error(name);
+                if (manifests[dir]?.[name]?.sha256 !== await hex(bytes)) throw Error(name);
                 return { name, bytes, provenance: 'PUBLIC_SYNTHETIC_SAMPLE' as const };
             }));
             setSelected(files);
@@ -52,16 +56,19 @@ export default function DemoDataWorkspace() {
         <div role="note" aria-label="Public prototype data notice" className="mb-5 space-y-1.5 rounded-lg border border-amber-200 bg-[var(--amber-soft)] p-3 text-sm">
             <p><strong>Public prototype: do not submit confidential or real financial documents.</strong> The built-in sample documents are fictional.</p>
             <p>If you choose your own CSV files, they are read and processed locally in this browser and are not uploaded to a server. Their contents are kept temporarily in this tab&apos;s sessionStorage so results survive a reload, until you press Clear results or close the tab.</p>
-            <p>Roles and columns are recognised by fixed schema rules and every figure is computed deterministically. This is not live AI inference.</p>
+            {ai?.available
+                ? <p><strong>AI layout interpretation is on.</strong> Documents in the supported layouts are recognised by fixed schema rules. For an unfamiliar layout, its headings, column profiles and a few sample lines (never the whole file) are sent through the FinGence server to {ai.model} on Groq, which proposes the layout. Deterministic checks on every row of the original file decide whether it is accepted; the model never supplies an amount, and every figure is computed in this browser.</p>
+                : <p>Roles and columns are recognised by fixed schema rules and every figure is computed deterministically. This is not live AI inference.</p>}
         </div>
         <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <Panel title="1. Documents" eyebrow="Input">
                 <div className="space-y-4 p-4 sm:p-5">
                     <div className="flex flex-wrap gap-2">
                         <button type="button" className={button} disabled={busy} onClick={() => void loadSample()}><FileSpreadsheet aria-hidden="true" size={16} />Use synthetic sample documents</button>
+                        {ai?.available ? <button type="button" className={button} disabled={busy} onClick={() => void loadSample(UNFAMILIAR)}><Sparkles aria-hidden="true" size={16} />Use unfamiliar-layout samples (AI)</button> : null}
                         <label className={`${button} cursor-pointer`}><Upload aria-hidden="true" size={16} />Choose CSV files<input className="sr-only" type="file" accept=".csv,text/csv" multiple disabled={busy} onChange={e => { void choose(e.target.files); e.target.value = ''; }} /></label>
                     </div>
-                    <p className="text-xs text-[var(--muted)]">Sample: a fictional bank statement and cash-account ledger for March 2026, plus 12 months of bank history (generated by <code>scripts/generate-demo-documents.mjs</code>). You may instead choose your own CSVs in the same layouts; you do not need to label them. Use only fictional or non-confidential test data.</p>
+                    <p className="text-xs text-[var(--muted)]">Sample: a fictional bank statement and cash-account ledger for March 2026, plus 12 months of bank history (generated by <code>scripts/generate-demo-documents.mjs</code>). You may instead choose your own CSVs in the same layouts; you do not need to label them. Use only fictional or non-confidential test data.{ai?.available ? ' The unfamiliar-layout samples are the same fictional transactions exported with other headings, date and number formats; they are read by the AI interpreter and must give exactly the same results.' : ''}</p>
                     {notice ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{notice}</p> : null}
                     {selected.length ? <ul aria-label="Selected documents" className="space-y-2">{selected.map(d => <li key={d.name} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"><span className="min-w-0 break-all">{d.name}</span><span className="shrink-0 text-xs text-[var(--muted)]">{kb(d.bytes.byteLength)} · {d.provenance === 'PUBLIC_SYNTHETIC_SAMPLE' ? 'sample' : 'yours'}</span></li>)}</ul>
                         : <p className="text-sm text-[var(--muted)]">No documents selected.</p>}
@@ -98,6 +105,7 @@ export default function DemoDataWorkspace() {
                     <code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>,
                 ])} />
             </Panel>
+            <InterpretationPanel context={context} />
             {scope && out?.reconciliation && out.totals ? <Panel title="4. Verified outputs" eyebrow={`${scope.businessName} · ${scope.period} · ${scope.currency}`}>
                 <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
                     <Stat label="Net signed bank movement" value={money(scope.currency, out.totals.net)} detail={`${out.totals.rows} bank records`} />
