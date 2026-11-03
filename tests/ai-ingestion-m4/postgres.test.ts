@@ -15,7 +15,8 @@ const bin = process.env.FINGENCE_TEST_PG_BIN ?? '/opt/homebrew/opt/postgresql@18
 describe.skipIf(!existsSync(join(bin, 'initdb')))('M4 native provider-boundary isolation (transport doubles only)', () => {
     let folder: string, pool: Pool, db: TransactionDatabase, started = false, user: string, org: string;
     const password = 'Synthetic-native-M4-password', bytes = readFileSync('synthetic/m2/verified-mixed.csv');
-    const control = (...args: string[]) => execFileSync(join(bin, 'pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore' });
+    // macOS postmaster refuses to start with no locale in the environment ("became multithreaded during startup").
+    const control = (...args: string[]) => execFileSync(join(bin, 'pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore', env: { ...process.env, LC_ALL: 'C' } });
     beforeAll(async () => { folder = mkdtempSync(join(tmpdir(), 'fingence-m4-native-')); execFileSync(join(bin, 'initdb'), ['-D', folder, '-U', 'postgres', '-A', 'trust', '--no-locale', '-E', 'UTF8'], { stdio: 'ignore' }); const server = createServer(); await new Promise<void>(r => server.listen(0, '127.0.0.1', r)); const port = (server.address() as {
         port: number;
     }).port; await new Promise<void>(r => server.close(() => r())); control('-l', join(folder, 'log'), '-o', `-h 127.0.0.1 -p ${port}`, '-w', 'start'); started = true; pool = new Pool({ host: '127.0.0.1', port, user: 'postgres', database: 'postgres', max: 1, statement_timeout: 5000 }); db = transactionDatabase(pool); await pool.query('CREATE ROLE anon;CREATE ROLE authenticated'); await pool.query(readFileSync('supabase/sql/v2-verified-document-local.sql', 'utf8')); await installM2Schema(db); const a = await provisionM2Account(db, { email: 'native@m4.invalid', password, organizationName: 'Native M4' }); user = a.userId; org = a.organizationId; await installM3Schema(db); await installM4Schema(db); await installM4Schema(db); }, 60000);
