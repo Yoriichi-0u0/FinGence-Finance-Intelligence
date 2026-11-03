@@ -17,6 +17,8 @@ import { syntheticResult, header } from "./fixtures";
 const binaries = process.env.FINGENCE_TEST_PG_BIN ?? (process.platform === "win32" ? "C:\\Program Files\\PostgreSQL\\18\\bin" : "/opt/homebrew/opt/postgresql@18/bin");
 const executable = (name: string) => join(binaries, name + (process.platform === "win32" ? ".exe" : ""));
 const available = existsSync(executable("initdb")) && existsSync(executable("pg_ctl"));
+// macOS postmaster refuses to start with no locale in the environment ("became multithreaded during startup").
+const pgEnv = { ...process.env, LC_ALL: "C" };
 const suite = available ? describe : describe.skip;
 suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", () => {
   let directory: string, port: number, pool: Pool, started = false;
@@ -51,7 +53,7 @@ suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", 
     // Windows server descendants can retain pipe handles after pg_ctl exits.
     // Use the log file plus ignored stdio so startup cannot wait on inherited pipes.
     started = true;
-    execFileSync(executable("pg_ctl"), ["-D", directory, "-l", join(directory, "test-server.log"), "-o", `-h 127.0.0.1 -p ${port}`, "-w", "-t", "30", "start"], { windowsHide: true, timeout: 35000, stdio: "ignore" });
+    execFileSync(executable("pg_ctl"), ["-D", directory, "-l", join(directory, "test-server.log"), "-o", `-h 127.0.0.1 -p ${port}`, "-w", "-t", "30", "start"], { windowsHide: true, env: pgEnv, timeout: 35000, stdio: "ignore" });
     pool = makePool();
     await pool.query("CREATE ROLE anon; CREATE ROLE authenticated;");
     for (const path of ["../../supabase/sql/phase1-clean-setup.sql", "../../supabase/sql/c3b1-grouped-persistence-upgrade.sql"]) {
@@ -64,7 +66,7 @@ suite("native disposable PostgreSQL: C3-B1 concurrency and production adapter", 
   });
   afterAll(async () => {
     await Promise.all(pools.map(value => value.end()));
-    if (started && existsSync(join(directory, "postmaster.pid"))) execFileSync(executable("pg_ctl"), ["-D", directory, "-m", "fast", "-w", "-t", "20", "stop"], { windowsHide: true, timeout: 25000, stdio: "ignore" });
+    if (started && existsSync(join(directory, "postmaster.pid"))) execFileSync(executable("pg_ctl"), ["-D", directory, "-m", "fast", "-w", "-t", "20", "stop"], { windowsHide: true, env: pgEnv, timeout: 25000, stdio: "ignore" });
     // Only remove the exact fresh temporary cluster created by this suite.
     if (directory) {
       const child = relative(resolve(tmpdir()), resolve(directory));
