@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 import { CASH_SOURCE_FIELDS, normalizeCashSourceBytes, reconcileCashSources } from '../poc-reconciliation/engine';
 import type { CashSource, FinancePoCReconciliationV1, ReconciliationStatus } from '../poc-reconciliation/contracts';
+import { buildStatement, type ReconciliationStatement } from '../poc-reconciliation/statement';
 import { EVALUATOR_COLUMNS, parseSource, SourceError, fromCents, toCents, type SourceRow } from '../poc-anomalies/source';
 import { detectAnomalies, DETECTOR_VERSION, type Candidate } from '../poc-anomalies/detector';
 import { readReconciliation, type ReconciliationView } from '../poc-anomalies/reconciliation';
@@ -57,6 +58,8 @@ export type ProcessingContext = {
     outputs: {
         bank: CashSource | null; ledger: CashSource | null; bankRows: SourceRow[];
         reconciliation: FinancePoCReconciliationV1 | null; reconciliationView: ReconciliationView;
+        /** Proposed bank reconciliation statement: every exception classified by a stated rule; nothing is cleared. */
+        statement: ReconciliationStatement | null;
         totals: BankTotals | null; anomalies: Candidate[]; history: { accepted: boolean; rows: SourceRow[]; months: string[] };
         forecast: BusinessForecast | null; report: ManagementSummary | null;
     };
@@ -126,7 +129,7 @@ async function processingIdentity(digest: Digest, parts: string[]) {
 export async function processDocuments(inputs: DocumentInput[], digest: Digest = sha256Hex, onStage?: (stage: Stage) => void | Promise<void>, options: ProcessingOptions = {}): Promise<ProcessingContext> {
     const stages: Stage[] = [], quarantine: Quarantined[] = [];
     const emit = async (id: StageId, decision: Decision, method: string, summary: string, checks: Check[]) => { const stage = { id, title: STAGE_TITLES[id], decision, method, summary, checks }; stages.push(stage); await onStage?.(stage); return stage; };
-    const outputs: ProcessingContext['outputs'] = { bank: null, ledger: null, bankRows: [], reconciliation: null, reconciliationView: { status: 'UNAVAILABLE', reason: 'Documents were not processed.' }, totals: null, anomalies: [], history: { accepted: false, rows: [], months: [] }, forecast: null, report: null };
+    const outputs: ProcessingContext['outputs'] = { bank: null, ledger: null, bankRows: [], reconciliation: null, reconciliationView: { status: 'UNAVAILABLE', reason: 'Documents were not processed.' }, statement: null, totals: null, anomalies: [], history: { accepted: false, rows: [], months: [] }, forecast: null, report: null };
     const conventions = ['Bank: Credit adds cash, Debit removes cash; SignedCashMovementMYR must equal the signed BankAmountMYR.', 'Ledger: cash account 1000-BANK; Debit adds cash, Credit removes cash; SignedCashMovementMYR must equal Debit − Credit.', 'Currency MYR only; no foreign-exchange conversion.'];
     const finish = async (status: ProcessingContext['status'], scope: ProcessingContext['scope']) => {
         // An AI-interpreted document is identified by its bytes AND the accepted mapping, so a different accepted reading is a different processing.
@@ -276,7 +279,7 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     // 5. Reconcile with the shared deterministic matcher, then re-validate the snapshot independently.
     const snapshot = reconcileCashSources(DEMO_ORGANIZATION, bank, ledger);
     const view = readReconciliation(snapshot, { ...scope, bankSha256: bank.sha256 });
-    outputs.reconciliation = snapshot; outputs.reconciliationView = view;
+    outputs.reconciliation = snapshot; outputs.reconciliationView = view; outputs.statement = buildStatement(snapshot);
     const matched = (s: ReconciliationStatus) => s === 'MATCH_EXACT' || s === 'MATCH_DATE_SHIFT';
     for (const r of snapshot.results.filter(r => !matched(r.status))) quarantine.push({ kind: 'RECONCILIATION_EXCEPTION', reference: r.bankRecordId ?? r.ledgerRecordIds.join(', '), status: r.status, reason: r.reason });
     const exceptions = snapshot.results.filter(r => !matched(r.status)).length;

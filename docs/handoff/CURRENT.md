@@ -1,5 +1,23 @@
 # FinGence — current technical entrypoint
 
+## Proposed bank reconciliation statement — 4 November 2026
+
+`lib/poc-reconciliation/statement.ts` (`buildStatement`, exposed as `ProcessingContext.outputs.statement`) classifies every open
+exception by a stated deterministic rule:
+
+- deposit in transit;
+- unpresented cheque;
+- bank charge, receipt or payment not in the ledger;
+- ledger amount error (with a transposition hint);
+- duplicate ledger posting;
+- reference-only;
+- otherwise UNEXPLAINED.
+
+Each item goes on the bank or ledger side, and three identities are proven: the exceptions' effects equal the difference,
+each record is listed once, and adjusted bank − adjusted ledger = unexplained. Matcher outcomes are unchanged and nothing is
+cleared or posted. On the Phase 1 sample both adjusted movements are MYR 29,644.41, with MYR 0.00 unexplained. The statement is
+shown on Reconciliation and in Reports.
+
 ## FinGence 2.0 AI M3 step 1: Excel workbooks — 4 November 2026
 
 `/data` accepts `.xlsx` files. Each worksheet holding a table becomes one document, converted to text deterministically by
