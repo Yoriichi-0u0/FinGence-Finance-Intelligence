@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Download, Printer, Send } from 'lucide-react';
 import { LineChart } from '@/components/charts';
 import { PageHeader, Panel } from '@/components/ui';
@@ -10,7 +10,11 @@ import { cashTotals } from '@/lib/poc-insights/model';
 import { reconciliationStatuses, type ReconciliationStatus } from '@/lib/poc-reconciliation/contracts';
 import { answerQuestion, suggestions, MAX_QUESTION, type QaAnswer } from '@/lib/poc-finance-qa/answer';
 import { qaFacts } from '@/lib/demo/questions';
+import { askGrounded, gatewayQaModel, qaGatewayStatus, type GroundedRun, type QaGatewayStatus } from '@/lib/grounded-qa/client';
+import { groundingIndex } from '@/lib/grounded-qa/tools';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
+import { GroundedAnswer } from './grounded-answer';
+import { useDemoProcessing } from './context';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, button, usesOwnDocuments, money, outflow, primaryButton } from './shared';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
@@ -173,30 +177,62 @@ function Reports({ c }: { c: Ready }) {
 }
 
 const DEMO_LINK: Record<string, string> = { '/transactions': '/transactions', '/anomalies': '/anomalies', '/reconciliation': '/reconciliation', '/forecasting': '/forecasting' };
+/** The rule-based answer card (Phase 1); also the fallback under any AI answer that is not accepted. */
+function RuleAnswer({ a, href }: { a: QaAnswer; href: (h: string) => string }) {
+    return <>
+        <header className="flex flex-wrap items-center justify-between gap-2"><p className="text-[var(--muted)]">{a.question}</p><DecisionBadge decision={a.status === 'ANSWERED' ? 'AUTO_ACCEPTED' : a.status === 'REFUSED' ? 'QUARANTINED' : 'UNAVAILABLE'} label={a.status === 'ANSWERED' ? 'Answered from source' : a.status === 'REFUSED' ? 'Refused' : 'Unavailable'} /></header>
+        <p className="mt-2 text-base font-semibold">{a.headline}</p><p className="mt-1 leading-relaxed text-[var(--muted-strong)]">{a.interpretation}</p>
+        {a.facts.length ? <dl className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{a.facts.filter(f => f.unit !== 'TEXT').map(f => <div key={f.id} className="rounded-lg bg-slate-50 px-3 py-2"><dt className="text-xs text-[var(--muted)]">{f.label}</dt><dd className="font-semibold tabular-nums">{f.unit === 'MONEY' ? money(f.currency ?? '', f.value) : f.unit === 'PERCENT' ? `${f.value}%` : f.value}</dd></div>)}</dl> : null}
+        {a.evidence.length ? <p className="mt-3 flex flex-wrap gap-3 text-xs">{a.evidence.map(e => <Link key={e.label} href={href(e.href)} className="font-semibold text-[var(--teal-dark)] underline">{e.label}</Link>)}</p> : null}
+    </>;
+}
+type AskItem = { key: number } & ({ kind: 'RULE'; answer: QaAnswer } | { kind: 'AI'; question: string; run: GroundedRun | null; fallback: QaAnswer });
 function Ask({ c }: { c: Ready }) {
-    const facts = useMemo(() => qaFacts(c), [c]), [answers, setAnswers] = useState<QaAnswer[]>([]), [question, setQuestion] = useState('');
+    const facts = useMemo(() => qaFacts(c), [c]), index = useMemo(() => groundingIndex(c), [c]);
+    const [items, setItems] = useState<AskItem[]>([]), [question, setQuestion] = useState(''), [busy, setBusy] = useState(false);
+    const [ai, setAi] = useState<QaGatewayStatus>({ available: false }), [mode, setMode] = useState<'RULES' | 'AI'>('RULES'), next = useRef(0);
+    // Probe the Q&A route only when the layout gateway already answered (same switch); otherwise nothing is requested.
+    const gateway = useDemoProcessing().ai?.available ?? false;
+    useEffect(() => { let live = true; if (gateway) qaGatewayStatus().then(s => { if (live) setAi(s); }); return () => { live = false; }; }, [gateway]);
     if (!facts) return <Unavailable title="Questions unavailable" detail="The processing context has no verified facts." />;
-    const ask = (q: string) => { if (!q.trim() || q.length > MAX_QUESTION) return; setAnswers(list => [answerQuestion(facts, q), ...list].slice(0, 8)); setQuestion(''); };
+    const aiMode = mode === 'AI' && ai.available && !!index;
+    const ask = async (q: string) => {
+        if (!q.trim() || q.length > MAX_QUESTION || busy) return;
+        const key = next.current++; setQuestion('');
+        if (!aiMode) { setItems(list => [{ key, kind: 'RULE' as const, answer: answerQuestion(facts, q) }, ...list].slice(0, 8)); return; }
+        setBusy(true);
+        setItems(list => [{ key, kind: 'AI' as const, question: q, run: null, fallback: answerQuestion(facts, q) }, ...list].slice(0, 8));
+        const run = await askGrounded(index!, q, gatewayQaModel);
+        setItems(list => list.map(i => i.key === key && i.kind === 'AI' ? { ...i, run } : i)); setBusy(false);
+    };
     // Evidence links point at this demo's pages; the management report lives on Reports here.
     const href = (h: string) => h.includes('#management-report') ? '/reports' : DEMO_LINK[h.split(/[?#]/)[0]] ?? '/data';
     return <>
-        <PageHeader title="Finance Q&A" description="Rule-based answers from the verified processing context. Unsupported questions are refused rather than answered with invented figures." />
-        <p className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--teal-soft)] p-3 text-sm"><strong>Rule-based source assistant, not live AI.</strong> A fixed set of question types is answered with figures copied from this processing; profit, ratio, advice, fraud and cause questions are refused.</p>
+        <PageHeader title="Finance Q&A" description={aiMode ? 'AI-assisted answers grounded in the verified processing context. Every figure is filled in from the records; answers that fail the checks are withheld.' : 'Rule-based answers from the verified processing context. Unsupported questions are refused rather than answered with invented figures.'} />
+        {aiMode ? <p className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--teal-soft)] p-3 text-sm"><strong>AI-assisted ({ai.available ? ai.model : ''} on Groq), verified by deterministic checks.</strong> The model chooses which verified queries to run and words the answer; it never types an amount, date or reference. FinGence fills every figure from the records and withholds any answer that fails a check. Sent: {ai.available ? ai.sends : ''}</p>
+            : <p className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--teal-soft)] p-3 text-sm"><strong>Rule-based source assistant, not live AI.</strong> A fixed set of question types is answered with figures copied from this processing; profit, ratio, advice, fraud and cause questions are refused.</p>}
         <SourceStrip context={c} />
         <Panel>
             <div className="space-y-3 p-4 sm:p-5">
-                <div aria-label="Suggested questions" className="flex flex-wrap gap-2">{suggestions(facts).map(q => <button key={q} type="button" className={button} onClick={() => ask(q)}>{q}</button>)}</div>
-                <form className="flex flex-col gap-2 sm:flex-row" onSubmit={e => { e.preventDefault(); ask(question); }}><label className="sr-only" htmlFor="demo-question">Question</label><input id="demo-question" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[var(--border-strong)] px-3 text-sm" maxLength={MAX_QUESTION} value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about this processing, for example: How many transactions were matched?" /><button className={primaryButton} disabled={!question.trim()}><Send aria-hidden="true" size={16} />Ask</button></form>
+                {ai.available && index ? <div role="group" aria-label="Answer mode" className="flex flex-wrap gap-2">
+                    <button type="button" aria-pressed={mode === 'RULES'} className={mode === 'RULES' ? primaryButton : button} onClick={() => setMode('RULES')}>Rule-based</button>
+                    <button type="button" aria-pressed={mode === 'AI'} className={mode === 'AI' ? primaryButton : button} onClick={() => setMode('AI')}>AI-assisted (verified)</button>
+                </div> : null}
+                <div aria-label="Suggested questions" className="flex flex-wrap gap-2">{(aiMode ? AI_SUGGESTIONS : suggestions(facts)).map(q => <button key={q} type="button" className={button} disabled={busy} onClick={() => ask(q)}>{q}</button>)}</div>
+                <form className="flex flex-col gap-2 sm:flex-row" onSubmit={e => { e.preventDefault(); ask(question); }}><label className="sr-only" htmlFor="demo-question">Question</label><input id="demo-question" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[var(--border-strong)] px-3 text-sm" maxLength={MAX_QUESTION} value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about this processing, for example: How many transactions were matched?" /><button className={primaryButton} disabled={!question.trim() || busy}><Send aria-hidden="true" size={16} />{busy ? 'Answering…' : 'Ask'}</button></form>
             </div>
         </Panel>
-        <section aria-label="Answers" className="mt-4 space-y-3">{answers.map((a, i) => <article key={answers.length - i} className="panel-shadow rounded-xl border border-[var(--border)] bg-white p-4 text-sm sm:p-5">
-            <header className="flex flex-wrap items-center justify-between gap-2"><p className="text-[var(--muted)]">{a.question}</p><DecisionBadge decision={a.status === 'ANSWERED' ? 'AUTO_ACCEPTED' : a.status === 'REFUSED' ? 'QUARANTINED' : 'UNAVAILABLE'} label={a.status === 'ANSWERED' ? 'Answered from source' : a.status === 'REFUSED' ? 'Refused' : 'Unavailable'} /></header>
-            <p className="mt-2 text-base font-semibold">{a.headline}</p><p className="mt-1 leading-relaxed text-[var(--muted-strong)]">{a.interpretation}</p>
-            {a.facts.length ? <dl className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{a.facts.filter(f => f.unit !== 'TEXT').map(f => <div key={f.id} className="rounded-lg bg-slate-50 px-3 py-2"><dt className="text-xs text-[var(--muted)]">{f.label}</dt><dd className="font-semibold tabular-nums">{f.unit === 'MONEY' ? money(f.currency ?? '', f.value) : f.unit === 'PERCENT' ? `${f.value}%` : f.value}</dd></div>)}</dl> : null}
-            {a.evidence.length ? <p className="mt-3 flex flex-wrap gap-3 text-xs">{a.evidence.map(e => <Link key={e.label} href={href(e.href)} className="font-semibold text-[var(--teal-dark)] underline">{e.label}</Link>)}</p> : null}
+        <section aria-label="Answers" className="mt-4 space-y-3">{items.map(item => <article key={item.key} className="panel-shadow rounded-xl border border-[var(--border)] bg-white p-4 text-sm sm:p-5">
+            {item.kind === 'RULE' ? <RuleAnswer a={item.answer} href={href} />
+                : !item.run ? <p className="text-[var(--muted)]" role="status">{item.question} · Answering from the verified records…</p>
+                    : <>
+                        <GroundedAnswer run={item.run} />
+                        {item.run.status !== 'ANSWERED' ? <div className="mt-3 border-t border-[var(--border)] pt-3"><RuleAnswer a={item.fallback} href={href} /></div> : null}
+                    </>}
         </article>)}</section>
     </>;
 }
+const AI_SUGGESTIONS = ['Who did we pay the most this month?', 'How much did we receive from GrabFood Marketplace Payout?', 'Which reconciliation items still need review, and what reason was recorded?', 'How much more money came in than went out?'];
 
 export function DemoModule({ view, context }: { view: DemoView; context: Ready }) {
     switch (view) {

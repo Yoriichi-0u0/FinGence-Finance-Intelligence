@@ -1,0 +1,85 @@
+import 'server-only';
+import { z } from 'zod';
+import { InterpreterUnavailable, type ModelReceipt } from '../../interpretation/contracts';
+
+/**
+ * One strict-JSON-schema Groq completion, shared by every FinGence AI call (layout interpretation, grounded
+ * Q&A). It never retries: a provider 429 (refused, not billed) surfaces as RATE_LIMITED with Retry-After so the
+ * browser may make one new, separately budgeted request. The content is returned parsed but UNTRUSTED.
+ */
+/** Published Groq prices (USD per million tokens, 2 Nov 2026) for the receipt's cost estimate. */
+export const GROQ_PRICES: Record<string, [number, number]> = {
+    'openai/gpt-oss-120b': [0.15, 0.6], 'openai/gpt-oss-20b': [0.075, 0.3], 'qwen/qwen3.8-27b': [0.8, 4],
+};
+export const GROQ_MODELS = Object.keys(GROQ_PRICES);
+export const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-120b';
+
+/** Strict-mode friendly JSON schema: no draft marker, and `const` written as a one-value enum. */
+export function portableJsonSchema(schema: z.ZodType) {
+    const portable = (node: unknown): unknown => Array.isArray(node) ? node.map(portable) : node && typeof node === 'object'
+        ? Object.fromEntries(Object.entries(node).filter(([k]) => k !== '$schema').map(([k, v]) => k === 'const' ? ['enum', [v]] : [k, portable(v)]))
+        : node;
+    return portable(z.toJSONSchema(schema)) as Record<string, unknown>;
+}
+
+/** Upper bound on one call's cost, reserved before dispatch: one token per prompt character plus the full completion budget. */
+export function worstCaseCompletionUsd(promptChars: number, maxCompletionTokens: number, model: string) {
+    const [inPrice, outPrice] = GROQ_PRICES[model] ?? GROQ_PRICES[DEFAULT_GROQ_MODEL];
+    return ((promptChars + 64) * inPrice + maxCompletionTokens * outPrice) / 1_000_000;
+}
+
+const responseSchema = z.object({
+    id: z.string().optional(), model: z.string(),
+    choices: z.array(z.object({ finish_reason: z.string().nullable().optional(), message: z.object({ content: z.string().nullable() }) })).min(1),
+    usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).optional(),
+});
+
+export type GroqTransport = (body: Record<string, unknown>, signal: AbortSignal) => Promise<{ status: number; json: unknown; retryAfterSeconds?: number }>;
+const defaultTransport: GroqTransport = async (body, signal) => {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST', signal, redirect: 'error',
+        headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+    });
+    const retryAfter = Number(response.headers.get('retry-after'));
+    return { status: response.status, json: await response.json().catch(() => null), retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined };
+};
+
+export type StructuredRequest = {
+    model: string; system: string; user: string; schemaName: string; schema: Record<string, unknown>;
+    maxCompletionTokens: number; reasoningEffort: 'low' | 'medium' | 'high'; transport?: GroqTransport;
+};
+export async function structuredCompletion(req: StructuredRequest): Promise<{ content: unknown; receipt: ModelReceipt }> {
+    if (!process.env.GROQ_API_KEY && !req.transport) throw new InterpreterUnavailable('NOT_CONFIGURED');
+    const body: Record<string, unknown> = {
+        model: req.model, temperature: 0, max_completion_tokens: req.maxCompletionTokens,
+        messages: [{ role: 'system', content: req.system }, { role: 'user', content: req.user }],
+        response_format: { type: 'json_schema', json_schema: { name: req.schemaName, strict: true, schema: req.schema } },
+        ...(req.model.startsWith('openai/') ? { reasoning_effort: req.reasoningEffort } : { reasoning_effort: 'none' }),
+    };
+    const started = Date.now();
+    let reply: Awaited<ReturnType<GroqTransport>>;
+    try { reply = await (req.transport ?? defaultTransport)(body, AbortSignal.timeout(45_000)); }
+    catch { throw new InterpreterUnavailable('PROVIDER_UNREACHABLE'); }
+    if (reply.status === 429) throw new InterpreterUnavailable('RATE_LIMITED', reply.retryAfterSeconds);
+    if (reply.status !== 200) {
+        // Keep only the provider's machine code (e.g. json_validate_failed when strict decoding could not satisfy the
+        // schema); its message and any failed generation are untrusted text and are not surfaced.
+        const code = (reply.json as { error?: { code?: unknown } } | null)?.error?.code;
+        throw new InterpreterUnavailable(`PROVIDER_HTTP_${reply.status}${typeof code === 'string' && /^[a-z_]{1,40}$/.test(code) ? `_${code.toUpperCase()}` : ''}`);
+    }
+    const parsed = responseSchema.safeParse(reply.json);
+    if (!parsed.success) throw new InterpreterUnavailable('PROVIDER_RESPONSE_INVALID');
+    const r = parsed.data, text = r.choices[0].message.content;
+    let content: unknown = null;
+    if (text && text.length <= 32_000) { try { content = JSON.parse(text); } catch { content = null; } }
+    const [inPrice, outPrice] = GROQ_PRICES[r.model] ?? GROQ_PRICES[req.model];
+    return {
+        content,
+        receipt: {
+            provider: 'GROQ', model: r.model, requestId: r.id ?? null, latencyMs: Date.now() - started, mode: 'LIVE',
+            inputTokens: r.usage?.prompt_tokens ?? null, outputTokens: r.usage?.completion_tokens ?? null,
+            estimatedUsd: r.usage ? (r.usage.prompt_tokens * inPrice + r.usage.completion_tokens * outPrice) / 1_000_000 : null,
+        },
+    };
+}

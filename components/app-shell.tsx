@@ -116,12 +116,12 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
   );
 }
 
-export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
   return (
-    <DemoProcessingProvider enabled={syntheticDemo}>
+    <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway}>
     <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)] print:block">
       <aside className="sticky top-0 hidden h-dvh lg:block print:hidden">
         <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} syntheticDemo={syntheticDemo} />
