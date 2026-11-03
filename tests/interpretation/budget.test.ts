@@ -34,6 +34,18 @@ describe('store selection fails closed on hosted deployments', () => {
         vi.stubEnv('FINGENCE_AI_BUDGET_REST_URL', 'https://example.upstash.io');
         expect(budgetStore()!.store.durable).toBe(true);
     });
+    it('accepts the Upstash integration variables, one complete pair at a time, explicit names first', () => {
+        for (const k of ['FINGENCE_AI_BUDGET_REST_URL', 'FINGENCE_AI_BUDGET_REST_TOKEN', 'UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN', 'KV_REST_API_URL', 'KV_REST_API_TOKEN']) vi.stubEnv(k, '');
+        vi.stubEnv('VERCEL', '1');
+        vi.stubEnv('KV_REST_API_URL', 'https://kv.example.upstash.io'); vi.stubEnv('KV_REST_API_TOKEN', 'kv-token');
+        expect(budgetStore()).toMatchObject({ secret: 'kv-token', store: { durable: true } });
+        vi.stubEnv('UPSTASH_REDIS_REST_URL', 'https://up.example.upstash.io'); vi.stubEnv('UPSTASH_REDIS_REST_TOKEN', 'up-token');
+        expect(budgetStore()).toMatchObject({ secret: 'up-token' });
+        vi.stubEnv('FINGENCE_AI_BUDGET_REST_URL', 'https://explicit.example'); // incomplete pair: never mixed with another token
+        expect(budgetStore()).toMatchObject({ secret: 'up-token' });
+        vi.stubEnv('UPSTASH_REDIS_REST_URL', 'http://insecure.example');
+        expect(budgetStore()).toBeNull(); // first complete pair is not https: fail closed, no fallback
+    });
     it('clamps operator overrides', () => {
         vi.stubEnv('FINGENCE_AI_DAILY_BUDGET_USD', '1000'); vi.stubEnv('FINGENCE_AI_CLIENT_DAILY_CALLS', '-5');
         expect(budgetPolicy()).toMatchObject({ dailyUsd: 20, clientPerDay: DEFAULT_BUDGET.clientPerDay });

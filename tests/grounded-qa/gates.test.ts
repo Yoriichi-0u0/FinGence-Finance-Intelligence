@@ -152,8 +152,26 @@ describe('answer gate withholds anything not grounded', () => {
         const q = { question: 'Who did we pay the most?', catalogue: cat };
         expect(failed(verifyAnswer(answered([{ text: '{F2.name} was the second-largest payee, paid {F2.total}.', cites: ['F2'] }]), facts, q))).toEqual([]);
         expect(failed(verifyAnswer(answered([{ text: 'The first payee by money paid was {F1.name}; {F2.name} is one of the others.', cites: ['F1', 'F2'] }]), facts, q))).toEqual([]);
-        expect(failed(verifyAnswer(answered([{ text: 'No one other than {F1.name} was paid {F1.total}.', cites: ['F1'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: '{F1.name} was first and {F2.name} second by money paid.', cites: ['F1', 'F2'] }]), facts, q))).toEqual([]);
         expect(failed(verifyAnswer(answered([{ text: '{F1.name} had {F1.transactions} payments.', cites: ['F1'] }]), facts, q))).toEqual([]);
+    });
+    it('withholds an exclusivity claim the facts do not support (owner review: "no one other than")', async () => {
+        const { cat, facts } = await setup(TOP_OUT);
+        const q = { question: 'Who did we pay the most?', catalogue: cat };
+        // Staff Payroll is the largest payee, but Borneo Fresh Supplies and Jalan Demo Properties were paid too.
+        for (const text of ['No one other than {F1.name} was paid {F1.total}.', 'Nobody except {F1.name} received {F1.total}.', 'None other than {F1.name} was paid {F1.total}.'])
+            expect([text, failed(verifyAnswer(answered([{ text, cites: ['F1'] }]), facts, q))]).toEqual([text, ['no-free-figures']]);
+    });
+    it('binds a rank word to the entity it describes, not to any cited fact (owner review)', async () => {
+        const { cat, facts } = await setup(TOP_OUT);
+        const q = { question: 'Who did we pay the most?', catalogue: cat };
+        // F1 (Staff Payroll) is #1; citing F2 (#2) as well must not let F1 be called second.
+        expect(failed(verifyAnswer(answered([{ text: '{F1.name} was the second-largest payee, ahead of {F2.name}.', cites: ['F1', 'F2'] }]), facts, q))).toEqual(['ranks']);
+        expect(failed(verifyAnswer(answered([{ text: 'Ahead of {F2.name}, the second-largest payee was {F1.name}.', cites: ['F1', 'F2'] }]), facts, q))).toEqual(['ranks']);
+        expect(failed(verifyAnswer(answered([{ text: '{F2.name} was the second-largest payee, behind {F1.name}.', cites: ['F1', 'F2'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: '{F1.name} was second and {F2.name} first by money paid.', cites: ['F1', 'F2'] }]), facts, q))).toEqual(['ranks']);
+        expect(failed(verifyAnswer(answered([{ text: 'The second-largest payee, {F2.name}, received {F2.total}.', cites: ['F2'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: 'The second-largest payee, {F1.name}, received {F1.total}.', cites: ['F1'] }]), facts, q))).toEqual(['ranks']);
     });
     it('withholds citations of facts outside this answer (schema-bound)', async () => {
         const { cat, facts } = await setup(TOP_OUT);

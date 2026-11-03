@@ -65,7 +65,11 @@ export type AnswerVerdict = {
 const PLACEHOLDER = /\{(F\d{1,2}|D[1-4])(?:\.([A-Za-z]{1,24}))?\}/g;
 /** Count words. "one"/"once" included: "There was one payment" is a count claim; only the idioms "one of" and "no one" are not. */
 const NUMBER_WORDS = /\b(zero|one|once|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion|dozen|half|twice|double|triple|percent|per cent)\b/i;
-const COUNT_IDIOMS = /\b(one of|no one)\b/gi;
+const COUNT_IDIOMS = /\b(one of)\b/gi;
+/** Exclusivity claims ("no one other than X was paid") assert something about every other counterparty; no fact establishes that. */
+const EXCLUSIVITY = /\b(no one|nobody|none other|no other)\b/i;
+/** Clause boundaries: a rank word describes the entity in its own clause ("X was second, ahead of Y" ranks X, not Y). */
+const CLAUSE = /[,;:]|\b(?:and|but|while|whereas|ahead of|behind|followed by|than)\b/i;
 /** Rank words; each must match a cited fact's own rank label ("Counterparty #2", "Earliest #1"). */
 const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
 const MONTH_WORDS = /\b(january|february|march|april|june|july|august|september|october|november|december|januari|februari|mac|mei|jun|julai|ogos|oktober|disember)\b/i;
@@ -129,11 +133,24 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     const verifiedMonths = new Set([+ctx.catalogue.scope.period.slice(5, 7), ...[...citedIds].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? [+v.ym.slice(5, 7)] : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []))]);
     const allowedMonth = new RegExp(`\\b(${[...verifiedMonths].flatMap(m => MONTH_NAMES[m - 1]).join('|')})\\b`, 'gi');
     const unverifiedMonth = (t: string) => { const rest = t.replace(allowedMonth, ' '); return MONTH_WORDS.test(rest) || /\bMay\b/.test(rest); };
-    const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', unverifiedMonth(t) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });
+    const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', EXCLUSIVITY.test(t) ? `sentence ${i + 1}: an exclusivity claim ("${t.match(EXCLUSIVITY)![0]}") no fact establishes` : '', unverifiedMonth(t) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });
     if (!gate('no-free-figures', 'No amount, count, date, percentage or identifier typed by the model', figures)) return result('WITHHELD');
-    // 3b. A rank word ("second-largest", "the third") must be the rank of a fact the same sentence cites.
-    const ranks = answer.sentences.flatMap((s, i) => ORDINALS.flatMap((word, n) => new RegExp(`\\b${word}\\b`, 'i').test(free[i])
-        && !s.cites.flatMap(c => derivedById.get(c)?.from ?? [c]).some(c => byId.get(c)?.label.includes(`#${n + 1}`)) ? [`sentence ${i + 1}: "${word}" is not the rank of a cited fact`] : []));
+    // 3b. A rank word ("second-largest", "the third") must be the rank of the entity it describes: the ranked facts
+    // placed in its own clause (or, for an appositive like "The second-largest payee, {F2.name}, …", the next clause)
+    // must have exactly the ranks the clause states. Citing some other fact of that rank elsewhere does not count.
+    const rankOf = (id: string) => { const m = /#(\d+)/.exec(byId.get(id)?.label ?? ''); return m ? Number(m[1]) : null; };
+    const ranks = answer.sentences.flatMap((s, i) => {
+        const clauses = s.text.split(new RegExp(CLAUSE.source, 'gi')).map(c => ({
+            stated: ORDINALS.flatMap((word, n) => new RegExp(`\\b${word}\\b`, 'i').test(c.replace(PLACEHOLDER, ' ')) ? [n + 1] : []),
+            ranked: [...c.matchAll(PLACEHOLDER)].flatMap(([, id]) => { const r = rankOf(id); return r === null ? [] : [r]; }),
+        }));
+        return clauses.flatMap((c, k) => {
+            if (!c.stated.length) return [];
+            const ranked = c.ranked.length ? c.ranked : clauses[k + 1]?.ranked ?? [];
+            const same = ranked.length > 0 && new Set(ranked).size === new Set(c.stated).size && ranked.every(r => c.stated.includes(r));
+            return same ? [] : [`sentence ${i + 1}: "${ORDINALS[c.stated[0] - 1]}" is not the rank of the entity it describes`];
+        });
+    });
     if (!gate('ranks', 'Rank words match the rank of a cited fact', ranks)) return result('WITHHELD');
 
     // 4. Entities: a known name must come from a cited fact; any other proper name must appear in the question or the facts.

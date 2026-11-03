@@ -57,12 +57,16 @@ export function budgetPolicy(): BudgetPolicy {
 }
 
 let memory: MemoryCounterStore | null = null, memorySecret: string | null = null;
+/** URL/token pairs, in precedence order: explicit FinGence names, then what Vercel's Upstash integration injects. */
+const STORE_ENV = [['FINGENCE_AI_BUDGET_REST_URL', 'FINGENCE_AI_BUDGET_REST_TOKEN'], ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN'], ['KV_REST_API_URL', 'KV_REST_API_TOKEN']] as const;
 /**
- * The configured store: Redis REST when both FINGENCE_AI_BUDGET_REST_URL (https) and _TOKEN are set; otherwise an
- * in-process store, but only off Vercel. On a hosted deployment without a durable store there is no gateway.
+ * The configured store: Redis REST from the first COMPLETE url+token pair (never a url from one pair with another's
+ * token), https only; otherwise an in-process store, but only off Vercel. On a hosted deployment without a durable
+ * store there is no gateway.
  */
 export function budgetStore(): { store: CounterStore; secret: string } | null {
-    const url = process.env.FINGENCE_AI_BUDGET_REST_URL, token = process.env.FINGENCE_AI_BUDGET_REST_TOKEN;
+    const pair = STORE_ENV.find(([u, t]) => process.env[u] && process.env[t]);
+    const url = pair ? process.env[pair[0]] : undefined, token = pair ? process.env[pair[1]] : undefined;
     if (url && token) return url.startsWith('https://') ? { store: new RedisRestCounterStore(url, token), secret: token } : null;
     if (process.env.VERCEL) return null;
     memory ??= new MemoryCounterStore(); memorySecret ??= randomBytes(32).toString('hex');
