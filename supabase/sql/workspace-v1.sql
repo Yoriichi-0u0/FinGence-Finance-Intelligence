@@ -1,3 +1,4 @@
+-- Applied to the FinGence-Production Supabase project (zmtdozblpvtjniehwjrw) on 4 Nov 2026 as migration fingence_workspace_v1.
 -- FinGence workspace v1: organizations, members with one of three roles, sign-in sessions, processing control and audit.
 -- Requires ingestion-layer-v1.sql. Like the ingestion schema, nothing is exposed to the Data API: every read and write goes
 -- through SECURITY DEFINER functions that only the service role may execute, and every function that acts for a person
