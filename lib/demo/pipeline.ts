@@ -1,7 +1,8 @@
 import Papa from 'papaparse';
-import { normalizeCashSourceBytes, reconcileCashSources } from '../poc-reconciliation/engine';
-import type { CashSource, FinancePoCReconciliationV1, ReconciliationStatus } from '../poc-reconciliation/contracts';
-import { buildStatement, type ReconciliationStatement } from '../poc-reconciliation/statement';
+import { normalizeCashSourceBytes, PHASE1_CASH_SCOPE } from '../poc-reconciliation/engine';
+import type { CashSource, FinancePoCReconciliationV1 } from '../poc-reconciliation/contracts';
+import type { ReconciliationStatement } from '../poc-reconciliation/statement';
+import { outcomeOf, reconcile, type ReconciliationOutcome } from '../reconciliation/reconcile';
 import { parseSource, SourceError, fromCents, toCents, type SourceRow } from '../poc-anomalies/source';
 import { detectAnomalies, DETECTOR_VERSION, type Candidate } from '../poc-anomalies/detector';
 import { readReconciliation, type ReconciliationView } from '../poc-anomalies/reconciliation';
@@ -43,6 +44,8 @@ export type ProcessingContext = {
         reconciliation: FinancePoCReconciliationV1 | null; reconciliationView: ReconciliationView;
         /** Proposed bank reconciliation statement: every exception classified by a stated rule; nothing is cleared. */
         statement: ReconciliationStatement | null;
+        /** Reconciliation layer outcome: every exception resolved by a stated rule, correcting entries, items flagged for attention. */
+        resolution: ReconciliationOutcome | null;
         totals: BankTotals | null; anomalies: Candidate[]; history: { accepted: boolean; rows: SourceRow[]; months: string[] };
         forecast: BusinessForecast | null; report: ManagementSummary | null;
     };
@@ -69,7 +72,7 @@ function limitations(models: string[]) {
         models.length
             ? `Layouts of unfamiliar documents were proposed by a language model (${models.join(', ')} on Groq) and accepted only after deterministic checks on every row of the original document; the model never supplied an amount. Other documents were recognised by exact schema signatures.`
             : 'Document roles and column meanings come from exact schema signatures and configured cash conventions, not from a language model.',
-        'Reconciliation exceptions and anomaly candidates are quarantined for exception handling; none is cleared automatically.',
+        'Every reconciliation exception is resolved automatically by a stated rule: a late match, a timing difference or a correcting entry prepared for the books (not posted to any accounting system). Only an exception no rule explains is flagged. Anomaly candidates are flagged for review.',
     ];
 }
 
@@ -83,7 +86,7 @@ async function processingIdentity(digest: Digest, parts: string[]) {
 export async function processDocuments(inputs: DocumentInput[], digest: Digest = sha256Hex, onStage?: (stage: Stage) => void | Promise<void>, options: ProcessingOptions = {}): Promise<ProcessingContext> {
     const stages: Stage[] = [], quarantine: Quarantined[] = [];
     const emit = async (id: StageId, decision: Decision, method: string, summary: string, checks: Check[]) => { const stage = { id, title: STAGE_TITLES[id], decision, method, summary, checks }; stages.push(stage); await onStage?.(stage); return stage; };
-    const outputs: ProcessingContext['outputs'] = { bank: null, ledger: null, bankRows: [], reconciliation: null, reconciliationView: { status: 'UNAVAILABLE', reason: 'Documents were not processed.' }, statement: null, totals: null, anomalies: [], history: { accepted: false, rows: [], months: [] }, forecast: null, report: null };
+    const outputs: ProcessingContext['outputs'] = { bank: null, ledger: null, bankRows: [], reconciliation: null, reconciliationView: { status: 'UNAVAILABLE', reason: 'Documents were not processed.' }, statement: null, resolution: null, totals: null, anomalies: [], history: { accepted: false, rows: [], months: [] }, forecast: null, report: null };
     const conventions = ['Bank: Credit adds cash, Debit removes cash; SignedCashMovementMYR must equal the signed BankAmountMYR.', 'Ledger: cash account 1000-BANK; Debit adds cash, Credit removes cash; SignedCashMovementMYR must equal Debit − Credit.', 'Currency MYR only; no foreign-exchange conversion.'];
     const finish = async (status: ProcessingContext['status'], scope: ProcessingContext['scope']) => {
         // An AI-interpreted document is identified by its bytes AND the accepted mapping, so a different accepted reading is a different processing.
@@ -190,16 +193,20 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     outputs.bank = bank; outputs.ledger = ledger; outputs.bankRows = bankRows;
     if (outputs.history.accepted) { outputs.history.rows = historyScoped; outputs.history.months = [...new Set(historyScoped.map(r => r.period))].sort(); }
 
-    // 5. Reconcile with the shared deterministic matcher, then re-validate the snapshot independently.
-    const snapshot = reconcileCashSources(DEMO_ORGANIZATION, bank, ledger);
+    // 5. Reconcile through the reconciliation layer (Phase 1 rule: one month, MYR): the unchanged matcher, then every
+    //    exception resolved by a stated rule. Only what no rule explains is quarantined.
+    const layer = reconcile(bank, ledger, { organizationId: DEMO_ORGANIZATION, scope: PHASE1_CASH_SCOPE });
+    const { snapshot, statement } = layer.periods[0];
     const view = readReconciliation(snapshot, { ...scope, bankSha256: bank.sha256 });
-    outputs.reconciliation = snapshot; outputs.reconciliationView = view; outputs.statement = buildStatement(snapshot);
-    const matched = (s: ReconciliationStatus) => s === 'MATCH_EXACT' || s === 'MATCH_DATE_SHIFT';
-    for (const r of snapshot.results.filter(r => !matched(r.status))) quarantine.push({ kind: 'RECONCILIATION_EXCEPTION', reference: r.bankRecordId ?? r.ledgerRecordIds.join(', '), status: r.status, reason: r.reason });
-    const exceptions = snapshot.results.filter(r => !matched(r.status)).length;
-    await emit('RECONCILE', view.status === 'AVAILABLE' ? 'AUTO_ACCEPTED' : 'QUARANTINED', 'Deterministic matching rules', `${snapshot.results.length - exceptions} outcomes matched automatically; ${exceptions} exceptions quarantined for exception handling, never cleared.`, [
+    outputs.reconciliation = snapshot; outputs.reconciliationView = view; outputs.statement = statement; outputs.resolution = outcomeOf(layer);
+    for (const i of layer.attention) quarantine.push({ kind: 'RECONCILIATION_EXCEPTION', reference: i.bankRecordId ?? i.ledgerRecordIds.join(', '), status: 'UNEXPLAINED', reason: i.rule });
+    const matchedCount = layer.totals.matched, resolvedCount = layer.periods[0].items.length - layer.attention.length, exceptions = layer.attention.length;
+    const layerPassed = layer.checks.every(k => k.passed) && layer.periods.every(p => p.checks.every(k => k.passed));
+    await emit('RECONCILE', view.status === 'AVAILABLE' && layerPassed ? 'AUTO_ACCEPTED' : 'QUARANTINED', 'Deterministic matching rules; reconciliation layer v1 resolution rules', `${matchedCount} outcomes matched automatically; ${resolvedCount} exceptions resolved by stated rules (${layer.totals.entries} correcting entries prepared); ${exceptions} unexplained${exceptions ? ' and flagged' : ''}.`, [
         check('contract', 'Snapshot passes the reconciliation contract', view.status === 'AVAILABLE', view.status === 'AVAILABLE' ? 'Counts equal row-level results; difference equals bank − ledger' : view.reason),
         check('bank-movement', 'Reconciled bank movement equals the verified bank total', snapshot.cashMovement.bank === fromCents(bankNormalized), `${snapshot.cashMovement.bank}`),
+        ...layer.periods[0].checks.map(k => check(`statement-${k.id}`, k.label, k.passed, k.detail)),
+        ...layer.checks.map(k => check(`layer-${k.id}`, k.label, k.passed, k.detail)),
     ]);
 
     // 6. Analytics and anomaly candidates from the same verified bank records.

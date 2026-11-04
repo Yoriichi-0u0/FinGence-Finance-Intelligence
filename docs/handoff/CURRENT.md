@@ -1,5 +1,18 @@
 # FinGence — current technical entrypoint
 
+## Reconciliation layer v1 — 4 November 2026
+
+The reconciliation layer is `lib/reconciliation/reconcile.ts` (`reconcile`): verified bank and cash-ledger records in, a fully resolved reconciliation out. Its contract is [docs/architecture/reconciliation-layer-v1.md](../architecture/reconciliation-layer-v1.md).
+
+It is **autonomous** and has no review queue. Each month goes through the unchanged matcher. The layer then links one transaction recorded on different days or in different months, and gives every exception one resolution:
+
+- matched late or by amount;
+- a timing difference, cleared or still open;
+- a balanced correcting entry, prepared and never posted;
+- unexplained, which is the only outcome flagged, and is flagged to the technical team.
+
+The layer accepts several months and any one currency. The Phase 1 pipeline passes its own rule of one month in MYR, and on the sample its snapshot and statement are unchanged. All 9 exceptions are resolved, 6 correcting entries are prepared, and 0 items are unexplained. The Reconciliation page shows "What FinGence did" in plain language.
+
 ## Ingestion layer v1 — 5 November 2026
 
 The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): documents in, verified records out. Its contract is
