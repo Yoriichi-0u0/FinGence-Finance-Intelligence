@@ -11,7 +11,7 @@ export const MAX_WORKBOOK_BYTES = 4_000_000;
 const EXCEL_DIGITS = 15;
 const ZIP_MAGIC = [0x50, 0x4b, 0x03, 0x04];
 
-export type WorksheetSource = { workbook: string; workbookSha256: string; sheet: string; sheetNumber: number; notes: string[] };
+export type WorksheetSource = { kind: 'WORKSHEET'; workbook: string; workbookSha256: string; sheet: string; sheetNumber: number; notes: string[] };
 export type Worksheet = { name: string; sheet: string; bytes: Uint8Array; source: WorksheetSource };
 export type ExpandedWorkbook = { worksheets: Worksheet[]; skipped: string[] } | { error: string };
 
@@ -85,7 +85,7 @@ export async function expandWorkbook(name: string, bytes: Uint8Array, sha256: st
         const notes = [`Worksheet ${sheet.index + 1} "${label}" of ${file.name}: ${lines.length} rows × ${Math.max(...widths)} columns read as text.`];
         if (counts.dates) notes.push(`${counts.dates} date cell${counts.dates === 1 ? '' : 's'} written as ISO dates (YYYY-MM-DD)${counts.timed ? `; ${counts.timed} carry a time of day` : ''}.`);
         if (counts.rounded) notes.push(`${counts.rounded} stored number${counts.rounded === 1 ? '' : 's'} read at Excel's 15-significant-digit precision.`);
-        worksheets.push({ name: `${file.name} › ${label}`.slice(0, 120), sheet: label, bytes: new TextEncoder().encode(text), source: { workbook: file.name, workbookSha256: sha256, sheet: label, sheetNumber: sheet.index + 1, notes } });
+        worksheets.push({ name: `${file.name} › ${label}`.slice(0, 120), sheet: label, bytes: new TextEncoder().encode(text), source: { kind: 'WORKSHEET', workbook: file.name, workbookSha256: sha256, sheet: label, sheetNumber: sheet.index + 1, notes } });
     }
     if (skipped.length) for (const w of worksheets) w.source.notes.push(`Worksheet${skipped.length === 1 ? '' : 's'} without a table not read: ${skipped.map(s => `"${s}"`).join(', ')}.`);
     return worksheets.length ? { worksheets, skipped } : { error: `No worksheet holds a table${skipped.length ? ` (${skipped.map(s => `"${s}"`).join(', ')})` : ''}.` };

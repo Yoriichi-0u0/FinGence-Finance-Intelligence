@@ -5,7 +5,7 @@ import Papa from 'papaparse';
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate';
 import { processDocuments, type DocumentInput, type ProcessingContext } from '../../lib/demo/pipeline';
 import type { LayoutInterpreter } from '../../lib/interpretation/contracts';
-import { excelNumber, expandWorkbook } from '../../lib/interpretation/workbook';
+import { excelNumber, expandWorkbook, type WorksheetSource } from '../../lib/interpretation/workbook';
 import { CORRECT, wire } from './proposals';
 
 const WORKBOOK = 'rimba-demo-kitchen-march-2026.xlsx';
@@ -79,10 +79,10 @@ describe('an Excel workbook gives exactly the Phase 1 results', () => {
         expect(c.stages.map(s => `${s.id}:${s.decision}`)).toEqual(baseline.stages.map(s => `${s.id}:${s.decision}`));
         expect(figures(c)).toEqual(figures(baseline));
         expect(c.outputs.reconciliation!.cashMovement.signedDifference).toBe('-2692.92');
-        expect(c.documents.map(d => [d.role, d.decision, d.source?.sheet ?? null])).toEqual([
+        expect(c.documents.map(d => [d.role, d.decision, d.source?.kind === 'WORKSHEET' ? d.source.sheet : null])).toEqual([
             ['BANK_STATEMENT', 'AUTO_ACCEPTED', 'Bank statement'], ['GENERAL_LEDGER', 'AUTO_ACCEPTED', 'Cash ledger'], ['BANK_HISTORY', 'AUTO_ACCEPTED', null],
         ]);
-        expect(c.documents[0].source!.workbookSha256).toBe('1c85a1295c8d3e5b763010600db3b46b72b172fef69cf698b97f4916ebae41cb');
+        expect((c.documents[0].source as WorksheetSource).workbookSha256).toBe('1c85a1295c8d3e5b763010600db3b46b72b172fef69cf698b97f4916ebae41cb');
         expect(c.stages.find(s => s.id === 'VERIFY')!.checks.filter(k => k.id.endsWith('roundtrip')).map(k => k.passed)).toEqual([true, true]);
     });
     it('identity follows the worksheet content: another save of the same workbook gives the same processing ID', async () => {
@@ -90,7 +90,7 @@ describe('an Excel workbook gives exactly the Phase 1 results', () => {
         const resaved = repack(workbook().bytes, () => {}, new Date('2026-05-09T13:45:00'));
         const b = await processDocuments([input('copy.xlsx', resaved)], undefined, undefined, { interpreter: { async propose(e) { return recorded.propose({ ...e, fileName: e.fileName.replace('copy.xlsx', WORKBOOK) }); } } });
         expect(a.status).not.toBe('QUARANTINED');
-        expect(b.documents[0].source!.workbookSha256).not.toBe(a.documents[0].source!.workbookSha256);
+        expect((b.documents[0].source as WorksheetSource).workbookSha256).not.toBe((a.documents[0].source as WorksheetSource).workbookSha256);
         expect(b.processingId).toBe(a.processingId);
     });
     it('without an interpreter the worksheets are quarantined as unfamiliar, exactly like CSVs', async () => {

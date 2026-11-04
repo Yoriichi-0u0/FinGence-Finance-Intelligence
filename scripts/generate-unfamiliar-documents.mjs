@@ -3,13 +3,15 @@
 // and number formats, delimiters, Malay, preambles and footers) for AI layout interpretation. Every
 // variant carries exactly the same transactions, so a correct interpretation must reproduce the Phase 1
 // figures to the cent. Also writes adversarial fixtures that must never be accepted with wrong figures.
-// Also writes one Excel workbook holding the bank statement and ledger as typed cells (dates, numbers).
+// Also writes one Excel workbook holding the bank statement and ledger as typed cells (dates, numbers), and
+// text PDFs of both (a two-page landscape statement with repeated headings, and a ledger with a totals line).
 // Usage: node scripts/generate-unfamiliar-documents.mjs [--check]
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
 import { strToU8, zipSync } from 'fflate';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 const ROOT = process.cwd(), DEMO = join(ROOT, 'public', 'demo'), PUBLIC_OUT = join(DEMO, 'unfamiliar'), FIXTURES = join(ROOT, 'tests', 'fixtures', 'interpretation');
 const read = name => Papa.parse(readFileSync(join(DEMO, name), 'utf8'), { header: true, skipEmptyLines: 'greedy' }).data;
@@ -145,12 +147,74 @@ function workbookExport() {
     return workbookBytes([['Cover', cover], ['Bank statement', bankSheet], ['Cash ledger', ledgerSheet]]);
 }
 
+// ---- Text PDFs (pdf-lib, fixed metadata so the bytes are reproducible). Columns: [heading, x, width, align].
+const FIXED_DATE = new Date('2026-04-01T00:00:00Z');
+const SIZE = 7.5, GAP = 14;
+async function pdfBytes(build, { landscape = true } = {}) {
+    const doc = await PDFDocument.create({ updateMetadata: false });
+    doc.setCreationDate(FIXED_DATE); doc.setModificationDate(FIXED_DATE); doc.setProducer('FinGence demo generator'); doc.setCreator('FinGence demo generator');
+    const font = await doc.embedFont(StandardFonts.Helvetica), bold = await doc.embedFont(StandardFonts.HelveticaBold);
+    for (const items of build((t, b = false, size = SIZE) => (b ? bold : font).widthOfTextAtSize(t, size))) {
+        const page = doc.addPage(landscape ? [842, 595] : [595, 842]), H = page.getHeight();
+        for (const { text, x, y, size = SIZE, isBold = false, align = 'left', width = 0 } of items) {
+            const f = isBold ? bold : font, w = f.widthOfTextAtSize(text, size);
+            page.drawText(text, { x: align === 'right' ? x + width - w : x, y: H - y, size, font: f, color: rgb(0.1, 0.1, 0.12) });
+        }
+    }
+    return Buffer.from(await doc.save({ useObjectStreams: false }));
+}
+/**
+ * Lays out a statement-style document: preamble lines, then a table split over pages (heading repeated), then
+ * footer lines. Each column is as wide as its widest text plus a clear gap, as a real statement's columns are.
+ */
+const layout = ({ preamble, columns, rows, footer, perPage }) => measure => {
+    let x = 30;
+    const cols = columns.map(([heading, align], k) => { const width = Math.max(measure(heading, true), ...rows.map(r => measure(r[k] ?? ''))); const c = { heading, align, x, width }; x += width + GAP; return c; });
+    if (x > 842) throw Error(`table is ${Math.round(x)}pt wide`);
+    const pages = [], chunks = [];
+    for (let i = 0; i < rows.length; i += perPage) chunks.push(rows.slice(i, i + perPage));
+    chunks.forEach((chunk, p) => {
+        const items = []; let y = 40;
+        if (p === 0) for (const [i, line] of preamble.entries()) { line.forEach((t, k) => t && items.push({ text: t, x: 30 + k * 140, y, size: i === 0 ? 12 : 9, isBold: i === 0 })); y += i === 0 ? 20 : 13; }
+        y += 10;
+        for (const c of cols) items.push({ text: c.heading, x: c.x, y, width: c.width, align: c.align, isBold: true });
+        y += 14;
+        for (const r of chunk) { r.forEach((t, k) => t && items.push({ text: t, x: cols[k].x, y, width: cols[k].width, align: cols[k].align })); y += 11.5; }
+        if (p === chunks.length - 1) { y += 14; for (const line of footer) { line.forEach((t, k) => t && items.push({ text: t, x: 30 + k * 140, y, size: 9 })); y += 13; } }
+        items.push({ text: `Page ${p + 1} of ${chunks.length}`, x: 390, y: 570, size: 8 });
+        pages.push(items);
+    });
+    return pages;
+};
+async function bankPdf() {
+    let balance = OPENING, out = 0, inn = 0;
+    const rows = bank.map(r => { const c = cents(r.SignedCashMovementMYR); balance += c; if (c < 0) out -= c; else inn += c; return [dmy(r.ValueDate), r.BankTransactionID, r.BankReference, r.BankDescription, r.Counterparty, c < 0 ? grouped(-c) : '', c > 0 ? grouped(c) : '', grouped(balance)]; });
+    return pdfBytes(layout({
+        preamble: [['Demo Bank Berhad - Current Account Statement'], ['Account holder', 'Rimba Demo Kitchen (Synthetic)'], ['Customer ID', 'DEMO-001'], ['Account', '****0000'], ['Statement period', '01/03/2026 to 31/03/2026'], ['Currency', 'Malaysian Ringgit (MYR)'], ['Opening balance', grouped(OPENING)]],
+        columns: [['Date', 'left'], ['Txn ID', 'left'], ['Ref No', 'left'], ['Particulars', 'left'], ['Payee / Payer', 'left'], ['Withdrawal (RM)', 'right'], ['Deposit (RM)', 'right'], ['Balance (RM)', 'right']],
+        rows, perPage: 30, footer: [['Total withdrawals', grouped(out)], ['Total deposits', grouped(inn)], ['Closing balance', grouped(balance)]],
+    }));
+}
+async function ledgerPdf() {
+    let dr = 0, cr = 0;
+    const rows = ledger.map(r => { const d = cents(r.CashAccountDebitMYR), k = cents(r.CashAccountCreditMYR); dr += d; cr += k; return [dMonY(r.PostingDate), r.LedgerEntryID, r.LedgerReference, r.LedgerMemo, r.Counterparty, d ? grouped(d) : '', k ? grouped(k) : '']; });
+    return pdfBytes(layout({
+        preamble: [['Rimba Demo Kitchen (Synthetic) - General Ledger Detail'], ['Entity code', 'DEMO-001'], ['Account', '1000 Bank - Current Account'], ['Period', 'March 2026'], ['Amounts in RM']],
+        columns: [['Journal Date', 'left'], ['Voucher No', 'left'], ['Ref', 'left'], ['Narration', 'left'], ['Party', 'left'], ['Dr (RM)', 'right'], ['Cr (RM)', 'right']],
+        rows, perPage: 34, footer: [['Total debits', grouped(dr)], ['Total credits', grouped(cr)]],
+    }));
+}
+
 const publicFiles = {
     'bank-statement-march-2026-export.csv': bankExport(),
     'general-ledger-cash-march-2026.csv': ledgerExport(),
     'penyata-bank-mac-2026.csv': malayStatement(),
     'ledger-signed-march-2026.csv': signedLedger(),
     'rimba-demo-kitchen-march-2026.xlsx': workbookExport(),
+    'bank-statement-march-2026.pdf': await bankPdf(),
+    'general-ledger-cash-march-2026.pdf': await ledgerPdf(),
+    // Scans are rendered by scripts/generate-scanned-documents.mjs (needs a local Chrome); they are pinned here as they are.
+    ...Object.fromEntries(['bank-statement-march-2026-scan.pdf', 'general-ledger-cash-march-2026-scan.jpg'].map(n => [n, readFileSync(join(PUBLIC_OUT, n))])),
 };
 const fixtures = {
     'opaque-headings-no-balance.csv': opaqueNoBalance(),

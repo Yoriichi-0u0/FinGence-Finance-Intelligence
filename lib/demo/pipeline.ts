@@ -9,8 +9,9 @@ import { cashTotals, type BankTotals } from '../poc-insights/model';
 import { forecastBusiness, FORECAST_VERSION, type BusinessForecast } from '../poc-forecast/forecast';
 import { InterpreterUnavailable, type LayoutInterpreter, type ModelReceipt } from '../interpretation/contracts';
 import { buildEvidence, readTable } from '../interpretation/evidence';
-import { verifyProposal, type FieldMapping } from '../interpretation/gates';
+import { verifyProposal, verifyWithDisputes, type FieldMapping } from '../interpretation/gates';
 import { expandWorkbook, isWorkbook, type WorksheetSource } from '../interpretation/workbook';
+import { extractDocument, isExtractable, type ExtractedSource } from '../interpretation/extract';
 
 /**
  * FinGence 2.0 Phase 1 processing pipeline: one action turns a bank statement and a cash-account
@@ -37,8 +38,11 @@ export type ProcessedDocument = {
     name: string; sha256: string; bytes: number; provenance: Provenance; role: DocumentRole | null; decision: Decision; reason: string;
     rows: number | null; businessId: string | null; currency: string | null; periods: string[];
     interpretation: InterpretationRecord | null;
-    /** Set when the document is a worksheet of an uploaded XLSX workbook; `sha256` is then that worksheet's table. */
-    source: WorksheetSource | null;
+    /**
+     * Set when the document was converted to a table: a worksheet of an XLSX workbook, or a PDF / image read by its text
+     * layer or OCR. `sha256` is then that table's fingerprint; the uploaded file's own is in the source.
+     */
+    source: WorksheetSource | ExtractedSource | null;
 };
 /** A model's layout proposal and what the deterministic gates concluded about it. */
 export type InterpretationRecord = {
@@ -143,20 +147,32 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     // 1. Identify each document's role from its exact column signature; an unfamiliar layout may be interpreted by the model and gates.
     const documents: ProcessedDocument[] = [], effective: Uint8Array[] = [];
     const aiModels = () => [...new Set(documents.filter(d => d.interpretation?.decision === 'AUTO_ACCEPTED' && d.interpretation.receipt).map(d => d.interpretation!.receipt!.model))];
-    // An XLSX workbook contributes one document per worksheet that holds a table, each converted deterministically to text.
-    const entries: (DocumentInput & { source: WorksheetSource | null })[] = [];
+    // An XLSX workbook contributes one document per worksheet that holds a table; a PDF or image is read into one table.
+    const entries: (DocumentInput & { source: WorksheetSource | ExtractedSource | null })[] = [];
+    const unread = (input: DocumentInput, name: string, sha256: string, reason: string) => {
+        documents.push({ name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: null, decision: 'QUARANTINED', reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: null });
+        effective.push(input.bytes);
+    };
     for (const input of inputs) {
         const name = input.name.split(/[/\\]/).pop()!.slice(0, 120);
+        if (isExtractable(input.bytes)) {
+            const sha256 = await digest(input.bytes), read = await extractDocument(name, input.bytes, sha256);
+            if ('error' in read) unread(input, name, sha256, `Not read: ${read.error}`);
+            else entries.push({ name, bytes: read.bytes, provenance: input.provenance, source: read.source });
+            continue;
+        }
         if (!isWorkbook(name, input.bytes)) { entries.push({ ...input, name, source: null }); continue; }
         const sha256 = await digest(input.bytes), expanded = await expandWorkbook(name, input.bytes, sha256);
-        if ('error' in expanded) {
-            documents.push({ name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: null, decision: 'QUARANTINED', reason: `Workbook not read: ${expanded.error}`, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: null });
-            effective.push(input.bytes);
-        } else for (const w of expanded.worksheets) entries.push({ name: w.name, bytes: w.bytes, provenance: input.provenance, source: w.source });
+        if ('error' in expanded) unread(input, name, sha256, `Workbook not read: ${expanded.error}`);
+        else for (const w of expanded.worksheets) entries.push({ name: w.name, bytes: w.bytes, provenance: input.provenance, source: w.source });
     }
     for (const input of entries) {
         const sha256 = await digest(input.bytes), oversized = input.bytes.byteLength > MAX_DOCUMENT_BYTES;
-        const found = oversized ? { role: null, reason: `Larger than ${MAX_DOCUMENT_BYTES / 1_000_000} MB.` } : identify(header(input.bytes));
+        const extracted = input.source?.kind === 'PDF_TEXT' || input.source?.kind === 'OCR' ? input.source.kind : undefined;
+        // A table assembled from positioned words is never accepted on its headings alone: it always goes through the gates and their arithmetic anchor.
+        const found = oversized ? { role: null, reason: `Larger than ${MAX_DOCUMENT_BYTES / 1_000_000} MB.` }
+            : extracted ? { role: null, reason: `Read from a ${extracted === 'OCR' ? 'scan or image by OCR' : 'PDF text layer'}; its layout and amounts must be verified by the AI layout proposal and arithmetic checks.`, unfamiliar: true }
+                : identify(header(input.bytes));
         const name = input.name;
         const doc: ProcessedDocument = { name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: found.role, decision: found.role ? 'AUTO_ACCEPTED' : 'QUARANTINED', reason: found.reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: input.source };
         let bytes = input.bytes;
@@ -165,7 +181,7 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
             const record: InterpretationRecord = { method: 'AI_LAYOUT_PROPOSAL', receipt: null, proposal: null, error: null, decision: 'QUARANTINED', summary: '', checks: [], mapping: [], disclosures: [], canonicalSha256: null, canonicalNet: null, mappingHash: null };
             try {
                 const { proposal, receipt } = await options.interpreter!.propose(buildEvidence(table, sha256, name));
-                const verdict = verifyProposal(table, proposal);
+                const verdict = input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted }) : verifyProposal(table, proposal, { extracted });
                 Object.assign(record, { proposal, receipt, decision: verdict.decision, summary: verdict.summary, checks: verdict.checks, mapping: verdict.mapping, disclosures: verdict.disclosures });
                 if (verdict.canonical && verdict.mappingKey) {
                     bytes = verdict.canonical.bytes;

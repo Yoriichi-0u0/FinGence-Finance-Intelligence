@@ -63,6 +63,28 @@ export const CORRECT: Record<string, LayoutProposal> = {
         scope: { businessId: { line: 1, literal: 'DEMO-001' }, businessName: { line: 0, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 4, literal: 'RM' }, statementPeriod: { line: 3, literal: 'March 2026' } },
         rationale: 'Recorded test proposal.', unresolved: [],
     },
+    // PDFs read by their text layer, and a scan read by OCR: the same layouts placed into tables by position.
+    'bank-statement-march-2026.pdf': {
+        role: 'BANK_STATEMENT', headerLine: 9,
+        columns: { ...none, date: 0, recordId: 1, reference: 2, description: 3, counterparty: 4, moneyOut: 5, moneyIn: 6, balance: 7 },
+        representation: 'SPLIT_IN_OUT', directionTokens: noTokens, dateFormat: 'DD/MM/YYYY', numberFormat: 'COMMA_THOUSANDS_DOT_DECIMAL',
+        scope: { businessId: { line: 3, literal: 'DEMO-001' }, businessName: { line: 2, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 6, literal: 'MYR' }, statementPeriod: { line: 5, literal: '01/03/2026 to 31/03/2026' } },
+        rationale: 'Recorded test proposal.', unresolved: [],
+    },
+    'general-ledger-cash-march-2026.pdf': {
+        role: 'GENERAL_LEDGER', headerLine: 7,
+        columns: { ...none, date: 0, recordId: 1, reference: 2, description: 3, counterparty: 4, debit: 5, credit: 6 },
+        representation: 'DEBIT_CREDIT', directionTokens: noTokens, dateFormat: 'DD-Mon-YYYY', numberFormat: 'COMMA_THOUSANDS_DOT_DECIMAL',
+        scope: { businessId: { line: 2, literal: 'DEMO-001' }, businessName: { line: 0, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 5, literal: 'RM' }, statementPeriod: { line: 4, literal: 'March 2026' } },
+        rationale: 'Recorded test proposal.', unresolved: [],
+    },
+    'general-ledger-cash-march-2026-scan.jpg': {
+        role: 'GENERAL_LEDGER', headerLine: 5,
+        columns: { ...none, date: 0, recordId: 1, reference: 2, description: 3, counterparty: 4, debit: 5, credit: 6 },
+        representation: 'DEBIT_CREDIT', directionTokens: noTokens, dateFormat: 'DD-Mon-YYYY', numberFormat: 'COMMA_THOUSANDS_DOT_DECIMAL',
+        scope: { businessId: { line: 1, literal: 'DEMO-001' }, businessName: { line: 0, literal: 'Rimba Demo Kitchen (Synthetic)' }, currency: { line: 4, literal: 'RM' }, statementPeriod: { line: 3, literal: 'March 2026' } },
+        rationale: 'Recorded test proposal.', unresolved: [],
+    },
     // Adversarial fixtures that ARE acceptable: bank statements without a running balance whose headings or tokens state direction.
     'bank-debit-credit-no-balance.csv': {
         role: 'BANK_STATEMENT', headerLine: 6,
