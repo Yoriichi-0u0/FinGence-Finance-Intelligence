@@ -94,4 +94,4 @@ The ingestion store is the Supabase project **FinGence-Production**, schema `fin
 - **Layout:** a footer typed directly under a table with no blank line is read as a table line and quarantines. Side-by-side tables on one page are not separated.
 - **OCR'd text fields:** references and descriptions are only as good as the scan. A misread reference makes a reconciliation item to review; it never produces a silent match.
 - **Scope:** one business, one cash account and one currency per document. Multi-currency and multi-account documents are quarantined.
-- **Downstream rule:** the Phase 1 reconciliation still requires one month in MYR. That is a rule of the reconciliation layer, not of ingestion.
+- **Downstream rule:** the Phase 1 pipeline still passes one month in MYR to reconciliation. The [reconciliation layer](reconciliation-layer-v1.md) itself accepts several months and any one currency.
