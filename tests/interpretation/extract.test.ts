@@ -60,10 +60,11 @@ describe('PDF documents give exactly the Phase 1 results', () => {
         expect(c.status).toBe('QUARANTINED');
         expect(c.documents[0].reason).toMatch(/PDF text layer/);
     });
-    it('a scanned PDF page without a canvas is reported, not guessed', async () => {
+    it('a scanned PDF page that is one stored JPEG is read by OCR from the image itself (no canvas needed)', async () => {
         const r = await extractDocument('scan.pdf', new Uint8Array(readFileSync(join(DIR, 'bank-statement-march-2026-scan.pdf'))), 'x');
-        expect(r).toEqual({ error: expect.stringMatching(/scan without a text layer/) });
-    });
+        expect(r).toMatchObject({ source: { kind: 'OCR', pages: 2 } });
+        expect(new TextDecoder().decode((r as { bytes: Uint8Array }).bytes)).toMatch(/Date,Txn ID,Ref No,Particulars,Payee \/ Payer,Withdrawal \(RM\),Deposit \(RM\),Balance \(RM\)/);
+    }, 60000);
 });
 
 describe('the arithmetic anchor refuses what the gates alone would accept', () => {

@@ -36,7 +36,7 @@ export function guessHeaderLine(rows: string[][]): number {
     return index < 0 ? 0 : index;
 }
 const clip = (cells: string[]) => cells.slice(0, 24).map(c => c.length > 80 ? c.slice(0, 77) + '…' : c);
-const numeric = /^\(?-?(?:RM|MYR)?\s?[\d.,]+\)?$/i, dateish = /\d{1,4}[-/.\s][A-Za-z\d]{1,9}[-/.\s]\d{2,4}|^\d{8}$/;
+const numeric = /^\(?[-+]?(?:RM|MYR|Rs\.?|INR|₹|\$)?\s?[\d.,]+\)?$/i, dateish = /\d{1,4}[-/.\s][A-Za-z\d]{1,9}[-/.\s]\d{2,4}|^\d{8}$/;
 
 export function buildEvidence(table: Table, sha256: string, fileName: string): LayoutEvidence {
     const { rows } = table, headerLine = guessHeaderLine(rows), width = rows[headerLine]?.length ?? 0;

@@ -1,17 +1,17 @@
 import Papa from 'papaparse';
-import { CASH_SOURCE_FIELDS, normalizeCashSourceBytes, reconcileCashSources } from '../poc-reconciliation/engine';
+import { normalizeCashSourceBytes, reconcileCashSources } from '../poc-reconciliation/engine';
 import type { CashSource, FinancePoCReconciliationV1, ReconciliationStatus } from '../poc-reconciliation/contracts';
 import { buildStatement, type ReconciliationStatement } from '../poc-reconciliation/statement';
-import { EVALUATOR_COLUMNS, parseSource, SourceError, fromCents, toCents, type SourceRow } from '../poc-anomalies/source';
+import { parseSource, SourceError, fromCents, toCents, type SourceRow } from '../poc-anomalies/source';
 import { detectAnomalies, DETECTOR_VERSION, type Candidate } from '../poc-anomalies/detector';
 import { readReconciliation, type ReconciliationView } from '../poc-anomalies/reconciliation';
 import { cashTotals, type BankTotals } from '../poc-insights/model';
 import { forecastBusiness, FORECAST_VERSION, type BusinessForecast } from '../poc-forecast/forecast';
-import { InterpreterUnavailable, type LayoutInterpreter, type ModelReceipt } from '../interpretation/contracts';
-import { buildEvidence, readTable } from '../interpretation/evidence';
-import { verifyProposal, verifyWithDisputes, type FieldMapping } from '../interpretation/gates';
-import { expandWorkbook, isWorkbook, type WorksheetSource } from '../interpretation/workbook';
-import { extractDocument, isExtractable, type ExtractedSource } from '../interpretation/extract';
+import type { LayoutInterpreter } from '../interpretation/contracts';
+import { ingestDocuments, sha256Hex, type Check, type Decision, type Digest, type DocumentInput, type DocumentRole, type ProcessedDocument } from '../document-ingestion/ingest';
+
+export { MAX_DOCUMENT_BYTES, sha256Hex } from '../document-ingestion/ingest';
+export type { Check, Decision, Digest, DocumentInput, DocumentRole, InterpretationRecord, ProcessedDocument, Provenance } from '../document-ingestion/ingest';
 
 /**
  * FinGence 2.0 Phase 1 processing pipeline: one action turns a bank statement and a cash-account
@@ -27,29 +27,8 @@ export const PIPELINE_VERSION = 'fingence-processing-v1' as const;
 /** Fixed organization scope for the browser-only synthetic demo; it is never a real tenant identifier. */
 export const DEMO_ORGANIZATION = 'synthetic-demo';
 
-export type DocumentRole = 'BANK_STATEMENT' | 'GENERAL_LEDGER' | 'BANK_HISTORY';
-export type Provenance = 'PUBLIC_SYNTHETIC_SAMPLE' | 'USER_SUPPLIED';
-export type DocumentInput = { name: string; bytes: Uint8Array; provenance: Provenance };
-export type Decision = 'AUTO_ACCEPTED' | 'QUARANTINED' | 'UNAVAILABLE';
-export type Check = { id: string; label: string; passed: boolean; detail: string };
 export type StageId = 'IDENTIFY' | 'EXTRACT' | 'INTERPRET' | 'VERIFY' | 'RECONCILE' | 'ANALYZE' | 'FORECAST' | 'REPORT';
 export type Stage = { id: StageId; title: string; decision: Decision; method: string; summary: string; checks: Check[] };
-export type ProcessedDocument = {
-    name: string; sha256: string; bytes: number; provenance: Provenance; role: DocumentRole | null; decision: Decision; reason: string;
-    rows: number | null; businessId: string | null; currency: string | null; periods: string[];
-    interpretation: InterpretationRecord | null;
-    /**
-     * Set when the document was converted to a table: a worksheet of an XLSX workbook, or a PDF / image read by its text
-     * layer or OCR. `sha256` is then that table's fingerprint; the uploaded file's own is in the source.
-     */
-    source: WorksheetSource | ExtractedSource | null;
-};
-/** A model's layout proposal and what the deterministic gates concluded about it. */
-export type InterpretationRecord = {
-    method: 'AI_LAYOUT_PROPOSAL'; receipt: ModelReceipt | null; proposal: unknown; error: string | null;
-    decision: Decision; summary: string; checks: Check[]; mapping: FieldMapping[]; disclosures: string[];
-    canonicalSha256: string | null; canonicalNet: string | null; mappingHash: string | null;
-};
 export type ProcessingOptions = { interpreter?: LayoutInterpreter | null };
 export type Quarantined = { kind: 'DOCUMENT' | 'RECONCILIATION_EXCEPTION' | 'ANOMALY_CANDIDATE' | 'HISTORY'; reference: string; status: string; reason: string };
 export type ProcessingContext = {
@@ -76,19 +55,6 @@ export type ManagementSummary = {
     anomalyCandidates: number; forecast: { status: 'AVAILABLE'; period: string; credits: string; debits: string; net: string } | { status: 'UNAVAILABLE'; detail: string };
     limitations: string[];
 };
-export type Digest = (bytes: Uint8Array) => Promise<string>;
-
-/** Web Crypto SHA-256 (browsers and Node 20+). */
-export const sha256Hex: Digest = async bytes => {
-    const view = new Uint8Array(bytes.byteLength); view.set(bytes);
-    const digest = await globalThis.crypto.subtle.digest('SHA-256', view.buffer);
-    return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
-};
-
-const BANK_FIELDS = [...CASH_SOURCE_FIELDS.bank, 'BusinessName', 'Counterparty'];
-const LEDGER_FIELDS = CASH_SOURCE_FIELDS.ledger;
-const HISTORY_FIELDS = ['TransactionID', 'BusinessID', 'BusinessName', 'Currency', 'TransactionDate', 'StatementMonth', 'RawBankDescription', 'BankDirection', 'AmountMYR', 'SignedCashMovementMYR', 'Counterparty', 'Reference'];
-export const MAX_DOCUMENT_BYTES = 4_000_000;
 export const STAGE_TITLES: Record<StageId, string> = {
     IDENTIFY: 'Identify documents and roles', EXTRACT: 'Extract and normalize records', INTERPRET: 'Interpret schema and accounting conventions',
     VERIFY: 'Independent verification', RECONCILE: 'Deterministic reconciliation', ANALYZE: 'Transaction analytics and anomaly candidates',
@@ -109,22 +75,6 @@ function limitations(models: string[]) {
 
 const check = (id: string, label: string, passed: boolean, detail: string): Check => ({ id, label, passed, detail });
 const sumCents = (values: string[]) => values.reduce((n, v) => n + toCents(v), 0n);
-function header(bytes: Uint8Array): string[] | null {
-    try {
-        const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes).replace(/^﻿/, '');
-        const first = Papa.parse<string[]>(text, { preview: 1 }).data[0];
-        return first ? first.map(h => h.trim()) : null;
-    } catch { return null; }
-}
-function identify(fields: string[] | null): { role: DocumentRole | null; reason: string; unfamiliar?: boolean } {
-    if (!fields) return { role: null, reason: 'Not a UTF-8 CSV with a header row.' };
-    if (fields.some(f => EVALUATOR_COLUMNS.includes(f))) return { role: null, reason: 'Contains evaluation or ground-truth columns; never accepted as a source document.' };
-    const has = (list: string[]) => list.every(f => fields.includes(f));
-    if (has(BANK_FIELDS)) return { role: 'BANK_STATEMENT', reason: 'All bank statement columns present (exact schema signature).' };
-    if (has(LEDGER_FIELDS)) return { role: 'GENERAL_LEDGER', reason: 'All cash-account general ledger columns present (exact schema signature).' };
-    if (has(HISTORY_FIELDS)) return { role: 'BANK_HISTORY', reason: 'All normalized bank transaction history columns present (exact schema signature).' };
-    return { role: null, reason: 'Columns do not match a supported bank statement, cash-account ledger or bank history schema.', unfamiliar: true };
-}
 /** Deterministic, order-independent processing identity: pipeline version plus each accepted role and source fingerprint. */
 async function processingIdentity(digest: Digest, parts: string[]) {
     return (await digest(new TextEncoder().encode([PIPELINE_VERSION, ...parts.sort()].join('\n')))).slice(0, 24);
@@ -145,60 +95,8 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     };
 
     // 1. Identify each document's role from its exact column signature; an unfamiliar layout may be interpreted by the model and gates.
-    const documents: ProcessedDocument[] = [], effective: Uint8Array[] = [];
+    const { documents, effective } = await ingestDocuments(inputs, { digest, interpreter: options.interpreter });
     const aiModels = () => [...new Set(documents.filter(d => d.interpretation?.decision === 'AUTO_ACCEPTED' && d.interpretation.receipt).map(d => d.interpretation!.receipt!.model))];
-    // An XLSX workbook contributes one document per worksheet that holds a table; a PDF or image is read into one table.
-    const entries: (DocumentInput & { source: WorksheetSource | ExtractedSource | null })[] = [];
-    const unread = (input: DocumentInput, name: string, sha256: string, reason: string) => {
-        documents.push({ name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: null, decision: 'QUARANTINED', reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: null });
-        effective.push(input.bytes);
-    };
-    for (const input of inputs) {
-        const name = input.name.split(/[/\\]/).pop()!.slice(0, 120);
-        if (isExtractable(input.bytes)) {
-            const sha256 = await digest(input.bytes), read = await extractDocument(name, input.bytes, sha256);
-            if ('error' in read) unread(input, name, sha256, `Not read: ${read.error}`);
-            else entries.push({ name, bytes: read.bytes, provenance: input.provenance, source: read.source });
-            continue;
-        }
-        if (!isWorkbook(name, input.bytes)) { entries.push({ ...input, name, source: null }); continue; }
-        const sha256 = await digest(input.bytes), expanded = await expandWorkbook(name, input.bytes, sha256);
-        if ('error' in expanded) unread(input, name, sha256, `Workbook not read: ${expanded.error}`);
-        else for (const w of expanded.worksheets) entries.push({ name: w.name, bytes: w.bytes, provenance: input.provenance, source: w.source });
-    }
-    for (const input of entries) {
-        const sha256 = await digest(input.bytes), oversized = input.bytes.byteLength > MAX_DOCUMENT_BYTES;
-        const extracted = input.source?.kind === 'PDF_TEXT' || input.source?.kind === 'OCR' ? input.source.kind : undefined;
-        // A table assembled from positioned words is never accepted on its headings alone: it always goes through the gates and their arithmetic anchor.
-        const found = oversized ? { role: null, reason: `Larger than ${MAX_DOCUMENT_BYTES / 1_000_000} MB.` }
-            : extracted ? { role: null, reason: `Read from a ${extracted === 'OCR' ? 'scan or image by OCR' : 'PDF text layer'}; its layout and amounts must be verified by the AI layout proposal and arithmetic checks.`, unfamiliar: true }
-                : identify(header(input.bytes));
-        const name = input.name;
-        const doc: ProcessedDocument = { name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: found.role, decision: found.role ? 'AUTO_ACCEPTED' : 'QUARANTINED', reason: found.reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: input.source };
-        let bytes = input.bytes;
-        const table = !found.role && found.unfamiliar && options.interpreter ? readTable(input.bytes) : null;
-        if (table) {
-            const record: InterpretationRecord = { method: 'AI_LAYOUT_PROPOSAL', receipt: null, proposal: null, error: null, decision: 'QUARANTINED', summary: '', checks: [], mapping: [], disclosures: [], canonicalSha256: null, canonicalNet: null, mappingHash: null };
-            try {
-                const { proposal, receipt } = await options.interpreter!.propose(buildEvidence(table, sha256, name));
-                const verdict = input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted }) : verifyProposal(table, proposal, { extracted });
-                Object.assign(record, { proposal, receipt, decision: verdict.decision, summary: verdict.summary, checks: verdict.checks, mapping: verdict.mapping, disclosures: verdict.disclosures });
-                if (verdict.canonical && verdict.mappingKey) {
-                    bytes = verdict.canonical.bytes;
-                    record.canonicalSha256 = await digest(bytes); record.canonicalNet = verdict.canonical.net;
-                    // Identity follows the verified canonical content, so equivalent proposals give the same processing ID.
-                    record.mappingHash = record.canonicalSha256.slice(0, 16);
-                    Object.assign(doc, { role: verdict.role, decision: 'AUTO_ACCEPTED', reason: `AI layout proposal accepted after ${verdict.checks.length} deterministic checks.` });
-                } else doc.reason = `AI layout proposal quarantined: ${verdict.summary}`;
-            } catch (error) {
-                record.error = error instanceof InterpreterUnavailable ? error.code : 'INTERPRETER_FAILED';
-                record.summary = 'The AI interpreter was unavailable; the document was not interpreted.';
-                doc.reason = `${found.reason} AI interpretation unavailable (${record.error}).`;
-            }
-            doc.interpretation = record;
-        }
-        documents.push(doc); effective.push(bytes);
-    }
     const byRole = (role: DocumentRole) => documents.filter(d => d.role === role);
     for (const role of ['BANK_STATEMENT', 'GENERAL_LEDGER', 'BANK_HISTORY'] as const) {
         const list = byRole(role);

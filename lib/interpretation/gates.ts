@@ -59,7 +59,15 @@ function periodMentioned(literal: string, period: string) {
  * Judges a proposal from the document's bytes alone. The file name is deliberately NOT an input: it is metadata
  * anyone can change, so it may guide a model's proposal (it is in the evidence) but never establishes a role.
  */
-export function verifyProposal(table: Table, raw: unknown, options: { extracted?: 'PDF_TEXT' | 'OCR' } = {}): VerifiedInterpretation {
+/**
+ * `extracted`: the table was assembled from positioned words (PDF text layer or OCR) and needs its own arithmetic.
+ * `scope`: what one document may cover. The Phase 1 pipeline reconciles one month in MYR (the default); the
+ * ingestion layer accepts consecutive or gapped months and any currency the document states verbatim.
+ */
+export type GateOptions = { extracted?: 'PDF_TEXT' | 'OCR'; scope?: { months: 'ONE' | 'MANY'; currencies: readonly string[] | 'ANY' } };
+const PHASE1_SCOPE: NonNullable<GateOptions['scope']> = { months: 'ONE', currencies: ['MYR'] };
+export function verifyProposal(table: Table, raw: unknown, options: GateOptions = {}): VerifiedInterpretation {
+    const scopeRule = options.scope ?? PHASE1_SCOPE;
     const checks: GateCheck[] = [], disclosures: string[] = [], mapping: FieldMapping[] = [];
     const result = (summary: string): VerifiedInterpretation => ({ decision: 'QUARANTINED', role: null, summary, checks, mapping, disclosures, canonical: null, mappingKey: null });
     const gate = (id: string, label: string, passed: boolean, detail: string) => { checks.push({ id, label, passed, detail }); return passed; };
@@ -110,13 +118,18 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     const dates = body.map(r => parseDate(cell(r.row, 'date'), dateFormat));
     const badDate = dates.findIndex(d => d === null);
     if (!gate('dates', `Every date parses as ${dateFormat}`, badDate < 0, badDate < 0 ? `${dates.length} dates` : `line ${body[badDate].line + 1}: "${cell(body[badDate].row, 'date')}"`)) return result('Dates do not follow the proposed format.');
-    const months = [...new Set(dates.map(d => d!.slice(0, 7)))];
-    if (!gate('period', 'All transactions fall within one month', months.length === 1, months.join(', '))) return result('The document spans more than one month.');
-    const period = months[0];
+    const months = [...new Set(dates.map(d => d!.slice(0, 7)))].sort();
+    const many = scopeRule.months === 'MANY';
+    if (!gate('period', many ? 'Transactions fall within the stated months' : 'All transactions fall within one month', many || months.length === 1, months.length > 3 ? `${months.length} months, ${months[0]} to ${months.at(-1)}` : months.join(', '))) return result('The document spans more than one month.');
+    // One month keeps its YYYY-MM identity (and the Phase 1 processing IDs); several months are named by their range.
+    const period = months.length === 1 ? months[0] : `${months[0]}/${months.at(-1)}`;
     const alternative = body.map(r => swappedReading(cell(r.row, 'date'), dateFormat));
     const alternativeViable = alternative.every(Boolean) && alternative.some((d, i) => d !== dates[i]);
     const alternativeMonths = new Set(alternative.map(d => d?.slice(0, 7)));
-    if (!gate('date-order', 'Day/month order is unambiguous', !alternativeViable || alternativeMonths.size > 1, !alternativeViable ? 'The swapped day/month reading is invalid for at least one date' : alternativeMonths.size > 1 ? `The swapped reading would span ${alternativeMonths.size} months, which a one-month statement cannot` : 'Both readings are valid one-month statements')) return result('The date order is ambiguous.');
+    const ordered = (ds: (string | null)[]) => ds.every((d, i) => i === 0 || d! >= ds[i - 1]!);
+    // Several months: the swapped reading is refuted when it breaks the statement's date order and the declared one keeps it.
+    const refuted = !alternativeViable || (many ? ordered(dates) && !ordered(alternative) : alternativeMonths.size > 1);
+    if (!gate('date-order', 'Day/month order is unambiguous', refuted, !alternativeViable ? 'The swapped day/month reading is invalid for at least one date' : refuted ? (many ? 'The swapped reading would put the transactions out of date order' : `The swapped reading would span ${alternativeMonths.size} months, which a one-month statement cannot`) : many ? 'Both readings keep the transactions in date order' : 'Both readings are valid one-month statements')) return result('The date order is ambiguous.');
 
     // 5. Amounts and direction under the declared representation.
     const tokens = { inflow: p.directionTokens.inflow.map(t => t.trim().toUpperCase()), outflow: p.directionTokens.outflow.map(t => t.trim().toUpperCase()) };
@@ -228,13 +241,13 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     const fromEvidence = (e: LayoutProposal['scope']['businessId']) => e && lineText(table, e.line).includes(e.literal) ? e.literal.trim() : e ? undefined : null;
     const scopeValue = (f: 'businessId' | 'businessName' | 'currency') => { const col = fromColumn(f); return col !== null ? col : fromEvidence(p.scope[f]); };
     const businessId = scopeValue('businessId'), currencyLiteral = scopeValue('currency'), businessName = scopeValue('businessName');
-    const currency = currencyLiteral ? /\b(MYR|RM)\b/i.test(currencyLiteral) ? 'MYR' : /^[A-Z]{3}$/.test(currencyLiteral) ? currencyLiteral : undefined : currencyLiteral;
+    const currency = currencyLiteral ? /\b(MYR|RM)\b/i.test(currencyLiteral) ? 'MYR' : /\b([A-Z]{3})\b/.exec(currencyLiteral)?.[1] ?? (/^(Rs\.?|₹)$/i.test(currencyLiteral) ? 'INR' : undefined) : currencyLiteral;
     const periodEvidence = p.scope.statementPeriod, periodLiteral = fromEvidence(periodEvidence);
     const scopeProblems = [
         businessId === null ? 'business ID not stated' : businessId === undefined || !/^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$/.test(businessId) ? 'business ID evidence not found verbatim or not an identifier' : '',
-        currency === null ? 'currency not stated' : currency === undefined ? 'currency evidence not found verbatim' : currency !== 'MYR' ? `currency ${currency} is not supported (MYR only)` : '',
+        currency === null ? 'currency not stated' : currency === undefined ? 'currency evidence not found verbatim' : scopeRule.currencies !== 'ANY' && !scopeRule.currencies.includes(currency) ? `currency ${currency} is not supported (${scopeRule.currencies.join(', ')} only)` : '',
         businessName === undefined ? 'business name evidence not found verbatim' : '',
-        periodLiteral === undefined ? 'statement period evidence not found verbatim' : periodLiteral && !periodMentioned(periodLiteral, period) ? `stated period "${periodLiteral}" does not match ${period}` : '',
+        periodLiteral === undefined ? 'statement period evidence not found verbatim' : periodLiteral && !(periodMentioned(periodLiteral, months[0]) && periodMentioned(periodLiteral, months.at(-1)!)) ? `stated period "${periodLiteral}" does not match ${period}` : '',
     ].filter(Boolean);
     if (!gate('scope', 'Business, currency and period come from the document', !scopeProblems.length, scopeProblems.length ? scopeProblems.join('; ') : `${businessId} · ${period} · ${currency}${periodLiteral ? ` · stated "${periodLiteral}"` : ''}`)) return result('Business, currency or period could not be established from the document.');
     // 11. Ledger account identity: one account, and the document names it as cash or bank. An account column the
@@ -257,14 +270,14 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     const rows = body.map((r, i): Record<string, string> => {
         const s = signed[i], abs = s < 0n ? -s : s;
         return ledger
-            ? { LedgerEntryID: ids[i], BusinessID: businessId!, PostingDate: dates[i]!, CashAccount: '1000-BANK', Currency: 'MYR', LedgerReference: references[i], LedgerMemo: descriptions[i], Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, CashAccountDebitMYR: cents(s > 0n ? s : 0n), CashAccountCreditMYR: cents(s < 0n ? -s : 0n), SignedCashMovementMYR: cents(s), CategoryLabel: '' }
-            : { BankTransactionID: ids[i], BusinessID: businessId!, BusinessName: (businessName ?? businessId!).slice(0, 120), AccountNumber: '', Currency: 'MYR', ValueDate: dates[i]!, StatementMonth: period, BankReference: references[i], BankDescription: descriptions[i], BankDirection: s < 0n ? 'Debit' : 'Credit', BankAmountMYR: cents(abs), SignedCashMovementMYR: cents(s), Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, SourceTransactionID: '' };
+            ? { LedgerEntryID: ids[i], BusinessID: businessId!, PostingDate: dates[i]!, CashAccount: '1000-BANK', Currency: currency!, LedgerReference: references[i], LedgerMemo: descriptions[i], Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, CashAccountDebitMYR: cents(s > 0n ? s : 0n), CashAccountCreditMYR: cents(s < 0n ? -s : 0n), SignedCashMovementMYR: cents(s), CategoryLabel: '' }
+            : { BankTransactionID: ids[i], BusinessID: businessId!, BusinessName: (businessName ?? businessId!).slice(0, 120), AccountNumber: '', Currency: currency!, ValueDate: dates[i]!, StatementMonth: dates[i]!.slice(0, 7), BankReference: references[i], BankDescription: descriptions[i], BankDirection: s < 0n ? 'Debit' : 'Credit', BankAmountMYR: cents(abs), SignedCashMovementMYR: cents(s), Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, SourceTransactionID: '' };
     });
     const bytes = new TextEncoder().encode(csv(ledger ? CANONICAL_LEDGER_HEADER : CANONICAL_BANK_HEADER, rows));
     const mappingKey = JSON.stringify({ role: p.role, headerLine: p.headerLine, columns: { ...c, recordId }, representation: rep, tokens: { inflow: [...tokens.inflow].sort(), outflow: [...tokens.outflow].sort() }, dateFormat, numberFormat, businessId, currency, period });
     return {
         decision: 'AUTO_ACCEPTED', role: p.role as 'BANK_STATEMENT' | 'GENERAL_LEDGER', checks, mapping, disclosures, mappingKey,
-        summary: `${ledger ? 'Cash-account ledger' : 'Bank statement'}: ${body.length} transactions, ${businessId} · ${period} · MYR, net ${cents(net)}; ${checks.length} independent checks passed.`,
+        summary: `${ledger ? 'Cash-account ledger' : 'Bank statement'}: ${body.length} transactions, ${businessId} · ${period} · ${currency}, net ${cents(net)}; ${checks.length} independent checks passed.`,
         canonical: { bytes, rows: body.length, lineage: body.map(r => r.line), net: cents(net), period, businessId: businessId! },
     };
 }
@@ -276,7 +289,7 @@ const READING_GATES = new Set(['amounts', 'dates', 'period', 'balance', 'anchor'
  * are tried, one cell and then two cells at a time. The result is accepted only when exactly one such choice makes
  * every gate pass; the choice is disclosed. A cell both passes read alike is never changed.
  */
-export function verifyWithDisputes(table: Table, raw: unknown, disputes: { line: number; column: number; readings: string[] }[], options: { extracted?: 'PDF_TEXT' | 'OCR' } = {}): VerifiedInterpretation {
+export function verifyWithDisputes(table: Table, raw: unknown, disputes: { line: number; column: number; readings: string[] }[], options: GateOptions = {}): VerifiedInterpretation {
     const first = verifyProposal(table, raw, options);
     const failed = first.checks.filter(k => !k.passed).map(k => k.id);
     if (first.decision === 'AUTO_ACCEPTED' || !disputes.length || !failed.length || !failed.every(id => READING_GATES.has(id))) return first;

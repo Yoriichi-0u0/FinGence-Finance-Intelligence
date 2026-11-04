@@ -23,12 +23,15 @@ export async function extractDocument(name: string, bytes: Uint8Array, sha256: s
         if (isPdf(bytes)) {
             const pdf = await readPdf(bytes);
             pages = pdf.pages.length;
+            const rotated = pdf.pages.reduce((n, p) => n + p.rotated, 0);
+            if (rotated) notes.push(`${rotated} rotated text run${rotated === 1 ? '' : 's'} (watermarks or margin notes) not read.`);
             try {
                 for (const page of pdf.pages) {
                     if (!page.scanned) { words.push(...page.words); continue; }
-                    const canvas = await pdf.render(page.number, SCAN_SCALE);
-                    if (!canvas) return { error: `Page ${page.number} is a scan without a text layer; scanned pages are read by OCR in the browser.` };
-                    const read = await ocrWords(canvas, page.number);
+                    // The scan as stored when the page is one JPEG; otherwise the page rendered at about 300 dpi (browser only).
+                    const scan = await pdf.image(page.number) ?? await pdf.render(page.number, SCAN_SCALE);
+                    if (!scan) return { error: `Page ${page.number} is a scan without a text layer that is not a single stored image; such pages are read by OCR in the browser.` };
+                    const read = await ocrWords(scan, page.number);
                     words.push(...read.words); confidences.push(read.confidence); disputed += read.disputed; ocrPages++;
                 }
             } finally { await pdf.close(); }
