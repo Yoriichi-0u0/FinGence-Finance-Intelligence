@@ -9,7 +9,7 @@
 - an extracted document always goes through the AI proposal and the gates, plus the date-order and arithmetic-anchor gates;
 - `verifyWithDisputes` may resolve a figure the two OCR passes disagree on, but only when exactly one reading makes every gate pass.
 
-Groq calls alternate between `GROQ_API_KEY` and `GROQ_API_KEY2` (#70). See the M1 runbook section "PDF statements and scans".
+Groq calls alternate between `GROQ_API_KEY` and `GROQ_API_KEY2` (#70); the second key adds capacity only when it is from a different Groq organization, since limits are per organization. See the M1 runbook section "PDF statements and scans".
 
 ## Proposed bank reconciliation statement — 4 November 2026
 
