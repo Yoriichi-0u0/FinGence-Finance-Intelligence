@@ -28,6 +28,7 @@ const ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** Headings that name a record identifier (not a reference or cheque number, which are separate fields). */
 const ID_HEADING = /^\s*(?:(?:txn|transaction|trans|entry|voucher|journal|jv|record|line|posting)(?:\s*(?:id|no\.?|number|#))?|id|id transaksi|no\.?\s*(?:baucar|rekod|transaksi|kemasukan))\s*$/i;
 const ACCOUNT_HEADING = /^\s*(account|acct|akaun|gl account|account code|account no\.?|kod akaun)\b/i;
+const TOTAL_LINE = /\b(totals?|jumlah)\b/i;
 const BALANCE_LINE = /\b(opening|closing|brought forward|carried forward|b\/f|c\/f|baki awal|baki akhir|baki dibawa)\b/i;
 const csvCell = (v: string) => /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 const csv = (header: string[], rows: Record<string, string>[]) => [header.join(','), ...rows.map(r => header.map(h => csvCell(r[h] ?? '')).join(','))].join('\n') + '\n';
@@ -58,7 +59,7 @@ function periodMentioned(literal: string, period: string) {
  * Judges a proposal from the document's bytes alone. The file name is deliberately NOT an input: it is metadata
  * anyone can change, so it may guide a model's proposal (it is in the evidence) but never establishes a role.
  */
-export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretation {
+export function verifyProposal(table: Table, raw: unknown, options: { extracted?: 'PDF_TEXT' | 'OCR' } = {}): VerifiedInterpretation {
     const checks: GateCheck[] = [], disclosures: string[] = [], mapping: FieldMapping[] = [];
     const result = (summary: string): VerifiedInterpretation => ({ decision: 'QUARANTINED', role: null, summary, checks, mapping, disclosures, canonical: null, mappingKey: null });
     const gate = (id: string, label: string, passed: boolean, detail: string) => { checks.push({ id, label, passed, detail }); return passed; };
@@ -157,6 +158,24 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
     }
     if (!gate('number-format', 'Number format is unambiguous', !ambiguousFormats.length || balanceStatus === 'PASSED', ambiguousFormats.length ? `${ambiguousFormats.join(', ')} would also read every amount${balanceStatus === 'PASSED' ? '; resolved by the running balance' : ''}` : 'No other format reads these amounts')) return result('The number format is ambiguous.');
 
+    // 6b. A table read from a PDF's text layer or by OCR was assembled from positioned words, and OCR can misread a
+    // digit: it needs its own arithmetic witness (the running balance, or the totals the document states), and its
+    // transactions must be in date order. A stated total that disagrees always fails.
+    if (options.extracted) {
+        const back = dates.findIndex((d, i) => i > 0 && d! < dates[i - 1]!);
+        if (!gate('date-sequence', 'Transactions are in date order', back < 0, back < 0 ? `${dates.length} dates in order` : `line ${body[back].line + 1} is dated before the line above it`)) return result('The extracted transactions are not in date order.');
+        const inflow = signed.filter(v => v > 0n).reduce((a, b) => a + b, 0n), outflow = signed.filter(v => v < 0n).reduce((a, b) => a - b, 0n);
+        const totalLines = excluded.filter(({ row }) => TOTAL_LINE.test(row.join(' ')) && !BALANCE_LINE.test(row.join(' ')));
+        const stated = totalLines.flatMap(({ row }) => row.map(v => parseAmount(v.trim(), numberFormat)).filter((v): v is bigint => typeof v === 'bigint').map(v => v < 0n ? -v : v));
+        const totals = !totalLines.length ? 'ABSENT' : stated.includes(inflow) && stated.includes(outflow) ? 'PASSED' : 'FAILED';
+        const show = (v: bigint) => cents(v);
+        const anchored = totals !== 'FAILED' && (balanceStatus === 'PASSED' || totals === 'PASSED');
+        if (!gate('anchor', `Amounts read by ${options.extracted === 'OCR' ? 'OCR' : 'PDF text extraction'} are confirmed arithmetically`, anchored,
+            totals === 'FAILED' ? `stated totals (${stated.map(show).join(', ') || 'none readable'}) do not equal money in ${show(inflow)} and money out ${show(outflow)}`
+                : totals === 'PASSED' ? `stated totals equal money in ${show(inflow)} and money out ${show(outflow)}${balanceStatus === 'PASSED' ? '; running balance also agrees' : ''}`
+                    : balanceStatus === 'PASSED' ? 'running balance agrees with every amount' : 'no running balance and no stated totals: amounts cannot be confirmed')) return result('Extracted amounts could not be confirmed by the document\'s own arithmetic.');
+    }
+
     // 7. Sign confirmation: heading/token vocabulary or the running balance must confirm direction; contradictions always fail.
     const meanings: [keyof typeof c, Meaning][] = rep === 'SPLIT_IN_OUT' ? [['moneyIn', 'IN'], ['moneyOut', 'OUT']] : rep === 'DEBIT_CREDIT' ? [['debit', 'DEBIT'], ['credit', 'CREDIT']] : [];
     const agreements: Agreement[] = [];
@@ -248,4 +267,36 @@ export function verifyProposal(table: Table, raw: unknown): VerifiedInterpretati
         summary: `${ledger ? 'Cash-account ledger' : 'Bank statement'}: ${body.length} transactions, ${businessId} · ${period} · MYR, net ${cents(net)}; ${checks.length} independent checks passed.`,
         canonical: { bytes, rows: body.length, lineage: body.map(r => r.line), net: cents(net), period, businessId: businessId! },
     };
+}
+
+/** Gate failures that a misread figure can cause; any other failure is never retried with alternative readings. */
+const READING_GATES = new Set(['amounts', 'dates', 'period', 'balance', 'anchor', 'date-sequence', 'number-format']);
+/**
+ * For a table read by OCR: when the proposal fails only on figures, the second OCR pass's readings of disputed cells
+ * are tried, one cell and then two cells at a time. The result is accepted only when exactly one such choice makes
+ * every gate pass; the choice is disclosed. A cell both passes read alike is never changed.
+ */
+export function verifyWithDisputes(table: Table, raw: unknown, disputes: { line: number; column: number; readings: string[] }[], options: { extracted?: 'PDF_TEXT' | 'OCR' } = {}): VerifiedInterpretation {
+    const first = verifyProposal(table, raw, options);
+    const failed = first.checks.filter(k => !k.passed).map(k => k.id);
+    if (first.decision === 'AUTO_ACCEPTED' || !disputes.length || !failed.length || !failed.every(id => READING_GATES.has(id))) return first;
+    const options1 = disputes.slice(0, 60).flatMap(d => d.readings.map(reading => ({ ...d, reading, was: table.rows[d.line]?.[d.column] ?? '' })));
+    const attempt = (choice: typeof options1) => {
+        if (new Set(choice.map(c => `${c.line}:${c.column}`)).size !== choice.length) return null;
+        const rows = table.rows.map(r => [...r]);
+        for (const c of choice) if (rows[c.line]) rows[c.line][c.column] = c.reading;
+        const v = verifyProposal({ ...table, rows }, raw, options);
+        return v.decision === 'AUTO_ACCEPTED' ? { v, choice } : null;
+    };
+    let found = options1.map(c => attempt([c])).filter(Boolean);
+    if (!found.length) found = options1.flatMap((a, i) => options1.slice(i + 1).map(b => attempt([a, b]))).filter(Boolean);
+    const tried = `${disputes.length} cell${disputes.length === 1 ? '' : 's'} read differently by the two OCR passes`;
+    if (found.length !== 1) {
+        first.disclosures.push(`${tried}: ${found.length ? `${found.length} different choices satisfy the checks, so none is taken` : 'no alternative reading satisfies the checks'}.`);
+        return first;
+    }
+    const { v, choice } = found[0]!;
+    v.checks.push({ id: 'ocr-readings', label: 'Disputed OCR readings resolved by the document\'s arithmetic', passed: true, detail: choice.map(c => `line ${c.line + 1}: "${c.reading}" not "${c.was}"`).join('; ') });
+    v.disclosures.push(`${tried}; exactly one choice satisfies every check: ${choice.map(c => `line ${c.line + 1} read as "${c.reading}" (the other pass read "${c.was}")`).join('; ')}.`);
+    return v;
 }

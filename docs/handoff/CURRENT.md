@@ -1,5 +1,16 @@
 # FinGence — current technical entrypoint
 
+## AI M3: PDF statements and scans — 4 November 2026
+
+`/data` ingests CSV, XLSX, PDF (text or scanned) and PNG/JPEG:
+
+- `lib/interpretation/extract.ts` reads text PDFs through pdf.js, and scans and images by OCR in the browser (tesseract.js, two passes);
+- `positioned.ts` places the words into a table by geometry alone;
+- an extracted document always goes through the AI proposal and the gates, plus the date-order and arithmetic-anchor gates;
+- `verifyWithDisputes` may resolve a figure the two OCR passes disagree on, but only when exactly one reading makes every gate pass.
+
+Groq calls alternate between `GROQ_API_KEY` and `GROQ_API_KEY2` (#70). See the M1 runbook section "PDF statements and scans".
+
 ## Proposed bank reconciliation statement — 4 November 2026
 
 `lib/poc-reconciliation/statement.ts` (`buildStatement`, exposed as `ProcessingContext.outputs.statement`) classifies every open
