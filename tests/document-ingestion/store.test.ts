@@ -51,6 +51,13 @@ describe('ingestion run store route', () => {
         expect((await (await route()).POST(request())).status).toBe(status);
         expect(fetch).not.toHaveBeenCalled();
     });
+    it('sends a new sb_secret key in apikey only (it is not a JWT)', async () => {
+        vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', ''); vi.stubEnv('SUPABASE_SECRET_KEY', 'sb_secret_not_real');
+        const fetch = vi.fn(async () => new Response(JSON.stringify(RUN_ID), { status: 200 })); vi.stubGlobal('fetch', fetch);
+        expect((await (await route()).POST(post(runPayload(await phase1())))).status).toBe(201);
+        const headers = (fetch.mock.calls[0] as unknown as [string, RequestInit])[1].headers as Record<string, string>;
+        expect([headers.apikey, headers.Authorization]).toEqual(['sb_secret_not_real', undefined]);
+    });
     it('reports a store failure without retrying', async () => {
         const fetch = vi.fn(async () => new Response('{"message":"x"}', { status: 500 })); vi.stubGlobal('fetch', fetch);
         const res = await (await route()).POST(post(runPayload(await phase1())));

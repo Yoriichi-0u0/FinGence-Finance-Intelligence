@@ -78,7 +78,7 @@ The ingestion store is the Supabase project **FinGence-Production**, schema `fin
 - **Access:** RLS is enabled and forced with no policies, the schema is not exposed, and anonymous and authenticated roles have no access.
   - Writes and reads go through `public.fingence_ingestion_record_run(payload)` (atomic) and `public.fingence_ingestion_get_run(run)`, which only the service role may execute.
 - **Route:** `POST /api/ingestion/runs` (same-origin, 1.5 MB bound, schema-validated by `runPayloadSchema`, rate-limited by the shared budget store) and `GET` for availability.
-  - The route exists only when `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set.
+  - The route exists only when `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (or the legacy `SUPABASE_SERVICE_ROLE_KEY`) are set.
   - The Data page shows "Save verified records" when it is on.
 
 ## Evidence

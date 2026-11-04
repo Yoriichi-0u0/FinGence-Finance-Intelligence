@@ -5,10 +5,11 @@ import type { RunPayload } from '../document-ingestion/run-payload';
 /**
  * Durable store for ingestion runs: the FinGence Supabase project's `fingence_ingestion` schema, written only through
  * `public.fingence_ingestion_record_run`, which only the service role may execute. Off unless
- * FINGENCE_INGESTION_STORE=1 with SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY set; the key never leaves the server.
+ * FINGENCE_INGESTION_STORE=1 with SUPABASE_URL and a server key: SUPABASE_SECRET_KEY (a new `sb_secret_` key) or the
+ * legacy SUPABASE_SERVICE_ROLE_KEY. Either acts as the service role; it never leaves the server.
  */
 export function ingestionStore(): { url: string; key: string } | null {
-    const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (process.env.FINGENCE_INGESTION_STORE !== '1' || !url || !key || !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/.test(url)) return null;
     return { url: url.replace(/\/$/, ''), key };
 }
@@ -21,7 +22,8 @@ export async function recordRun(payload: RunPayload & { clientHash: string | nul
     try {
         response = await transport(`${store.url}/rest/v1/rpc/fingence_ingestion_record_run`, {
             method: 'POST', redirect: 'error', signal: AbortSignal.timeout(15_000),
-            headers: { apikey: store.key, Authorization: `Bearer ${store.key}`, 'Content-Type': 'application/json' },
+            // A new secret key (sb_secret_…) is not a JWT and goes in `apikey` only; a legacy service-role JWT also as Bearer.
+            headers: { apikey: store.key, ...(store.key.startsWith('sb_') ? {} : { Authorization: `Bearer ${store.key}` }), 'Content-Type': 'application/json' },
             body: JSON.stringify({ payload }),
         });
     } catch { return { error: 'STORE_UNREACHABLE' }; }
