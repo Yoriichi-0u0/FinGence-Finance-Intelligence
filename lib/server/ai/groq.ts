@@ -45,7 +45,10 @@ const defaultTransport: GroqTransport = async (body, signal, key) => {
     const retryAfter = Number(response.headers.get('retry-after'));
     return { status: response.status, json: await response.json().catch(() => null), retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined };
 };
-/** Configured Groq keys, in order: GROQ_API_KEY, then GROQ_API_KEY2. Each key has its own provider rate limits. */
+/**
+ * Configured Groq keys, in order: GROQ_API_KEY, then GROQ_API_KEY2. Groq's rate limits are per organization, so the
+ * second key adds capacity only when it belongs to a different organization; in the same one, failover finds the same limit.
+ */
 export function groqKeys(): string[] {
     return [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY2].filter((k): k is string => !!k);
 }
