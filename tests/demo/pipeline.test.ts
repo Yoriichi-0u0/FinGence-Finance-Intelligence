@@ -42,11 +42,14 @@ describe('one-action processing of the public synthetic documents', () => {
         expect(pair.stages.find(s => s.id === 'FORECAST')!.decision).toBe('UNAVAILABLE');
         expect(pair.outputs.report!.forecast.status).toBe('UNAVAILABLE');
     });
-    it('quarantines every unmatched and ambiguous outcome and never presents it as matched', async () => {
+    it('resolves every exception autonomously, quarantines only the unexplained, and never presents an exception as matched', async () => {
         const c = await processDocuments(sample()), snapshot = c.outputs.reconciliation!;
-        const exceptions = c.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION');
-        expect(exceptions).toHaveLength(9);
-        expect(exceptions.map(e => e.status).sort()).toEqual(['AMBIGUOUS_DUPLICATE_LEDGER', 'AMOUNT_MISMATCH_REVIEW', 'AMOUNT_MISMATCH_REVIEW', 'BANK_ONLY', 'BANK_ONLY', 'BANK_ONLY', 'LEDGER_ONLY', 'LEDGER_ONLY', 'REFERENCE_MISMATCH_REVIEW']);
+        // The matcher's outcomes are unchanged: nine exceptions, none shown as a match.
+        expect(snapshot.results.filter(r => !r.status.startsWith('MATCH_')).map(r => r.status).sort()).toEqual(['AMBIGUOUS_DUPLICATE_LEDGER', 'AMOUNT_MISMATCH_REVIEW', 'AMOUNT_MISMATCH_REVIEW', 'BANK_ONLY', 'BANK_ONLY', 'BANK_ONLY', 'LEDGER_ONLY', 'LEDGER_ONLY', 'REFERENCE_MISMATCH_REVIEW']);
+        // Each is resolved by a stated rule; nothing is left for review and nothing is unexplained.
+        expect(c.outputs.resolution!.totals.resolutions).toEqual({ MATCHED_LATE: 0, MATCHED_BY_AMOUNT: 1, TIMING_CLEARED: 0, TIMING_OPEN: 2, ENTRY_PREPARED: 6, UNEXPLAINED: 0 });
+        expect(c.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION')).toEqual([]);
+        expect(c.stages.find(s => s.id === 'RECONCILE')!.summary).toBe('50 outcomes matched automatically; 9 exceptions resolved by stated rules (6 correcting entries prepared); 0 unexplained.');
         const ambiguous = snapshot.results.find(r => r.status === 'AMBIGUOUS_DUPLICATE_LEDGER')!;
         expect(ambiguous.ledgerRecordIds).toHaveLength(2);
         expect(c.quarantine.filter(q => q.kind === 'ANOMALY_CANDIDATE')).toHaveLength(6);

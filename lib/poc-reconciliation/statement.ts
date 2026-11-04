@@ -13,12 +13,16 @@ import { fromCents, toCents as cents } from '../poc-anomalies/source';
 import type { CashSourceRow, FinancePoCReconciliationV1, ReconciliationStatus } from './contracts';
 
 export const STATEMENT_VERSION = 'fingence-reconciliation-statement-v1';
-export const ITEM_CATEGORIES = ['DEPOSIT_IN_TRANSIT', 'UNPRESENTED_CHEQUE', 'BANK_CHARGE_NOT_IN_LEDGER', 'RECEIPT_NOT_IN_LEDGER', 'PAYMENT_NOT_IN_LEDGER', 'LEDGER_AMOUNT_ERROR', 'DUPLICATE_LEDGER_POSTING', 'REFERENCE_ONLY', 'UNEXPLAINED'] as const;
+export const ITEM_CATEGORIES = ['DEPOSIT_IN_TRANSIT', 'UNPRESENTED_CHEQUE', 'BANK_CHARGE_NOT_IN_LEDGER', 'RECEIPT_NOT_IN_LEDGER', 'PAYMENT_NOT_IN_LEDGER', 'LEDGER_AMOUNT_ERROR', 'DUPLICATE_LEDGER_POSTING', 'REFERENCE_ONLY', 'UNEXPLAINED',
+    // Assigned only by the reconciliation layer (lib/reconciliation), which links exceptions across days and months.
+    'LATE_MATCH', 'PAYMENT_IN_TRANSIT', 'LEDGER_POSTED_LATE', 'CLEARED_PRIOR_PERIOD_ITEM'] as const;
 export type ItemCategory = typeof ITEM_CATEGORIES[number];
 export const CATEGORY_LABEL: Record<ItemCategory, string> = {
     DEPOSIT_IN_TRANSIT: 'Deposit in transit', UNPRESENTED_CHEQUE: 'Unpresented cheque', BANK_CHARGE_NOT_IN_LEDGER: 'Bank charge not in the ledger',
     RECEIPT_NOT_IN_LEDGER: 'Receipt not in the ledger', PAYMENT_NOT_IN_LEDGER: 'Payment not in the ledger', LEDGER_AMOUNT_ERROR: 'Ledger amount differs from the bank',
     DUPLICATE_LEDGER_POSTING: 'Duplicate ledger posting', REFERENCE_ONLY: 'Reference differs (no amount effect)', UNEXPLAINED: 'Unexplained',
+    LATE_MATCH: 'Matched, recorded days apart', PAYMENT_IN_TRANSIT: 'Payment not yet cleared by the bank', LEDGER_POSTED_LATE: 'Recorded in the ledger in a later month',
+    CLEARED_PRIOR_PERIOD_ITEM: 'Clears an item from an earlier month',
 };
 /** Days at the end of the period within which an unbanked ledger receipt is treated as in transit. */
 export const IN_TRANSIT_DAYS = 3;
@@ -46,8 +50,18 @@ export type ReconciliationStatement = {
 const MATCHED = new Set<ReconciliationStatus>(['MATCH_EXACT', 'MATCH_DATE_SHIFT']);
 const sum = (values: bigint[]) => values.reduce((a, b) => a + b, 0n);
 const lastDay = (period: string) => { const [y, m] = period.split('-').map(Number); return new Date(Date.UTC(y, m, 0)).getUTCDate(); };
-const signed = (c: bigint) => (c < 0n ? '-' : '') + fromCents(c < 0n ? -c : c);
-const money = (c: bigint, currency: string) => `${c < 0n ? '−' : ''}${currency} ${groupDigits(fromCents(c < 0n ? -c : c))}`;
+export const signed = (c: bigint) => (c < 0n ? '-' : '') + fromCents(c < 0n ? -c : c);
+export const money = (c: bigint, currency: string) => `${c < 0n ? '−' : ''}${currency} ${groupDigits(fromCents(c < 0n ? -c : c))}`;
+
+/**
+ * Which of several identical ledger copies of one bank record FinGence keeps: the posting date closest to the bank
+ * date, then the lowest record ID. The others are reversed. Deterministic, so no human choice is needed.
+ */
+export function duplicateChoice(bank: CashSourceRow, ledger: CashSourceRow[]): { kept: CashSourceRow; reversed: CashSourceRow[] } {
+    const gap = (r: CashSourceRow) => Math.abs(Date.parse(r.date) - Date.parse(bank.date));
+    const [kept, ...reversed] = [...ledger].sort((a, b) => gap(a) - gap(b) || a.recordId.localeCompare(b.recordId));
+    return { kept, reversed: reversed.sort((a, b) => a.recordId.localeCompare(b.recordId)) };
+}
 
 function classify(r: FinancePoCReconciliationV1['results'][number], bank: CashSourceRow | undefined, ledger: CashSourceRow[], period: string, currency: string): Omit<StatementItem, 'effect' | 'status' | 'bankRecordId' | 'ledgerRecordIds'> {
     const b = bank ? BigInt(bank.signedCents) : 0n, l = ledger.map(x => BigInt(x.signedCents)), row = bank ?? ledger[0];
@@ -76,7 +90,7 @@ function classify(r: FinancePoCReconciliationV1['results'][number], bank: CashSo
         case 'AMBIGUOUS_DUPLICATE_LEDGER': {
             if (!bank || ledger.length < 2 || l.some(v => v !== b)) return unexplained('Several candidates that are not identical copies of one bank amount.');
             return { ...base, category: 'DUPLICATE_LEDGER_POSTING', side: 'LEDGER', adjustment: signed(-b * BigInt(ledger.length - 1)), rule: `One bank record and ${ledger.length} identical ledger entries: the ${ledger.length - 1 === 1 ? 'extra entry is' : 'extra entries are'} reversed.`,
-                note: `Ledger entries ${ledger.map(x => x.recordId).join(', ')} carry the same reference and amount; which one to reverse is a human choice.` };
+                note: (({ kept, reversed }) => `Ledger entries ${ledger.map(x => x.recordId).join(', ')} carry the same reference and amount. ${kept.recordId} is kept (posting date closest to the bank record, then lowest ID); ${reversed.map(x => x.recordId).join(', ')} ${reversed.length === 1 ? 'is' : 'are'} reversed.`)(duplicateChoice(bank, ledger)) };
         }
         case 'REFERENCE_MISMATCH_REVIEW':
             if (bank && ledger.length === 1 && b === l[0]) return { ...base, category: 'REFERENCE_ONLY', side: 'NONE', adjustment: '0.00', rule: 'Same date and amount with different references: no amount effect; the pairing still needs confirmation.' };
@@ -93,6 +107,16 @@ export function buildStatement(snapshot: FinancePoCReconciliationV1): Reconcilia
         const effect = (bank ? BigInt(bank.signedCents) : 0n) - sum(ledger.map(x => BigInt(x.signedCents)));
         return { ...classify(r, bank, ledger, period, currency), status: r.status, effect: signed(effect), bankRecordId: r.bankRecordId, ledgerRecordIds: r.ledgerRecordIds };
     });
+    return assembleStatement(snapshot, items);
+}
+
+/**
+ * The statement for a snapshot and its classified exception items: totals, the unexplained remainder and the three
+ * identities. Shared by buildStatement and the reconciliation layer, which reclassifies items it links.
+ */
+export function assembleStatement(snapshot: FinancePoCReconciliationV1, items: StatementItem[]): ReconciliationStatement {
+    const { period, currency } = snapshot.scope;
+    const bankRows = new Map(snapshot.rows.bank.map(r => [r.recordId, r])), ledgerRows = new Map(snapshot.rows.ledger.map(r => [r.recordId, r]));
     const bankMovement = cents(snapshot.cashMovement.bank), ledgerMovement = cents(snapshot.cashMovement.ledger), difference = cents(snapshot.cashMovement.signedDifference);
     const on = (side: StatementItem['side']) => items.filter(i => i.side === side);
     const adjustedBank = bankMovement + sum(on('BANK').map(i => cents(i.adjustment))), adjustedLedger = ledgerMovement + sum(on('LEDGER').map(i => cents(i.adjustment)));

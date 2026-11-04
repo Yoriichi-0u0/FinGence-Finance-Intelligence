@@ -136,7 +136,7 @@ export default function DemoDataWorkspace() {
                 <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
                     <Stat label="Net signed bank movement" value={money(scope.currency, out.totals.net)} detail={`${out.totals.rows} bank records`} />
                     <Stat label="Bank − ledger difference" value={money(scope.currency, out.reconciliation.cashMovement.signedDifference)} detail={`Ledger ${money(scope.currency, out.reconciliation.cashMovement.ledger)}`} />
-                    <Stat label="Matched automatically" value={`${out.reconciliation.counts.MATCH_EXACT + out.reconciliation.counts.MATCH_DATE_SHIFT} of ${out.reconciliation.results.length}`} detail={`${context.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length} exceptions quarantined`} />
+                    <Stat label="Matched automatically" value={`${out.reconciliation.counts.MATCH_EXACT + out.reconciliation.counts.MATCH_DATE_SHIFT} of ${out.reconciliation.results.length}`} detail={out.resolution ? `${out.resolution.totals.timing + out.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved · ${out.resolution.attention.length} flagged` : `${context.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length} exceptions flagged`} />
                     <Stat label="Next-month baseline" value={out.forecast?.forecast.status === 'AVAILABLE' ? money(scope.currency, out.forecast.forecast.net) : 'Unavailable'} detail={out.forecast?.forecast.status === 'AVAILABLE' ? `${out.forecast.forecast.period} net, six-month mean` : 'Needs 7 consecutive months'} />
                 </div>
                 <nav aria-label="Connected results" className="flex flex-wrap gap-2 border-t border-[var(--border)] p-4 sm:px-5">
