@@ -125,7 +125,7 @@ Each gate is computed from the original bytes, independently of the model:
 | --- | --- | --- |
 | **M1 (built)** | **AI layout interpretation with deterministic acceptance** | Server Groq gateway behind a durable fail-closed spend budget; v2 discriminated-union proposal schema; gates that take role, signed convention and cash account from document content only (never the file name); canonical materialization; pipeline + UI integration with receipts; unfamiliar-layout public samples; recorded-proposal tests (positive and adversarial); live evaluation harness with accuracy, false-acceptance, latency and cost report; positive variants reproduce the exact Phase 1 figures (difference MYR −2,692.92). |
 | M2 **(built)** | Grounded AI Finance Q&A + narrated report (Reports commentary built 4 Nov 2026) | Tool-calling planner over deterministic tools; numeric-citation gate; refusal of unsupported questions; answer evaluation set (supported, unsupported, adversarial); AI narrative clearly separated from verified figures. |
-| M3 | XLSX worksheets **(built)**; images/scanned PDFs via vision | `qwen3.8-27b` transcription to rows → arithmetic anchor gates (running balance, stated totals) → same materializer; Docling/OCR-0 as an optional local reader for comparison. |
+| M3 **(built)** | XLSX worksheets, text PDFs, scanned PDFs and images (browser OCR with arithmetic anchors) | `qwen3.8-27b` transcription to rows → arithmetic anchor gates (running balance, stated totals) → same materializer; Docling/OCR-0 as an optional local reader for comparison. |
 | M4 | Intelligent exception matching and forecasting choice | LLM/E5 candidate ranking for BANK_ONLY/LEDGER_ONLY/REFERENCE_REVIEW with an exact-money/date gate, shown as suggestions; backtest-selected forecasting model. |
 | M5 | Backend jobs + Supabase persistence | `ProcessingRunner` backend implementation on Celester's DB04/AI06 contracts: content-addressed sources, stage records, receipts, quarantine inbox, audit. |
 
@@ -152,8 +152,9 @@ Each gate is computed from the original bytes, independently of the model:
 **Broader document understanding (M3), in order of risk.**
 
 1. **XLSX (built, 4 Nov 2026).** Deterministic worksheet → table conversion (`lib/interpretation/workbook.ts`), then the M1 interpreter and gates unchanged. See the M1 runbook, "Excel workbooks".
-2. **Text PDFs.** Docling (local) table extraction into the same evidence window. Running-balance and stated-total anchors become mandatory where the layout is extracted rather than read.
-3. **Scans and images.** Vision transcription (`qwen3.8-27b`; Xiaomi-OCR-0 as a local comparison) proposes *rows*, not just layout.
+2. **Text PDFs (built, 4 Nov 2026).** pdf.js text layer in the browser → positioned words → table, then the same interpreter and gates. The running-balance or stated-total anchor and date order are mandatory for extracted layouts.
+3. **Scans and images (built with browser OCR, 4 Nov 2026).** tesseract.js reads each page twice in the browser; the arithmetic anchor accepts only a document whose figures its own running balance or stated totals confirm, and resolves a disputed figure only when exactly one reading is consistent. The vision-model route below stays an option for harder scans.
+   Earlier plan: Vision transcription (`qwen3.8-27b`; Xiaomi-OCR-0 as a local comparison) proposes *rows*, not just layout.
    - That is a larger trust step, so acceptance requires a passing running balance or stated opening/closing totals.
    - Opaque scans without such anchors are quarantined.
 4. **Scope widening.** Multi-month documents, then other currencies, each behind its own gates and fixtures.
