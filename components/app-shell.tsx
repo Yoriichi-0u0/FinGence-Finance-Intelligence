@@ -6,8 +6,13 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { DemoProcessingProvider } from "@/components/demo/context";
 import { DemoBanner } from "@/components/demo/banner";
+import { ROLE_LABEL, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
 import {
+  Activity,
   AlertTriangle,
+  LogIn,
+  LogOut,
+  Users,
   Building2,
   ChartNoAxesCombined,
   ChevronDown,
@@ -39,6 +44,9 @@ const administration = { href: "/admin", label: "Administration", icon: ShieldCh
 const financeQuestions = { href: "/finance-questions", label: "Finance questions", icon: MessageSquareText };
 // Browser-only synthetic demo: rule-based answers over the current processing context.
 const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareText };
+// Hosted workspace: Management (Technical) watches the backend; Admin manages the team. Neither processes documents.
+const operationsItem = { href: "/operations", label: "Operations", icon: Activity };
+const teamItem = { href: "/team", label: "Team", icon: Users };
 
 function Brand() {
   return (
@@ -60,6 +68,9 @@ function Brand() {
 
 function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false }: { onNavigate?: () => void; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean }) {
   const pathname = usePathname();
+  const workspace = useWorkspace(), role = workspace.session?.role;
+  const items = role === "MANAGEMENT" ? [operationsItem] : role === "ADMIN" ? [teamItem, operationsItem]
+    : [...navigation, ...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : []), ...(localAdministration ? [administration] : [])];
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[var(--navy)] px-3 py-5 text-white">
@@ -68,7 +79,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
       </div>
 
       <nav aria-label="Primary navigation" className="space-y-1">
-        {[...navigation, ...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : []), ...(localAdministration ? [administration] : [])].map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
@@ -96,6 +107,31 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
       </nav>
 
       <div className="mt-auto border-t border-white/14 px-2 pt-5">
+        {workspace.enabled && workspace.session ? (
+          <div className="flex items-center gap-3 p-1">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full border border-teal-300/50 text-teal-200">
+              <Building2 aria-hidden="true" size={20} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold">{workspace.session.organization.name}</span>
+              <span className="block truncate text-xs text-slate-300">{workspace.session.email}</span>
+              <span className="mt-0.5 block text-xs text-slate-400">{ROLE_LABEL[workspace.session.role]}</span>
+            </span>
+            <button type="button" onClick={() => void workspace.signOut()} className="grid size-10 shrink-0 place-items-center rounded-lg text-slate-200 hover:bg-white/10 hover:text-white" aria-label="Sign out" title="Sign out">
+              <LogOut aria-hidden="true" size={18} />
+            </button>
+          </div>
+        ) : workspace.enabled && !workspace.loading ? (
+          <Link href="/sign-in" onClick={onNavigate} className="flex items-center gap-3 rounded-lg p-1 hover:bg-white/7">
+            <span className="grid size-10 shrink-0 place-items-center rounded-full border border-teal-300/50 text-teal-200">
+              <LogIn aria-hidden="true" size={19} />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">Sign in</span>
+              <span className="block truncate text-xs text-slate-300">{syntheticDemo ? "Or use the public demo, no sign-in" : "Organization workspace"}</span>
+            </span>
+          </Link>
+        ) : (
         <button
           type="button"
           className="flex w-full items-center gap-3 rounded-lg p-1 text-left hover:bg-white/7"
@@ -111,16 +147,18 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
           </span>
           <ChevronDown aria-hidden="true" size={16} className="text-slate-300" />
         </button>
+        )}
       </div>
     </div>
   );
 }
 
-export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, workspace = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; workspace?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
   return (
+    <WorkspaceProvider enabled={workspace}>
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway}>
     <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)] print:block">
       <aside className="sticky top-0 hidden h-dvh lg:block print:hidden">
@@ -153,7 +191,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
-          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
+          {["/sign-in", "/join", "/team", "/operations"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
           {children}
@@ -183,5 +221,6 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
       ) : null}
     </div>
     </DemoProcessingProvider>
+    </WorkspaceProvider>
   );
 }

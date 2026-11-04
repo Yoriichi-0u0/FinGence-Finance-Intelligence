@@ -2,6 +2,7 @@ import { evidenceSchema, InterpreterUnavailable } from '@/lib/interpretation/con
 import { admit, clientAddress } from '@/lib/server/ai/budget';
 import { aiGatewayEnabled, interpreterModel, proposeLayout, worstCaseUsd } from '@/lib/server/ai/groq-interpreter';
 import { boundedJson, noStoreJson as json } from '@/lib/server/ai/request';
+import { processingRefusal } from '@/lib/server/workspace/session';
 
 export const dynamic = 'force-dynamic';
 const MAX_BODY_BYTES = 48_000;
@@ -21,6 +22,8 @@ export async function POST(request: Request) {
     if (!aiGatewayEnabled()) return notFound();
     const read = await boundedJson(request, MAX_BODY_BYTES);
     if ('refusal' in read) return read.refusal;
+    const gate = await processingRefusal(request.headers);
+    if (gate) return json({ code: gate.code, ...(gate.reason ? { reason: gate.reason } : {}) }, gate.status);
     const evidence = evidenceSchema.safeParse((read.body as { evidence?: unknown } | null)?.evidence);
     if (!evidence.success) return json({ code: 'INVALID_EVIDENCE' }, 400);
     const admission = await admit({ client: clientAddress(request.headers), worstCaseUsd: worstCaseUsd(evidence.data) });

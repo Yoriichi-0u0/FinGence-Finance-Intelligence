@@ -7,6 +7,7 @@ import { STAGE_TITLES, type DocumentInput, type StageId } from '@/lib/demo/pipel
 import { useDemoProcessing } from './context';
 import { InterpretationPanel } from './interpretation-panel';
 import { SaveRun } from './save-run';
+import { ROLE_LABEL, useWorkspace } from '@/components/workspace/context';
 import { DecisionBadge, PendingBadge, Stat, Table, button, money, primaryButton } from './shared';
 
 const SAMPLE = ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
@@ -33,6 +34,7 @@ export default function DemoDataWorkspace() {
     const [selected, setSelected] = useState<DocumentInput[]>([]);
     const [notice, setNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const workspace = useWorkspace(), paused = workspace.session?.processing.paused ? workspace.session.processing : null;
     const busy = status === 'processing' || loading;
 
     async function loadSample(paths = SAMPLE) {
@@ -59,8 +61,19 @@ export default function DemoDataWorkspace() {
     const ended = status === 'ready' || status === 'failed';
     const scope = context?.scope, out = context?.outputs;
 
+    if (workspace.session && workspace.session.role !== 'FINANCE') return <>
+        <PageHeader title="Data" description="Documents are processed by Finance users." />
+        <Panel title={`Signed in as ${ROLE_LABEL[workspace.session.role]}`}>
+            <div className="p-4 sm:p-5"><p className="text-sm">Your role does not process financial documents. {workspace.session.role === 'MANAGEMENT' ? 'Every run your Finance users process appears in Operations, with each check, model call and failure.' : 'Manage who can sign in, and with which role, in Team.'}</p>
+            <Link href={workspace.session.role === 'MANAGEMENT' ? '/operations' : '/team'} className={`${primaryButton} mt-4`}>{workspace.session.role === 'MANAGEMENT' ? 'Open Operations' : 'Open Team'}</Link></div>
+        </Panel>
+    </>;
     return <>
         <PageHeader title="Data" description="Provide a bank statement and a general ledger once. FinGence identifies, verifies, reconciles and analyses them in one run." />
+        {paused ? <div role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-950">
+            <p><strong>Processing is paused by your technical team.</strong> You can still look at earlier results; new documents cannot be processed until they resume it.</p>
+            {paused.reason ? <p className="mt-1">Their note: {paused.reason}</p> : null}
+        </div> : null}
         <div role="note" aria-label="Public prototype data notice" className="mb-5 space-y-1.5 rounded-lg border border-amber-200 bg-[var(--amber-soft)] p-3 text-sm">
             <p><strong>Public prototype: do not submit confidential or real financial documents.</strong> The built-in sample documents are fictional.</p>
             <p>If you choose your own files, they are read and processed locally in this browser and are not uploaded to a server; scans and images are read by OCR here too (the OCR engine and its English language data are downloaded from the jsDelivr CDN). Their contents are kept temporarily in this tab&apos;s sessionStorage so results survive a reload, until you press Clear results or close the tab.</p>
@@ -84,7 +97,7 @@ export default function DemoDataWorkspace() {
                     {selected.length ? <ul aria-label="Selected documents" className="space-y-2">{selected.map(d => <li key={d.name} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"><span className="min-w-0 break-all">{d.name}</span><span className="shrink-0 text-xs text-[var(--muted)]">{kb(d.bytes.byteLength)} · {d.provenance === 'PUBLIC_SYNTHETIC_SAMPLE' ? 'sample' : 'yours'}</span></li>)}</ul>
                         : <p className="text-sm text-[var(--muted)]">No documents selected.</p>}
                     <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
-                        <button type="button" className={primaryButton} disabled={busy || !selected.length} onClick={() => void process(selected)}>{status === 'processing' ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Play aria-hidden="true" size={16} />}Process Financial Documents</button>
+                        <button type="button" className={primaryButton} disabled={busy || !selected.length || !!paused} onClick={() => void process(selected)}>{status === 'processing' ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Play aria-hidden="true" size={16} />}Process Financial Documents</button>
                         <button type="button" className={button} disabled={busy || (status !== 'ready' && status !== 'failed')} onClick={() => { clear(); setSelected([]); }}><RotateCcw aria-hidden="true" size={16} />Clear results</button>
                     </div>
                 </div>

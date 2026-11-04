@@ -1,5 +1,16 @@
 # FinGence — current technical entrypoint
 
+## Workspace v1: organizations and three roles — 5 November 2026
+
+The hosted workspace is in [docs/architecture/workspace-roles-v1.md](../architecture/workspace-roles-v1.md): Supabase schema `fingence_workspace` (`supabase/sql/workspace-v1.sql`) and `lib/server/workspace/*`.
+
+- **Autonomous processing:** there is no approval or review step. Finance users process documents, and each run is recorded automatically for their organization.
+- **Management (Technical):** sees every run's checks, failures and model receipts in `/operations`, and can pause processing or end sessions.
+- **Admin:** manages members and invitations in `/team`.
+- **Public demo:** unchanged, with no session.
+- **Switch:** on with `FINGENCE_WORKSPACE=1`.
+- **Replaces locally:** this is the hosted counterpart of the local-only M5 `/admin` and `/enroll`, which stay as they were.
+
 ## Ingestion layer v1 — 5 November 2026
 
 The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): documents in, verified records out. Its contract is
