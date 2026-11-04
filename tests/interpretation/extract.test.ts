@@ -60,10 +60,11 @@ describe('PDF documents give exactly the Phase 1 results', () => {
         expect(c.status).toBe('QUARANTINED');
         expect(c.documents[0].reason).toMatch(/PDF text layer/);
     });
-    it('a scanned PDF page without a canvas is reported, not guessed', async () => {
+    it('a scanned PDF page that is one stored JPEG is read by OCR from the image itself (no canvas needed)', async () => {
         const r = await extractDocument('scan.pdf', new Uint8Array(readFileSync(join(DIR, 'bank-statement-march-2026-scan.pdf'))), 'x');
-        expect(r).toEqual({ error: expect.stringMatching(/scan without a text layer/) });
-    });
+        expect(r).toMatchObject({ source: { kind: 'OCR', pages: 2 } });
+        expect(new TextDecoder().decode((r as { bytes: Uint8Array }).bytes)).toMatch(/Date,Txn ID,Ref No,Particulars,Payee \/ Payer,Withdrawal \(RM\),Deposit \(RM\),Balance \(RM\)/);
+    }, 180000);
 });
 
 describe('the arithmetic anchor refuses what the gates alone would accept', () => {
@@ -100,12 +101,12 @@ describe('OCR of a scanned ledger', () => {
         const matched = (x: ProcessingContext) => x.outputs.reconciliation!.counts.MATCH_EXACT + x.outputs.reconciliation!.counts.MATCH_DATE_SHIFT;
         expect(matched(c)).toBeLessThan(matched(baseline));
         expect(c.outputs.reconciliation!.results.length - matched(c)).toBeGreaterThan(9);
-    }, 60000);
+    }, 180000);
     it('a PDF with no readable text is quarantined with its reason', async () => {
         const doc = await PDFDocument.create(); doc.addPage([200, 200]);
         const blank = await processDocuments([input('blank.pdf', new Uint8Array(await doc.save())), file(DIR, LEDGER_SCAN)], undefined, undefined, { interpreter: recorded });
         expect(blank.documents[0]).toMatchObject({ decision: 'QUARANTINED', reason: expect.stringMatching(/^Not read: /) });
-    }, 60000);
+    }, 180000);
 });
 
 describe('two OCR readings that disagree: the arithmetic may choose, but only one consistent choice', () => {

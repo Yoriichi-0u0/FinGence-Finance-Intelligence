@@ -59,7 +59,15 @@ function periodMentioned(literal: string, period: string) {
  * Judges a proposal from the document's bytes alone. The file name is deliberately NOT an input: it is metadata
  * anyone can change, so it may guide a model's proposal (it is in the evidence) but never establishes a role.
  */
-export function verifyProposal(table: Table, raw: unknown, options: { extracted?: 'PDF_TEXT' | 'OCR' } = {}): VerifiedInterpretation {
+/**
+ * `extracted`: the table was assembled from positioned words (PDF text layer or OCR) and needs its own arithmetic.
+ * `scope`: what one document may cover. The Phase 1 pipeline reconciles one month in MYR (the default); the
+ * ingestion layer accepts consecutive or gapped months and any currency the document states verbatim.
+ */
+export type GateOptions = { extracted?: 'PDF_TEXT' | 'OCR'; scope?: { months: 'ONE' | 'MANY'; currencies: readonly string[] | 'ANY' } };
+const PHASE1_SCOPE: NonNullable<GateOptions['scope']> = { months: 'ONE', currencies: ['MYR'] };
+export function verifyProposal(table: Table, raw: unknown, options: GateOptions = {}): VerifiedInterpretation {
+    const scopeRule = options.scope ?? PHASE1_SCOPE;
     const checks: GateCheck[] = [], disclosures: string[] = [], mapping: FieldMapping[] = [];
     const result = (summary: string): VerifiedInterpretation => ({ decision: 'QUARANTINED', role: null, summary, checks, mapping, disclosures, canonical: null, mappingKey: null });
     const gate = (id: string, label: string, passed: boolean, detail: string) => { checks.push({ id, label, passed, detail }); return passed; };
@@ -78,7 +86,7 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     // 2. Mapping integrity for the declared role and representation.
     const allowed = ledger ? ['SIGNED_AMOUNT', 'AMOUNT_AND_DIRECTION', 'DEBIT_CREDIT'] : ['SIGNED_AMOUNT', 'AMOUNT_AND_DIRECTION', 'SPLIT_IN_OUT'];
     const rep = p.representation, repFields: readonly string[] = rep ? REPRESENTATION_FIELDS[rep] : [];
-    const required = ['date', 'description', 'reference', ...repFields] as (keyof typeof c)[];
+    const required = ['date', 'description', ...repFields] as (keyof typeof c)[];
     const missing = required.filter(f => c[f] === null);
     const stray = MONEY_FIELDS.filter(f => c[f] !== null && !repFields.includes(f));
     const indices = mapping.map(m => m.column), outOfRange = indices.filter(i => i >= width), duplicate = indices.filter((v, i) => indices.indexOf(v) !== i);
@@ -95,9 +103,14 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     // 3. Transaction lines: equal-width rows with a date; balance-only lines at the edges are excluded and disclosed.
     const cell = (row: string[], f: keyof typeof c) => c[f] === null ? '' : (row[c[f]!] ?? '').trim();
     const candidates = table.rows.map((row, line) => ({ row, line })).slice(p.headerLine + 1).filter(({ row }) => row.some(Boolean));
-    const isTxn = ({ row }: { row: string[] }) => row.length === width && !!cell(row, 'date') && !(repFields.every(f => !cell(row, f as keyof typeof c)) && BALANCE_LINE.test(cell(row, 'description')));
+    // A totals or balance-forward line ("Total withdrawals", "Jumlah", "Balance carried forward") whose date cell holds no
+    // date is not a transaction, wherever it sits; it is excluded and disclosed. A line WITH a valid date never is.
+    const footerLike = (row: string[]) => !parseDate(cell(row, 'date'), dateFormat) && (TOTAL_LINE.test(row.join(' ')) || BALANCE_LINE.test(row.join(' ')));
+    const isTxn = ({ row }: { row: string[] }) => row.length === width && !!cell(row, 'date') && !footerLike(row) && !(repFields.every(f => !cell(row, f as keyof typeof c)) && BALANCE_LINE.test(cell(row, 'description')));
     const first = candidates.findIndex(isTxn), last = candidates.findLastIndex(isTxn);
-    const body = first < 0 ? [] : candidates.slice(first, last + 1);
+    const inside = first < 0 ? [] : candidates.slice(first, last + 1);
+    const forwarded = inside.filter(r => !isTxn(r) && footerLike(r.row)), body = inside.filter(r => !forwarded.includes(r));
+    if (forwarded.length) disclosures.push(`${forwarded.length} balance or total line${forwarded.length === 1 ? '' : 's'} between transactions excluded: ${forwarded.slice(0, 2).map(r => `line ${r.line + 1} "${r.row.filter(Boolean).join(' ').slice(0, 50)}"`).join('; ')}`);
     const interleaved = body.filter(r => !isTxn(r));
     const excluded = [...candidates.slice(0, Math.max(first, 0)), ...(first < 0 ? [] : candidates.slice(last + 1))];
     if (excluded.length) disclosures.push(`${excluded.length} non-transaction line${excluded.length === 1 ? '' : 's'} excluded: ${excluded.slice(0, 3).map(r => `line ${r.line + 1} "${r.row.filter(Boolean).join(' ').slice(0, 50)}"`).join('; ')}`);
@@ -110,17 +123,22 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     const dates = body.map(r => parseDate(cell(r.row, 'date'), dateFormat));
     const badDate = dates.findIndex(d => d === null);
     if (!gate('dates', `Every date parses as ${dateFormat}`, badDate < 0, badDate < 0 ? `${dates.length} dates` : `line ${body[badDate].line + 1}: "${cell(body[badDate].row, 'date')}"`)) return result('Dates do not follow the proposed format.');
-    const months = [...new Set(dates.map(d => d!.slice(0, 7)))];
-    if (!gate('period', 'All transactions fall within one month', months.length === 1, months.join(', '))) return result('The document spans more than one month.');
-    const period = months[0];
+    const months = [...new Set(dates.map(d => d!.slice(0, 7)))].sort();
+    const many = scopeRule.months === 'MANY';
+    if (!gate('period', many ? 'Transactions fall within the stated months' : 'All transactions fall within one month', many || months.length === 1, months.length > 3 ? `${months.length} months, ${months[0]} to ${months.at(-1)}` : months.join(', '))) return result('The document spans more than one month.');
+    // One month keeps its YYYY-MM identity (and the Phase 1 processing IDs); several months are named by their range.
+    const period = months.length === 1 ? months[0] : `${months[0]}/${months.at(-1)}`;
     const alternative = body.map(r => swappedReading(cell(r.row, 'date'), dateFormat));
     const alternativeViable = alternative.every(Boolean) && alternative.some((d, i) => d !== dates[i]);
     const alternativeMonths = new Set(alternative.map(d => d?.slice(0, 7)));
-    if (!gate('date-order', 'Day/month order is unambiguous', !alternativeViable || alternativeMonths.size > 1, !alternativeViable ? 'The swapped day/month reading is invalid for at least one date' : alternativeMonths.size > 1 ? `The swapped reading would span ${alternativeMonths.size} months, which a one-month statement cannot` : 'Both readings are valid one-month statements')) return result('The date order is ambiguous.');
+    const ordered = (ds: (string | null)[]) => ds.every((d, i) => i === 0 || d! >= ds[i - 1]!);
+    // Several months: the swapped reading is refuted when it breaks the statement's date order and the declared one keeps it.
+    const refuted = !alternativeViable || (many ? ordered(dates) && !ordered(alternative) : alternativeMonths.size > 1);
+    if (!gate('date-order', 'Day/month order is unambiguous', refuted, !alternativeViable ? 'The swapped day/month reading is invalid for at least one date' : refuted ? (many ? 'The swapped reading would put the transactions out of date order' : `The swapped reading would span ${alternativeMonths.size} months, which a one-month statement cannot`) : many ? 'Both readings keep the transactions in date order' : 'Both readings are valid one-month statements')) return result('The date order is ambiguous.');
 
     // 5. Amounts and direction under the declared representation.
     const tokens = { inflow: p.directionTokens.inflow.map(t => t.trim().toUpperCase()), outflow: p.directionTokens.outflow.map(t => t.trim().toUpperCase()) };
-    const signed: bigint[] = [], problems: string[] = [];
+    const signed: bigint[] = [], problems: string[] = [], zeroLines: number[] = [];
     for (const { row, line } of body) {
         const value = (f: keyof typeof c) => parseAmount(cell(row, f), numberFormat);
         if (rep === 'SIGNED_AMOUNT') {
@@ -135,10 +153,14 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
             const [inField, outField] = rep === 'SPLIT_IN_OUT' ? ['moneyIn', 'moneyOut'] as const : ['debit', 'credit'] as const;
             const a = value(inField), b = value(outField);
             const one = (a !== undefined && a !== 0n) !== (b !== undefined && b !== 0n);
-            if (a === null || b === null || (a ?? 0n) < 0n || (b ?? 0n) < 0n || !one) problems.push(`line ${line + 1}: "${cell(row, inField)}" / "${cell(row, outField)}" ${one ? 'not valid amounts' : 'must have exactly one non-zero side'}`);
-            else signed.push((a ?? 0n) - (b ?? 0n));
+            // A line with neither side (a failed or reversed instruction printed for the record) moves no cash; it is
+            // admitted only when a running balance exists, whose unchanged value the balance gate then has to confirm.
+            const none = a === undefined && b === undefined && c.balance !== null && !!cell(row, 'balance');
+            if (a === null || b === null || (a ?? 0n) < 0n || (b ?? 0n) < 0n || (!one && !none)) problems.push(`line ${line + 1}: "${cell(row, inField)}" / "${cell(row, outField)}" ${one ? 'not valid amounts' : 'must have exactly one non-zero side'}`);
+            else { signed.push((a ?? 0n) - (b ?? 0n)); if (none) zeroLines.push(line + 1); }
         }
     }
+    if (zeroLines.length) disclosures.push(`${zeroLines.length} line${zeroLines.length === 1 ? '' : 's'} with no amount on either side read as no cash movement, confirmed by the running balance (line ${zeroLines.slice(0, 3).join(', ')}).`);
     const overlap = tokens.inflow.filter(t => tokens.outflow.includes(t));
     if (!gate('amounts', `Every amount parses as ${numberFormat} under ${rep}`, !problems.length && !overlap.length, problems.length ? `${problems.length} problem${problems.length === 1 ? '' : 's'}; ${problems.slice(0, 2).join('; ')}` : overlap.length ? `token ${overlap[0]} is both inflow and outflow` : `${signed.length} amounts, exact cents`)) return result('Amounts do not follow the proposed representation.');
     const moneyLiterals = body.flatMap(({ row }) => [...repFields.filter(f => f !== 'direction'), ...(c.balance !== null ? ['balance'] : [])].map(f => cell(row, f as keyof typeof c)).filter(Boolean));
@@ -209,7 +231,8 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     if (recordId === null) disclosures.push(evidentIds.length > 1 ? `${evidentIds.length} columns could be the record ID (${evidentIds.map(i => `"${header[i]}"`).join(', ')}); IDs are derived from source line numbers (L<line>).` : 'No record ID column; IDs are derived from source line numbers (L<line>).');
     if (!gate('ids', 'Record identifiers are present and unique', ids.every(i => ID.test(i)) && new Set(ids).size === ids.length, recordId === null ? `${ids.length} line-derived IDs` : `${new Set(ids).size} unique of ${ids.length}${c.recordId === null ? ` in adopted column "${header[recordId]}"` : ''}`)) return result('Record identifiers are missing or duplicated.');
     const references = body.map(r => cell(r.row, 'reference')), descriptions = body.map(r => cell(r.row, 'description'));
-    const textOk = ledger ? references.every(v => v.length <= 64) && descriptions.every(v => v.length <= 300) : references.every(v => v && v.length <= 64) && descriptions.every(v => v && v.length <= 300);
+    // A mapped bank reference column must be filled on every line; a statement without one keeps empty references.
+    const textOk = ledger ? references.every(v => v.length <= 64) && descriptions.every(v => v.length <= 300) : references.every(v => (c.reference === null || v) && v.length <= 64) && descriptions.every(v => v && v.length <= 300);
     if (!gate('text', 'References and descriptions are usable', textOk, `${references.filter(Boolean).length} references, ${descriptions.filter(Boolean).length} descriptions`)) return result('References or descriptions are missing.');
     const counterparties = body.map(r => cell(r.row, 'counterparty').slice(0, 120));
     const notStated = counterparties.filter(v => !v).length;
@@ -228,13 +251,13 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     const fromEvidence = (e: LayoutProposal['scope']['businessId']) => e && lineText(table, e.line).includes(e.literal) ? e.literal.trim() : e ? undefined : null;
     const scopeValue = (f: 'businessId' | 'businessName' | 'currency') => { const col = fromColumn(f); return col !== null ? col : fromEvidence(p.scope[f]); };
     const businessId = scopeValue('businessId'), currencyLiteral = scopeValue('currency'), businessName = scopeValue('businessName');
-    const currency = currencyLiteral ? /\b(MYR|RM)\b/i.test(currencyLiteral) ? 'MYR' : /^[A-Z]{3}$/.test(currencyLiteral) ? currencyLiteral : undefined : currencyLiteral;
+    const currency = currencyLiteral ? /\b(MYR|RM)\b/i.test(currencyLiteral) ? 'MYR' : /\b([A-Z]{3})\b/.exec(currencyLiteral)?.[1] ?? (/^(Rs\.?|₹)$/i.test(currencyLiteral) ? 'INR' : undefined) : currencyLiteral;
     const periodEvidence = p.scope.statementPeriod, periodLiteral = fromEvidence(periodEvidence);
     const scopeProblems = [
         businessId === null ? 'business ID not stated' : businessId === undefined || !/^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$/.test(businessId) ? 'business ID evidence not found verbatim or not an identifier' : '',
-        currency === null ? 'currency not stated' : currency === undefined ? 'currency evidence not found verbatim' : currency !== 'MYR' ? `currency ${currency} is not supported (MYR only)` : '',
+        currency === null ? 'currency not stated' : currency === undefined ? 'currency evidence not found verbatim' : scopeRule.currencies !== 'ANY' && !scopeRule.currencies.includes(currency) ? `currency ${currency} is not supported (${scopeRule.currencies.join(', ')} only)` : '',
         businessName === undefined ? 'business name evidence not found verbatim' : '',
-        periodLiteral === undefined ? 'statement period evidence not found verbatim' : periodLiteral && !periodMentioned(periodLiteral, period) ? `stated period "${periodLiteral}" does not match ${period}` : '',
+        periodLiteral === undefined ? 'statement period evidence not found verbatim' : periodLiteral && !(periodMentioned(periodLiteral, months[0]) && periodMentioned(periodLiteral, months.at(-1)!)) ? `stated period "${periodLiteral}" does not match ${period}` : '',
     ].filter(Boolean);
     if (!gate('scope', 'Business, currency and period come from the document', !scopeProblems.length, scopeProblems.length ? scopeProblems.join('; ') : `${businessId} · ${period} · ${currency}${periodLiteral ? ` · stated "${periodLiteral}"` : ''}`)) return result('Business, currency or period could not be established from the document.');
     // 11. Ledger account identity: one account, and the document names it as cash or bank. An account column the
@@ -257,14 +280,14 @@ export function verifyProposal(table: Table, raw: unknown, options: { extracted?
     const rows = body.map((r, i): Record<string, string> => {
         const s = signed[i], abs = s < 0n ? -s : s;
         return ledger
-            ? { LedgerEntryID: ids[i], BusinessID: businessId!, PostingDate: dates[i]!, CashAccount: '1000-BANK', Currency: 'MYR', LedgerReference: references[i], LedgerMemo: descriptions[i], Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, CashAccountDebitMYR: cents(s > 0n ? s : 0n), CashAccountCreditMYR: cents(s < 0n ? -s : 0n), SignedCashMovementMYR: cents(s), CategoryLabel: '' }
-            : { BankTransactionID: ids[i], BusinessID: businessId!, BusinessName: (businessName ?? businessId!).slice(0, 120), AccountNumber: '', Currency: 'MYR', ValueDate: dates[i]!, StatementMonth: period, BankReference: references[i], BankDescription: descriptions[i], BankDirection: s < 0n ? 'Debit' : 'Credit', BankAmountMYR: cents(abs), SignedCashMovementMYR: cents(s), Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, SourceTransactionID: '' };
+            ? { LedgerEntryID: ids[i], BusinessID: businessId!, PostingDate: dates[i]!, CashAccount: '1000-BANK', Currency: currency!, LedgerReference: references[i], LedgerMemo: descriptions[i], Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, CashAccountDebitMYR: cents(s > 0n ? s : 0n), CashAccountCreditMYR: cents(s < 0n ? -s : 0n), SignedCashMovementMYR: cents(s), CategoryLabel: '' }
+            : { BankTransactionID: ids[i], BusinessID: businessId!, BusinessName: (businessName ?? businessId!).slice(0, 120), AccountNumber: '', Currency: currency!, ValueDate: dates[i]!, StatementMonth: dates[i]!.slice(0, 7), BankReference: references[i], BankDescription: descriptions[i], BankDirection: s < 0n ? 'Debit' : 'Credit', BankAmountMYR: cents(abs), SignedCashMovementMYR: cents(s), Counterparty: counterparties[i] || COUNTERPARTY_NOT_STATED, SourceTransactionID: '' };
     });
     const bytes = new TextEncoder().encode(csv(ledger ? CANONICAL_LEDGER_HEADER : CANONICAL_BANK_HEADER, rows));
     const mappingKey = JSON.stringify({ role: p.role, headerLine: p.headerLine, columns: { ...c, recordId }, representation: rep, tokens: { inflow: [...tokens.inflow].sort(), outflow: [...tokens.outflow].sort() }, dateFormat, numberFormat, businessId, currency, period });
     return {
         decision: 'AUTO_ACCEPTED', role: p.role as 'BANK_STATEMENT' | 'GENERAL_LEDGER', checks, mapping, disclosures, mappingKey,
-        summary: `${ledger ? 'Cash-account ledger' : 'Bank statement'}: ${body.length} transactions, ${businessId} · ${period} · MYR, net ${cents(net)}; ${checks.length} independent checks passed.`,
+        summary: `${ledger ? 'Cash-account ledger' : 'Bank statement'}: ${body.length} transactions, ${businessId} · ${period} · ${currency}, net ${cents(net)}; ${checks.length} independent checks passed.`,
         canonical: { bytes, rows: body.length, lineage: body.map(r => r.line), net: cents(net), period, businessId: businessId! },
     };
 }
@@ -276,7 +299,7 @@ const READING_GATES = new Set(['amounts', 'dates', 'period', 'balance', 'anchor'
  * are tried, one cell and then two cells at a time. The result is accepted only when exactly one such choice makes
  * every gate pass; the choice is disclosed. A cell both passes read alike is never changed.
  */
-export function verifyWithDisputes(table: Table, raw: unknown, disputes: { line: number; column: number; readings: string[] }[], options: { extracted?: 'PDF_TEXT' | 'OCR' } = {}): VerifiedInterpretation {
+export function verifyWithDisputes(table: Table, raw: unknown, disputes: { line: number; column: number; readings: string[] }[], options: GateOptions = {}): VerifiedInterpretation {
     const first = verifyProposal(table, raw, options);
     const failed = first.checks.filter(k => !k.passed).map(k => k.id);
     if (first.decision === 'AUTO_ACCEPTED' || !disputes.length || !failed.length || !failed.every(id => READING_GATES.has(id))) return first;

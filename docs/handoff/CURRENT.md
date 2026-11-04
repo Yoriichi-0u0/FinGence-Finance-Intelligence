@@ -1,5 +1,14 @@
 # FinGence — current technical entrypoint
 
+## Ingestion layer v1 — 5 November 2026
+
+The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): documents in, verified records out. Its contract is
+[docs/architecture/ingestion-layer-v1.md](../architecture/ingestion-layer-v1.md).
+
+- **Formats:** CSV, XLSX, text PDF, scanned PDF and images. Real-statement layouts are handled, and the ingestion scope accepts several months and any stated currency.
+- **Durable store:** Supabase FinGence-Production, schema `fingence_ingestion` (`supabase/sql/ingestion-layer-v1.sql`), through `POST /api/ingestion/runs`. It needs `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
+- **Benchmark:** see [docs/integration/ingestion-benchmark.md](../integration/ingestion-benchmark.md). 0 false acceptances so far; the full rerun is pending the Groq daily allowance.
+
 ## AI M3: PDF statements and scans — 4 November 2026
 
 `/data` ingests CSV, XLSX, PDF (text or scanned) and PNG/JPEG:
