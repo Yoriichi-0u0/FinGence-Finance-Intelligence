@@ -86,7 +86,7 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
     // 2. Mapping integrity for the declared role and representation.
     const allowed = ledger ? ['SIGNED_AMOUNT', 'AMOUNT_AND_DIRECTION', 'DEBIT_CREDIT'] : ['SIGNED_AMOUNT', 'AMOUNT_AND_DIRECTION', 'SPLIT_IN_OUT'];
     const rep = p.representation, repFields: readonly string[] = rep ? REPRESENTATION_FIELDS[rep] : [];
-    const required = ['date', 'description', 'reference', ...repFields] as (keyof typeof c)[];
+    const required = ['date', 'description', ...repFields] as (keyof typeof c)[];
     const missing = required.filter(f => c[f] === null);
     const stray = MONEY_FIELDS.filter(f => c[f] !== null && !repFields.includes(f));
     const indices = mapping.map(m => m.column), outOfRange = indices.filter(i => i >= width), duplicate = indices.filter((v, i) => indices.indexOf(v) !== i);
@@ -103,9 +103,14 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
     // 3. Transaction lines: equal-width rows with a date; balance-only lines at the edges are excluded and disclosed.
     const cell = (row: string[], f: keyof typeof c) => c[f] === null ? '' : (row[c[f]!] ?? '').trim();
     const candidates = table.rows.map((row, line) => ({ row, line })).slice(p.headerLine + 1).filter(({ row }) => row.some(Boolean));
-    const isTxn = ({ row }: { row: string[] }) => row.length === width && !!cell(row, 'date') && !(repFields.every(f => !cell(row, f as keyof typeof c)) && BALANCE_LINE.test(cell(row, 'description')));
+    // A totals or balance-forward line ("Total withdrawals", "Jumlah", "Balance carried forward") whose date cell holds no
+    // date is not a transaction, wherever it sits; it is excluded and disclosed. A line WITH a valid date never is.
+    const footerLike = (row: string[]) => !parseDate(cell(row, 'date'), dateFormat) && (TOTAL_LINE.test(row.join(' ')) || BALANCE_LINE.test(row.join(' ')));
+    const isTxn = ({ row }: { row: string[] }) => row.length === width && !!cell(row, 'date') && !footerLike(row) && !(repFields.every(f => !cell(row, f as keyof typeof c)) && BALANCE_LINE.test(cell(row, 'description')));
     const first = candidates.findIndex(isTxn), last = candidates.findLastIndex(isTxn);
-    const body = first < 0 ? [] : candidates.slice(first, last + 1);
+    const inside = first < 0 ? [] : candidates.slice(first, last + 1);
+    const forwarded = inside.filter(r => !isTxn(r) && footerLike(r.row)), body = inside.filter(r => !forwarded.includes(r));
+    if (forwarded.length) disclosures.push(`${forwarded.length} balance or total line${forwarded.length === 1 ? '' : 's'} between transactions excluded: ${forwarded.slice(0, 2).map(r => `line ${r.line + 1} "${r.row.filter(Boolean).join(' ').slice(0, 50)}"`).join('; ')}`);
     const interleaved = body.filter(r => !isTxn(r));
     const excluded = [...candidates.slice(0, Math.max(first, 0)), ...(first < 0 ? [] : candidates.slice(last + 1))];
     if (excluded.length) disclosures.push(`${excluded.length} non-transaction line${excluded.length === 1 ? '' : 's'} excluded: ${excluded.slice(0, 3).map(r => `line ${r.line + 1} "${r.row.filter(Boolean).join(' ').slice(0, 50)}"`).join('; ')}`);
@@ -133,7 +138,7 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
 
     // 5. Amounts and direction under the declared representation.
     const tokens = { inflow: p.directionTokens.inflow.map(t => t.trim().toUpperCase()), outflow: p.directionTokens.outflow.map(t => t.trim().toUpperCase()) };
-    const signed: bigint[] = [], problems: string[] = [];
+    const signed: bigint[] = [], problems: string[] = [], zeroLines: number[] = [];
     for (const { row, line } of body) {
         const value = (f: keyof typeof c) => parseAmount(cell(row, f), numberFormat);
         if (rep === 'SIGNED_AMOUNT') {
@@ -148,10 +153,14 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
             const [inField, outField] = rep === 'SPLIT_IN_OUT' ? ['moneyIn', 'moneyOut'] as const : ['debit', 'credit'] as const;
             const a = value(inField), b = value(outField);
             const one = (a !== undefined && a !== 0n) !== (b !== undefined && b !== 0n);
-            if (a === null || b === null || (a ?? 0n) < 0n || (b ?? 0n) < 0n || !one) problems.push(`line ${line + 1}: "${cell(row, inField)}" / "${cell(row, outField)}" ${one ? 'not valid amounts' : 'must have exactly one non-zero side'}`);
-            else signed.push((a ?? 0n) - (b ?? 0n));
+            // A line with neither side (a failed or reversed instruction printed for the record) moves no cash; it is
+            // admitted only when a running balance exists, whose unchanged value the balance gate then has to confirm.
+            const none = a === undefined && b === undefined && c.balance !== null && !!cell(row, 'balance');
+            if (a === null || b === null || (a ?? 0n) < 0n || (b ?? 0n) < 0n || (!one && !none)) problems.push(`line ${line + 1}: "${cell(row, inField)}" / "${cell(row, outField)}" ${one ? 'not valid amounts' : 'must have exactly one non-zero side'}`);
+            else { signed.push((a ?? 0n) - (b ?? 0n)); if (none) zeroLines.push(line + 1); }
         }
     }
+    if (zeroLines.length) disclosures.push(`${zeroLines.length} line${zeroLines.length === 1 ? '' : 's'} with no amount on either side read as no cash movement, confirmed by the running balance (line ${zeroLines.slice(0, 3).join(', ')}).`);
     const overlap = tokens.inflow.filter(t => tokens.outflow.includes(t));
     if (!gate('amounts', `Every amount parses as ${numberFormat} under ${rep}`, !problems.length && !overlap.length, problems.length ? `${problems.length} problem${problems.length === 1 ? '' : 's'}; ${problems.slice(0, 2).join('; ')}` : overlap.length ? `token ${overlap[0]} is both inflow and outflow` : `${signed.length} amounts, exact cents`)) return result('Amounts do not follow the proposed representation.');
     const moneyLiterals = body.flatMap(({ row }) => [...repFields.filter(f => f !== 'direction'), ...(c.balance !== null ? ['balance'] : [])].map(f => cell(row, f as keyof typeof c)).filter(Boolean));
@@ -222,7 +231,8 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
     if (recordId === null) disclosures.push(evidentIds.length > 1 ? `${evidentIds.length} columns could be the record ID (${evidentIds.map(i => `"${header[i]}"`).join(', ')}); IDs are derived from source line numbers (L<line>).` : 'No record ID column; IDs are derived from source line numbers (L<line>).');
     if (!gate('ids', 'Record identifiers are present and unique', ids.every(i => ID.test(i)) && new Set(ids).size === ids.length, recordId === null ? `${ids.length} line-derived IDs` : `${new Set(ids).size} unique of ${ids.length}${c.recordId === null ? ` in adopted column "${header[recordId]}"` : ''}`)) return result('Record identifiers are missing or duplicated.');
     const references = body.map(r => cell(r.row, 'reference')), descriptions = body.map(r => cell(r.row, 'description'));
-    const textOk = ledger ? references.every(v => v.length <= 64) && descriptions.every(v => v.length <= 300) : references.every(v => v && v.length <= 64) && descriptions.every(v => v && v.length <= 300);
+    // A mapped bank reference column must be filled on every line; a statement without one keeps empty references.
+    const textOk = ledger ? references.every(v => v.length <= 64) && descriptions.every(v => v.length <= 300) : references.every(v => (c.reference === null || v) && v.length <= 64) && descriptions.every(v => v && v.length <= 300);
     if (!gate('text', 'References and descriptions are usable', textOk, `${references.filter(Boolean).length} references, ${descriptions.filter(Boolean).length} descriptions`)) return result('References or descriptions are missing.');
     const counterparties = body.map(r => cell(r.row, 'counterparty').slice(0, 120));
     const notStated = counterparties.filter(v => !v).length;

@@ -16,7 +16,9 @@ type Line = { page: number; y: number; height: number; cells: Cell[] };
 export type PositionedTable = { bytes: Uint8Array; rows: number; columns: number; notes: string[]; disputes: Dispute[] };
 
 const DATE_LIKE = /\d{1,4}[-/.\s][A-Za-z\d]{1,9}[-/.\s]\d{2,4}|^\d{8}$/;
-const NUMERIC = /^\(?-?(?:RM|MYR)?\s?[\d.,]+\)?$/i;
+const NUMERIC = /^\(?[-+]?(?:RM|MYR|Rs\.?|INR|₹|USD|US\$|\$|SGD|S\$|EUR|€|GBP|£)?\s?[\d.,]+\)?(?:\s?(?:MYR|INR|USD|SGD|EUR|GBP|CR|DR))?$/i;
+/** Totals and balance lines are never the continuation of a transaction's text. */
+const SUMMARY = /\b(totals?|jumlah|opening|closing|brought forward|carried forward|baki)\b/i;
 const PAGE_MARK = /^(page|halaman|muka surat)\s*\d+(\s*(of|\/|dari|daripada)\s*\d+)?$/i;
 const median = (values: number[]) => { const s = [...values].sort((a, b) => a - b); return s.length ? s[Math.floor(s.length / 2)] : 0; };
 const join = (a: string, b: string) => [a, b].filter(Boolean).join(' ');
@@ -67,11 +69,13 @@ function lines(words: Word[]): Line[] {
 
 const isHeading = (l: Line) => l.cells.length >= 3 && l.cells.every(c => !NUMERIC.test(c.text) && !DATE_LIKE.test(c.text));
 const isDated = (l: Line) => l.cells.length >= 3 && l.cells.some(c => DATE_LIKE.test(c.text));
+/** A dated line within the next three (a wrapped description may sit between the headings and the first transaction). */
+const datedSoon = (block: Line[], from: number) => block.slice(from, from + 3).some(isDated);
 /** `next` only continues headings of `top`: every one of its cells sits under one heading cell, and it has no figures. */
 const wraps = (top: Line, next: Line) => next.cells.length >= 1 && next.cells.length < top.cells.length && next.cells.every(c => !DATE_LIKE.test(c.text) && !/\d/.test(c.text) && top.cells.some(h => c.x0 < h.x1 && c.x1 > h.x0));
 
 /** `top` is a heading fragment above `heading` ("Transaction" over "ID"): several cells (a single one is a title or note), each over a heading cell. */
-const prefixes = (top: Line, heading: Line) => top.cells.length >= 2 && wraps(heading, top);
+const prefixes = (top: Line, heading: Line, next: Line | undefined) => top.cells.length >= 2 && wraps(heading, top) && (!next || heading.y - top.y <= (next.y - heading.y) * 1.2);
 /** OCR noise: a low-confidence word made only of marks (rules, smudges, underlines). */
 const NOISE = /^[~_\-—–=|.,:;'`"^*•·°]+$/;
 
@@ -106,7 +110,7 @@ export function wordsToTable(input: Word[]): PositionedTable {
     };
     // A line of a table with neither a date nor a figure continues a transaction whose text wrapped (a long
     // description, a time printed under the date): it joins the nearest dated or figured line, above or below.
-    const anchored = (a: Aligned) => a.row.some(c => DATE_LIKE.test(c) || (NUMERIC.test(c) && /\d/.test(c)));
+    const anchored = (a: Aligned) => a.row.some(c => DATE_LIKE.test(c) || (NUMERIC.test(c) && /\d/.test(c)) || SUMMARY.test(c));
     const emit = (lines: Aligned[]) => {
         const anchors = lines.map((a, i) => anchored(a) ? i : -1).filter(i => i >= 0);
         const parts = new Map<number, Aligned[]>(anchors.map(i => [i, [lines[i]]]));
@@ -138,8 +142,8 @@ export function wordsToTable(input: Word[]): PositionedTable {
     for (const block of blocks) {
         const sameHeading = (l: Line) => !!header && l.cells.map(c => c.text).join('|') === header.cells.map(c => c.text).join('|');
         // Find this block's heading line, joining a heading printed on two lines ("Dr" over "(RM)", "Transaction" over "ID").
-        let start = block.findIndex((l, i) => isHeading(l) && block[i + 1] && isDated(block[i + 1]));
-        if (start < 0) for (let i = 0; i + 2 < block.length; i++) if (isHeading(block[i]) && wraps(block[i], block[i + 1]) && isDated(block[i + 2])) {
+        let start = block.findIndex((l, i) => isHeading(l) && datedSoon(block, i + 1));
+        if (start < 0) for (let i = 0; i + 2 < block.length; i++) if (isHeading(block[i]) && wraps(block[i], block[i + 1]) && datedSoon(block, i + 2)) {
             const top = block[i], next = block[i + 1], merged: Line = { ...top, cells: top.cells.map(c => ({ ...c })) };
             for (const c of next.cells) {
                 const k = merged.cells.findIndex(h => c.x0 < h.x1 && c.x1 > h.x0);
@@ -148,7 +152,8 @@ export function wordsToTable(input: Word[]): PositionedTable {
             block.splice(i, 2, merged); start = i; joinedHeadings++;
             break;
         }
-        if (start > 0 && prefixes(block[start - 1], block[start])) {
+        // ...but only when it sits as close to the headings as the headings sit to the first row (not a preamble line above them).
+        if (start > 0 && prefixes(block[start - 1], block[start], block[start + 1])) {
             const top = block[start - 1], merged: Line = { ...block[start], cells: block[start].cells.map(c => ({ ...c })) };
             for (const c of top.cells) { const k = merged.cells.findIndex(h => c.x0 < h.x1 && c.x1 > h.x0); merged.cells[k].text = `${c.text} ${merged.cells[k].text}`; }
             block.splice(start - 1, 2, merged); start--; joinedHeadings++;

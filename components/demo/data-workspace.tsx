@@ -6,6 +6,7 @@ import { PageHeader, Panel } from '@/components/ui';
 import { STAGE_TITLES, type DocumentInput, type StageId } from '@/lib/demo/pipeline';
 import { useDemoProcessing } from './context';
 import { InterpretationPanel } from './interpretation-panel';
+import { SaveRun } from './save-run';
 import { DecisionBadge, PendingBadge, Stat, Table, button, money, primaryButton } from './shared';
 
 const SAMPLE = ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
@@ -128,6 +129,7 @@ export default function DemoDataWorkspace() {
                 <nav aria-label="Connected results" className="flex flex-wrap gap-2 border-t border-[var(--border)] p-4 sm:px-5">
                     {[['/', 'Overview'], ['/transactions', 'Transactions'], ['/reconciliation', 'Reconciliation'], ['/analytics', 'Analytics'], ['/anomalies', 'Anomalies'], ['/forecasting', 'Forecasting'], ['/reports', 'Reports'], ['/ask', 'Finance Q&A']].map(([href, label]) => <Link key={href} href={href} className={button}>{label}</Link>)}
                 </nav>
+                <SaveRun context={context} />
             </Panel> : <Panel title="4. Outputs"><p className="p-5 text-sm">No financial outputs were produced because the documents were quarantined. See the stage checks above for the exact reason.</p></Panel>}
         </div> : null}
     </>;

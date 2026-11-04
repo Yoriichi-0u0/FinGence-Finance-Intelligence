@@ -24,6 +24,7 @@ import { stopOcr } from '../../lib/interpretation/ocr';
 
 const LIVE = process.env.FINGENCE_INGESTION_BENCHMARK === '1' && !!process.env.GROQ_API_KEY;
 const AGAMI = process.env.FINGENCE_BENCH_AGAMI_DIR ?? '.local/datasets/agami';
+const CORPUS = process.env.FINGENCE_BENCH_CORPUS_DIR ?? '.local/benchmark/corpus';
 const only = process.env.FINGENCE_BENCH_ONLY;
 type Truth = { date: string; cents: bigint }[];
 /**
@@ -54,7 +55,7 @@ function truthBalanceBreaks(json: string) {
     return tx.slice(1).filter((t, i) => bal(t) - bal(tx[i]) !== truth[i + 1].cents).length;
 }
 type Expect = 'ACCEPT' | 'QUARANTINE' | 'EXACT_OR_QUARANTINE';
-type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI'; file: string; expect: Expect; truth: (name: string) => Truth | null };
+type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED'; file: string; expect: Expect; truth: (name: string) => Truth | null };
 
 const cents = (v: string | number) => { const [w, f = ''] = String(typeof v === 'number' ? v.toFixed(2) : v).replace(/,/g, '').split('.'); const n = BigInt(w.replace('-', '')) * 100n + BigInt((f + '00').slice(0, 2)); return String(v).trim().startsWith('-') ? -n : n; };
 const csvRows = (path: string) => Papa.parse<Record<string, string>>(readFileSync(path, 'utf8'), { header: true, skipEmptyLines: true }).data;
@@ -79,6 +80,11 @@ const cases: Case[] = [
     ...([['bank-debit-credit-no-balance.csv', 'ACCEPT'], ['bank-dr-cr-no-balance.csv', 'ACCEPT'], ['prompt-injection-in-cell.csv', 'EXACT_OR_QUARANTINE'],
         ...['opaque-headings-no-balance.csv', 'corrupted-running-balance.csv', 'mislabelled-withdrawal-deposit.csv', 'usd-statement.csv', 'staff-roster.csv', 'signed-amount-reversed-no-balance.csv', 'ledger-signed-opaque-no-balance.csv', 'ledger-multiple-accounts.csv', 'ledger-sales-account.csv', 'ledger-bank-loan-account.csv', 'ledger-no-account-evidence.csv', 'bank-ambiguous-debit-credit.csv'].map(f => [f, 'QUARANTINE'])] as [string, Expect][])
         .map(([f, expect]) => ({ id: f, format: 'CSV', corpus: 'ADVERSARIAL' as const, file: join(F, f), expect, truth: () => bankTruth })),
+    // The generated multi-bank corpus (scripts/generate-statement-corpus.mjs): every document is valid and must be read exactly.
+    ...(existsSync(join(CORPUS, 'manifest.json')) ? (JSON.parse(readFileSync(join(CORPUS, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string }[] }).documents.map(d => ({
+        id: `corpus/${d.file}`, format: d.format, corpus: 'GENERATED' as const, file: join(CORPUS, d.file), expect: 'ACCEPT' as const,
+        truth: () => (JSON.parse(readFileSync(join(CORPUS, d.truth), 'utf8')) as { transactions: { date: string; cents: string }[] }).transactions.map(t => ({ date: t.date, cents: BigInt(t.cents) })),
+    })) : []),
     ...(existsSync(AGAMI) ? readdirSync(AGAMI).flatMap(type => readdirSync(join(AGAMI, type)).filter(f => f.endsWith('.pdf')).map(f => ({
         id: `agami/${type}/${f}`, format: /Scanned/.test(type) ? 'PDF (scanned)' : 'PDF (text)', corpus: 'AGAMI' as const, file: join(AGAMI, type, f), expect: 'ACCEPT' as const,
         truth: () => agamiTruth(join(AGAMI, type, f.replace(/\.pdf$/, '.json'))),
@@ -94,7 +100,8 @@ const live: LayoutInterpreter = {
         for (let attempt = 0; ; attempt++) {
             try { return await proposeLayout(evidence); }
             catch (error) {
-                if (!(error instanceof InterpreterUnavailable) || error.code !== 'RATE_LIMITED' || attempt > 20) throw error;
+                // A long Retry-After is a daily cap: give up on this document rather than stall the run.
+                if (!(error instanceof InterpreterUnavailable) || error.code !== 'RATE_LIMITED' || attempt > 20 || (error.retryAfterSeconds ?? 0) > 150) throw error;
                 await sleep(((error.retryAfterSeconds ?? 20) + 1) * 1000);
             }
         }
