@@ -130,6 +130,32 @@ describe('server processing jobs', () => {
         expect(replay.documents[0].sha256).toBe((await processDocuments([scan], undefined, undefined, { extract: extractor })).documents[0].sha256);
         await db.query(`update fingence_processing.jobs set finished_at = now() - interval '16 minutes' where id = $1`, [jobId]);
         expect((await getJob(jobId, false, deps))!.extractions).toEqual({});
+        // The cleanup does not depend on anyone reading the job: the scheduled store-wide cleanup and the Data page's state check both run it.
+        const stored = async (id: string) => (await db.query<{ e: unknown }>('select extractions as e from fingence_processing.jobs where id = $1', [id])).rows[0].e;
+        for (const trigger of [
+            () => deps.transport(`${store.url}/rest/v1/rpc/fingence_processing_reap_all`, { method: 'POST', body: '{}' }),
+            () => processingState(deps),
+        ]) {
+            const { jobId: other } = await createJob([scan], null, deps) as { jobId: string };
+            await runJob(other, [scan], '127.0.0.1', { ...deps, extractor });
+            await db.query(`update fingence_processing.jobs set finished_at = now() - interval '16 minutes' where id = $1`, [other]);
+            expect(Object.keys(await stored(other) as object)).toHaveLength(1);
+            await trigger();
+            expect(await stored(other)).toEqual({});
+        }
+    }, 30_000);
+
+    it('stops a timed-out job: no further reading, model call or stage after the limit', async () => {
+        const unfamiliar = ['bank-statement-march-2026-export.csv', 'general-ledger-cash-march-2026.csv'].map(n => doc('public/demo/unfamiliar', n));
+        const propose = vi.fn(() => new Promise<never>((_, reject) => setTimeout(() => reject(new Error('slow provider')), 120)));
+        const { jobId } = await createJob(unfamiliar, null, deps) as { jobId: string };
+        calls.length = 0;
+        expect(await runJob(jobId, unfamiliar, '127.0.0.1', { ...deps, interpreter: { propose }, timeoutMs: 40 })).toBe('FAILED');
+        await new Promise(r => setTimeout(r, 400));
+        // The first proposal was in flight at the limit; the second document is never sent, and no stage is recorded after it.
+        expect(propose).toHaveBeenCalledTimes(1);
+        expect(calls.filter(c => c === 'fingence_processing_job_stage')).toEqual([]);
+        expect(await getJob(jobId, false, deps)).toEqual(expect.objectContaining({ status: 'FAILED', error: 'TIMED_OUT', stages: [] }));
     }, 30_000);
 
     it('flags an unexplained ledger record with its own month, date and signed amount', async () => {
@@ -161,7 +187,7 @@ describe('server processing jobs', () => {
     it('keeps the schema closed: only the service role may call the functions, and nobody may read the tables', async () => {
         const { rows } = await db.query<{ fn: string; anon: boolean; service: boolean }>(`select p.proname as fn, has_function_privilege('anon', p.oid, 'execute') as anon, has_function_privilege('service_role', p.oid, 'execute') as service
             from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' and p.proname like 'fingence_processing_%'`);
-        expect(rows.length).toBe(9);
+        expect(rows.length).toBe(10);
         expect(rows.every(r => !r.anon && r.service)).toBe(true);
         for (const t of ['controls', 'jobs', 'results', 'flagged']) {
             const { rows: p } = await db.query<{ a: boolean; s: boolean }>(`select has_table_privilege('anon', 'fingence_processing.${t}', 'select') as a, has_table_privilege('authenticated', 'fingence_processing.${t}', 'select') as s`);

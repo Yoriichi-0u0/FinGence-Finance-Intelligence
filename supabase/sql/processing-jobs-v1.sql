@@ -73,6 +73,18 @@ language sql security definer set search_path = '' as $$
 $$;
 revoke execute on function fingence_processing.reap(text) from public, anon, authenticated;
 
+-- The same for every organization, on a schedule that does not depend on anyone reading a job (see the end of this file).
+create function public.fingence_processing_reap_all() returns int
+language plpgsql security definer set search_path = '' as $$
+declare n int;
+begin
+    update fingence_processing.jobs set status = 'FAILED', finished_at = now(), error = 'TIMED_OUT'
+    where status in ('QUEUED', 'RUNNING') and created_at < now() - interval '10 minutes';
+    update fingence_processing.jobs set extractions = '{}' where extractions <> '{}' and finished_at < now() - interval '15 minutes';
+    get diagnostics n = row_count;
+    return n;
+end $$;
+
 -- A flagged item as JSON, in the field names the server and console use.
 create function fingence_processing.flag_json(f fingence_processing.flagged) returns jsonb
 language sql immutable set search_path = '' as $$
@@ -86,6 +98,7 @@ create function public.fingence_processing_create_job(org text, inputs jsonb, cl
 language plpgsql security definer set search_path = '' as $$
 declare c fingence_processing.controls; job uuid;
 begin
+    perform fingence_processing.reap(org);
     select * into c from fingence_processing.controls where organization_id = org for share;
     if c.paused then return jsonb_build_object('error', 'PROCESSING_PAUSED', 'reason', c.reason, 'since', c.changed_at); end if;
     insert into fingence_processing.jobs (organization_id, inputs, client_hash) values (org, inputs, client) returning id into job;
@@ -189,8 +202,10 @@ begin
 end $$;
 
 -- Processing state only (for the Data page): paused or not, and the reason Finance users see.
+-- Each open Data page asks for this every 15 s, which also runs the cleanup.
 create function public.fingence_processing_state(org text) returns jsonb
-language sql stable security definer set search_path = '' as $$
+language sql security definer set search_path = '' as $$
+    select fingence_processing.reap(org);
     select coalesce((select jsonb_build_object('paused', c.paused, 'reason', c.reason, 'changedAt', c.changed_at) from fingence_processing.controls c where c.organization_id = org),
         jsonb_build_object('paused', false, 'reason', null, 'changedAt', null))
 $$;
@@ -198,9 +213,18 @@ $$;
 do $$ declare f text; begin
     foreach f in array array['fingence_processing_create_job(text, jsonb, text)', 'fingence_processing_start_job(uuid)', 'fingence_processing_job_stage(uuid, jsonb)',
         'fingence_processing_finish_job(uuid, jsonb, jsonb)', 'fingence_processing_fail_job(uuid, text)', 'fingence_processing_get_job(text, uuid, boolean)',
-        'fingence_processing_overview(text, int)', 'fingence_processing_set_paused(text, boolean, text)', 'fingence_processing_state(text)'] loop
+        'fingence_processing_overview(text, int)', 'fingence_processing_set_paused(text, boolean, text)', 'fingence_processing_state(text)', 'fingence_processing_reap_all()'] loop
         execute format('revoke execute on function public.%s from public, anon, authenticated', f);
         execute format('grant execute on function public.%s to service_role', f);
     end loop;
 end $$;
 grant usage on schema fingence_processing to service_role;
+
+-- Independent cleanup: where the pg_cron extension is enabled (Supabase: Database → Extensions), run it every 5 minutes.
+-- Without pg_cron, the cleanup still runs on every job read, every new job and every Data page's 15 s state check,
+-- and the local store (scripts/dev-store.mjs) runs it every minute.
+do $$ begin
+    if exists (select 1 from pg_extension where extname = 'pg_cron') then
+        perform cron.schedule('fingence-processing-reap', '*/5 * * * *', 'select public.fingence_processing_reap_all()');
+    end if;
+end $$;

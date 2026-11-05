@@ -26,6 +26,9 @@ if (fresh) {
 let queue = Promise.resolve();
 const serial = work => (queue = queue.then(work, work));
 
+// Retention without user activity: fail stopped jobs and delete scan readings older than 15 minutes, every minute.
+setInterval(() => serial(() => db.query('select public.fingence_processing_reap_all()').catch(() => undefined)), 60_000).unref();
+
 createServer((req, res) => {
     const fn = req.method === 'POST' ? req.url?.match(/^\/rest\/v1\/rpc\/(fingence_(?:processing|ingestion)_[a-z_]+)$/)?.[1] : null;
     if (!fn) { res.writeHead(404).end(); return; }

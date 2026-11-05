@@ -1,8 +1,8 @@
 import 'server-only';
 import { z } from 'zod';
-import { MAX_DOCUMENT_BYTES, processDocuments, sha256Hex, type DocumentInput } from '../../demo/pipeline';
+import { MAX_DOCUMENT_BYTES, processDocuments, sha256Hex, type DocumentInput, type Stage } from '../../demo/pipeline';
 import { runPayload, runPayloadSchema } from '../../document-ingestion/run-payload';
-import type { InterpretationResult, LayoutInterpreter } from '../../interpretation/contracts';
+import { InterpreterUnavailable, type InterpretationResult, type LayoutInterpreter } from '../../interpretation/contracts';
 import type { Extractor } from '../../interpretation/extract';
 import { recordingExtractor, type StoredExtraction } from '../../processing/extractions';
 import { jobResult, MAX_FLAGGED, stageSummary, type FlaggedItem, type StageSummary } from '../../processing/job-result';
@@ -70,12 +70,24 @@ export async function createJob(documents: DocumentInput[], clientHash: string |
 export async function runJob(jobId: string, documents: DocumentInput[], client: string, deps: Deps = {}): Promise<JobStatus> {
     try {
         if (!await call<boolean>('fingence_processing_start_job', { job: jobId }, deps)) return 'FAILED';
-        const interpreter = deps.interpreter !== undefined ? deps.interpreter : aiGatewayEnabled() ? serverInterpreter(client) : null;
-        let timer: ReturnType<typeof setTimeout> | undefined;
         const extractions: Record<string, StoredExtraction> = {};
+        const base = deps.interpreter !== undefined ? deps.interpreter : aiGatewayEnabled() ? serverInterpreter(client) : null;
+        // Once the job is out of time (or the store no longer has it running), nothing more is read, sent to the
+        // model or calculated: every reader call and every stage boundary checks that the job is still live.
+        const stop = new AbortController();
+        const live = () => { if (stop.signal.aborted) throw new JobTimeout(); };
+        const interpreter: LayoutInterpreter | null = base && { propose: async evidence => { if (stop.signal.aborted) throw new InterpreterUnavailable('JOB_STOPPED'); return base.propose(evidence); } };
+        const read = recordingExtractor(extractions, deps.extractor);
+        const extract: Extractor = async (name, bytes, sha256) => stop.signal.aborted ? { error: 'The processing job stopped.' } : read(name, bytes, sha256);
+        const onStage = async (stage: Stage) => {
+            live();
+            if (!await call<boolean>('fingence_processing_job_stage', { job: jobId, stage: stageSummary(stage) }, deps)) { stop.abort(); throw new JobTimeout(); }
+            live();
+        };
+        let timer: ReturnType<typeof setTimeout> | undefined;
         const context = await Promise.race([
-            processDocuments(documents, sha256Hex, async stage => { await call('fingence_processing_job_stage', { job: jobId, stage: stageSummary(stage) }, deps); }, { interpreter, job: { id: jobId, runner: 'BACKEND_JOB_RUNNER' }, extract: recordingExtractor(extractions, deps.extractor) }),
-            new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new JobTimeout()), deps.timeoutMs ?? JOB_TIMEOUT_MS); }),
+            processDocuments(documents, sha256Hex, onStage, { interpreter, job: { id: jobId, runner: 'BACKEND_JOB_RUNNER' }, extract }),
+            new Promise<never>((_, reject) => { timer = setTimeout(() => { stop.abort(); reject(new JobTimeout()); }, deps.timeoutMs ?? JOB_TIMEOUT_MS); }),
         ]).finally(() => clearTimeout(timer));
         const run = runPayloadSchema.safeParse(runPayload(context));
         if (!run.success) { await call('fingence_processing_fail_job', { job: jobId, code: 'INVALID_RUN' }, deps); return 'FAILED'; }

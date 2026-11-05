@@ -44,7 +44,12 @@ Schema `fingence_processing` (`supabase/sql/processing-jobs-v1.sql`) has the tab
 - RLS is enabled and forced with no policies;
 - every read and write goes through a `SECURITY DEFINER` function that only `service_role` may execute.
 
-A job still queued or running after 10 minutes is failed as `TIMED_OUT`.
+A job still queued or running after 10 minutes is failed as `TIMED_OUT`. A job that reaches its own 280 s limit stops itself: no further document is read, sent to the model or calculated after the limit.
+
+**Cleanup without user activity:** `fingence_processing_reap_all()` fails stopped jobs and deletes scan readings older than 15 minutes. It runs:
+- every 5 minutes through `pg_cron`, when that extension is enabled before the migration (on Supabase: Database → Extensions; otherwise schedule it once with `cron.schedule`);
+- every minute in the local store;
+- on every job read, every new job, and every Data page's 15 s state check.
 
 ## Switches
 
