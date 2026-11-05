@@ -53,9 +53,14 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
     useEffect(() => { if (enabled && aiGateway) { probe.current = gatewayStatus(); void probe.current.then(setAi); } }, [enabled, aiGateway]);
     useEffect(() => {
         if (!enabled || !serverJobs) return;
+        // A pause or resume by Management reaches an open tab within 15 s, and at once when the tab is focused again.
         let live = true;
-        fetch('/api/processing/jobs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live) setServerState(b?.processing ?? null); }).catch(() => undefined);
-        return () => { live = false; };
+        const refresh = () => { fetch('/api/processing/jobs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live && b) setServerState(b.processing ?? null); }).catch(() => undefined); };
+        const visible = () => { if (document.visibilityState === 'visible') refresh(); };
+        refresh();
+        const timer = setInterval(refresh, 15_000);
+        window.addEventListener('focus', refresh); document.addEventListener('visibilitychange', visible);
+        return () => { live = false; clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', visible); };
     }, [enabled, serverJobs]);
 
     useEffect(() => {

@@ -6,7 +6,8 @@ import type { PGlite } from '@electric-sql/pglite';
 import { processDocuments, type DocumentInput } from '../../lib/demo/pipeline';
 import { replayInterpreter } from '../../lib/interpretation/client';
 import { replayExtractor } from '../../lib/processing/extractions';
-import { jobResult } from '../../lib/processing/job-result';
+import { runPayload } from '../../lib/document-ingestion/run-payload';
+import { jobResult, MAX_FLAGGED } from '../../lib/processing/job-result';
 import { createJob, getJob, overview, processingState, runJob, setPaused } from '../../lib/server/processing/jobs';
 import type { ProcessingStore } from '../../lib/server/processing/store';
 import { processingDatabase, rpcTransport } from './db';
@@ -139,6 +140,23 @@ describe('server processing jobs', () => {
         const flagged = jobResult(c).flagged.find(f => f.reference === 'GL-DEMO-9999');
         expect(flagged).toEqual(expect.objectContaining({ kind: 'RECONCILIATION_EXCEPTION', status: 'UNEXPLAINED', period: '2026-03', date: '2026-03-10', currency: 'MYR', signedAmount: '-812.40' }));
     }, 30_000);
+
+    it('stores every flagged item, and refuses a run with more than the limit instead of storing a subset', async () => {
+        const c = await processDocuments(march());
+        const many = { ...c, quarantine: Array.from({ length: 600 }, (_, i) => ({ kind: 'ANOMALY_CANDIDATE' as const, reference: `R${i}`, status: 'HIGH', reason: 'test' })) };
+        expect(jobResult(many).flagged).toHaveLength(600);
+        // A finished job stores all of them (more than the old 500).
+        const { jobId } = await createJob(march(), null, deps) as { jobId: string };
+        await db.query(`update fingence_processing.jobs set status = 'RUNNING' where id = $1`, [jobId]);
+        const done = await deps.transport(`${store.url}/rest/v1/rpc/fingence_processing_finish_job`, { method: 'POST', body: JSON.stringify({ job: jobId, run: runPayload(c), result: { ...jobResult(many), extractions: {} } }) });
+        expect(done.status).toBe(200);
+        expect((await getJob(jobId, true, deps))).toEqual(expect.objectContaining({ flaggedCount: 600, flagged: expect.arrayContaining([expect.objectContaining({ reference: 'R599' })]) }));
+        // Over the limit, the whole run is refused with a reason and nothing is stored.
+        expect(MAX_FLAGGED).toBe(10_000);
+        const { jobId: over } = await createJob(quarter(), null, deps) as { jobId: string };
+        expect(await runJob(over, quarter(), '127.0.0.1', { ...deps, maxFlagged: 0 })).toBe('FAILED');
+        expect(await getJob(over, false, deps)).toEqual(expect.objectContaining({ status: 'FAILED', error: 'TOO_MANY_FLAGGED', ingestionRunId: null, flaggedCount: 0 }));
+    }, 60_000);
 
     it('keeps the schema closed: only the service role may call the functions, and nobody may read the tables', async () => {
         const { rows } = await db.query<{ fn: string; anon: boolean; service: boolean }>(`select p.proname as fn, has_function_privilege('anon', p.oid, 'execute') as anon, has_function_privilege('service_role', p.oid, 'execute') as service

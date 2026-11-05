@@ -7,6 +7,8 @@ import type { InterpretationResult } from '../interpretation/contracts';
 import type { ProcessingContext, Quarantined, Stage } from '../demo/pipeline';
 
 export const JOB_RESULT_VERSION = 'fingence-job-result-v1' as const;
+/** The most flagged items one job stores. A run with more is refused as a whole, never stored as an apparently complete subset. */
+export const MAX_FLAGGED = 10_000;
 export type FlaggedItem = {
     kind: Quarantined['kind']; reference: string; status: string;
     period: string | null; date: string | null; currency: string | null; signedAmount: string | null;
@@ -54,7 +56,7 @@ export function flaggedItems(c: ProcessingContext): FlaggedItem[] {
     });
     for (const d of c.documents) if (d.decision === 'UNAVAILABLE')
         items.push({ kind: 'DOCUMENT', reference: clip(d.name, 300), status: 'UNAVAILABLE', period: null, date: null, currency: null, signedAmount: null, title: clip(`${d.name} could not be read.`, 400), reason: clip(d.reason, 2000) });
-    return items.slice(0, 500);
+    return items;
 }
 
 export function jobResult(c: ProcessingContext): JobResult {

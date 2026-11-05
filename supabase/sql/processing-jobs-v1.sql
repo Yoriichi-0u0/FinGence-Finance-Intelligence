@@ -112,7 +112,7 @@ declare j fingence_processing.jobs; run_id uuid; item jsonb; n bigint;
 begin
     select * into j from fingence_processing.jobs where id = job for update;
     if not found or j.status <> 'RUNNING' then return jsonb_build_object('error', 'NOT_RUNNING'); end if;
-    if jsonb_typeof(result->'flagged') <> 'array' or jsonb_array_length(result->'flagged') > 500 then raise exception 'flagged must be an array of at most 500'; end if;
+    if jsonb_typeof(result->'flagged') <> 'array' or jsonb_array_length(result->'flagged') > 10000 then raise exception 'flagged must be an array of at most 10000'; end if;
     run_id := public.fingence_ingestion_record_run(run);
     update fingence_processing.jobs set status = 'COMPLETED', finished_at = now(), pipeline_version = result->>'pipelineVersion',
         processing_id = result->>'processingId', outcome = result->>'outcome', scope = result->'scope', summary = result->>'summary',

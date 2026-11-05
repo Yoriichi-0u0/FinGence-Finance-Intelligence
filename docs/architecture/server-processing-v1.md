@@ -19,11 +19,11 @@ autonomous: no job waits for approval, and nothing in the console approves anyth
    - the ingestion run (`fingence_ingestion_record_run`: fingerprints, decisions, model receipts, gate checks, verified records);
    - the results (`lib/processing/job-result.ts`: reconciliation per month with every resolved item and correcting entry, anomaly resolutions, management summary, document decisions);
    - every flagged item (`flaggedItems`: the context's quarantine, with month, date and amount, plus documents no reader could take).
-   A failure is recorded as a short code (`STORE_HTTP_500`, `TIMED_OUT`, `PROCESSING_FAILED`).
+   A failure is recorded as a short code (`STORE_HTTP_500`, `TIMED_OUT`, `PROCESSING_FAILED`). A run with more than 10,000 flagged items is refused as a whole (`TOO_MANY_FLAGGED`); it is never stored as an apparently complete subset.
 4. **The browser re-checks** the job. It polls `GET /api/processing/jobs/<id>`. Then it re-runs the same pipeline on the same documents and must reach the job's processing ID, or nothing is shown. The re-check uses:
    - the job's accepted layout readings (no model call);
    - for PDFs and scans, the table the job read. OCR engines differ between server and browser, so a second OCR pass would not re-check the first; every gate and the arithmetic anchor still run on that table.
-   A browser running on its own (server processing off) is unchanged.
+   A browser running on its own (server processing off) is unchanged. An open tab re-reads the pause state every 15 s and whenever it is focused again, so a resume reaches Finance users without a reload.
 
 ## What is stored, and what is not
 

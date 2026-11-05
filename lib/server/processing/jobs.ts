@@ -5,7 +5,7 @@ import { runPayload, runPayloadSchema } from '../../document-ingestion/run-paylo
 import type { InterpretationResult, LayoutInterpreter } from '../../interpretation/contracts';
 import type { Extractor } from '../../interpretation/extract';
 import { recordingExtractor, type StoredExtraction } from '../../processing/extractions';
-import { jobResult, stageSummary, type FlaggedItem, type StageSummary } from '../../processing/job-result';
+import { jobResult, MAX_FLAGGED, stageSummary, type FlaggedItem, type StageSummary } from '../../processing/job-result';
 import { aiGatewayEnabled } from '../ai/groq-interpreter';
 import { serverInterpreter } from '../ai/interpret';
 import { PROCESSING_ORGANIZATION, rpc, StoreError, type ProcessingStore } from './store';
@@ -39,7 +39,7 @@ export type JobView = {
     interpretations: Record<string, InterpretationResult>; extractions: Record<string, StoredExtraction>; ingestionRunId: string | null; error: string | null;
     results?: { reconciliation: unknown; anomalies: unknown; report: unknown; documents: unknown } | null; flagged?: (FlaggedItem & { ordinal: number })[];
 };
-type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string; timeoutMs?: number; extractor?: Extractor };
+type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string; timeoutMs?: number; extractor?: Extractor; maxFlagged?: number };
 /** A job stops itself before the 300 s a hosted function may run, so it is failed with a reason instead of cut off. */
 export const JOB_TIMEOUT_MS = 280_000;
 class JobTimeout extends Error {}
@@ -79,7 +79,9 @@ export async function runJob(jobId: string, documents: DocumentInput[], client: 
         ]).finally(() => clearTimeout(timer));
         const run = runPayloadSchema.safeParse(runPayload(context));
         if (!run.success) { await call('fingence_processing_fail_job', { job: jobId, code: 'INVALID_RUN' }, deps); return 'FAILED'; }
-        const done = await call<{ jobId?: string; error?: string }>('fingence_processing_finish_job', { job: jobId, run: run.data, result: { ...jobResult(context), extractions } }, deps);
+        const result = jobResult(context);
+        if (result.flagged.length > (deps.maxFlagged ?? MAX_FLAGGED)) { await call('fingence_processing_fail_job', { job: jobId, code: 'TOO_MANY_FLAGGED' }, deps); return 'FAILED'; }
+        const done = await call<{ jobId?: string; error?: string }>('fingence_processing_finish_job', { job: jobId, run: run.data, result: { ...result, extractions } }, deps);
         return done?.jobId ? 'COMPLETED' : 'FAILED';
     } catch (error) {
         const code = error instanceof StoreError ? error.code : error instanceof JobTimeout ? 'TIMED_OUT' : 'PROCESSING_FAILED';
