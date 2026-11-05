@@ -49,15 +49,20 @@ function swappedReading(literal: string, format: DateFormat): string | null {
 }
 function lineText(table: Table, line: number) { return (table.rows[line] ?? []).join(' '); }
 const ISO_CURRENCIES = new Set(Intl.supportedValuesOf('currency'));
-/** An OCR'd currency code with one letter in the wrong case ("UsD"), found case-insensitively on the cited line. */
+/**
+ * An OCR'd currency code with one letter in the wrong case ("UsD"). Tokens are whole words of the complete cited
+ * line, never of the model's literal: the line must hold exactly one such code, and the literal must name it.
+ */
 function ocrCurrencyCode(table: Table, e: { line: number; literal: string } | null | undefined) {
-    if (!e?.literal.trim()) return null;
-    const text = lineText(table, e.line), at = text.toLowerCase().indexOf(e.literal.trim().toLowerCase());
-    if (at < 0) return null;
-    const read = text.slice(at, at + e.literal.trim().length);
-    const codes = [...read.matchAll(/\b[A-Za-z]{3}\b/g)].map(m => m[0])
+    const literal = e?.literal.trim();
+    if (!e || !literal) return null;
+    const text = lineText(table, e.line);
+    if (!text.toLowerCase().includes(literal.toLowerCase())) return null;
+    const codes = [...text.matchAll(/(?<![\p{L}\p{N}])[A-Za-z]{3}(?![\p{L}\p{N}])/gu)].map(m => m[0])
         .filter(t => (t.match(/[a-z]/g)?.length ?? 0) <= 1 && ISO_CURRENCIES.has(t.toUpperCase()));
-    return codes.length === 1 ? { code: codes[0].toUpperCase(), read: codes[0], line: e.line } : null;
+    if (codes.length !== 1) return null;
+    const named = new RegExp(`(?<![\\p{L}\\p{N}])${codes[0]}(?![\\p{L}\\p{N}])`, 'iu').test(literal);
+    return named ? { code: codes[0].toUpperCase(), read: codes[0], line: e.line } : null;
 }
 function periodMentioned(literal: string, period: string) {
     const [y, m] = period.split('-'), text = literal.toLowerCase();

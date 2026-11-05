@@ -106,7 +106,8 @@ The generated corpus and the FinGence and adversarial sets ran first (55 documen
 **Fix from this run:**
 
 - **OCR currency case.** OCR read the cell "USD" as "UsD", so the pelita photo was refused although all 30 rows had been read exactly. For an OCR table only, a currency code on the cited line may be read case-insensitively. The conditions:
-  - exactly one three-letter code is on that line;
+  - exactly one three-letter code is on that line, counted as whole words of the full line, not of the model's quoted text;
+  - the model's quoted text names that code;
   - it has at most one letter in the wrong case;
   - its upper-case form is an ISO 4217 code.
 

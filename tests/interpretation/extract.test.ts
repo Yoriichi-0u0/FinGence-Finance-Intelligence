@@ -147,6 +147,10 @@ describe('two OCR readings that disagree: the arithmetic may choose, but only on
         expect(verifyProposal(await withLine('Usd'), proposal('USD'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
         expect(verifyProposal(await withLine('XqZ'), proposal('XQZ'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
         expect(verifyProposal(await withLine('UsD'), proposal('SGD'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
+        // Tokens come from the whole cited line, not the model's literal: no standalone code, or two codes, stays quarantined.
+        expect(verifyProposal(await withLine('UsDT'), proposal('USD'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
+        expect(verifyProposal(await withLine('UsD / SgD'), proposal('USD'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
+        expect(verifyProposal(await withLine('UsD'), proposal('Currency UsD'), { extracted: 'OCR', scope }).decision).toBe('AUTO_ACCEPTED');
     });
     it('a failure that is not about figures is never retried with other readings', async () => {
         const { verifyWithDisputes } = await import('../../lib/interpretation/gates');
