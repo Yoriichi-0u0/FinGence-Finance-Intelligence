@@ -20,7 +20,7 @@ The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): d
 
 - **Formats:** CSV, XLSX, text PDF, scanned PDF and images. Real-statement layouts are handled, and the ingestion scope accepts several months and any stated currency.
 - **Durable store:** Supabase FinGence-Production, schema `fingence_ingestion` (`supabase/sql/ingestion-layer-v1.sql`), through `POST /api/ingestion/runs`. It needs `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
-- **Benchmark:** see [docs/integration/ingestion-benchmark.md](../integration/ingestion-benchmark.md). 0 false acceptances so far; the full rerun is pending the Groq daily allowance.
+- **Benchmark:** see [docs/integration/ingestion-benchmark.md](../integration/ingestion-benchmark.md). Full rerun 5 Nov 2026 (run 4): 67 documents, 0 false acceptances. All 24 generated digital documents and all 10 FinGence samples were accepted exactly. Quarantines that remain are OCR digit misreads and AgamiAI statements whose own balances break. For OCR only, a currency code with one wrong-case letter ("UsD") is read as its ISO code and disclosed.
 
 ## AI M3: PDF statements and scans — 4 November 2026
 

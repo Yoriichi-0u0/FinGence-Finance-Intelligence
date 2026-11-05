@@ -48,6 +48,22 @@ function swappedReading(literal: string, format: DateFormat): string | null {
     return m ? parseDate(`${m[2]}/${m[1]}/${m[3]}`, 'DD/MM/YYYY') : null;
 }
 function lineText(table: Table, line: number) { return (table.rows[line] ?? []).join(' '); }
+const ISO_CURRENCIES = new Set(Intl.supportedValuesOf('currency'));
+/**
+ * An OCR'd currency code with one letter in the wrong case ("UsD"). Tokens are whole words of the complete cited
+ * line, never of the model's literal: the line must hold exactly one such code, and the literal must name it.
+ */
+function ocrCurrencyCode(table: Table, e: { line: number; literal: string } | null | undefined) {
+    const literal = e?.literal.trim();
+    if (!e || !literal) return null;
+    const text = lineText(table, e.line);
+    if (!text.toLowerCase().includes(literal.toLowerCase())) return null;
+    const codes = [...text.matchAll(/(?<![\p{L}\p{N}])[A-Za-z]{3}(?![\p{L}\p{N}])/gu)].map(m => m[0])
+        .filter(t => (t.match(/[a-z]/g)?.length ?? 0) <= 1 && ISO_CURRENCIES.has(t.toUpperCase()));
+    if (codes.length !== 1) return null;
+    const named = new RegExp(`(?<![\\p{L}\\p{N}])${codes[0]}(?![\\p{L}\\p{N}])`, 'iu').test(literal);
+    return named ? { code: codes[0].toUpperCase(), read: codes[0], line: e.line } : null;
+}
 function periodMentioned(literal: string, period: string) {
     const [y, m] = period.split('-'), text = literal.toLowerCase();
     const names = [MONTH_NAMES[+m - 1], MONTH_NAMES[+m - 1].slice(0, 3), MALAY_MONTH_NAMES[+m - 1]];
@@ -251,7 +267,13 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
     const fromEvidence = (e: LayoutProposal['scope']['businessId']) => e && lineText(table, e.line).includes(e.literal) ? e.literal.trim() : e ? undefined : null;
     const scopeValue = (f: 'businessId' | 'businessName' | 'currency') => { const col = fromColumn(f); return col !== null ? col : fromEvidence(p.scope[f]); };
     const businessId = scopeValue('businessId'), currencyLiteral = scopeValue('currency'), businessName = scopeValue('businessName');
-    const currency = currencyLiteral ? /\b(MYR|RM)\b/i.test(currencyLiteral) ? 'MYR' : /\b([A-Z]{3})\b/.exec(currencyLiteral)?.[1] ?? (/^(Rs\.?|₹)$/i.test(currencyLiteral) ? 'INR' : undefined) : currencyLiteral;
+    const strictCurrency = currencyLiteral ? /\b(MYR|RM)\b/i.test(currencyLiteral) ? 'MYR' : /\b([A-Z]{3})\b/.exec(currencyLiteral)?.[1] ?? (/^(Rs\.?|₹)$/i.test(currencyLiteral) ? 'INR' : undefined) : currencyLiteral;
+    // OCR misreads a letter's case ("UsD"). For an OCR table only, a cited currency the strict reading rejects is
+    // read from the document's own text on the cited line: exactly one three-letter ISO 4217 code with at most one
+    // letter in the wrong case. Disclosed; any other doubt stays quarantined.
+    const ocrCurrency = strictCurrency === undefined && options.extracted === 'OCR' && c.currency === null ? ocrCurrencyCode(table, p.scope.currency) : null;
+    if (ocrCurrency) disclosures.push(`Currency "${ocrCurrency.read}" on line ${ocrCurrency.line + 1} was read by OCR with a letter in the wrong case; taken as ${ocrCurrency.code}.`);
+    const currency = ocrCurrency?.code ?? strictCurrency;
     const periodEvidence = p.scope.statementPeriod, periodLiteral = fromEvidence(periodEvidence);
     const scopeProblems = [
         businessId === null ? 'business ID not stated' : businessId === undefined || !/^[A-Za-z0-9][A-Za-z0-9._-]{1,31}$/.test(businessId) ? 'business ID evidence not found verbatim or not an identifier' : '',
