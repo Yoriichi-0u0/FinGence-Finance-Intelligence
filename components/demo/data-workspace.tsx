@@ -31,11 +31,11 @@ async function hex(bytes: Uint8Array) {
 
 /** Phase 1 Data experience: select documents once, process once, inspect every stage's evidence. */
 export default function DemoDataWorkspace() {
-    const { status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait } = useDemoProcessing();
+    const { status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState } = useDemoProcessing();
     const [selected, setSelected] = useState<DocumentInput[]>([]);
     const [notice, setNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const busy = status === 'processing' || loading;
+    const busy = status === 'processing' || loading, paused = !!serverState?.paused;
 
     async function loadSample(paths = SAMPLE) {
         setLoading(true); setNotice(null);
@@ -65,11 +65,14 @@ export default function DemoDataWorkspace() {
         <PageHeader title="Data" description="Provide a bank statement and a general ledger once. FinGence identifies, verifies, reconciles and analyses them in one run." />
         <div role="note" aria-label="Public prototype data notice" className="mb-5 space-y-1.5 rounded-lg border border-amber-200 bg-[var(--amber-soft)] p-3 text-sm">
             <p><strong>Public prototype: do not submit confidential or real financial documents.</strong> The built-in sample documents are fictional.</p>
-            <p>If you choose your own files, they are read and processed locally in this browser and are not uploaded to a server; scans and images are read by OCR here too (the OCR engine and its English language data are downloaded from the jsDelivr CDN). Their contents are kept temporarily in this tab&apos;s sessionStorage so results survive a reload, until you press Clear results or close the tab.</p>
+            {serverJobs
+                ? <p><strong>Processing runs on the FinGence server.</strong> Your files are sent to the server for one processing job and are not stored there; the server stores their fingerprints, decisions, verified records, reconciliation and anomaly results. This browser then re-checks the result from the same files. Their contents are kept temporarily in this tab&apos;s sessionStorage so results survive a reload, until you press Clear results or close the tab.</p>
+                : <p>If you choose your own files, they are read and processed locally in this browser and are not uploaded to a server; scans and images are read by OCR here too (the OCR engine and its English language data are downloaded from the jsDelivr CDN). Their contents are kept temporarily in this tab&apos;s sessionStorage so results survive a reload, until you press Clear results or close the tab.</p>}
             {ai?.available
-                ? <p><strong>AI layout interpretation is on.</strong> Documents in the supported layouts are recognised by fixed schema rules. For an unfamiliar layout, its headings, column profiles and a few sample lines (never the whole file) are sent through the FinGence server to {ai.model} on Groq, which proposes the layout. Deterministic checks on every row of the original file decide whether it is accepted; the model never supplies an amount, and every figure is computed in this browser.</p>
+                ? <p><strong>AI layout interpretation is on.</strong> Documents in the supported layouts are recognised by fixed schema rules. For an unfamiliar layout, its headings, column profiles and a few sample lines (never the whole file) are sent through the FinGence server to {ai.model} on Groq, which proposes the layout. Deterministic checks on every row of the original file decide whether it is accepted; the model never supplies an amount, and every figure is computed {serverJobs ? 'on the server and re-checked in this browser' : 'in this browser'}.</p>
                 : <p>Roles and columns are recognised by fixed schema rules and every figure is computed deterministically. This is not live AI inference.</p>}
         </div>
+        {paused && serverState ? <p role="alert" className="mb-5 rounded-lg border border-amber-300 bg-[var(--amber-soft)] p-3 text-sm"><strong>Processing is paused by your technical team.</strong> {serverState.reason ? `Reason: ${serverState.reason}. ` : ''}New documents cannot be processed until it is resumed.</p> : null}
         <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
             <Panel title="1. Documents" eyebrow="Input">
                 <div className="space-y-4 p-4 sm:p-5">
@@ -82,18 +85,18 @@ export default function DemoDataWorkspace() {
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--muted-strong)]"><Sparkles aria-hidden="true" size={14} />Same documents, other formats (AI):</span>
                         {FORMATS.map(f => <button key={f.label} type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} disabled={busy} onClick={() => void loadSample(f.paths)}>{f.label}</button>)}
                     </div> : null}
-                    <p className="text-xs text-[var(--muted)]">Sample: a fictional bank statement and cash-account ledger for March 2026, plus 12 months of bank history (generated by <code>scripts/generate-demo-documents.mjs</code>). The quarter sample is a second fictional business with three months in Singapore dollars, where timing differences clear from one month to the next (<code>scripts/generate-quarter-documents.mjs</code>). You may instead choose your own files: CSV, Excel (.xlsx), PDF statements, or scans and photos (PDF, PNG, JPEG); you do not need to label them. Use only fictional or non-confidential test data.{ai?.available ? ' The unfamiliar-layout samples are the same fictional transactions exported with other headings, date and number formats; the Excel, PDF and scanned samples hold the same documents in those formats. They are read by the AI interpreter and checked against the arithmetic in each document. Scans are read by OCR in this browser, which can take up to a minute, and an OCR misreading of a reference code shows up as a reconciliation item to review.' : ''}</p>
+                    <p className="text-xs text-[var(--muted)]">Sample: a fictional bank statement and cash-account ledger for March 2026, plus 12 months of bank history (generated by <code>scripts/generate-demo-documents.mjs</code>). The quarter sample is a second fictional business with three months in Singapore dollars, where timing differences clear from one month to the next (<code>scripts/generate-quarter-documents.mjs</code>). You may instead choose your own files: CSV, Excel (.xlsx), PDF statements, or scans and photos (PDF, PNG, JPEG); you do not need to label them. Use only fictional or non-confidential test data.{ai?.available ? ` The unfamiliar-layout samples are the same fictional transactions exported with other headings, date and number formats; the Excel, PDF and scanned samples hold the same documents in those formats. They are read by the AI interpreter and checked against the arithmetic in each document. Scans are read by OCR ${serverJobs ? 'on the server and again in this browser' : 'in this browser'}, which can take up to a minute, and an OCR misreading of a reference code shows up as a reconciliation item to review.` : ''}</p>
                     {notice ? <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{notice}</p> : null}
                     {selected.length ? <ul aria-label="Selected documents" className="space-y-2">{selected.map(d => <li key={d.name} className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-[var(--border)] px-3 py-2 text-sm"><span className="min-w-0 break-all">{d.name}</span><span className="shrink-0 text-xs text-[var(--muted)]">{kb(d.bytes.byteLength)} · {d.provenance === 'PUBLIC_SYNTHETIC_SAMPLE' ? 'sample' : 'yours'}</span></li>)}</ul>
                         : <p className="text-sm text-[var(--muted)]">No documents selected.</p>}
                     <div className="flex flex-wrap gap-2 border-t border-[var(--border)] pt-4">
-                        <button type="button" className={primaryButton} disabled={busy || !selected.length} onClick={() => void process(selected)}>{status === 'processing' ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Play aria-hidden="true" size={16} />}Process Financial Documents</button>
+                        <button type="button" className={primaryButton} disabled={busy || paused || !selected.length} onClick={() => void process(selected)}>{status === 'processing' ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Play aria-hidden="true" size={16} />}Process Financial Documents</button>
                         <button type="button" className={button} disabled={busy || (status !== 'ready' && status !== 'failed')} onClick={() => { clear(); setSelected([]); }}><RotateCcw aria-hidden="true" size={16} />Clear results</button>
                     </div>
                 </div>
             </Panel>
-            <Panel title="2. Processing stages" eyebrow="Browser demo runner">
-                {context ? <p className="border-b border-[var(--border)] px-4 py-2 text-xs text-[var(--muted)] sm:px-5">Processing ID <code className="text-[var(--ink)]">{context.processingId}</code> · same documents always give the same ID</p> : null}
+            <Panel title="2. Processing stages" eyebrow={serverJobs ? 'Server processing job' : 'Browser demo runner'}>
+                {context ? <p className="border-b border-[var(--border)] px-4 py-2 text-xs text-[var(--muted)] sm:px-5">Processing ID <code className="text-[var(--ink)]">{context.processingId}</code> · same documents always give the same ID{context.job ? <> · server job <code className="text-[var(--ink)]">{context.job.id}</code>, results stored, re-checked in this browser</> : null}</p> : null}
                 <ol className="divide-y divide-[var(--border)]" aria-live="polite">
                     {stages.map(({ id, title, stage }, i) => <li key={id} className="px-4 py-3 sm:px-5">
                         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
@@ -115,7 +118,7 @@ export default function DemoDataWorkspace() {
             <Panel title="3. Documents identified" eyebrow={processedAt ? `Processed ${new Date(processedAt).toLocaleString()}${persisted ? '' : ' · not kept after reload'}` : undefined}>
                 <Table caption="Identified documents" columns={['Document', 'Role', 'Decision', 'Records', 'Scope', 'SHA-256']} rows={context.documents.map(d => [
                     <span key="n" className="grid gap-1"><span className="break-all">{d.name}</span>{d.source?.kind === 'WORKSHEET' ? <span className="text-xs text-[var(--muted)]">Worksheet {d.source.sheetNumber} of {d.source.workbook} · workbook SHA-256 <code>{d.source.workbookSha256.slice(0, 12)}…</code></span>
-                        : d.source ? <span className="text-xs text-[var(--muted)]">{d.source.kind === 'OCR' ? `Read by OCR in this browser · ${d.source.confidence}% mean confidence` : 'PDF text layer'} · {d.source.pages} page{d.source.pages === 1 ? '' : 's'} · file SHA-256 <code>{d.source.fileSha256.slice(0, 12)}…</code></span> : null}</span>, d.role ? ROLE[d.role] : 'Not identified',
+                        : d.source ? <span className="text-xs text-[var(--muted)]">{d.source.kind === 'OCR' ? `Read by OCR ${context.job ? 'on the server' : 'in this browser'} · ${d.source.confidence}% mean confidence` : 'PDF text layer'} · {d.source.pages} page{d.source.pages === 1 ? '' : 's'} · file SHA-256 <code>{d.source.fileSha256.slice(0, 12)}…</code></span> : null}</span>, d.role ? ROLE[d.role] : 'Not identified',
                     <span key="d" className="grid gap-1"><DecisionBadge decision={d.decision} label={d.decision === 'AUTO_ACCEPTED' && context.status === 'QUARANTINED' ? 'Identified · run quarantined' : undefined} /><span className="text-xs text-[var(--muted)]">{d.reason}</span></span>,
                     d.rows ?? '—', d.businessId ? `${d.businessId} · ${d.periods.length > 1 ? `${d.periods[0]} to ${d.periods.at(-1)}` : d.periods[0] ?? ''} · ${d.currency}` : '—',
                     <code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>,
@@ -132,7 +135,7 @@ export default function DemoDataWorkspace() {
                 <nav aria-label="Connected results" className="flex flex-wrap gap-2 border-t border-[var(--border)] p-4 sm:px-5">
                     {[['/', 'Overview'], ['/transactions', 'Transactions'], ['/reconciliation', 'Reconciliation'], ['/analytics', 'Analytics'], ['/anomalies', 'Anomalies'], ['/forecasting', 'Forecasting'], ['/reports', 'Reports'], ['/ask', 'Finance Q&A']].map(([href, label]) => <Link key={href} href={href} className={button}>{label}</Link>)}
                 </nav>
-                <SaveRun context={context} />
+                {context.job ? null : <SaveRun context={context} />}
             </Panel> : <Panel title="4. Outputs"><p className="p-5 text-sm">No financial outputs were produced because the documents were quarantined. See the stage checks above for the exact reason.</p></Panel>}
         </div> : null}
     </>;

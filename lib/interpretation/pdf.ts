@@ -1,7 +1,8 @@
 /**
  * Reads a PDF's text layer into positioned words (pdf.js, in the browser or in Node). Pages with no text
- * layer are scans: they are rendered and read by OCR where a canvas exists (the browser), and otherwise
- * reported, never guessed.
+ * layer are scans: they are rendered and read by OCR, on a browser canvas or, in Node (server processing jobs),
+ * on pdf.js's own Node canvas (@napi-rs/canvas, a pdf.js dependency); a page that cannot be rendered is reported,
+ * never guessed.
  */
 import type { Word } from './positioned';
 
@@ -32,7 +33,7 @@ async function pageJpeg(bytes: Uint8Array, page: number): Promise<Uint8Array | n
     return images[0].contents;
 }
 
-export async function readPdf(bytes: Uint8Array): Promise<{ pages: PdfPage[]; image: (page: number) => Promise<Uint8Array | null>; render: (page: number, scale: number) => Promise<HTMLCanvasElement | null>; close: () => Promise<void> }> {
+export async function readPdf(bytes: Uint8Array): Promise<{ pages: PdfPage[]; image: (page: number) => Promise<Uint8Array | null>; render: (page: number, scale: number) => Promise<HTMLCanvasElement | Uint8Array | null>; close: () => Promise<void> }> {
     const lib = await pdfjs();
     const task = lib.getDocument({ data: bytes.slice(), disableFontFace: true, useSystemFonts: false }), doc = await task.promise;
     if (doc.numPages > MAX_PDF_PAGES) { await task.destroy(); throw Error(`More than ${MAX_PDF_PAGES} pages.`); }
@@ -51,8 +52,18 @@ export async function readPdf(bytes: Uint8Array): Promise<{ pages: PdfPage[]; im
         }
         pages.push({ number: n, width: view.width, height: view.height, words, scanned: words.length === 0, rotated });
     }
-    const render = async (n: number, scale: number) => {
-        if (typeof document === 'undefined') return null;
+    const render = async (n: number, scale: number): Promise<HTMLCanvasElement | Uint8Array | null> => {
+        if (typeof document === 'undefined') {
+            // Node: pdf.js's canvas factory draws on @napi-rs/canvas; the page goes to OCR as a PNG.
+            const factory = (doc as unknown as { canvasFactory?: { create(w: number, h: number): { canvas: { toBuffer(type: 'image/png'): Uint8Array }; context: unknown } } }).canvasFactory;
+            if (!factory) return null;
+            const page = await doc.getPage(n), view = page.getViewport({ scale });
+            try {
+                const { canvas, context } = factory.create(Math.ceil(view.width), Math.ceil(view.height));
+                await page.render({ canvasContext: context as CanvasRenderingContext2D, canvas: canvas as unknown as HTMLCanvasElement, viewport: view, intent: 'print' }).promise;
+                return new Uint8Array(canvas.toBuffer('image/png'));
+            } catch { return null; }
+        }
         const page = await doc.getPage(n), view = page.getViewport({ scale }), canvas = document.createElement('canvas');
         canvas.width = Math.ceil(view.width); canvas.height = Math.ceil(view.height);
         // The print intent renders without requestAnimationFrame, which browsers pause in a background tab.

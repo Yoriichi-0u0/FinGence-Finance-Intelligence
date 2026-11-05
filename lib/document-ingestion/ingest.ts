@@ -14,7 +14,7 @@ import { InterpreterUnavailable, type LayoutInterpreter, type ModelReceipt } fro
 import { buildEvidence, readTable } from '../interpretation/evidence';
 import { verifyProposal, verifyWithDisputes, type FieldMapping, type GateOptions } from '../interpretation/gates';
 import { expandWorkbook, isWorkbook, type WorksheetSource } from '../interpretation/workbook';
-import { extractDocument, isExtractable, type ExtractedSource } from '../interpretation/extract';
+import { extractDocument, isExtractable, type ExtractedSource, type Extractor } from '../interpretation/extract';
 
 export type DocumentRole = 'BANK_STATEMENT' | 'GENERAL_LEDGER' | 'BANK_HISTORY';
 export type Provenance = 'PUBLIC_SYNTHETIC_SAMPLE' | 'USER_SUPPLIED';
@@ -70,7 +70,8 @@ function identify(fields: string[] | null): { role: DocumentRole | null; reason:
 /** What a document may cover: the Phase 1 pipeline reconciles one month in MYR; the ingestion layer alone accepts more. */
 export const INGESTION_SCOPE: NonNullable<GateOptions['scope']> = { months: 'MANY', currencies: 'ANY' };
 /** `onTable`: observes the table bytes each document is interpreted from (evaluation); it cannot change them. */
-export type IngestionOptions = { interpreter?: LayoutInterpreter | null; digest?: Digest; scope?: GateOptions['scope']; onTable?: (table: Uint8Array) => void };
+/** `extract` reads a PDF or image into a table (default: `extractDocument`); a server job's re-check replays the job's reading instead. */
+export type IngestionOptions = { interpreter?: LayoutInterpreter | null; digest?: Digest; scope?: GateOptions['scope']; onTable?: (table: Uint8Array) => void; extract?: Extractor };
 export type Ingested = {
     documents: ProcessedDocument[];
     /** The bytes each document continues as, index for index: canonical CSV for an AI-interpreted document, else its own table. */
@@ -89,7 +90,7 @@ export async function ingestDocuments(inputs: DocumentInput[], options: Ingestio
     for (const input of inputs) {
         const name = input.name.split(/[/\\]/).pop()!.slice(0, 120);
         if (isExtractable(input.bytes)) {
-            const sha256 = await digest(input.bytes), read = await extractDocument(name, input.bytes, sha256);
+            const sha256 = await digest(input.bytes), read = await (options.extract ?? extractDocument)(name, input.bytes, sha256);
             if ('error' in read) unread(input, name, sha256, `Not read: ${read.error}`);
             else entries.push({ name, bytes: read.bytes, provenance: input.provenance, source: read.source });
             continue;
