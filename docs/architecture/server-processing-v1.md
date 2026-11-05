@@ -13,7 +13,7 @@ autonomous: no job waits for approval, and nothing in the console approves anyth
    - Otherwise the server answers **202** with the job ID straight away.
 2. **The job** runs after the response (`after()`, `maxDuration` 300 s, its own 280 s limit). It uses the same pure pipeline the browser runner uses (`processDocuments`), with:
    - the AI layout reader called in-process from the same spend budget and retry rule as the browser gateway (`lib/server/ai/interpret.ts`);
-   - PDF text and OCR read on the server (`pdf.js` and `tesseract.js` are `serverExternalPackages`).
+   - PDF text and OCR read on the server (`pdf.js` and `tesseract.js` are `serverExternalPackages`). A scanned page that is not one stored JPEG is rendered on pdf.js's own Node canvas (`@napi-rs/canvas`), as the browser renders it on its canvas.
    Each stage is recorded as it finishes (`fingence_processing_job_stage`).
 3. **Finishing** (`fingence_processing_finish_job`) is one transaction. It stores:
    - the ingestion run (`fingence_ingestion_record_run`: fingerprints, decisions, model receipts, gate checks, verified records);
@@ -23,7 +23,7 @@ autonomous: no job waits for approval, and nothing in the console approves anyth
 4. **The browser re-checks** the job. It polls `GET /api/processing/jobs/<id>`. Then it re-runs the same pipeline on the same documents and must reach the job's processing ID, or nothing is shown. The re-check uses:
    - the job's accepted layout readings (no model call);
    - for PDFs and scans, the table the job read. OCR engines differ between server and browser, so a second OCR pass would not re-check the first; every gate and the arithmetic anchor still run on that table.
-   A browser running on its own (server processing off) is unchanged. An open tab re-reads the pause state every 15 s and whenever it is focused again, so a resume reaches Finance users without a reload.
+   A browser running on its own (server processing off) is unchanged. After a reload, a saved job result is shown only if the replay still reaches that job's processing ID. An open tab re-reads the pause state every 15 s and whenever it is focused again, so a resume reaches Finance users without a reload.
 
 ## What is stored, and what is not
 

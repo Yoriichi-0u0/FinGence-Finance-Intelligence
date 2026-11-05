@@ -1,6 +1,6 @@
 /**
  * PDFs and images → one CSV-shaped document each. A PDF's text layer is read directly; scanned pages (no text
- * layer) and images are read by OCR in this browser. Either way the words are placed into a table by geometry
+ * layer) and images are read by OCR (in the browser, or on the server in a processing job). Either way the words are placed into a table by geometry
  * alone (`positioned.ts`), and the document is then identified, interpreted and gated like a CSV, with an
  * additional arithmetic anchor (`verifyProposal` with `extracted`).
  */
@@ -30,9 +30,9 @@ export async function extractDocument(name: string, bytes: Uint8Array, sha256: s
             try {
                 for (const page of pdf.pages) {
                     if (!page.scanned) { words.push(...page.words); continue; }
-                    // The scan as stored when the page is one JPEG; otherwise the page rendered at about 300 dpi (browser only).
+                    // The scan as stored when the page is one JPEG; otherwise the page rendered at about 300 dpi (browser or Node canvas).
                     const scan = await pdf.image(page.number) ?? await pdf.render(page.number, SCAN_SCALE);
-                    if (!scan) return { error: `Page ${page.number} is a scan without a text layer that is not a single stored image; such pages are read by OCR in the browser.` };
+                    if (!scan) return { error: `Page ${page.number} is a scan without a text layer that could not be rendered for OCR.` };
                     const read = await ocrWords(scan, page.number);
                     words.push(...read.words); confidences.push(read.confidence); disputed += read.disputed; ocrPages++;
                 }

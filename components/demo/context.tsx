@@ -13,7 +13,7 @@ import { submitServerJob, type ServerProcessingState } from './server-jobs';
  * ones. A reload replays stored proposals through the gates instead of calling the model again.
  */
 const STORAGE_KEY = 'fingence-demo-documents-v1';
-type Stored = { processedAt: string; documents: { name: string; provenance: DocumentInput['provenance']; base64: string }[]; interpretations?: Record<string, InterpretationResult>; job?: { id: string }; extractions?: Record<string, StoredExtraction> };
+type Stored = { processedAt: string; documents: { name: string; provenance: DocumentInput['provenance']; base64: string }[]; interpretations?: Record<string, InterpretationResult>; job?: { id: string; processingId: string }; extractions?: Record<string, StoredExtraction> };
 export type DemoStatus = 'loading' | 'empty' | 'processing' | 'ready' | 'failed';
 type Value = {
     enabled: boolean; status: DemoStatus; context: ProcessingContext | null; liveStages: Stage[]; processedAt: string | null; persisted: boolean; error: string | null;
@@ -68,7 +68,14 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
         const stored = readStored(), current = ++run.current;
         if (!stored) { queueMicrotask(() => { if (current === run.current) setStatus('empty'); }); return; }
         browserDemoRunner.run(stored.documents.map(d => ({ name: d.name, provenance: d.provenance, bytes: fromBase64(d.base64) })), undefined, { interpreter: replayInterpreter(stored.interpretations ?? {}, null), job: stored.job ? { id: stored.job.id, runner: 'BACKEND_JOB_RUNNER' } : null, extract: stored.extractions ? replayExtractor(stored.extractions) : undefined })
-            .then(result => { if (current !== run.current) return; setContext(result); setLiveStages(result.stages); setProcessedAt(stored.processedAt); setStatus('ready'); })
+            .then(result => {
+                if (current !== run.current) return;
+                // A server job's result is shown again only while it still reproduces the job (same pipeline, same readings).
+                if (stored.job && result.processingId !== stored.job.processingId) {
+                    writeStored(null); setError(`The saved result of server job ${stored.job.id} no longer matches this version of FinGence, so it is not shown. Please process the documents again.`); setStatus('failed'); return;
+                }
+                setContext(result); setLiveStages(result.stages); setProcessedAt(stored.processedAt); setStatus('ready');
+            })
             .catch(() => { if (current !== run.current) return; writeStored(null); setStatus('empty'); });
     }, [enabled]);
 
@@ -79,7 +86,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
         try {
             // If the server says AI is on but the browser's status check has not answered yet (a fast click after a
             // fresh load), wait for it, so an unfamiliar document is never processed without the interpreter by accident.
-            let result: ProcessingContext, job: { id: string } | undefined, extractions: Record<string, StoredExtraction> | undefined;
+            let result: ProcessingContext, job: { id: string; processingId: string } | undefined, extractions: Record<string, StoredExtraction> | undefined;
             if (serverJobs) {
                 // The server runs the job and stores its results; this browser then re-runs the same pure pipeline on the
                 // same documents with the server's accepted layout readings (no model call) and must reach the same ID.
@@ -89,7 +96,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
                     if (outcome.state) setServerState(outcome.state);
                     setError(outcome.refusal); setStatus('failed'); return null;
                 }
-                job = { id: outcome.job.id }; extractions = outcome.job.extractions;
+                job = { id: outcome.job.id, processingId: outcome.job.processingId }; extractions = outcome.job.extractions;
                 result = await browserDemoRunner.run(inputs, undefined, { interpreter: replayInterpreter(outcome.job.interpretations, null), job: { id: outcome.job.id, runner: 'BACKEND_JOB_RUNNER' }, extract: replayExtractor(outcome.job.extractions) });
                 if (current !== run.current) return null;
                 if (result.processingId !== outcome.job.processingId) { setError(`This browser's re-check of server job ${outcome.job.id} did not reach the same result, so it is not shown. Your technical team can see the job in Management.`); setStatus('failed'); return null; }
