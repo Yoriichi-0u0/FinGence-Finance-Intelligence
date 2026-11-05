@@ -176,6 +176,11 @@ describe('answer gate withholds anything not grounded', () => {
         expect(failed(verifyAnswer(answered([{ text: '{F2.name}, the second-largest payee, received {F2.total}.', cites: ['F2'] }]), facts, q))).toEqual([]);
         expect(failed(verifyAnswer(answered([{ text: '{F1.name}, the second-largest payee, received {F1.total}.', cites: ['F1'] }]), facts, q))).toEqual(['ranks']);
         expect(failed(verifyAnswer(answered([{ text: '{F1.name}, the second-largest payee, received {F2.total}.', cites: ['F1', 'F2'] }]), facts, q))).toEqual(['ranks']);
+        // Across a conjunction the rank phrase describes the entity after it, not the one before.
+        expect(failed(verifyAnswer(answered([{ text: '{F2.name} received {F2.total} and the second-largest payee, {F1.name}, received {F1.total}.', cites: ['F1', 'F2'] }]), facts, q))).toEqual(['ranks']);
+        expect(failed(verifyAnswer(answered([{ text: '{F1.name} received {F1.total} and the second-largest payee, {F2.name}, received {F2.total}.', cites: ['F1', 'F2'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: 'Payments went to {F2.name}, the second-largest payee.', cites: ['F2'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: 'Payments went to {F1.name}, the second-largest payee.', cites: ['F1'] }]), facts, q))).toEqual(['ranks']);
     });
     it('withholds citations of facts outside this answer (schema-bound)', async () => {
         const { cat, facts } = await setup(TOP_OUT);
