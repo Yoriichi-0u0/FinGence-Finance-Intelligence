@@ -29,7 +29,7 @@ export function formatValue(v: Value): string {
         case 'MONEY': { const s = groupDigits(fromCents(BigInt(v.cents))); return s.startsWith('-') ? `−${v.currency} ${s.slice(1)}` : `${v.currency} ${s}`; }
         case 'COUNT': return String(v.n);
         case 'DATE': { const [y, m, d] = v.iso.split('-'); return `${+d} ${MONTHS[+m - 1]} ${y}`; }
-        case 'PERIOD': { const [y, m] = v.ym.split('-'); return `${MONTHS[+m - 1]} ${y}`; }
+        case 'PERIOD': { const month = (ym: string) => { const [y, m] = ym.split('-'); return `${MONTHS[+m - 1]} ${y}`; }; const [a, b] = v.ym.split('/'); return b ? `${month(a)} to ${month(b)}` : month(a); }
         case 'TEXT': return v.text;
         case 'PERCENT': return `${(v.tenths / 10).toFixed(1)}%`;
     }

@@ -17,18 +17,19 @@ const replaceCell = (body: string, row: number, column: string, value: string) =
 describe('one-action processing of the public synthetic documents', () => {
     it('identifies roles, verifies independently and produces one consistent context', async () => {
         const c = await processDocuments(sample());
-        expect(c.status).toBe('COMPLETED_WITH_EXCEPTIONS');
+        // Every reconciliation exception and every anomaly candidate is resolved by a stated rule: nothing is left open.
+        expect(c.status).toBe('COMPLETED');
         expect(c.documents.map(d => [d.role, d.decision])).toEqual([['BANK_STATEMENT', 'AUTO_ACCEPTED'], ['GENERAL_LEDGER', 'AUTO_ACCEPTED'], ['BANK_HISTORY', 'AUTO_ACCEPTED']]);
         expect(c.stages.map(s => `${s.id}:${s.decision}`)).toEqual(['IDENTIFY:AUTO_ACCEPTED', 'EXTRACT:AUTO_ACCEPTED', 'INTERPRET:AUTO_ACCEPTED', 'VERIFY:AUTO_ACCEPTED', 'RECONCILE:AUTO_ACCEPTED', 'ANALYZE:AUTO_ACCEPTED', 'FORECAST:AUTO_ACCEPTED', 'REPORT:AUTO_ACCEPTED']);
         expect(c.stages.flatMap(s => s.checks).every(k => k.passed)).toBe(true);
-        expect(c.scope).toEqual({ organizationId: 'synthetic-demo', businessId: 'DEMO-001', businessName: 'Rimba Demo Kitchen (Synthetic)', period: '2026-03', currency: 'MYR' });
+        expect(c.scope).toEqual({ organizationId: 'synthetic-demo', businessId: 'DEMO-001', businessName: 'Rimba Demo Kitchen (Synthetic)', period: '2026-03', months: ['2026-03'], currency: 'MYR' });
         expect(c.outputs.reconciliation!.counts).toEqual({ MATCH_EXACT: 46, MATCH_DATE_SHIFT: 4, BANK_ONLY: 3, LEDGER_ONLY: 2, AMOUNT_MISMATCH_REVIEW: 2, AMBIGUOUS_DUPLICATE_LEDGER: 1, REFERENCE_MISMATCH_REVIEW: 1 });
         expect(c.outputs.reconciliation!.cashMovement).toEqual({ bank: '28232.01', ledger: '30924.93', signedDifference: '-2692.92' });
         expect(c.outputs.totals).toMatchObject({ rows: 57, net: '28232.01' });
         expect(c.outputs.anomalies).toHaveLength(6);
         expect(c.outputs.history.months).toHaveLength(12);
         expect(c.outputs.forecast!.forecast).toMatchObject({ status: 'AVAILABLE', period: '2026-04', credits: '67274.28', debits: '31827.83', net: '35446.45', tests: 6 });
-        expect(c.outputs.report).toMatchObject({ processingId: c.processingId, anomalyCandidates: 6, forecast: { status: 'AVAILABLE', period: '2026-04' } });
+        expect(c.outputs.report).toMatchObject({ processingId: c.processingId, anomalyCandidates: 6, anomaliesFlagged: 0, forecast: { status: 'AVAILABLE', period: '2026-04' } });
         expect(c.outputs.report!.sources.map(s => s.sha256)).toEqual(c.documents.map(d => d.sha256));
     });
     it('is deterministic and order independent; a different document set is a different processing', async () => {
@@ -52,7 +53,10 @@ describe('one-action processing of the public synthetic documents', () => {
         expect(c.stages.find(s => s.id === 'RECONCILE')!.summary).toBe('50 outcomes matched automatically; 9 exceptions resolved by stated rules (6 correcting entries prepared); 0 unexplained.');
         const ambiguous = snapshot.results.find(r => r.status === 'AMBIGUOUS_DUPLICATE_LEDGER')!;
         expect(ambiguous.ledgerRecordIds).toHaveLength(2);
-        expect(c.quarantine.filter(q => q.kind === 'ANOMALY_CANDIDATE')).toHaveLength(6);
+        // The six anomaly candidates are all recorded in the books with the same amounts, so none is flagged.
+        expect(c.outputs.anomalyResolution).toMatchObject({ corroborated: 6, flagged: 0 });
+        expect(c.outputs.anomalyResolution!.items.map(a => [a.row.rowId, a.booked!.ledgerRecordIds])).toEqual([['BANK-DEMO-0013', ['GL-DEMO-0014']], ['BANK-DEMO-0025', ['GL-DEMO-0026']], ['BANK-DEMO-0035', ['GL-DEMO-0035']], ['BANK-DEMO-0041', ['GL-DEMO-0041']], ['BANK-DEMO-0044', ['GL-DEMO-0044']], ['BANK-DEMO-0050', ['GL-DEMO-0050']]]);
+        expect(c.quarantine).toEqual([]);
     });
     it('quarantines missing, duplicated, evaluation-only and inconsistent documents instead of guessing', async () => {
         const missing = await processDocuments([doc(BANK)]);

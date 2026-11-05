@@ -93,7 +93,7 @@ For a duplicate, the copy kept is the one with the posting date closest to the b
 
 ## Limits
 
-- **Multi-month documents on `/data`:** the Phase 1 pipeline still reads one month in MYR for its other stages (analytics, anomalies, forecast, Q&A). Multi-month and non-MYR reconciliation is available through the layer API and its tests, not yet through `/data`.
+- **Multi-month documents on `/data`:** supported since 5 November 2026. Every stage handles several months and any one currency ([multi-period processing v1](multi-period-processing-v1.md)).
 - **Persistence:** reconciliation results are not yet stored. The ingestion store keeps the records, so a stored run can be reconciled again deterministically.
 - **Management view:** unexplained items are reported in the outcome and in processing details. The Management console that lists them lives in the held workspace branch (PR #74).
 - **Movement basis:** the documents give monthly cash movements, not opening and closing balances.

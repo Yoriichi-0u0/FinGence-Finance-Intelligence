@@ -127,13 +127,21 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     if (!gate('placeholders', 'Every figure is a placeholder for a cited, verified fact', resolution)) return result('WITHHELD');
 
     // 3. The free text carries no figure, date, percentage or record identifier of its own. A bare month name is
-    // allowed only when it is the processing period's month or the month of a cited period/date fact (no year: digits stay banned).
+    // allowed only when it is the month of a cited period/date fact (no year: digits stay banned). A one-month processing
+    // also allows its own month. In a multi-month processing a month name must be the month of a single-month fact cited
+    // in THAT sentence: a whole-range fact never vouches for one month inside it.
     const free = answer.sentences.map(s => s.text.replace(PLACEHOLDER, ' '));
-    const citedIds = new Set(answer.sentences.flatMap(s => s.cites).flatMap(c => derivedById.get(c)?.from ?? [c]));
-    const verifiedMonths = new Set([+ctx.catalogue.scope.period.slice(5, 7), ...[...citedIds].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? [+v.ym.slice(5, 7)] : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []))]);
-    const allowedMonth = new RegExp(`\\b(${[...verifiedMonths].flatMap(m => MONTH_NAMES[m - 1]).join('|')})\\b`, 'gi');
-    const unverifiedMonth = (t: string) => { const rest = t.replace(allowedMonth, ' '); return MONTH_WORDS.test(rest) || /\bMay\b/.test(rest); };
-    const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', EXCLUSIVITY.test(t) ? `sentence ${i + 1}: an exclusivity claim ("${t.match(EXCLUSIVITY)![0]}") no fact establishes` : '', unverifiedMonth(t) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });
+    const expand = (cites: string[]) => cites.flatMap(c => derivedById.get(c)?.from ?? [c]);
+    const citedIds = new Set(expand(answer.sentences.flatMap(s => s.cites)));
+    const factMonths = (ids: Iterable<string>) => [...ids].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? (v.ym.includes('/') ? [] : [+v.ym.slice(5, 7)]) : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []));
+    const single = !ctx.catalogue.scope.period.includes('/');
+    const answerMonths = new Set([+ctx.catalogue.scope.period.slice(5, 7), ...factMonths(citedIds)]);
+    const monthsFor = (i: number) => single ? answerMonths : new Set(factMonths(expand(answer.sentences[i].cites)));
+    const unverifiedMonth = (t: string, i: number) => {
+        const months = [...monthsFor(i)], rest = months.length ? t.replace(new RegExp(`\\b(${months.flatMap(m => MONTH_NAMES[m - 1]).join('|')})\\b`, 'gi'), ' ') : t;
+        return MONTH_WORDS.test(rest) || /\bMay\b/.test(rest);
+    };
+    const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', EXCLUSIVITY.test(t) ? `sentence ${i + 1}: an exclusivity claim ("${t.match(EXCLUSIVITY)![0]}") no fact establishes` : '', unverifiedMonth(t, i) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });
     if (!gate('no-free-figures', 'No amount, count, date, percentage or identifier typed by the model', figures)) return result('WITHHELD');
     // 3b. A rank word ("second-largest", "the third") must be the rank of the entity it describes: the ranked facts
     // placed in its own clause must have exactly the ranks the clause states. A rank clause with no entity of its own is

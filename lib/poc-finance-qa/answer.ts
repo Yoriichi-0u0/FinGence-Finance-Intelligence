@@ -152,6 +152,7 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
         const label = off.period ?? MONTHS[off.month! - 1].replace(/^./, ch => ch.toUpperCase());
         if (intent === 'CASH_FORECAST') return refuse('SELECTION_MISMATCH', `Only the month after the last observed month can be forecast (${target}).`, `The question names ${label}. The baseline forecasts one month ahead and never further.`, intent);
         if (!facts.periods.some(p => fits(off, p))) return unavailable(intent, 'ABSENT_PERIOD', `No ${s.businessId} ${c} rows for ${label} in this source.`, `The uploaded file has ${plural(facts.periods.length, 'observed month')} for this business and currency (${facts.periods[0]}${facts.periods.length > 1 ? ` to ${facts.periods.at(-1)}` : ''}). Missing months are never filled in.`, [link.transactions]);
+        if (s.period.includes('/')) return refuse('SELECTION_MISMATCH', `The question names ${label}, but these answers cover ${s.period} as a whole.`, 'Totals here are for the whole statement period and are never split by guessing. Ask for the monthly history to see each month, or open Analytics.', intent);
         return refuse('SELECTION_MISMATCH', `The question names ${label}, but ${s.period} is selected.`, 'Questions never change the selected month. Choose that month in the selector, then ask again.', intent);
     }
 
@@ -179,7 +180,7 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
             [link.anomalies, link.reconciliation], records);
         return answered(intent,
             `${all.length} of ${plural(t.rows, 'source record')} for ${scope} ${all.length === 1 ? 'is an anomaly review candidate' : 'are anomaly review candidates'} (${high} high, ${all.length - high} medium severity).`,
-            `${byRule.length ? `Rule hits: ${byRule.map(([r, n]) => `${RULES[r].title.toLowerCase()} ${n}`).join(', ')}; one row can hit several rules. ` : ''}The rules compare each row with every ${s.businessId} ${c} row in this file, so another file can give a different count. Candidates need human review and are not fraud findings.`,
+            `${byRule.length ? `Rule hits: ${byRule.map(([r, n]) => `${RULES[r].title.toLowerCase()} ${n}`).join(', ')}; one row can hit several rules. ` : ''}The rules compare each row with every ${s.businessId} ${c} row in this file, so another file can give a different count. A candidate is a reason to look, not a fraud finding.`,
             [{ id: 'candidates', label: 'Review candidates', value: String(all.length), unit: 'COUNT' }, { id: 'rows', label: 'Source records (denominator)', value: String(t.rows), unit: 'COUNT' }, { id: 'high', label: 'High severity', value: String(high), unit: 'COUNT' }, { id: 'medium', label: 'Medium severity', value: String(all.length - high), unit: 'COUNT' },
                 { id: 'open', label: 'Still open', value: String(open.length), unit: 'COUNT' }, ...ruleFacts],
             [link.anomalies, link.report], records);
