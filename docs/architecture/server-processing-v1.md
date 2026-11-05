@@ -74,7 +74,9 @@ Open `/data`, process a sample, then open `/management`. Add `FINGENCE_AI_GATEWA
 ## Limits
 
 - **Hosted request size:** a hosted function accepts at most 4.5 MB per request, so on Vercel a job's documents must total about 3 MB. The scanned sample (4.1 MB) runs locally but not hosted. Larger files need direct upload to storage, which is not built.
-- **Hosted OCR and PDF reading** are untested on Vercel: bundle size and the worker files of `pdf.js` and `tesseract.js`. CSV and XLSX jobs need neither.
+- **Hosted PDF and scan reading:** pdf.js and tesseract.js load files at run time that the build's file trace never sees: pdf.js's worker, the canvas it draws scanned pages on (with its native binary), the OCR worker script and its dependencies, the OCR engine, and the English data. `outputFileTracingIncludes` in `next.config.ts` adds them to `/api/processing/jobs`; the route's function holds about 390 traced files, under 100 MB.
+  - `pnpm check:job-trace` (after `pnpm build`) copies only the traced files into an empty folder and reads a text PDF, draws a page and OCRs a scan from there.
+  - Without the includes it fails, as Production did on 5 Nov 2026 (`Setting up fake worker failed`). The PDFs were quarantined and flagged, never guessed.
 - **Production:** the migration is not applied to the Production Supabase project, and `FINGENCE_PROCESSING_JOBS` is not set on Vercel. Both are owner decisions. Until then Production is the browser-only demo.
 - **Job IDs** are unguessable UUIDs. Anyone with a job ID can read its status and processing ID. Results and flagged items are read only through the Management API.
 
