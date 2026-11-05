@@ -56,7 +56,7 @@ A job still queued or running after 10 minutes is failed as `TIMED_OUT`. A job t
 | Variable | Effect |
 | --- | --- |
 | `FINGENCE_PROCESSING_JOBS=1` | Server processing on (with a store and a rate-limit store). Off: the app is the browser-only demo exactly as before |
-| `FINGENCE_PROCESSING_LOCAL_URL` | Development only (`NODE_ENV=development`, not on Vercel): the local store from `node scripts/dev-store.mjs` (PGlite under `.local/dev/processing-store`, 127.0.0.1 only) |
+| `FINGENCE_PROCESSING_LOCAL_URL` | Development only (`NODE_ENV=development`, not on Vercel): the local store from `node scripts/dev-store.mjs` (PGlite under `.local/dev/processing-store`, 127.0.0.1 only; it refuses any request that looks like it came from a browser: Origin, Referer or Sec-Fetch-Site, a non-JSON body, or a Host other than its loopback address) |
 | Ingestion store (`FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`) | The hosted store, once `processing-jobs-v1.sql` is applied |
 | `FINGENCE_MANAGEMENT_CONSOLE=1` | Opens `/management` on a hosted deployment. Without sign-in it is otherwise local-only; it should stay closed until the workspace's Management (Technical) role (#74) guards it |
 

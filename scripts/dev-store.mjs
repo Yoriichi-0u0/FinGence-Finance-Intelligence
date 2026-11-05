@@ -10,12 +10,13 @@
  */
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
+import { dirname } from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 
 const port = Number(process.env.FINGENCE_DEV_STORE_PORT ?? 54329);
-const dir = '.local/dev/processing-store';
+const dir = process.env.FINGENCE_DEV_STORE_DIR ?? '.local/dev/processing-store';
 const fresh = !existsSync(dir);
-mkdirSync('.local/dev', { recursive: true });
+mkdirSync(dirname(dir), { recursive: true });
 const db = new PGlite(dir);
 if (fresh) {
     await db.exec('create role anon; create role authenticated; create role service_role;');
@@ -29,7 +30,22 @@ const serial = work => (queue = queue.then(work, work));
 // Retention without user activity: fail stopped jobs and delete scan readings older than 15 minutes, every minute.
 setInterval(() => serial(() => db.query('select public.fingence_processing_reap_all()').catch(() => undefined)), 60_000).unref();
 
+/**
+ * Only the FinGence server on this machine may call the store. A web page in a browser can reach loopback addresses,
+ * so a request that looks like it came from a browser is refused: an Origin, Referer or Sec-Fetch-Site header, any content
+ * type but JSON (a JSON body forces a CORS preflight, which this store never answers), or a Host other than this
+ * loopback address (DNS rebinding).
+ */
+function fromBrowser(req) {
+    const h = req.headers;
+    // Node's fetch sends Sec-Fetch-Mode but never Sec-Fetch-Site, Origin or Referer; browsers send Sec-Fetch-Site on every request.
+    return !!(h.origin || h['sec-fetch-site'] || h.referer)
+        || !(h['content-type'] ?? '').startsWith('application/json')
+        || ![`127.0.0.1:${port}`, `localhost:${port}`].includes(h.host ?? '');
+}
+
 createServer((req, res) => {
+    if (fromBrowser(req)) { res.writeHead(403).end(); return; }
     const fn = req.method === 'POST' ? req.url?.match(/^\/rest\/v1\/rpc\/(fingence_(?:processing|ingestion)_[a-z_]+)$/)?.[1] : null;
     if (!fn) { res.writeHead(404).end(); return; }
     const chunks = [];
