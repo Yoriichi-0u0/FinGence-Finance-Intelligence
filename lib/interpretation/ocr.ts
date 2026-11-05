@@ -52,7 +52,17 @@ async function pass(image: Encoded, page: number, mode: '3' | '6'): Promise<Word
  * is more confident of is used and the other is kept as an alternative. Only if the table then fails its arithmetic
  * may the gates try those alternatives (`verifyWithDisputes`), and only a single consistent choice is accepted.
  */
-export async function ocrWords(input: OcrImage, page: number): Promise<{ words: Word[]; confidence: number; disputed: number }> {
+/**
+ * One OCR read at a time on the shared worker: a read changes the worker's settings (segmentation mode, character
+ * whitelist) between calls, so two overlapping reads (two server jobs, two pages) could take each other's settings.
+ */
+let queue: Promise<unknown> = Promise.resolve();
+export function ocrWords(input: OcrImage, page: number): Promise<{ words: Word[]; confidence: number; disputed: number }> {
+    const turn = queue.then(() => readWords(input, page));
+    queue = turn.catch(() => undefined);
+    return turn;
+}
+async function readWords(input: OcrImage, page: number): Promise<{ words: Word[]; confidence: number; disputed: number }> {
     // A canvas is encoded once: handing the same canvas to the engine twice stalls the second read in the browser.
     const image = input instanceof Uint8Array ? input : await new Promise<Blob>((resolve, reject) => input.toBlob(b => b ? resolve(b) : reject(Error('canvas could not be encoded')), 'image/png'));
     const block = await pass(image, page, '6'), auto = await pass(image, page, '3');
