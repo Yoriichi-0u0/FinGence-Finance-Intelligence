@@ -172,6 +172,10 @@ describe('answer gate withholds anything not grounded', () => {
         expect(failed(verifyAnswer(answered([{ text: '{F1.name} was second and {F2.name} first by money paid.', cites: ['F1', 'F2'] }]), facts, q))).toEqual(['ranks']);
         expect(failed(verifyAnswer(answered([{ text: 'The second-largest payee, {F2.name}, received {F2.total}.', cites: ['F2'] }]), facts, q))).toEqual([]);
         expect(failed(verifyAnswer(answered([{ text: 'The second-largest payee, {F1.name}, received {F1.total}.', cites: ['F1'] }]), facts, q))).toEqual(['ranks']);
+        // An appositive after its entity binds to that entity, not to the clause that follows.
+        expect(failed(verifyAnswer(answered([{ text: '{F2.name}, the second-largest payee, received {F2.total}.', cites: ['F2'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: '{F1.name}, the second-largest payee, received {F1.total}.', cites: ['F1'] }]), facts, q))).toEqual(['ranks']);
+        expect(failed(verifyAnswer(answered([{ text: '{F1.name}, the second-largest payee, received {F2.total}.', cites: ['F1', 'F2'] }]), facts, q))).toEqual(['ranks']);
     });
     it('withholds citations of facts outside this answer (schema-bound)', async () => {
         const { cat, facts } = await setup(TOP_OUT);

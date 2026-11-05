@@ -136,8 +136,10 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', EXCLUSIVITY.test(t) ? `sentence ${i + 1}: an exclusivity claim ("${t.match(EXCLUSIVITY)![0]}") no fact establishes` : '', unverifiedMonth(t) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });
     if (!gate('no-free-figures', 'No amount, count, date, percentage or identifier typed by the model', figures)) return result('WITHHELD');
     // 3b. A rank word ("second-largest", "the third") must be the rank of the entity it describes: the ranked facts
-    // placed in its own clause (or, for an appositive like "The second-largest payee, {F2.name}, …", the next clause)
-    // must have exactly the ranks the clause states. Citing some other fact of that rank elsewhere does not count.
+    // placed in its own clause must have exactly the ranks the clause states. A rank clause with no entity of its own is
+    // an appositive: of the entity just before it ("{F2.name}, the second-largest payee, …") or, when none comes
+    // before, just after it ("The second-largest payee, {F2.name}, …"); that entity must match exactly. Citing some other fact of that
+    // rank elsewhere does not count.
     const rankOf = (id: string) => { const m = /#(\d+)/.exec(byId.get(id)?.label ?? ''); return m ? Number(m[1]) : null; };
     const ranks = answer.sentences.flatMap((s, i) => {
         const clauses = s.text.split(new RegExp(CLAUSE.source, 'gi')).map(c => ({
@@ -146,8 +148,10 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
         }));
         return clauses.flatMap((c, k) => {
             if (!c.stated.length) return [];
-            const ranked = c.ranked.length ? c.ranked : clauses[k + 1]?.ranked ?? [];
-            const same = ranked.length > 0 && new Set(ranked).size === new Set(c.stated).size && ranked.every(r => c.stated.includes(r));
+            const matches = (ranked: number[]) => ranked.length > 0 && new Set(ranked).size === new Set(c.stated).size && ranked.every(r => c.stated.includes(r));
+            // The entity just before takes precedence; only when it holds no ranked fact does the next clause count.
+            const before = clauses[k - 1]?.ranked ?? [];
+            const same = matches(c.ranked.length ? c.ranked : before.length ? before : clauses[k + 1]?.ranked ?? []);
             return same ? [] : [`sentence ${i + 1}: "${ORDINALS[c.stated[0] - 1]}" is not the rank of the entity it describes`];
         });
     });

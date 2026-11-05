@@ -4,6 +4,7 @@
  * when all gates pass, and is then materialized into the Phase 1 canonical CSV layout so the rest of
  * the pipeline (normalizer, second parser, matcher, analytics) runs unchanged.
  */
+import Papa from 'papaparse';
 import { parseProposal, type LayoutProposal } from './contracts';
 import { NUMBER_FORMAT_LIST, MALAY_MONTH_NAMES, MONTH_NAMES, SWAPPED, cents, parseAmount, parseDate, type DateFormat } from './formats';
 import { cashAccountAgreement, headingAgreement, roleAgreement, signedAgreement, tokenAgreement, type Agreement, type Meaning } from './lexicon';
@@ -29,6 +30,7 @@ const ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 const ID_HEADING = /^\s*(?:(?:txn|transaction|trans|entry|voucher|journal|jv|record|line|posting)(?:\s*(?:id|no\.?|number|#))?|id|id transaksi|no\.?\s*(?:baucar|rekod|transaksi|kemasukan))\s*$/i;
 const ACCOUNT_HEADING = /^\s*(account|acct|akaun|gl account|account code|account no\.?|kod akaun)\b/i;
 const TOTAL_LINE = /\b(totals?|jumlah)\b/i;
+const OPENING_LINE = /\b(opening|brought forward|b\/f|baki awal|baki dibawa)\b/i;
 const BALANCE_LINE = /\b(opening|closing|brought forward|carried forward|b\/f|c\/f|baki awal|baki akhir|baki dibawa)\b/i;
 const csvCell = (v: string) => /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 const csv = (header: string[], rows: Record<string, string>[]) => [header.join(','), ...rows.map(r => header.map(h => csvCell(r[h] ?? '')).join(','))].join('\n') + '\n';
@@ -46,6 +48,14 @@ function swappedReading(literal: string, format: DateFormat): string | null {
     if (SWAPPED[format]) return parseDate(literal, SWAPPED[format]!);
     const m = format === 'DD-MM-YYYY' ? /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(literal.trim()) : format === 'DD.MM.YYYY' ? /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(literal.trim()) : null;
     return m ? parseDate(`${m[2]}/${m[1]}/${m[3]}`, 'DD/MM/YYYY') : null;
+}
+/** The side a stated total names, read for whose books these are: a bank's debit is money out, a cash ledger's money in. */
+function totalSide(label: string, ledger: boolean): 'IN' | 'OUT' | null {
+    const t = label.toLowerCase();
+    const inWord = /\b(deposits?|receipts?|money in|inflows?|masuk|terimaan)\b/.test(t), outWord = /\b(withdrawals?|payments?|money out|outflows?|keluar|pengeluaran)\b/.test(t);
+    const debit = /\b(debits?|dr)\b/.test(t), credit = /\b(credits?|kredit|cr)\b/.test(t);
+    const isIn = inWord || (ledger ? debit : credit), isOut = outWord || (ledger ? credit : debit);
+    return isIn === isOut ? null : isIn ? 'IN' : 'OUT';
 }
 function lineText(table: Table, line: number) { return (table.rows[line] ?? []).join(' '); }
 const ISO_CURRENCIES = new Set(Intl.supportedValuesOf('currency'));
@@ -184,8 +194,9 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
 
     // 6. Running balance: an independent arithmetic witness for amounts and direction.
     let balanceStatus: 'ABSENT' | 'PASSED' | 'FAILED' = 'ABSENT', balanceDetail = 'No balance column';
+    let balances: (bigint | null | undefined)[] = [];
     if (c.balance !== null) {
-        const balances = body.map(r => parseAmount(cell(r.row, 'balance'), numberFormat));
+        balances = body.map(r => parseAmount(cell(r.row, 'balance'), numberFormat));
         const steps = balances.slice(1).map((b, i) => typeof b === 'bigint' && typeof balances[i] === 'bigint' ? b - balances[i]! === signed[i + 1] : false);
         const failedStep = steps.indexOf(false);
         balanceStatus = balances.length >= 3 && failedStep < 0 ? 'PASSED' : 'FAILED';
@@ -204,14 +215,40 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
         if (!gate('date-sequence', 'Transactions are in date order', back < 0, back < 0 ? `${dates.length} dates in order` : `line ${body[back].line + 1} is dated before the line above it`)) return result('The extracted transactions are not in date order.');
         const inflow = signed.filter(v => v > 0n).reduce((a, b) => a + b, 0n), outflow = signed.filter(v => v < 0n).reduce((a, b) => a - b, 0n);
         const totalLines = excluded.filter(({ row }) => TOTAL_LINE.test(row.join(' ')) && !BALANCE_LINE.test(row.join(' ')));
-        const stated = totalLines.flatMap(({ row }) => row.map(v => parseAmount(v.trim(), numberFormat)).filter((v): v is bigint => typeof v === 'bigint').map(v => v < 0n ? -v : v));
-        const totals = !totalLines.length ? 'ABSENT' : stated.includes(inflow) && stated.includes(outflow) ? 'PASSED' : 'FAILED';
+        // Each stated total is bound to the side it states: by the mapped money column it sits under, or by its label
+        // read for this document's role (a bank's debit is money out, a cash ledger's debit is money in). A total
+        // compared only with the side it names cannot be satisfied by swapped debits and credits.
+        const [inColumn, outColumn] = rep === 'SPLIT_IN_OUT' ? [c.moneyIn, c.moneyOut] : rep === 'DEBIT_CREDIT' ? [c.debit, c.credit] : [null, null];
+        const stated = totalLines.flatMap(({ row }) => {
+            const label = totalSide(row.filter(v => typeof parseAmount(v.trim(), numberFormat) !== 'bigint').join(' '), ledger);
+            return row.flatMap((v, i) => {
+                const a = parseAmount(v.trim(), numberFormat);
+                if (typeof a !== 'bigint') return [];
+                const side = row.length === width && i === inColumn ? 'IN' as const : row.length === width && i === outColumn ? 'OUT' as const : label;
+                return [{ side, value: a < 0n ? -a : a }];
+            });
+        });
+        const expected = (side: 'IN' | 'OUT') => side === 'IN' ? inflow : outflow;
+        const contradicts = stated.filter(t => t.side && t.value !== expected(t.side));
+        const confirms = (side: 'IN' | 'OUT') => stated.some(t => t.side === side && t.value === expected(side));
+        const pool = stated.map(t => t.value);
+        const totals = !totalLines.length ? 'ABSENT'
+            : contradicts.length || !pool.includes(inflow) || !pool.includes(outflow) ? 'FAILED'
+                : confirms('IN') && confirms('OUT') ? 'PASSED' : 'UNBOUND';
+        // The running balance confirms every amount but the first (it compares consecutive balances); the first is
+        // confirmed by an opening balance the document states, or by its stated totals.
+        const openings = [...table.rows.slice(0, p.headerLine), ...candidates.slice(0, Math.max(first, 0)).map(r => r.row)]
+            .filter(row => OPENING_LINE.test(row.join(' '))).flatMap(row => row.map(v => parseAmount(v.trim(), numberFormat)).filter((v): v is bigint => typeof v === 'bigint'));
+        const firstConfirmed = balanceStatus === 'PASSED' && typeof balances[0] === 'bigint' && openings.some(o => o + signed[0] === balances[0]);
         const show = (v: bigint) => cents(v);
-        const anchored = totals !== 'FAILED' && (balanceStatus === 'PASSED' || totals === 'PASSED');
+        const anchored = totals !== 'FAILED' && (totals === 'PASSED' || firstConfirmed);
+        const sideName = (t: { side: 'IN' | 'OUT' | null }) => t.side === 'IN' ? 'money in' : 'money out';
         if (!gate('anchor', `Amounts read by ${options.extracted === 'OCR' ? 'OCR' : 'PDF text extraction'} are confirmed arithmetically`, anchored,
-            totals === 'FAILED' ? `stated totals (${stated.map(show).join(', ') || 'none readable'}) do not equal money in ${show(inflow)} and money out ${show(outflow)}`
+            totals === 'FAILED' ? (contradicts.length ? `stated ${contradicts.map(t => `${sideName(t)} ${show(t.value)}`).join(', ')} contradicts computed money in ${show(inflow)} and money out ${show(outflow)}` : `stated totals (${pool.map(show).join(', ') || 'none readable'}) do not equal money in ${show(inflow)} and money out ${show(outflow)}`)
                 : totals === 'PASSED' ? `stated totals equal money in ${show(inflow)} and money out ${show(outflow)}${balanceStatus === 'PASSED' ? '; running balance also agrees' : ''}`
-                    : balanceStatus === 'PASSED' ? 'running balance agrees with every amount' : 'no running balance and no stated totals: amounts cannot be confirmed')) return result('Extracted amounts could not be confirmed by the document\'s own arithmetic.');
+                    : firstConfirmed ? `running balance agrees with every amount, from the stated opening balance${totals === 'UNBOUND' ? '; stated totals do not name their sides' : ''}`
+                        : balanceStatus === 'PASSED' ? 'running balance agrees from the second transaction, but no opening balance or stated totals confirm the first amount'
+                            : totals === 'UNBOUND' ? 'stated totals do not name which side they total, and there is no running balance' : 'no running balance and no stated totals: amounts cannot be confirmed')) return result('Extracted amounts could not be confirmed by the document\'s own arithmetic.');
     }
 
     // 7. Sign confirmation: heading/token vocabulary or the running balance must confirm direction; contradictions always fail.
@@ -314,12 +351,18 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
     };
 }
 
+/** The date and signed amount of every canonical transaction, in order: what two OCR choices must agree on. */
+function financialReading(v: VerifiedInterpretation) {
+    const rows = Papa.parse<Record<string, string>>(new TextDecoder().decode(v.canonical!.bytes), { header: true, skipEmptyLines: true }).data;
+    return rows.map(r => `${r.ValueDate ?? r.PostingDate}:${r.SignedCashMovementMYR}`).join('|');
+}
 /** Gate failures that a misread figure can cause; any other failure is never retried with alternative readings. */
 const READING_GATES = new Set(['amounts', 'dates', 'period', 'balance', 'anchor', 'date-sequence', 'number-format']);
 /**
  * For a table read by OCR: when the proposal fails only on figures, the second OCR pass's readings of disputed cells
- * are tried, one cell and then two cells at a time. The result is accepted only when exactly one such choice makes
- * every gate pass; the choice is disclosed. A cell both passes read alike is never changed.
+ * are tried, one cell and two cells at a time (both sizes, always). The result is accepted only when every choice that
+ * makes every gate pass gives the same financial reading (the date and signed amount of every transaction), and
+ * the smallest such choice is disclosed. A cell both passes read alike is never changed.
  */
 export function verifyWithDisputes(table: Table, raw: unknown, disputes: { line: number; column: number; readings: string[] }[], options: GateOptions = {}): VerifiedInterpretation {
     const first = verifyProposal(table, raw, options);
@@ -333,11 +376,13 @@ export function verifyWithDisputes(table: Table, raw: unknown, disputes: { line:
         const v = verifyProposal({ ...table, rows }, raw, options);
         return v.decision === 'AUTO_ACCEPTED' ? { v, choice } : null;
     };
-    let found = options1.map(c => attempt([c])).filter(Boolean);
-    if (!found.length) found = options1.flatMap((a, i) => options1.slice(i + 1).map(b => attempt([a, b]))).filter(Boolean);
+    // Both sizes are searched: a one-cell correction passing does not make it the only valid reading.
+    const found = [...options1.map(c => attempt([c])), ...options1.flatMap((a, i) => options1.slice(i + 1).map(b => attempt([a, b])))]
+        .filter((x): x is NonNullable<typeof x> => x !== null);
+    const readings = new Set(found.map(x => financialReading(x.v)));
     const tried = `${disputes.length} cell${disputes.length === 1 ? '' : 's'} read differently by the two OCR passes`;
-    if (found.length !== 1) {
-        first.disclosures.push(`${tried}: ${found.length ? `${found.length} different choices satisfy the checks, so none is taken` : 'no alternative reading satisfies the checks'}.`);
+    if (readings.size !== 1) {
+        first.disclosures.push(`${tried}: ${found.length ? `${readings.size} different financial readings satisfy the checks, so none is taken` : 'no alternative reading satisfies the checks'}.`);
         return first;
     }
     const { v, choice } = found[0]!;
