@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { processDocuments, type DocumentInput } from '../../lib/demo/pipeline';
 import { toCents } from '../../lib/poc-anomalies/source';
-import { groundingIndex, runQueries } from '../../lib/grounded-qa/tools';
+import { catalogue, groundingIndex, runQueries } from '../../lib/grounded-qa/tools';
+import { verifyAnswer } from '../../lib/grounded-qa/gates';
 import { qaFacts } from '../../lib/demo/questions';
 import { answerQuestion } from '../../lib/poc-finance-qa/answer';
 
@@ -94,6 +95,18 @@ describe('several months and another currency, end to end', () => {
         const apart = await processDocuments([doc(BANK, bankMarch), doc(LEDGER, ledgerJanuary)]);
         expect(apart.status).toBe('QUARANTINED');
         expect(apart.stages.at(-1)).toMatchObject({ id: 'INTERPRET', decision: 'QUARANTINED' });
+    });
+    it('a month named in an AI answer must be the month of a fact cited in that sentence', async () => {
+        const c = await processDocuments(sample()), index = groundingIndex(c)!, cat = catalogue(index), ctx = { question: 'What was the net cash movement?', catalogue: cat };
+        const answer = (text: string, cites: string[]) => ({ answer: { kind: 'ANSWERED', sentences: [{ text, cites }], derived: [] } });
+        const failed = (v: { checks: { id: string; passed: boolean }[] }) => v.checks.filter(k => !k.passed).map(k => k.id);
+        // The whole-range summary never vouches for one month inside it.
+        const whole = runQueries(index, [{ tool: 'cash_summary', period: '2026-01/2026-03' }]);
+        expect(failed(verifyAnswer(answer('February net cash movement was {F1.net}.', ['F1']), whole, ctx))).toEqual(['no-free-figures']);
+        expect(failed(verifyAnswer(answer('Net cash movement over {F1.period} was {F1.net}.', ['F1']), whole, ctx))).toEqual([]);
+        // A February fact cited in the same sentence does.
+        const february = runQueries(index, [{ tool: 'cash_summary', period: '2026-02' }]);
+        expect(failed(verifyAnswer(answer('February net cash movement was {F1.net}.', ['F1']), february, ctx))).toEqual([]);
     });
     it('is deterministic and order independent', async () => {
         const a = await processDocuments(sample()), b = await processDocuments(sample().reverse());
