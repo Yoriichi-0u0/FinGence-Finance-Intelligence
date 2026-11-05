@@ -1,13 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import workspaceStyles from "./demo/workspace-final.module.css";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { NavigationProvider, useNavigationItems } from "@/components/navigation/context";
+import { usesFinancialWorkspaceBackground } from "@/components/navigation/routes";
 import { useTheme } from "@/components/overview/theme";
 import { DemoProcessingProvider } from "@/components/demo/context";
-import { DemoBanner } from "@/components/demo/banner";
 import { Building2, Menu, Pin, PinOff, X } from "lucide-react";
 
 function Sidebar({ onNavigate, desktop = false, pinned = false, onPin, localFinancialConsumers = false, syntheticDemo = false }: {
@@ -18,13 +19,13 @@ function Sidebar({ onNavigate, desktop = false, pinned = false, onPin, localFina
   const workspace = localFinancialConsumers ? 'Synthetic organization' : syntheticDemo ? 'Synthetic demo' : 'SAIC';
   return <div className={`shell-sidebar${desktop ? ' shell-sidebar-desktop' : ''}`}>
     <div className="shell-brand-row">
-      <Link href="/" className="shell-brand" aria-label="FinGence overview" onClick={onNavigate}>
+      <Link href="/" className="shell-brand" aria-label="FinGence home" onClick={onNavigate}>
         <Image src="/branding/FinGence_Logo_96.png" width={34} height={34} alt="" unoptimized />
         <span className="shell-sidebar-label"><strong>FinGence</strong><small>Financial Intelligence</small></span>
       </Link>
     </div>
     {desktop && <div className="shell-pin-row"><button type="button" onClick={onPin} className="shell-pin" aria-label={pinned ? 'Unpin sidebar' : 'Pin sidebar expanded'} aria-pressed={pinned} title={pinned ? 'Unpin sidebar' : 'Pin sidebar expanded'}>{pinned ? <PinOff size={16} aria-hidden="true" /> : <Pin size={16} aria-hidden="true" />}<span className="shell-sidebar-label">{pinned ? 'Unpin navigation' : 'Pin navigation'}</span></button></div>}
-    <nav aria-label="Primary navigation" className="shell-navigation">
+    <nav aria-label="Primary navigation" className="shell-navigation" tabIndex={0}>
       {items.map(item => {
         const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
         return <Link key={item.href} href={item.href} onClick={onNavigate} aria-label={item.label} title={item.label} aria-current={active ? 'page' : undefined} className="shell-nav-link">
@@ -46,10 +47,12 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   const theme = useTheme();
   const pathname = usePathname();
 
+  if (pathname === "/sign-in" || pathname === "/sign-up") return <div data-shell-theme={theme}>{children}</div>;
+
   return (
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway}>
     <NavigationProvider mode={{ syntheticDemo, localFinancialConsumers, localAdministration, localReconciliation }}>
-    <div data-shell-theme={theme} data-sidebar-pinned={pinned} className={`${pathname === "/" ? "overview-shell " : ""}app-layout min-h-dvh bg-[var(--canvas)] print:block`}>
+    <div data-shell-theme={theme} data-sidebar-pinned={pinned} className={`${(pathname === "/" || pathname === "/overview") ? "overview-shell " : ""}${usesFinancialWorkspaceBackground(pathname) ? "financial-workspace " : ""}app-layout min-h-dvh bg-[var(--canvas)] print:block ${usesFinancialWorkspaceBackground(pathname) ? workspaceStyles.theme : ""}`}>
       <aside className="desktop-sidebar-slot hidden lg:block print:hidden" aria-label="Desktop navigation">
         <Sidebar desktop pinned={pinned} onPin={() => setPinned(value => !value)} localFinancialConsumers={localFinancialConsumers} syntheticDemo={syntheticDemo} />
       </aside>
@@ -66,7 +69,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             >
               <Menu aria-hidden="true" size={23} />
             </button>
-            <Link href="/" aria-label="FinGence overview" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
+            <Link href="/" aria-label="FinGence home" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
               <Image src="/branding/FinGence_Logo_96.png" width={28} height={28} alt="" unoptimized className="size-7 shrink-0 rounded-md" />
               FinGence
             </Link>
@@ -80,9 +83,6 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </header>
 
         <main className="shell-main mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
-          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && pathname !== "/" && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
-            <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
-          </aside>}
           {children}
         </main>
       </div>

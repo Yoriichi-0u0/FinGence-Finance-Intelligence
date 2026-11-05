@@ -1,10 +1,12 @@
 "use client";
 import Link from 'next/link';
-import { ArrowRight, CheckCheck, Landmark, Scale, ArrowDownLeft, ClipboardList, TriangleAlert, ChevronDown } from 'lucide-react';
+import styles from './dashboard-refinement.module.css';
+import { ArrowRight, CheckCheck, ClipboardList, TriangleAlert, ChevronDown } from 'lucide-react';
+import { DemoProfile } from './demo-profile';
 import { ThemeToggle } from './theme';
 import { NavigationSearch } from '@/components/navigation/search';
 import { FinancialChart } from './financial-chart';
-import { groupDigits } from '@/lib/poc-anomalies/format';
+import { KpiCards } from './kpi-cards';
 import type { FinancePoCReconciliationV1 } from '@/lib/poc-anomalies/reconciliation';
 import type { BankTotals } from '@/lib/poc-insights/model';
 export function workspaceDescription(business: string, period: string) {
@@ -12,28 +14,22 @@ export function workspaceDescription(business: string, period: string) {
  const label = Number.isNaN(date.getTime()) ? period : date.toLocaleDateString('en', { month: 'long', year: 'numeric', timeZone: 'UTC' });
  return `${business} · ${label}`;
 }
-export function OverviewHeader({ children, notice }: { children?: React.ReactNode; notice?: React.ReactNode }) {
- return <header className="ov-header"><div className="ov-welcome"><h1>Welcome to FinGence 2.0</h1><p className="ov-welcome-subtitle">Your financial workspace at a glance.</p>{notice}</div><div className="ov-header-tools"><div className="ov-header-actions"><NavigationSearch /><ThemeToggle /></div>{children && <details className="ov-processing-menu"><summary>Processing Details <ChevronDown size={13} aria-hidden="true" /></summary><div className="ov-processing-popover">{children}</div></details>}</div></header>;
+export function OverviewHeader({ children, notice, demoProfile = false }: { children?: React.ReactNode; notice?: React.ReactNode; demoProfile?: boolean }) {
+ return <header className={`ov-header ${styles.header}`}><div className="ov-welcome"><div className="ov-heading-row"><div className={styles.title}><h1>Welcome to FinGence 2.0</h1><p className="ov-welcome-subtitle">Your financial workspace at a glance.</p></div>{notice}</div></div><div className="ov-header-tools"><div className="ov-header-actions"><NavigationSearch /><ThemeToggle />{demoProfile && <DemoProfile />}</div>{children && <details className="ov-processing-menu"><summary>Processing Details <ChevronDown size={13} aria-hidden="true" /></summary><div className="ov-processing-popover">{children}</div></details>}</div></header>;
 }
-export function OverviewDashboard({ currency, description, processing, notice, bank, reconciliation, months, anomalies, local = false, selection = '' }: {
- currency: string; description: string; processing?: React.ReactNode; notice?: React.ReactNode; bank: string; reconciliation: FinancePoCReconciliationV1 | null;
+export function OverviewDashboard({ currency, description, processing, notice, navigation, bank, bankTotals, reconciliation, months, anomalies, selection = '', local = false }: {
+ currency: string; description: string; processing?: React.ReactNode; notice?: React.ReactNode; navigation?: React.ReactNode; bank: string; bankTotals?: BankTotals; reconciliation: FinancePoCReconciliationV1 | null;
  months: (BankTotals & { period: string })[]; anomalies: number; local?: boolean; selection?: string;
 }) {
  // Missing category counts are unavailable, never implied zero outcomes.
  const r = reconciliation && Array.isArray(reconciliation.results) && [reconciliation.counts?.MATCH_EXACT, reconciliation.counts?.MATCH_DATE_SHIFT].every(n => typeof n === 'number' && Number.isSafeInteger(n) && n >= 0) ? reconciliation : null;
- const money = (v: string) => `${currency === 'MYR' ? 'RM' : currency} ${groupDigits(v)}`;
  const exact = r?.counts.MATCH_EXACT ?? 0, shifted = r?.counts.MATCH_DATE_SHIFT ?? 0;
  const issues = r?.results.filter(x => x.status !== 'MATCH_EXACT' && x.status !== 'MATCH_DATE_SHIFT');
  const link = (path: string) => `${path}${selection ? `?${selection}` : ''}`;
- const metrics = [
-  { label: 'Bank net cash movement', value: money(bank), detail: 'Signed movement · selected statement', icon: ArrowDownLeft },
-  { label: 'Ledger cash movement', value: r ? money(r.cashMovement.ledger) : 'Unavailable', detail: 'Verified cash-account ledger', icon: Landmark },
-  { label: 'Signed bank − ledger difference', value: r ? money(r.cashMovement.signedDifference) : 'Unavailable', detail: 'Signed difference · cause not inferred', icon: Scale },
-  { label: 'Automatically matched', value: r ? `${exact + shifted} / ${r.results.length}` : 'Unavailable', detail: 'Exact + date shift · reconciliation outcomes', icon: CheckCheck },
- ];
- return <div className="ov-dashboard">
-  <OverviewHeader notice={notice}>{processing}</OverviewHeader>
-  <section className="ov-metrics" aria-label="Financial summary">{metrics.map(({ label, value, detail, icon: Icon }) => <article className="ov-card ov-metric" key={label}><div className="ov-metric-top"><span>{label}</span><span className="ov-icon"><Icon size={18} aria-hidden="true" /></span></div><p className="ov-value">{value}</p><p className="ov-muted">{detail}</p></article>)}</section>
+ return <div className={`ov-dashboard ${styles.dashboard}`}>
+  <OverviewHeader notice={notice} demoProfile={!local}>{processing}</OverviewHeader>
+  {navigation}
+  <KpiCards source={{currency, bank, bankTotals, reconciliation:r, anomalies}} />
   <div className="ov-main-grid">
    <FinancialChart key={selection || description} months={months} currency={currency} counts={r ? { exact, shifted, unresolved: issues!.length, total: r.results.length } : null} />
    <div className="ov-right-stack">
@@ -54,7 +50,6 @@ export function OverviewDashboard({ currency, description, processing, notice, b
    </div>
   </div>
   <section className="ov-card ov-review-queue"><div className="ov-section-head"><h2>Review Queue</h2><span className="ov-tag">Source-backed issues</span></div><p className="ov-muted">Original matcher outcomes. Annotations never clear a discrepancy.</p><ul className="ov-queue">{issues?.length ? issues.slice(0, 4).map((issue, i) => <li key={i}><Link href={link('/reconciliation')}><span className="ov-queue-copy"><strong>{issue.bankRecordId ?? issue.ledgerRecordIds.join(', ')}</strong><span>{issue.reason}</span><small>{issue.status.replaceAll('_', ' ').toLowerCase()}</small></span><ArrowRight size={16} aria-hidden="true" /></Link></li>) : <li className="ov-unavailable">{r ? 'No reconciliation exceptions in this source pair.' : 'Source-backed reconciliation issues are unavailable.'}</li>}</ul>{issues && issues.length > 4 && <Link href={link('/reconciliation')} className="ov-text-link">Review all {issues.length} exceptions <ArrowRight size={15} aria-hidden="true" /></Link>}</section>
-  <section className="ov-card ov-actions"><div><p className="ov-eyebrow">KEEP MOVING</p><h2>Quick Actions</h2></div><nav aria-label="Overview quick actions">{[['/data', 'Data'], ['/reconciliation', 'Reconciliation'], ['/reports', 'Reports'], [local ? '/finance-questions' : '/ask', 'Finance Questions']].map(([href, label]) => <Link key={href} href={link(href)}>{label}<ArrowRight size={14} aria-hidden="true" /></Link>)}</nav></section>
   <p className="ov-footnote">Bank cash movement is not revenue, expenses or profit. All figures retain their original source scope. No accounting classification is inferred.</p>
  </div>;
 }

@@ -89,13 +89,13 @@ if (!artifactsOnly) {
   results.push({path,method,status:response.status,blocked:[403,404,405].includes(response.status)});
  }
  assert.ok(!(await (await fetch(new URL("/",origin))).text()).includes('href="/admin"')&&!(await (await fetch(new URL("/",origin))).text()).includes('href="/finance-questions"'),"Local administration or Finance questions navigation leaked into production");
- // Hosted public views retain their explicit illustrative fallback, never local financial data.
+ // Hosted public views render their real empty layouts, never local financial data.
  for(const path of ["/transactions","/analytics","/reports"]){
   const response=await fetch(new URL(path,origin));const html=await response.text();
   assert.equal(response.status,200);assert.ok(!html.includes("Selection proof:")&&!html.includes("One authorized V2 dataset")&&!html.includes("PoC management report")&&!html.includes("Source-backed synthetic bank records")&&!html.includes("Observed monthly bank movement"),"Local consumer UI leaked into production");
  }
- { const html=await (await fetch(new URL("/forecasting",origin))).text();assert.ok(html.includes("No XGBoost or ARIMA model is trained")&&!html.includes("Six-month average baseline"),"Local cash forecast leaked into production"); }
- { const html=await (await fetch(new URL("/anomalies",origin))).text();assert.ok(html.includes("Mock prototype result")&&!html.includes("Rule-based review candidates"),"Local anomaly review leaked into production"); }
+ { const html=await (await fetch(new URL("/forecasting",origin))).text();assert.ok(html.includes("No forecast has been calculated.")&&!html.includes("Six-month average baseline"),"Local cash forecast leaked into production"); }
+ { const html=await (await fetch(new URL("/anomalies",origin))).text();assert.ok(html.includes("No anomaly analysis has run.")&&!html.includes("Rule-based review candidates"),"Local anomaly review leaked into production"); }
 }
 const sentinels = JSON.parse(process.env.FINGENCE_ISOLATION_SENTINELS ?? "[]");
 assert.ok(Array.isArray(sentinels) && sentinels.every(value => typeof value === "string" && value.length >= 16), "Use only nonsecret canary strings of at least 16 characters");

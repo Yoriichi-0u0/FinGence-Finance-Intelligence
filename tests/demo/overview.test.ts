@@ -20,10 +20,8 @@ describe('source-backed Overview', () => {
   expect(page).toContain('Rimba Demo Kitchen (Synthetic) · 2026-03 · MYR'); expect(page).not.toContain('John Doe');
   const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
   expect(header).not.toContain('>OVERVIEW<');
-  expect(header).toContain('Public Demo'); expect(header).toContain('No sign-in');
-  expect(header).toContain('rule-based processing in your browser, not live AI');
-  expect(header).toContain('do not use confidential or real financial documents');
-  expect(header.indexOf('Public demo notice')).toBeLessThan(header.indexOf('ov-processing-menu'));
+  expect(header).not.toContain('Public Demo'); expect(header).not.toContain('Public demo notice');
+  expect(header).toContain('Demo guest menu');
   expect(header).not.toContain('ov-workspace-description'); expect(header).not.toContain('Verified browser processing');
   expect(header).toContain('Processing Details'); expect(header).toContain('ov-processing-popover');
   expect(html).not.toContain('These outcomes were not automatically matched and require further inspection.');
@@ -37,7 +35,7 @@ describe('source-backed Overview', () => {
   expect(page).toContain('Exact matches 46'); expect(page).toContain('Date shift matches 4');
   expect(html).toContain('Cash Out'); expect(html).toContain('stroke-dasharray="6 6"');
   expect(html).toContain('View exact monthly values'); expect(html).toContain('2025-04');
-  expect(html).toContain('/ask'); expect(html).not.toContain('/finance-questions');
+  expect(html).not.toContain('Quick Actions'); expect(html).not.toContain('/finance-questions');
   expect(html).toContain('aria-label="Search navigation"');
   expect(html).toContain('Source evidence'); expect(html).not.toContain('<details open');
   expect(html).toContain(c.processingId);
@@ -51,8 +49,8 @@ describe('source-backed Overview', () => {
  });
  it('never replaces unavailable local reconciliation with zero counts or demo figures', () => {
   const html = renderToStaticMarkup(createElement(OverviewDashboard, { local: true, description: 'Selected local source', currency: 'MYR', bank: '100.00', reconciliation: null, months: [], anomalies: 2, selection: 'source=abc' }));
-  expect(text(html)).toContain('Reconciliation unavailable'); expect(text(html)).toContain('Ledger cash movement Unavailable');
-  expect(html).toContain('/finance-questions?source=abc'); expect(html).not.toContain('50 / 59');
+  expect(text(html)).toContain('Reconciliation unavailable'); expect(text(html)).toContain('Ledger cash movement \u2014');
+  expect(html).not.toContain('Overview quick actions'); expect(html).not.toContain('50 / 59');
   expect(html).not.toContain('Public Demo'); expect(html).not.toContain('Public demo notice');
  });
  it('shows a no-pending-review state for an outcome set with no unresolved exceptions', async () => {
@@ -67,7 +65,7 @@ describe('source-backed Overview', () => {
   const c = await processDocuments(pair()); if (!isReady(c)) throw Error('Not ready');
   const reconciliation = { ...c.outputs.reconciliation, counts: { ...c.outputs.reconciliation.counts, MATCH_EXACT: undefined } };
   const html = renderToStaticMarkup(createElement(OverviewDashboard, { currency: 'MYR', description: 'Partial UI fixture', bank: c.outputs.totals.net, reconciliation, months: [], anomalies: 0 }));
-  expect(text(html)).toContain('Reconciliation unavailable'); expect(text(html)).toContain('Automatically matched Unavailable');
+  expect(text(html)).toContain('Reconciliation unavailable'); expect(text(html)).toContain('Automatically matched \u2014');
   expect(html).not.toContain('9 exceptions need review');
  });
 
@@ -76,12 +74,8 @@ describe('source-backed Overview', () => {
   expect(workspaceDescription('Business', 'unavailable')).toBe('Business · unavailable');
  });
 
- it('keeps the compact public safety notice visible before any documents are processed', () => {
-  const html = renderToStaticMarkup(createElement(CompactDemoNotice, { context: null }));
-  expect(html).toContain('Public Demo'); expect(html).toContain('No sign-in');
-  expect(html).toContain('rule-based processing in your browser, not live AI');
-  expect(html).toContain('do not use confidential or real financial documents');
-  expect(html).not.toContain('<details'); expect(html).not.toContain('title=');
+ it('keeps the retired shared notice absent before processing', () => {
+  expect(renderToStaticMarkup(createElement(CompactDemoNotice, { context: null }))).toBe('');
  });
 
 });

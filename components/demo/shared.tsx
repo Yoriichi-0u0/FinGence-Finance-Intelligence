@@ -10,8 +10,8 @@ export const money = (currency: string, value: string) => `${currency} ${groupDi
 export const outflow = (currency: string, value: string) => money(currency, value.replace(/^-/, ''));
 /** True when the current processing includes the visitor's own files rather than only the built-in fictional samples. */
 export const usesOwnDocuments = (context: ProcessingContext) => context.documents.some(d => d.provenance === 'USER_SUPPLIED');
-export const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
-export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)] disabled:cursor-not-allowed disabled:opacity-50';
+export const button = 'workspace-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
+export const primaryButton = 'workspace-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-[var(--ui-on-primary,white)] hover:bg-[var(--teal-dark)] disabled:cursor-not-allowed disabled:opacity-50';
 
 const DECISION: Record<Decision, { label: string; className: string; Icon: typeof CheckCircle2 }> = {
     AUTO_ACCEPTED: { label: 'Auto-accepted · verified', className: 'border-emerald-200 bg-[var(--green-soft)] text-[var(--green)]', Icon: CheckCircle2 },

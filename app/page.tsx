@@ -1,3 +1,5 @@
+import { OverviewWelcome } from '@/components/overview/welcome';
+import { syntheticDemoEnabled } from '@/lib/server/demo/mode';
 import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { DemoGate } from '@/components/demo/gate';
@@ -13,5 +15,5 @@ export default async function OverviewPage() {
         if (!pocRequestAllowed(request)) notFound();
         return <OverviewTheme><LocalOverview /></OverviewTheme>;
     }
-    return <OverviewTheme><DemoGate view="overview" /></OverviewTheme>;
+    return <OverviewTheme>{syntheticDemoEnabled() ? <OverviewWelcome /> : <DemoGate view="overview" />}</OverviewTheme>;
 }

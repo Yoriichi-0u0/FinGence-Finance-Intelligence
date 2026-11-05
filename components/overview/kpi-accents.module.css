@@ -1,0 +1,13 @@
+.card { --kpi-accent:var(--kpi-light); position:relative; border-top:3px solid color-mix(in srgb,var(--kpi-accent) 65%,var(--border)); }
+:global([data-shell-theme="dark"]) .card { --kpi-accent:var(--kpi-dark); }
+.card :global(.ov-icon) { color:var(--kpi-accent); background:color-mix(in srgb,var(--kpi-accent) 12%,transparent); }
+@media(hover:hover) and (pointer:fine) {
+    .card { transition:border-color 180ms ease; }
+
+    .card:hover { border-color:color-mix(in srgb,var(--kpi-accent) 36%,var(--border)); border-top-color:color-mix(in srgb,var(--kpi-accent) 78%,var(--border)); }
+    @supports(mask-composite:exclude) {
+    .card::after { content:''; position:absolute; inset:-1px; padding:1px; border-radius:inherit; pointer-events:none; background:radial-gradient(190px circle at var(--kpi-x,50%) var(--kpi-y,0%),color-mix(in srgb,var(--kpi-accent) 65%,transparent),transparent 75%); mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); mask-composite:exclude; opacity:0; transition:opacity 200ms ease; }
+    .card:hover::after { opacity:.8; }
+    }
+}
+@media(prefers-reduced-motion:reduce) { .card { transition:none; }.card::after { display:none; transition:none; } }

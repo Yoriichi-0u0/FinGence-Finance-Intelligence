@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
+import { TradingLineChart } from "./trading-line-chart";
 
 export type ChartSeries = {
   label: string;
@@ -16,12 +17,14 @@ export function LineChart({
   height = 250,
   formatValue = (value) => `${Math.round(value / 1000)}K`,
   ariaLabel,
+  appearance = "standard", xValues, pointLabels, formatTooltipValue,
 }: {
   labels: string[];
   series: ChartSeries[];
   height?: number;
   formatValue?: (value: number) => string;
   ariaLabel: string;
+  appearance?: "standard" | "trading"; xValues?: number[]; pointLabels?: string[]; formatTooltipValue?: (value: number) => string;
 }) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const gradientId = useId().replace(/:/g, "");
@@ -54,6 +57,8 @@ export function LineChart({
 
   const tooltipSeries = hoveredIndex === null ? [] : series.filter((item) => item.values[hoveredIndex] !== null);
   const tooltipX = hoveredIndex === null ? padding.left : Math.min(width - 160, Math.max(padding.left, x(hoveredIndex) - 68));
+
+  if (appearance === 'trading') return <TradingLineChart labels={labels} pointLabels={pointLabels} xValues={xValues} ariaLabel={ariaLabel} series={series.map(item=>({...item,exactValues:item.values.map(value=>value===null?null:(formatTooltipValue??formatValue)(value))}))} formatAxis={formatValue}/>;
 
   return (
     <div className="w-full">

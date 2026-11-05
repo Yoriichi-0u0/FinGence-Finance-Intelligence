@@ -1,5 +1,7 @@
 "use client";
 import { useId, useState } from 'react';
+import { ChartReadout } from '../chart-readout';
+import financialStyles from '../financial-chart.module.css';
 import { CalendarDays } from 'lucide-react';
 import { CashHistory } from './history';
 import { PERIODS, availablePeriods, defaultPeriod, monthlyWindow, type ChartView, type ChartPeriod, type VerifiedMonth, type ReconciliationCounts } from './chart-model';
@@ -26,8 +28,9 @@ export function reportingRange(months: VerifiedMonth[]) {
     return `${format(months[0].period)} to ${format(months.at(-1)!.period)}`;
 }
 export function ReconciliationStatusChart({ counts }: { counts: ReconciliationCounts | null }) {
+    const [active, setActive] = useState<number | null>(null);
     if (!counts) return <div className="ov-unavailable ov-chart-empty"><h3>Reconciliation unavailable</h3><p>No verified outcome counts are available for this source and processing result.</p></div>;
     const categories = [{ label: 'Exact matches', value: counts.exact, color: 'var(--cash-in)' }, { label: 'Date shift matches', value: counts.shifted, color: 'var(--cash-out)' }, { label: 'Unresolved exceptions', value: counts.unresolved, color: 'var(--review)' }];
     const max = Math.max(1, ...categories.map(c => c.value));
-    return <div className="ov-status-chart" role="group" aria-label="Current reconciliation outcome category counts"><p className="ov-muted">Number of outcomes · current result</p>{categories.map(c => <div className="ov-status-category" key={c.label}><div><span>{c.label}</span><strong>{c.value}</strong></div><div className="ov-status-track" role="img" aria-label={`${c.label}: ${c.value} outcomes`}><span style={{ width: `${c.value / max * 100}%`, background: c.color }} /></div></div>)}<p className="ov-status-total">{counts.total} total outcomes · categories describe this result, not a monthly trend.</p></div>;
+    return <div className={`ov-status-chart ${financialStyles.status}`} role="group" aria-label="Current reconciliation outcome category counts"><ChartReadout hint="Hover, tap or focus a category for exact outcome counts." title={active === null ? undefined : 'Current processing result'} items={active === null ? [] : [{ label: categories[active].label, value: `${categories[active].value} outcomes`, color: categories[active].color }]} /><p className="ov-muted">Number of outcomes · current result</p>{categories.map((c,i) => <div className="ov-status-category" key={c.label} tabIndex={0} role="button" aria-label={`${c.label}: ${c.value} outcomes`} onPointerEnter={()=>setActive(i)} onPointerLeave={e=>{if(e.pointerType!=='touch'&&!e.currentTarget.contains(document.activeElement))setActive(null);}} onPointerDown={()=>setActive(i)} onFocus={()=>setActive(i)} onBlur={()=>setActive(null)} onKeyDown={e=>{if(e.key==='Escape')setActive(null);if(e.key==='Enter'||e.key===' '){e.preventDefault();setActive(i);}}}><div><span>{c.label}</span><strong>{c.value}</strong></div><div className="ov-status-track" role="img" aria-label={`${c.label}: ${c.value} outcomes`}><span style={{ width: `${c.value / max * 100}%`, background: c.color }} /></div></div>)}<p className="ov-status-total">{counts.total} total outcomes · categories describe this result, not a monthly trend.</p></div>;
 }

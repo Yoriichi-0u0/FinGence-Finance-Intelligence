@@ -34,6 +34,11 @@ describe('shared sidebar and navigation search catalogue', () => {
         expect(paths({ syntheticDemo: true, role: 'Finance' })).not.toContain('/finance-questions');
         expect(paths({ syntheticDemo: true })).toContain('/ask');
     });
+    it('separates public Overview from Welcome without mutating local navigation',()=>{
+        expect(paths({syntheticDemo:true})).toContain('/overview');expect(paths({syntheticDemo:true})).not.toContain('/');
+        expect(visibleNavigation({syntheticDemo:true}).find(x=>x.label==='Dashboard')?.href).toBe('/overview');
+        expect(visibleNavigation({}).find(x=>x.label==='Dashboard')?.href).toBe('/');
+    });
     it('wraps keyboard selection in both directions and handles zero results', () => {
         expect(moveNavigationIndex(-1, 'ArrowDown', 3)).toBe(0);
         expect(moveNavigationIndex(-1, 'ArrowUp', 3)).toBe(2);
