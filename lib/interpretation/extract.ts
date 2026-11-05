@@ -14,7 +14,9 @@ export const isExtractable = (bytes: Uint8Array) => isPdf(bytes) || isImage(byte
 /** Rendering scale for scanned PDF pages: about 300 dpi, enough for statement-size print. */
 const SCAN_SCALE = 300 / 72;
 
-export async function extractDocument(name: string, bytes: Uint8Array, sha256: string): Promise<{ bytes: Uint8Array; source: ExtractedSource } | { error: string }> {
+export type Extraction = { bytes: Uint8Array; source: ExtractedSource } | { error: string };
+export type Extractor = (name: string, bytes: Uint8Array, sha256: string) => Promise<Extraction>;
+export async function extractDocument(name: string, bytes: Uint8Array, sha256: string): Promise<Extraction> {
     if (bytes.byteLength > MAX_EXTRACT_BYTES) return { error: `Larger than ${MAX_EXTRACT_BYTES / 1_000_000} MB.` };
     const words: Word[] = [], notes: string[] = [], confidences: number[] = [];
     let disputed = 0;
@@ -46,7 +48,7 @@ export async function extractDocument(name: string, bytes: Uint8Array, sha256: s
     const table = wordsToTable(words);
     const kind = ocrPages ? 'OCR' : 'PDF_TEXT', confidence = confidences.length ? Math.round(confidences.reduce((a, b) => a + b, 0) / confidences.length) : null;
     notes.push(kind === 'OCR'
-        ? `${isPdf(bytes) ? `${ocrPages} of ${pages} scanned PDF page${pages === 1 ? '' : 's'}` : 'Image'} read by OCR in this browser (${OCR_ENGINE}); mean word confidence ${confidence}%.`
+        ? `${isPdf(bytes) ? `${ocrPages} of ${pages} scanned PDF page${pages === 1 ? '' : 's'}` : 'Image'} read by OCR (${OCR_ENGINE}${typeof window === 'undefined' ? ', on the server' : ', in this browser'}); mean word confidence ${confidence}%.`
         : `Text layer of ${pages} PDF page${pages === 1 ? '' : 's'} read directly (no OCR).`);
     if (disputed) notes.push(`Each page was read twice; ${disputed} word${disputed === 1 ? '' : 's'} read differently by the two passes took the more confident reading.`);
     notes.push(`${words.length} words placed into ${table.rows} lines by position; cell values are kept as read.`, ...table.notes);

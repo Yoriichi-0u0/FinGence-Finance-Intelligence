@@ -18,10 +18,13 @@ async function engine() {
         // Statement text is mostly codes and figures: the word dictionaries would pull "29TPR9…" towards letters.
         const config = { load_system_dawg: '0', load_freq_dawg: '0' };
         if (typeof window !== 'undefined') return createWorker('eng', 1, {}, config);
-        // Node (tests): the language model comes from the installed @tesseract.js-data/eng package, not the network.
+        // Node (tests, server processing jobs): the language model comes from the installed @tesseract.js-data/eng package,
+        // not the network. Resolved at run time from the project, so a bundler cannot rewrite the path.
         const { dirname, join } = await import('node:path'), { createRequire } = await import('node:module');
-        const langPath = join(dirname(createRequire(import.meta.url).resolve('@tesseract.js-data/eng/package.json')), '4.0.0');
-        return createWorker('eng', 1, { langPath, gzip: true, cacheMethod: 'none' }, config);
+        const data = ['@tesseract.js-data', 'eng', 'package.json'].join('/');
+        const langPath = join(dirname(createRequire(join(process.cwd(), 'package.json')).resolve(data)), '4.0.0');
+        // An engine error drops the cached worker, so the next document starts a fresh one.
+        return createWorker('eng', 1, { langPath, gzip: true, cacheMethod: 'none', errorHandler: () => { worker = null; } }, config);
     })();
     return worker;
 }

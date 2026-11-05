@@ -1,5 +1,15 @@
 # FinGence — current technical entrypoint
 
+## Server processing jobs, stored results and the Management console — 5 November 2026
+
+Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/architecture/server-processing-v1.md](../architecture/server-processing-v1.md).
+
+- **Jobs:** `POST /api/processing/jobs` answers 202 with a job ID and runs the unchanged pipeline after the response (`lib/server/processing/jobs.ts`). The AI layout reader is called in-process from the shared budget (`lib/server/ai/interpret.ts`), and PDFs and scans are read on the server.
+- **Stored results:** a finished job stores, in one transaction, its ingestion run (verified records), its reconciliation and anomaly results and every flagged item (`lib/processing/job-result.ts`, schema `fingence_processing`, `supabase/sql/processing-jobs-v1.sql`). Uploaded documents are never stored.
+- **Re-check:** the browser re-runs the pipeline on the same documents with the job's accepted readings and must reach the job's processing ID, or nothing is shown.
+- **Management console:** `/management` lists jobs and flagged items and pauses or resumes processing; a pause refuses new jobs with 423 and the reason Finance users see.
+- **Off by default:** without `FINGENCE_PROCESSING_JOBS=1` the app is the browser-only demo exactly as before. Locally, `node scripts/dev-store.mjs` runs the same migrations in PGlite. Not applied to Production: the migration and the Vercel switches are owner decisions, and the console has no sign-in until #74.
+
 ## Several months and any currency end to end; anomalies resolved autonomously — 5 November 2026
 
 `/data` now processes several months and any one stated currency through every stage (checkpoint 9, #78). The contract is [docs/architecture/multi-period-processing-v1.md](../architecture/multi-period-processing-v1.md).
