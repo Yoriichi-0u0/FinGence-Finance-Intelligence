@@ -77,6 +77,12 @@ describe('several months and another currency, end to end', () => {
         // The rule-based answerer refuses to quote a reconciliation whose bank movement is not the statement's.
         expect(answerQuestion(qaFacts(c)!, 'What is the bank-versus-ledger difference?')).toMatchObject({ status: 'UNAVAILABLE' });
     });
+    it('confirms a bank record that clears a booked item in a month the books do not cover', async () => {
+        // Only January's ledger: the February bank credit BANK-Q1-0038 clears January's deposit GL-Q1-0036 in transit.
+        const january = text(LEDGER).split('\n').filter((l, i) => i === 0 || l.includes(',2026-01-')).join('\n');
+        const c = await processDocuments([doc(BANK), doc(LEDGER, january), doc(HISTORY)]);
+        expect(c.outputs.anomalyResolution!.items.find(i => i.row.rowId === 'BANK-Q1-0038')).toMatchObject({ resolution: 'CORROBORATED_BY_BOOKS', booked: { ledgerRecordIds: ['GL-Q1-0036'], how: 'TIMING_CLEARED' } });
+    });
     it('quarantines a history whose month disagrees with the statement, and a pair that shares no month', async () => {
         const lines = text(HISTORY).split('\n'), header = lines[0].split(','), row = lines.findIndex(l => l.includes(',2026-02,'));
         const cells = lines[row].split(','); cells[header.indexOf('AmountMYR')] = '1.00'; cells[header.indexOf('SignedCashMovementMYR')] = cells[header.indexOf('SignedCashMovementMYR')].startsWith('-') ? '-1.00' : '1.00'; lines[row] = cells.join(',');

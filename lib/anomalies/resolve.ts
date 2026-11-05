@@ -25,7 +25,12 @@ function bookings(layer: ReconciliationResult) {
     for (const p of layer.periods) {
         for (const r of p.snapshot.results) if (r.bankRecordId && (r.status === 'MATCH_EXACT' || r.status === 'MATCH_DATE_SHIFT')) booked.set(r.bankRecordId, { ledgerRecordIds: r.ledgerRecordIds, how: 'MATCHED' });
         for (const i of p.items) {
-            if (!i.bankRecordId) continue;
+            // A ledger item cleared by a bank record in a month only the bank covers carries the link on the ledger side.
+            if (!i.bankRecordId) {
+                if ((i.resolution === 'TIMING_CLEARED' || i.resolution === 'MATCHED_LATE') && i.link?.side === 'BANK' && i.ledgerRecordIds.length && !booked.has(i.link.recordId))
+                    booked.set(i.link.recordId, { ledgerRecordIds: i.ledgerRecordIds, how: i.resolution === 'MATCHED_LATE' ? 'MATCHED_LATE' : 'TIMING_CLEARED' });
+                continue;
+            }
             if (i.resolution === 'MATCHED_BY_AMOUNT' && i.ledgerRecordIds.length) booked.set(i.bankRecordId, { ledgerRecordIds: i.ledgerRecordIds, how: 'MATCHED_BY_AMOUNT' });
             else if ((i.resolution === 'MATCHED_LATE' || i.resolution === 'TIMING_CLEARED') && i.link?.side === 'LEDGER') booked.set(i.bankRecordId, { ledgerRecordIds: [i.link.recordId], how: i.resolution === 'MATCHED_LATE' ? 'MATCHED_LATE' : 'TIMING_CLEARED' });
         }
