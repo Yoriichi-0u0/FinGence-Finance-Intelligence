@@ -102,11 +102,13 @@ function run(index: GroundingIndex, q: ToolCall): Draft[] {
             // The reconciliation covers only the months both documents cover: label it with those months, and disclose
             // any statement month left out, so a partial reconciliation is never presented as the whole period's.
             const reconciled = o.periods.length ? o.periods.map(p => p.period) : [rec.scope.period];
-            const left = o.notReconciled.map(n => `${n.period} (${n.side === 'BANK' ? 'bank statement only' : 'books only'})`);
+            // Bounded: the label stays within the gateway's 160 characters; the months left out go in a field (≤ 400).
+            const side = (k: 'BANK' | 'LEDGER') => o.notReconciled.filter(n => n.side === k).map(n => n.period);
+            const left = [['bank statement only', side('BANK')], ['books only', side('LEDGER')]] as const, omitted = o.notReconciled.length;
             const summary: Draft = {
-                label: `Reconciliation of ${reconciled.length > 1 ? `${reconciled[0]} to ${reconciled.at(-1)}` : reconciled[0]} (bank minus ledger)${left.length ? `; not reconciled: ${left.join(', ')}` : ''}`, primary: 'difference',
+                label: `Reconciliation of ${reconciled.length > 1 ? `${reconciled[0]} to ${reconciled.at(-1)}` : reconciled[0]} (bank minus ledger)${omitted ? `; ${omitted} month${omitted === 1 ? '' : 's'} not reconciled` : ''}`, primary: 'difference',
                 fields: {
-                    reconciledMonths: text(reconciled.join(', ')), ...(left.length ? { notReconciled: text(`${left.join(', ')}: only one document covers ${left.length === 1 ? 'this month' : 'these months'}, so ${left.length === 1 ? 'it is' : 'they are'} not in these figures`) } : {}),
+                    reconciledMonths: text(reconciled.join(', ')), ...(omitted ? { notReconciled: text(`Not in these figures, because only one document covers ${omitted === 1 ? 'it' : 'them'}: ${left.filter(([, m]) => m.length).map(([who, m]) => `${who} ${m.join(', ')}`).join('; ')}`) } : {}),
                     difference: money(toCents(rec.cashMovement.signedDifference), currency), bankMovement: money(toCents(rec.cashMovement.bank), currency), ledgerMovement: money(toCents(rec.cashMovement.ledger), currency),
                     matched: count(rec.counts.MATCH_EXACT + rec.counts.MATCH_DATE_SHIFT), exceptions: count(rec.results.filter(r => !MATCHED.has(r.status)).length), selected: count(items.length),
                     ...Object.fromEntries(Object.entries(rec.counts).map(([s, n]) => [s.toLowerCase().replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()), count(n)])),

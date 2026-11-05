@@ -65,10 +65,15 @@ describe('several months and another currency, end to end', () => {
         expect(march.every(i => i.resolution === 'FLAGGED' && /no ledger covers that month/.test(i.summary))).toBe(true);
         // Q&A never presents the partial reconciliation as the whole statement period's.
         const [rec] = runQueries(groundingIndex(c)!, [{ tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }]);
-        expect(rec.label).toBe('Reconciliation of 2026-01 to 2026-02 (bank minus ledger); not reconciled: 2026-03 (bank statement only)');
+        expect(rec.label).toBe('Reconciliation of 2026-01 to 2026-02 (bank minus ledger); 1 month not reconciled');
         expect(rec.fields.bankMovement).toMatchObject({ kind: 'MONEY', cents: toCents(c.outputs.reconciliation!.cashMovement.bank).toString() });
         expect(c.outputs.reconciliation!.cashMovement.bank).not.toBe(c.outputs.totals!.net);
-        expect(rec.fields.notReconciled).toMatchObject({ kind: 'TEXT', text: '2026-03 (bank statement only): only one document covers this month, so it is not in these figures' });
+        expect(rec.fields.notReconciled).toMatchObject({ kind: 'TEXT', text: 'Not in these figures, because only one document covers it: bank statement only 2026-03' });
+        // Label and fields stay within the gateway's limits even for a long statement against one ledger month.
+        const long = await processDocuments([doc(BANK), doc(LEDGER, text(LEDGER).split('\n').filter((l, i) => i === 0 || l.includes(',2026-01-')).join('\n'))]);
+        const [one] = runQueries(groundingIndex(long)!, [{ tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }]);
+        expect(one.label.length).toBeLessThanOrEqual(160);
+        expect(Object.values(one.fields).every(v => v.kind !== 'TEXT' || v.text.length <= 400)).toBe(true);
         // The rule-based answerer refuses to quote a reconciliation whose bank movement is not the statement's.
         expect(answerQuestion(qaFacts(c)!, 'What is the bank-versus-ledger difference?')).toMatchObject({ status: 'UNAVAILABLE' });
     });
