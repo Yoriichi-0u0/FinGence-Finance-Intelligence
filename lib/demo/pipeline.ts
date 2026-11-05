@@ -10,6 +10,7 @@ import { readReconciliation, type ReconciliationView } from '../poc-anomalies/re
 import { cashTotals, type BankTotals } from '../poc-insights/model';
 import { forecastBusiness, FORECAST_VERSION, type BusinessForecast } from '../poc-forecast/forecast';
 import type { LayoutInterpreter } from '../interpretation/contracts';
+import type { Extractor } from '../interpretation/extract';
 import { ingestDocuments, INGESTION_SCOPE, sha256Hex, type Check, type Decision, type Digest, type DocumentInput, type DocumentRole, type ProcessedDocument } from '../document-ingestion/ingest';
 
 export { MAX_DOCUMENT_BYTES, sha256Hex } from '../document-ingestion/ingest';
@@ -31,10 +32,13 @@ export const DEMO_ORGANIZATION = 'synthetic-demo';
 
 export type StageId = 'IDENTIFY' | 'EXTRACT' | 'INTERPRET' | 'VERIFY' | 'RECONCILE' | 'ANALYZE' | 'FORECAST' | 'REPORT';
 export type Stage = { id: StageId; title: string; decision: Decision; method: string; summary: string; checks: Check[] };
-export type ProcessingOptions = { interpreter?: LayoutInterpreter | null };
+/** `job`: the server job this run belongs to (the job itself, or the browser re-checking its result). */
+export type ProcessingOptions = { interpreter?: LayoutInterpreter | null; job?: { id: string; runner: ProcessingRunner['kind'] } | null; extract?: Extractor };
 export type Quarantined = { kind: 'DOCUMENT' | 'RECONCILIATION_EXCEPTION' | 'ANOMALY_CANDIDATE' | 'HISTORY'; reference: string; status: string; reason: string };
 export type ProcessingContext = {
-    version: typeof PIPELINE_VERSION; processingId: string; runner: 'BROWSER_DEMO_RUNNER';
+    version: typeof PIPELINE_VERSION; processingId: string; runner: ProcessingRunner['kind'];
+    /** Set when the run was processed by a server job: its ID. The browser's re-check of that job carries it too. */
+    job: { id: string } | null;
     status: 'COMPLETED' | 'COMPLETED_WITH_EXCEPTIONS' | 'QUARANTINED';
     documents: ProcessedDocument[];
     /** `period` is one month (YYYY-MM) or the range the bank statement covers (YYYY-MM/YYYY-MM); `months` lists every statement month. */
@@ -73,9 +77,10 @@ export const STAGE_TITLES: Record<StageId, string> = {
     VERIFY: 'Independent verification', RECONCILE: 'Deterministic reconciliation', ANALYZE: 'Transaction analytics and anomaly candidates',
     FORECAST: 'Supported forecast', REPORT: 'Management summary',
 };
-function limitations(models: string[]) {
+const SERVER_LIMITATION = 'Processed on the FinGence server as a processing job. The documents were sent to the server for that job only and are not stored; their fingerprints, decisions, verified records, reconciliation and anomaly results are stored in the FinGence database, and this browser re-checked the result from the same documents.';
+function limitations(models: string[], job: boolean) {
     return [
-        models.length
+        job ? SERVER_LIMITATION : models.length
             ? 'All calculations ran in this browser. For AI-interpreted documents only the headings, column profiles and a few sample lines were sent to the FinGence server and Groq. The input documents are kept temporarily in this browser tab\'s sessionStorage until results are cleared or the tab is closed.'
             : 'Processed in this browser only; nothing is uploaded to a server or shared. The input documents are kept temporarily in this browser tab\'s sessionStorage until results are cleared or the tab is closed.',
         'Signed cash movement is bank cash in and out. It is not revenue, expenses, profit or a cash flow statement.',
@@ -116,15 +121,15 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     const finish = async (status: ProcessingContext['status'], scope: ProcessingContext['scope']) => {
         // An AI-interpreted document is identified by its bytes AND the accepted mapping, so a different accepted reading is a different processing.
         const accepted = documents.filter(d => d.decision === 'AUTO_ACCEPTED' && d.role).map(d => `${d.role}:${d.sha256}${d.interpretation?.mappingHash ? `:${d.interpretation.mappingHash}` : ''}`);
-        if (outputs.report) outputs.report.limitations = limitations(aiModels());
+        if (outputs.report) outputs.report.limitations = limitations(aiModels(), !!options.job);
         const processingId = await processingIdentity(digest, accepted.length ? accepted : documents.map(d => `INPUT:${d.sha256}`));
         if (outputs.report) outputs.report.processingId = processingId;
-        return { version: PIPELINE_VERSION, processingId, runner: 'BROWSER_DEMO_RUNNER' as const, status, documents, scope, stages, conventions, outputs, quarantine };
+        return { version: PIPELINE_VERSION, processingId, runner: options.job?.runner ?? 'BROWSER_DEMO_RUNNER', job: options.job ? { id: options.job.id } : null, status, documents, scope, stages, conventions, outputs, quarantine };
     };
 
     // 1. Identify each document's role from its exact column signature; an unfamiliar layout may be interpreted by the model and gates.
     // Ingestion scope: several months and any stated currency; one business and one currency per pair is enforced below.
-    const { documents, effective } = await ingestDocuments(inputs, { digest, interpreter: options.interpreter, scope: INGESTION_SCOPE });
+    const { documents, effective } = await ingestDocuments(inputs, { digest, interpreter: options.interpreter, scope: INGESTION_SCOPE, extract: options.extract });
     const aiModels = () => [...new Set(documents.filter(d => d.interpretation?.decision === 'AUTO_ACCEPTED' && d.interpretation.receipt).map(d => d.interpretation!.receipt!.model))];
     const byRole = (role: DocumentRole) => documents.filter(d => d.role === role);
     for (const role of ['BANK_STATEMENT', 'GENERAL_LEDGER', 'BANK_HISTORY'] as const) {
@@ -272,13 +277,13 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
         sources: documents.filter(d => d.decision === 'AUTO_ACCEPTED' && d.role).map(d => ({ role: d.role!, name: d.name, sha256: d.sha256 })),
         cash: outputs.totals, reconciliation: { cashMovement: snapshot.cashMovement, counts: snapshot.counts }, anomalyCandidates: outputs.anomalies.length, anomaliesFlagged: ar.flagged,
         forecast: f.status === 'AVAILABLE' ? { status: 'AVAILABLE', period: f.period, credits: f.credits, debits: f.debits, net: f.net } : { status: 'UNAVAILABLE', detail: f.detail },
-        limitations: limitations(aiModels()),
+        limitations: limitations(aiModels(), !!options.job),
     };
     await emit('REPORT', 'AUTO_ACCEPTED', 'Generated from the processing context', 'Summary, JSON evidence and printable report use the same figures.', [check('same-source', 'Every figure comes from this processing context', true, `${outputs.report.sources.length} source fingerprints`)]);
     return finish(exceptions || ar.flagged || quarantine.length ? 'COMPLETED_WITH_EXCEPTIONS' : 'COMPLETED', scope);
 }
 
-/** The future backend job system implements the same contract; the browser demo runner is the Phase 1 implementation. */
+/** Both runners execute the same pure pipeline: the browser demo runner, and the server job runner (lib/server/processing/jobs.ts). */
 export interface ProcessingRunner {
     readonly kind: 'BROWSER_DEMO_RUNNER' | 'BACKEND_JOB_RUNNER';
     run(inputs: DocumentInput[], onStage?: (stage: Stage) => void | Promise<void>, options?: ProcessingOptions): Promise<ProcessingContext>;

@@ -1,6 +1,6 @@
-import { evidenceSchema, InterpreterUnavailable } from '@/lib/interpretation/contracts';
-import { admit, clientAddress } from '@/lib/server/ai/budget';
-import { aiGatewayEnabled, interpreterModel, proposeLayout, worstCaseUsd } from '@/lib/server/ai/groq-interpreter';
+import { clientAddress } from '@/lib/server/ai/budget';
+import { aiGatewayEnabled, interpreterModel } from '@/lib/server/ai/groq-interpreter';
+import { interpretEvidence } from '@/lib/server/ai/interpret';
 import { boundedJson, noStoreJson as json } from '@/lib/server/ai/request';
 import { processingRefusal } from '@/lib/server/workspace/session';
 
@@ -24,19 +24,6 @@ export async function POST(request: Request) {
     if ('refusal' in read) return read.refusal;
     const gate = await processingRefusal(request.headers);
     if (gate) return json({ code: gate.code, ...(gate.reason ? { reason: gate.reason } : {}) }, gate.status);
-    const evidence = evidenceSchema.safeParse((read.body as { evidence?: unknown } | null)?.evidence);
-    if (!evidence.success) return json({ code: 'INVALID_EVIDENCE' }, 400);
-    const admission = await admit({ client: clientAddress(request.headers), worstCaseUsd: worstCaseUsd(evidence.data) });
-    if (!admission.admitted) return json({ code: admission.code, ...(admission.retryAfterSeconds ? { retryAfterSeconds: admission.retryAfterSeconds } : {}) }, admission.status);
-    try {
-        const result = await proposeLayout(evidence.data);
-        await admission.settle(result.receipt.estimatedUsd);
-        return json(result);
-    } catch (error) {
-        const code = error instanceof InterpreterUnavailable ? error.code : 'INTERPRETER_FAILED';
-        // A provider 429 is refused before processing and not billed; any other failure keeps its full reservation.
-        await admission.settle(code === 'RATE_LIMITED' ? 0 : null);
-        const retryAfterSeconds = error instanceof InterpreterUnavailable ? error.retryAfterSeconds : undefined;
-        return json(code === 'RATE_LIMITED' ? { code, retryAfterSeconds: Math.ceil(retryAfterSeconds ?? 20) } : { code }, code === 'RATE_LIMITED' ? 429 : 502);
-    }
+    const result = await interpretEvidence(read.body, clientAddress(request.headers));
+    return json(result.body, result.status);
 }

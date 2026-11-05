@@ -8,6 +8,8 @@ import {pocLocalEnabled} from "@/lib/server/poc-reconciliation/runtime";
 import {syntheticDemoEnabled} from "@/lib/server/demo/mode";
 import {aiGatewayEnabled} from "@/lib/server/ai/groq-interpreter";
 import {workspaceEnabled} from "@/lib/server/workspace/store";
+import {budgetStore} from "@/lib/server/ai/budget";
+import {managementEnabled, processingStore} from "@/lib/server/processing/store";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} workspace={workspaceEnabled()}>{children}</AppShell>
+        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()} workspace={workspaceEnabled()}>{children}</AppShell>
       </body>
     </html>
   );

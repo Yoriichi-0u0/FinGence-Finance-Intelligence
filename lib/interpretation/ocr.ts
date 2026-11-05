@@ -18,10 +18,13 @@ async function engine() {
         // Statement text is mostly codes and figures: the word dictionaries would pull "29TPR9…" towards letters.
         const config = { load_system_dawg: '0', load_freq_dawg: '0' };
         if (typeof window !== 'undefined') return createWorker('eng', 1, {}, config);
-        // Node (tests): the language model comes from the installed @tesseract.js-data/eng package, not the network.
+        // Node (tests, server processing jobs): the language model comes from the installed @tesseract.js-data/eng package,
+        // not the network. Resolved at run time from the project, so a bundler cannot rewrite the path.
         const { dirname, join } = await import('node:path'), { createRequire } = await import('node:module');
-        const langPath = join(dirname(createRequire(import.meta.url).resolve('@tesseract.js-data/eng/package.json')), '4.0.0');
-        return createWorker('eng', 1, { langPath, gzip: true, cacheMethod: 'none' }, config);
+        const data = ['@tesseract.js-data', 'eng', 'package.json'].join('/');
+        const langPath = join(dirname(createRequire(join(process.cwd(), 'package.json')).resolve(data)), '4.0.0');
+        // An engine error drops the cached worker, so the next document starts a fresh one.
+        return createWorker('eng', 1, { langPath, gzip: true, cacheMethod: 'none', errorHandler: () => { worker = null; } }, config);
     })();
     return worker;
 }
@@ -49,7 +52,17 @@ async function pass(image: Encoded, page: number, mode: '3' | '6'): Promise<Word
  * is more confident of is used and the other is kept as an alternative. Only if the table then fails its arithmetic
  * may the gates try those alternatives (`verifyWithDisputes`), and only a single consistent choice is accepted.
  */
-export async function ocrWords(input: OcrImage, page: number): Promise<{ words: Word[]; confidence: number; disputed: number }> {
+/**
+ * One OCR read at a time on the shared worker: a read changes the worker's settings (segmentation mode, character
+ * whitelist) between calls, so two overlapping reads (two server jobs, two pages) could take each other's settings.
+ */
+let queue: Promise<unknown> = Promise.resolve();
+export function ocrWords(input: OcrImage, page: number): Promise<{ words: Word[]; confidence: number; disputed: number }> {
+    const turn = queue.then(() => readWords(input, page));
+    queue = turn.catch(() => undefined);
+    return turn;
+}
+async function readWords(input: OcrImage, page: number): Promise<{ words: Word[]; confidence: number; disputed: number }> {
     // A canvas is encoded once: handing the same canvas to the engine twice stalls the second read in the browser.
     const image = input instanceof Uint8Array ? input : await new Promise<Blob>((resolve, reject) => input.toBlob(b => b ? resolve(b) : reject(Error('canvas could not be encoded')), 'image/png'));
     const block = await pass(image, page, '6'), auto = await pass(image, page, '3');
