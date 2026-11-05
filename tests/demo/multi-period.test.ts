@@ -5,6 +5,7 @@ import { processDocuments, type DocumentInput } from '../../lib/demo/pipeline';
 import { toCents } from '../../lib/poc-anomalies/source';
 import { catalogue, groundingIndex, runQueries } from '../../lib/grounded-qa/tools';
 import { verifyAnswer } from '../../lib/grounded-qa/gates';
+import { catalogueSchema } from '../../lib/grounded-qa/contracts';
 import { qaFacts } from '../../lib/demo/questions';
 import { answerQuestion } from '../../lib/poc-finance-qa/answer';
 
@@ -107,6 +108,24 @@ describe('several months and another currency, end to end', () => {
         // A February fact cited in the same sentence does.
         const february = runQueries(index, [{ tool: 'cash_summary', period: '2026-02' }]);
         expect(failed(verifyAnswer(answer('February net cash movement was {F1.net}.', ['F1']), february, ctx))).toEqual([]);
+    });
+    it('keeps the AI Q&A catalogue within its bound for a long multi-month processing', async () => {
+        // 30 months, two bank records and their ledger entries per month.
+        const months = Array.from({ length: 30 }, (_, i) => `${2024 + Math.floor(i / 12)}-${String(i % 12 + 1).padStart(2, '0')}`);
+        const bankHead = 'BankTransactionID,BusinessID,BusinessName,AccountNumber,Currency,ValueDate,StatementMonth,BankReference,BankDescription,BankDirection,BankAmountMYR,SignedCashMovementMYR,Counterparty,SourceTransactionID';
+        const ledgerHead = 'LedgerEntryID,BusinessID,PostingDate,CashAccount,Currency,LedgerReference,LedgerMemo,Counterparty,CashAccountDebitMYR,CashAccountCreditMYR,SignedCashMovementMYR,CategoryLabel';
+        const rows = months.flatMap((m, i) => [[`B${i}A`, `${m}-05`, `REFA${String(i).padStart(4, '0')}`, 'Credit', '100.00', '100.00', 'Card Sales'], [`B${i}B`, `${m}-20`, `REFB${String(i).padStart(4, '0')}`, 'Debit', '40.00', '-40.00', 'Flour Mill']]);
+        const bank = [bankHead, ...rows.map(([id, d, ref, dir, amt, sgn, cp]) => `${id},DEMO-009,Long Demo (Synthetic),****0009,SGD,${d},${d.slice(0, 7)},${ref},[${dir.toLowerCase()}] ${cp.toUpperCase()},${dir},${amt},${sgn},${cp},`)].join('\n');
+        const ledger = [ledgerHead, ...rows.map(([id, d, ref, , amt, sgn, cp]) => `L${id},DEMO-009,${d},1000-BANK,SGD,${ref},Entry,${cp},${sgn.startsWith('-') ? '0.00' : amt},${sgn.startsWith('-') ? amt : '0.00'},${sgn},Other`)].join('\n');
+        const c = await processDocuments([doc('long-bank.csv', bank + '\n'), doc('long-ledger.csv', ledger + '\n')]);
+        expect(c.scope?.months).toHaveLength(30);
+        const index = groundingIndex(c)!, cat = catalogue(index);
+        expect(catalogueSchema.safeParse(cat).success).toBe(true);
+        expect(cat.months).toHaveLength(25);
+        expect(cat.months.at(-1)).toBe('2024-01/2026-06');
+        // The whole range is still answered from every statement record.
+        const [whole] = runQueries(index, [{ tool: 'cash_summary', period: '2024-01/2026-06' }]);
+        expect(whole.fields.transactions).toMatchObject({ kind: 'COUNT', n: 60 });
     });
     it('is deterministic and order independent', async () => {
         const a = await processDocuments(sample()), b = await processDocuments(sample().reverse());

@@ -6,7 +6,7 @@ import type { ProcessingContext } from '../demo/pipeline';
 import { RULES } from '../poc-anomalies/detector';
 import { reconciliationStatuses } from '../poc-reconciliation/contracts';
 import { toCents, type SourceRow } from '../poc-anomalies/source';
-import { QA_VERSION, MAX_FACTS, type Catalogue, type ToolCall } from './contracts';
+import { QA_VERSION, MAX_FACTS, CATALOGUE_MONTHS, type Catalogue, type ToolCall } from './contracts';
 import { count, money, text, type Fact, type SourceRef, type Value } from './facts';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -28,7 +28,9 @@ export function groundingIndex(context: ProcessingContext): GroundingIndex | nul
     const { scope, outputs } = context;
     if (!scope || !outputs.totals || !outputs.bankRows.length) return null;
     const history = outputs.history.accepted ? outputs.history.rows : outputs.bankRows;
-    const months = [...new Set([...history.map(r => r.period), ...scope.months])].sort();
+    // Bounded to the catalogue limit: the most recent CATALOGUE_MONTHS single months, plus the whole range of a
+    // multi-month statement, which cash_summary always answers in full whatever its length.
+    const months = [...new Set([...history.map(r => r.period), ...scope.months])].sort().slice(-CATALOGUE_MONTHS);
     if (scope.months.length > 1) months.push(scope.period);
     return { processingId: context.processingId, scope: { businessId: scope.businessId, businessName: scope.businessName, period: scope.period, currency: scope.currency }, currency: scope.currency, rows: outputs.bankRows, history, months, statementMonths: scope.months, context };
 }
