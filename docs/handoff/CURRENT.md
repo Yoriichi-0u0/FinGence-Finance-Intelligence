@@ -1,5 +1,16 @@
 # FinGence — current technical entrypoint
 
+## Several months and any currency end to end; anomalies resolved autonomously — 5 November 2026
+
+`/data` now processes several months and any one stated currency through every stage (checkpoint 9, #78). The contract is [docs/architecture/multi-period-processing-v1.md](../architecture/multi-period-processing-v1.md).
+
+- **Scope:** `scope.period` is a month or a `YYYY-MM/YYYY-MM` range, and `scope.months` lists the statement months.
+- **Reconciliation:** every month both documents cover is reconciled (`outputs.periods`), with a combined whole-run snapshot (`outputs.reconciliation`). Months only one side covers are reported (`outputs.notReconciled`).
+- **Anomalies:** every anomaly candidate is checked against the books (`lib/anomalies/resolve.ts`). A record the ledger also shows is confirmed; only one the books cannot confirm is flagged to the technical team.
+- **Samples:**
+  - The March MYR sample keeps its figures and now completes with nothing flagged.
+  - A new quarter sample (DEMO-002, January–March 2026, SGD; `scripts/generate-quarter-documents.mjs`) shows timing differences clearing across months and one flagged payment.
+
 ## Workspace v1: organizations and three roles — 5 November 2026
 
 The hosted workspace is in [docs/architecture/workspace-roles-v1.md](../architecture/workspace-roles-v1.md): Supabase schema `fingence_workspace` (`supabase/sql/workspace-v1.sql`) and `lib/server/workspace/*`.
@@ -22,7 +33,7 @@ It is **autonomous** and has no review queue. Each month goes through the unchan
 - a balanced correcting entry, prepared and never posted;
 - unexplained, which is the only outcome flagged, and is flagged to the technical team.
 
-The layer accepts several months and any one currency. The Phase 1 pipeline passes its own rule of one month in MYR, and on the sample its snapshot and statement are unchanged. All 9 exceptions are resolved, 6 correcting entries are prepared, and 0 items are unexplained. The Reconciliation page shows "What FinGence did" in plain language.
+The layer accepts several months and any one currency; since 5 November the `/data` pipeline uses that scope too (see the entry above). On the March sample its snapshot and statement are unchanged. All 9 exceptions are resolved, 6 correcting entries are prepared, and 0 items are unexplained. The Reconciliation page shows "What FinGence did" in plain language.
 
 ## Ingestion layer v1 — 5 November 2026
 
@@ -31,7 +42,7 @@ The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): d
 
 - **Formats:** CSV, XLSX, text PDF, scanned PDF and images. Real-statement layouts are handled, and the ingestion scope accepts several months and any stated currency.
 - **Durable store:** Supabase FinGence-Production, schema `fingence_ingestion` (`supabase/sql/ingestion-layer-v1.sql`), through `POST /api/ingestion/runs`. It needs `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
-- **Benchmark:** see [docs/integration/ingestion-benchmark.md](../integration/ingestion-benchmark.md). 0 false acceptances so far; the full rerun is pending the Groq daily allowance.
+- **Benchmark:** see [docs/integration/ingestion-benchmark.md](../integration/ingestion-benchmark.md). Full rerun 5 Nov 2026 (run 4): 67 documents, 0 false acceptances. All 24 generated digital documents and all 10 FinGence samples were accepted exactly. Quarantines that remain are OCR digit misreads and AgamiAI statements whose own balances break. For OCR only, a currency code with one wrong-case letter ("UsD") is read as its ISO code and disclosed.
 
 ## AI M3: PDF statements and scans — 4 November 2026
 
@@ -40,7 +51,10 @@ The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): d
 - `lib/interpretation/extract.ts` reads text PDFs through pdf.js, and scans and images by OCR in the browser (tesseract.js, two passes);
 - `positioned.ts` places the words into a table by geometry alone;
 - an extracted document always goes through the AI proposal and the gates, plus the date-order and arithmetic-anchor gates;
-- `verifyWithDisputes` may resolve a figure the two OCR passes disagree on, but only when exactly one reading makes every gate pass.
+- `verifyWithDisputes` may resolve a figure the two OCR passes disagree on. It searches one-cell and two-cell corrections every time, and accepts only when every passing choice gives the same dates and signed amounts.
+- The arithmetic anchor for an extracted document (tightened 5 Nov 2026 after Codex review):
+  - each stated total is bound to the side it names, by the column it sits under or by its label read for the document's role (a bank's debit is money out, a ledger's debit is money in);
+  - a running balance confirms the first amount only together with a stated opening balance.
 
 Groq calls alternate between `GROQ_API_KEY` and `GROQ_API_KEY2` (#70); the second key adds capacity only when it is from a different Groq organization, since limits are per organization. See the M1 runbook section "PDF statements and scans".
 

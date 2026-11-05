@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDemoProcessing } from './context';
-import { usesOwnDocuments } from './shared';
+import { periodLabel, usesOwnDocuments } from './shared';
 import { useWorkspace } from '@/components/workspace/context';
 
 /** Always-visible demo identity: what mode this is and which processing the page reflects. */
@@ -18,7 +18,7 @@ export function DemoBanner() {
             ? <>{lead} · AI layout interpretation ({aiModels.join(', ')} on Groq) verified by deterministic checks · calculations in your browser · do not use confidential or real financial documents</>
             : aiRejected ? <>{lead} · an AI layout proposal was quarantined; nothing from the model was accepted · do not use confidential or real financial documents</>
             : <>{lead} · rule-based processing in your browser, not live AI · do not use confidential or real financial documents</>}</span>
-        {status === 'ready' && context ? s ? <span className="sm:ml-auto">Showing processing <code className="text-xs">{context.processingId}</code> · {s.businessId} · {s.period} · {usesOwnDocuments(context) ? 'your documents, processed locally' : 'fictional sample documents'}</span> : <span className="sm:ml-auto">Last documents quarantined</span>
+        {status === 'ready' && context ? s ? <span className="sm:ml-auto">Showing processing <code className="text-xs">{context.processingId}</code> · {s.businessId} · {periodLabel(s.period)} · {usesOwnDocuments(context) ? 'your documents, processed locally' : 'fictional sample documents'}</span> : <span className="sm:ml-auto">Last documents quarantined</span>
             : pathname !== '/data' && status !== 'loading' ? <Link href="/data" className="font-semibold underline sm:ml-auto">No documents processed · open Data</Link> : null}
     </aside>;
 }
