@@ -132,6 +132,22 @@ describe('two OCR readings that disagree: the arithmetic may choose, but only on
         expect(v.decision).toBe('QUARANTINED');
         expect(v.disclosures.at(-1)).toMatch(/no alternative reading satisfies the checks/);
     });
+    it('an OCR currency code with one letter in the wrong case is read as its ISO code, disclosed; only for OCR', async () => {
+        const { verifyProposal } = await import('../../lib/interpretation/gates');
+        const scope = { months: 'MANY' as const, currencies: 'ANY' as const };
+        const proposal = (literal: string) => { const p = structuredClone(CORRECT[LEDGER_PDF]); p.scope.currency = { line: 5, literal }; return wire(p); };
+        const withLine = async (text: string) => { const t = await ledgerTable(); t.rows[5] = ['Currency', text]; return t; };
+        const ocr = verifyProposal(await withLine('UsD'), proposal('USD'), { extracted: 'OCR', scope });
+        expect(ocr.decision).toBe('AUTO_ACCEPTED');
+        expect(ocr.summary).toContain('· USD,');
+        expect(ocr.disclosures).toContain('Currency "UsD" on line 6 was read by OCR with a letter in the wrong case; taken as USD.');
+        expect(verifyProposal(await withLine('UsD'), proposal('UsD'), { extracted: 'OCR', scope }).decision).toBe('AUTO_ACCEPTED');
+        // A text layer is never case-corrected; two wrong-case letters, a non-ISO code or a code absent from the cited line stay quarantined.
+        expect(verifyProposal(await withLine('UsD'), proposal('USD'), { extracted: 'PDF_TEXT', scope }).decision).toBe('QUARANTINED');
+        expect(verifyProposal(await withLine('Usd'), proposal('USD'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
+        expect(verifyProposal(await withLine('XqZ'), proposal('XQZ'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
+        expect(verifyProposal(await withLine('UsD'), proposal('SGD'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
+    });
     it('a failure that is not about figures is never retried with other readings', async () => {
         const { verifyWithDisputes } = await import('../../lib/interpretation/gates');
         const t = await ledgerTable();

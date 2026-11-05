@@ -66,4 +66,52 @@ Results are written to `.local/benchmark/ingestion-<date>.json`, with a `.md` ta
 
 The generated kenyalang statement, which had failed as a PDF in run 1 (`dates: "Total withdrawals"`), was accepted exactly as CSV, XLSX and text PDF. Its scan was quarantined on two OCR digit errors. The remaining 36 documents could not be interpreted: `RATE_LIMITED`, because both free-tier keys had used their daily token allowance (about 500k tokens over the two days). The full rerun is pending.
 
-**Across every run so far: 0 false acceptances.**
+### Run 4 (5 Nov 2026, full rerun after the fixes): 67 documents, 0 false acceptances
+
+The generated corpus and the FinGence and adversarial sets ran first (55 documents, 739 s). AgamiAI ran next (12 documents, 809 s). Both used the two free-tier keys on the same day. The one change made after this run, OCR currency case, was then rerun live on the document it affects. That row is marked †.
+
+| Set | Format | Docs | Accepted exactly | Quarantined | False acceptances | Meets expectation | Rows read exactly |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| FinGence | CSV | 4 | 4 | 0 | 0 | 4 | 228 / 228 |
+| FinGence | XLSX | 2 | 2 | 0 | 0 | 2 | 114 / 114 |
+| FinGence | PDF (text) | 2 | 2 | 0 | 0 | 2 | 114 / 114 |
+| FinGence | PDF (scanned) | 1 | 1 | 0 | 0 | 1 | 57 / 57 |
+| FinGence | JPEG | 1 | 1 | 0 | 0 | 1 | 57 / 57 |
+| Adversarial | CSV | 15 | 4 (all valid ones) | 11 (all invalid ones) | 0 | 15 | — |
+| Generated | CSV | 8 | 8 | 0 | 0 | 8 | 392 / 392 |
+| Generated | XLSX | 8 | 8 | 0 | 0 | 8 | 392 / 392 |
+| Generated | PDF (text) | 8 | 8 | 0 | 0 | 8 | 392 / 392 |
+| Generated | PDF (scanned) | 4 | 2 | 2 | 0 | 2 | 171 / 176 |
+| Generated | JPEG † | 2 | 1 | 1 | 0 | 1 | 61 / 62 |
+| AgamiAI | PDF (text) | 6 | 0 | 6 | 0 | 0 | 482 / 973 |
+| AgamiAI | PDF (scanned) | 6 | 0 | 6 | 0 | 0 | 0 / 973 |
+
+**Compared with run 1:**
+- Generated digital documents (CSV, XLSX and text PDF) went from 9 of 24 accepted exactly to **24 of 24**.
+- Every FinGence sample and every adversarial expectation still holds.
+- AgamiAI rows read exactly went from 320 to 482.
+
+**What remains quarantined, and why that is correct:**
+
+1. **OCR digit misreads (4 scans or photos).** Each document gets one quarantine reason; this is what was cited.
+   - kenyalang scan: "2,02243" for 2,022.13, and an unreadable "(15722500),".
+   - rajang scan: one balance figure misread, so 36 of 37 balance changes agree.
+   - lejar photo: "E6358".
+
+   These change a digit, so neither the arithmetic nor the second OCR pass can recover the printed value with certainty, and the gates refuse the document. Better scan quality or a stronger OCR engine is the remedy, not a looser gate.
+2. **AgamiAI Type 1 digital (3).** Read exactly: 162/162, 161/161, 159/159. Refused because the dataset's own running balance breaks 10 to 20 times per statement.
+3. **AgamiAI Type 2 digital (3).** The model mapped one column to two fields ("one column used twice"). A layout with a separate `Cr/Dr` column, three date columns and a transaction ID is not yet read. Even when read, these statements would be refused, because their balances break 16 to 30 times.
+4. **AgamiAI scans (6).** OCR confidence is 39–86% on six watermarked pages. The model abstains or the table does not hold together.
+
+**Fix from this run:**
+
+- **OCR currency case.** OCR read the cell "USD" as "UsD", so the pelita photo was refused although all 30 rows had been read exactly. For an OCR table only, a currency code on the cited line may be read case-insensitively. The conditions:
+  - exactly one three-letter code is on that line;
+  - it has at most one letter in the wrong case;
+  - its upper-case form is an ISO 4217 code.
+
+  The correction is disclosed.
+
+  Text layers and spreadsheets stay strict. Two wrong-case letters ("Usd") or a non-ISO code stays quarantined (`tests/interpretation/extract.test.ts`). Rerun live: pelita photo **accepted exactly**, 30/30 rows, USD.
+
+**Across every run: 0 false acceptances in 67 documents per full run.**
