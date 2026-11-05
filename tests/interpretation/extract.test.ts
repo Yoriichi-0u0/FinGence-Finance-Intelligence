@@ -152,6 +152,44 @@ describe('two OCR readings that disagree: the arithmetic may choose, but only on
         expect(verifyProposal(await withLine('UsD / SgD'), proposal('USD'), { extracted: 'OCR', scope }).decision).toBe('QUARANTINED');
         expect(verifyProposal(await withLine('UsD'), proposal('Currency UsD'), { extracted: 'OCR', scope }).decision).toBe('AUTO_ACCEPTED');
     });
+    it('two different corrections that both pass every check are ambiguous: none is taken', async () => {
+        const { verifyWithDisputes } = await import('../../lib/interpretation/gates');
+        const { parseAmount } = await import('../../lib/interpretation/formats');
+        const t = await ledgerTable(), header = CORRECT[LEDGER_PDF].headerLine;
+        const debits = t.rows.map((r, line) => ({ r, line })).filter(({ r, line }) => line > header && r.length === t.rows[header].length && typeof parseAmount(r[5] ?? '', 'COMMA_THOUSANDS_DOT_DECIMAL') === 'bigint' && parseAmount(r[5], 'COMMA_THOUSANDS_DOT_DECIMAL')! > 10000n).slice(0, 3);
+        const fmt = (v: bigint) => `${(v / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}.${(v % 100n).toString().padStart(2, '0')}`;
+        const value = (i: number) => parseAmount(debits[i].r[5], 'COMMA_THOUSANDS_DOT_DECIMAL') as bigint;
+        const original = debits[0].r[5];
+        // The first debit was read MYR 90 short. Restoring it, or adding MYR 40 and MYR 50 to two other debits, both match the stated totals.
+        const disputes = [{ line: debits[0].line, column: 5, readings: [original] }, { line: debits[1].line, column: 5, readings: [fmt(value(1) + 4000n)] }, { line: debits[2].line, column: 5, readings: [fmt(value(2) + 5000n)] }];
+        t.rows[debits[0].line][5] = fmt(value(0) - 9000n);
+        const v = verifyWithDisputes(t, wire(CORRECT[LEDGER_PDF]), disputes, { extracted: 'OCR' });
+        expect(v.decision).toBe('QUARANTINED');
+        expect(v.disclosures.at(-1)).toMatch(/2 different financial readings satisfy the checks, so none is taken/);
+    });
+    it('a ledger whose debits and credits are swapped is refused by its own labelled totals', async () => {
+        const { verifyProposal } = await import('../../lib/interpretation/gates');
+        const t = await ledgerTable(), header = CORRECT[LEDGER_PDF].headerLine, width = t.rows[header].length;
+        for (const [line, r] of t.rows.entries()) if (line > header && r.length === width && /\d/.test(r[0] ?? '')) [r[5], r[6]] = [r[6], r[5]];
+        const v = verifyProposal(t, wire(CORRECT[LEDGER_PDF]), { extracted: 'OCR' });
+        expect(v.decision).toBe('QUARANTINED');
+        expect(v.checks.find(k => k.id === 'anchor')).toMatchObject({ passed: false, detail: expect.stringMatching(/^stated money in .* contradicts computed/) });
+    });
+    it('without stated totals, the first amount is confirmed only by the stated opening balance', async () => {
+        const { verifyProposal } = await import('../../lib/interpretation/gates');
+        const { readTable } = await import('../../lib/interpretation/evidence');
+        const read = await extractDocument(BANK_PDF, file(DIR, BANK_PDF).bytes, 'x') as { bytes: Uint8Array };
+        const base = readTable(read.bytes)!, header = CORRECT[BANK_PDF].headerLine;
+        const noTotals = () => ({ ...base, rows: base.rows.map(r => /^Total /.test(r.join(' ')) ? [] : [...r]) });
+        const firstLine = header + 1, column = base.rows[firstLine][6] ? 6 : 5;
+        expect(verifyProposal(noTotals(), wire(CORRECT[BANK_PDF]), { extracted: 'PDF_TEXT' }).checks.find(k => k.id === 'anchor')!.detail).toBe('running balance agrees with every amount, from the stated opening balance');
+        const misread = noTotals(); misread.rows[firstLine][column] = '9,999.99';
+        const v = verifyProposal(misread, wire(CORRECT[BANK_PDF]), { extracted: 'PDF_TEXT' });
+        expect(v.decision).toBe('QUARANTINED');
+        expect(v.checks.find(k => k.id === 'anchor')!.detail).toMatch(/no opening balance or stated totals confirm the first amount/);
+        const noOpening = noTotals(); noOpening.rows = noOpening.rows.map(r => /Opening balance/.test(r.join(' ')) ? [] : r);
+        expect(verifyProposal(noOpening, wire(CORRECT[BANK_PDF]), { extracted: 'PDF_TEXT' }).decision).toBe('QUARANTINED');
+    });
     it('a failure that is not about figures is never retried with other readings', async () => {
         const { verifyWithDisputes } = await import('../../lib/interpretation/gates');
         const t = await ledgerTable();

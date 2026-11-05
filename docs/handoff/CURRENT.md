@@ -29,7 +29,10 @@ The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): d
 - `lib/interpretation/extract.ts` reads text PDFs through pdf.js, and scans and images by OCR in the browser (tesseract.js, two passes);
 - `positioned.ts` places the words into a table by geometry alone;
 - an extracted document always goes through the AI proposal and the gates, plus the date-order and arithmetic-anchor gates;
-- `verifyWithDisputes` may resolve a figure the two OCR passes disagree on, but only when exactly one reading makes every gate pass.
+- `verifyWithDisputes` may resolve a figure the two OCR passes disagree on. It searches one-cell and two-cell corrections every time, and accepts only when every passing choice gives the same dates and signed amounts.
+- The arithmetic anchor for an extracted document (tightened 5 Nov 2026 after Codex review):
+  - each stated total is bound to the side it names, by the column it sits under or by its label read for the document's role (a bank's debit is money out, a ledger's debit is money in);
+  - a running balance confirms the first amount only together with a stated opening balance.
 
 Groq calls alternate between `GROQ_API_KEY` and `GROQ_API_KEY2` (#70); the second key adds capacity only when it is from a different Groq organization, since limits are per organization. See the M1 runbook section "PDF statements and scans".
 
