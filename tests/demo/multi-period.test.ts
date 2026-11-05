@@ -3,6 +3,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { processDocuments, type DocumentInput } from '../../lib/demo/pipeline';
 import { toCents } from '../../lib/poc-anomalies/source';
+import { groundingIndex, runQueries } from '../../lib/grounded-qa/tools';
+import { qaFacts } from '../../lib/demo/questions';
+import { answerQuestion } from '../../lib/poc-finance-qa/answer';
 
 // The public quarter sample (scripts/generate-quarter-documents.mjs): three months, SGD, a second fictional business.
 const text = (name: string) => readFileSync(join('public/demo/quarter', name), 'utf8');
@@ -60,6 +63,14 @@ describe('several months and another currency, end to end', () => {
         const march = c.outputs.anomalyResolution!.items.filter(i => i.row.period === '2026-03');
         expect(march.length).toBeGreaterThan(0);
         expect(march.every(i => i.resolution === 'FLAGGED' && /no ledger covers that month/.test(i.summary))).toBe(true);
+        // Q&A never presents the partial reconciliation as the whole statement period's.
+        const [rec] = runQueries(groundingIndex(c)!, [{ tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }]);
+        expect(rec.label).toBe('Reconciliation of 2026-01 to 2026-02 (bank minus ledger); not reconciled: 2026-03 (bank statement only)');
+        expect(rec.fields.bankMovement).toMatchObject({ kind: 'MONEY', cents: toCents(c.outputs.reconciliation!.cashMovement.bank).toString() });
+        expect(c.outputs.reconciliation!.cashMovement.bank).not.toBe(c.outputs.totals!.net);
+        expect(rec.fields.notReconciled).toMatchObject({ kind: 'TEXT', text: '2026-03 (bank statement only): only one document covers this month, so it is not in these figures' });
+        // The rule-based answerer refuses to quote a reconciliation whose bank movement is not the statement's.
+        expect(answerQuestion(qaFacts(c)!, 'What is the bank-versus-ledger difference?')).toMatchObject({ status: 'UNAVAILABLE' });
     });
     it('quarantines a history whose month disagrees with the statement, and a pair that shares no month', async () => {
         const lines = text(HISTORY).split('\n'), header = lines[0].split(','), row = lines.findIndex(l => l.includes(',2026-02,'));

@@ -99,9 +99,14 @@ function run(index: GroundingIndex, q: ToolCall): Draft[] {
             if (!rec) return [{ label: 'Reconciliation', primary: 'status', fields: { status: text(o.reconciliationView.status === 'UNAVAILABLE' ? o.reconciliationView.reason : 'Unavailable') }, sources: [] }];
             const items = rec.results.filter(r => q.status === 'ALL_EXCEPTIONS' ? !MATCHED.has(r.status) : r.status === q.status);
             const bank = new Map(rec.rows.bank.map(r => [r.recordId, r])), ledger = new Map(rec.rows.ledger.map(r => [r.recordId, r]));
+            // The reconciliation covers only the months both documents cover: label it with those months, and disclose
+            // any statement month left out, so a partial reconciliation is never presented as the whole period's.
+            const reconciled = o.periods.length ? o.periods.map(p => p.period) : [rec.scope.period];
+            const left = o.notReconciled.map(n => `${n.period} (${n.side === 'BANK' ? 'bank statement only' : 'books only'})`);
             const summary: Draft = {
-                label: `Reconciliation of ${index.scope.period} (bank minus ledger)`, primary: 'difference',
+                label: `Reconciliation of ${reconciled.length > 1 ? `${reconciled[0]} to ${reconciled.at(-1)}` : reconciled[0]} (bank minus ledger)${left.length ? `; not reconciled: ${left.join(', ')}` : ''}`, primary: 'difference',
                 fields: {
+                    reconciledMonths: text(reconciled.join(', ')), ...(left.length ? { notReconciled: text(`${left.join(', ')}: only one document covers ${left.length === 1 ? 'this month' : 'these months'}, so ${left.length === 1 ? 'it is' : 'they are'} not in these figures`) } : {}),
                     difference: money(toCents(rec.cashMovement.signedDifference), currency), bankMovement: money(toCents(rec.cashMovement.bank), currency), ledgerMovement: money(toCents(rec.cashMovement.ledger), currency),
                     matched: count(rec.counts.MATCH_EXACT + rec.counts.MATCH_DATE_SHIFT), exceptions: count(rec.results.filter(r => !MATCHED.has(r.status)).length), selected: count(items.length),
                     ...Object.fromEntries(Object.entries(rec.counts).map(([s, n]) => [s.toLowerCase().replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()), count(n)])),
