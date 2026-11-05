@@ -11,7 +11,8 @@ export function qaFacts(context: ProcessingContext): QaFacts | null {
         selection: { sourceId: context.processingId, fileName: bank.name, sha256: bank.sha256, businessId: scope.businessId, businessName: scope.businessName, period: scope.period, currency: scope.currency },
         businesses: [scope.businessId], periods, totals: outputs.totals,
         series: periods.map(period => ({ period, ...cashTotals(rows.filter(r => r.period === period)) })),
-        candidates: outputs.anomalies.map(c => ({ rowId: c.row.rowId, severity: c.severity, rules: c.findings.map(f => f.ruleId), review: 'OPEN' as const })),
+        // Each candidate is resolved against the books: confirmed by the ledger (explained) or flagged to the technical team (escalated).
+        candidates: outputs.anomalies.map(c => ({ rowId: c.row.rowId, severity: c.severity, rules: c.findings.map(f => f.ruleId), review: outputs.anomalyResolution?.items.find(a => a.row.rowId === c.row.rowId)?.resolution === 'CORROBORATED_BY_BOOKS' ? 'EXPLAINED' as const : outputs.anomalyResolution ? 'ESCALATED' as const : 'OPEN' as const })),
         reconciliation: outputs.reconciliationView, reconciliationReviews: null, forecast: outputs.forecast, pooled: null,
     };
 }

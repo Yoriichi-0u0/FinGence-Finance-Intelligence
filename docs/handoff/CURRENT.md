@@ -1,5 +1,16 @@
 # FinGence — current technical entrypoint
 
+## Several months and any currency end to end; anomalies resolved autonomously — 5 November 2026
+
+`/data` now processes several months and any one stated currency through every stage (checkpoint 9, #78). The contract is [docs/architecture/multi-period-processing-v1.md](../architecture/multi-period-processing-v1.md).
+
+- **Scope:** `scope.period` is a month or a `YYYY-MM/YYYY-MM` range, and `scope.months` lists the statement months.
+- **Reconciliation:** every month both documents cover is reconciled (`outputs.periods`), with a combined whole-run snapshot (`outputs.reconciliation`). Months only one side covers are reported (`outputs.notReconciled`).
+- **Anomalies:** every anomaly candidate is checked against the books (`lib/anomalies/resolve.ts`). A record the ledger also shows is confirmed; only one the books cannot confirm is flagged to the technical team.
+- **Samples:**
+  - The March MYR sample keeps its figures and now completes with nothing flagged.
+  - A new quarter sample (DEMO-002, January–March 2026, SGD; `scripts/generate-quarter-documents.mjs`) shows timing differences clearing across months and one flagged payment.
+
 ## Reconciliation layer v1 — 4 November 2026
 
 The reconciliation layer is `lib/reconciliation/reconcile.ts` (`reconcile`): verified bank and cash-ledger records in, a fully resolved reconciliation out. Its contract is [docs/architecture/reconciliation-layer-v1.md](../architecture/reconciliation-layer-v1.md).
@@ -11,7 +22,7 @@ It is **autonomous** and has no review queue. Each month goes through the unchan
 - a balanced correcting entry, prepared and never posted;
 - unexplained, which is the only outcome flagged, and is flagged to the technical team.
 
-The layer accepts several months and any one currency. The Phase 1 pipeline passes its own rule of one month in MYR, and on the sample its snapshot and statement are unchanged. All 9 exceptions are resolved, 6 correcting entries are prepared, and 0 items are unexplained. The Reconciliation page shows "What FinGence did" in plain language.
+The layer accepts several months and any one currency; since 5 November the `/data` pipeline uses that scope too (see the entry above). On the March sample its snapshot and statement are unchanged. All 9 exceptions are resolved, 6 correcting entries are prepared, and 0 items are unexplained. The Reconciliation page shows "What FinGence did" in plain language.
 
 ## Ingestion layer v1 — 5 November 2026
 

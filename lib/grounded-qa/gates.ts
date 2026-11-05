@@ -19,6 +19,13 @@ const ALLEGATION = /\b(fraud\w*|embezzl\w*|launder\w*|theft|steal\w*|stole|crim(
 export const CLASSIFICATION = /\b(outside compan(y|ies)|compan(y|ies)|firms?|organi[sz]ations?|external|third[- ]part(y|ies)|suppliers?|suppl(y|ies|ied) us|vendors?|contractors?|customers?|clients?|employees?|landlords?|tenants?|creditors?|debtors?|shareholders?|directors?|ingredients?|utilit(y|ies)|rents?|rental|salar(y|ies)|wages?|marketing|insurance|inventory|sales|turnover)\b/i;
 
 /** Catalogue counterparties a text names, by full name or by its distinctive first word (e.g. "Borneo", "GrabFood"). */
+/** Month numbers (1–12) a month or a YYYY-MM/YYYY-MM range covers. */
+function monthNumbers(period: string): number[] {
+    const [from, to = from] = period.split('/'), out: number[] = [];
+    let [y, m] = from.split('-').map(Number); const [ty, tm] = to.split('-').map(Number);
+    for (let n = 0; n < 25 && (y < ty || (y === ty && m <= tm)); n++) { out.push(m); m++; if (m > 12) { m = 1; y++; } }
+    return out;
+}
 export function namedCounterparties(text: string, counterparties: string[]): string[] {
     const t = text.toLowerCase(), first = (n: string) => n.toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
     return counterparties.filter(n => t.includes(n.toLowerCase()) || (first(n).length > 3 && new RegExp(`\\b${first(n)}\\b`).test(t)));
@@ -130,7 +137,7 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     // allowed only when it is the processing period's month or the month of a cited period/date fact (no year: digits stay banned).
     const free = answer.sentences.map(s => s.text.replace(PLACEHOLDER, ' '));
     const citedIds = new Set(answer.sentences.flatMap(s => s.cites).flatMap(c => derivedById.get(c)?.from ?? [c]));
-    const verifiedMonths = new Set([+ctx.catalogue.scope.period.slice(5, 7), ...[...citedIds].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? [+v.ym.slice(5, 7)] : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []))]);
+    const verifiedMonths = new Set([...monthNumbers(ctx.catalogue.scope.period), ...[...citedIds].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? monthNumbers(v.ym) : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []))]);
     const allowedMonth = new RegExp(`\\b(${[...verifiedMonths].flatMap(m => MONTH_NAMES[m - 1]).join('|')})\\b`, 'gi');
     const unverifiedMonth = (t: string) => { const rest = t.replace(allowedMonth, ' '); return MONTH_WORDS.test(rest) || /\bMay\b/.test(rest); };
     const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', EXCLUSIVITY.test(t) ? `sentence ${i + 1}: an exclusivity claim ("${t.match(EXCLUSIVITY)![0]}") no fact establishes` : '', unverifiedMonth(t) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });

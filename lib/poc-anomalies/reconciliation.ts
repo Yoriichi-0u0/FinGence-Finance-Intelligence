@@ -14,7 +14,8 @@ const result = z.object({ status, bankRecordId: id.nullable(), ledgerRecordIds: 
 const snapshot = z.object({
     version: z.literal('finance-poc-reconciliation-v1'),
     origin: z.literal('DETERMINISTIC_RULES'),
-    scope: z.object({ organizationId: id, businessId: id, period: z.string().regex(/^\d{4}-\d{2}$/), currency: z.string().regex(/^[A-Z]{3}$/) }),
+    // One month, or a multi-month run's range (YYYY-MM/YYYY-MM) for a combined snapshot.
+    scope: z.object({ organizationId: id, businessId: id, period: z.string().regex(/^\d{4}-\d{2}(\/\d{4}-\d{2})?$/), currency: z.string().regex(/^[A-Z]{3}$/) }),
     sources: z.object({ bank: z.object({ sourceId: id, sha256: z.string().regex(/^[0-9a-f]{64}$/) }), ledger: z.object({ sourceId: id, sha256: z.string().regex(/^[0-9a-f]{64}$/) }) }),
     cashMovement: z.object({ bank: decimal, ledger: decimal, signedDifference: decimal }),
     counts: z.partialRecord(status, z.number().int().nonnegative()),

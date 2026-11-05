@@ -5,6 +5,9 @@ import { groupDigits } from '@/lib/poc-anomalies/format';
 import type { Decision, ProcessingContext } from '@/lib/demo/pipeline';
 
 export const money = (currency: string, value: string) => `${currency} ${groupDigits(value)}`;
+const monthName = (ym: string) => new Date(`${ym}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+/** "March 2026", or "January 2026 to March 2026" for a multi-month processing (YYYY-MM/YYYY-MM). */
+export const periodLabel = (period: string) => { const [a, b] = period.split('/'); return b ? `${monthName(a)} to ${monthName(b)}` : monthName(a); };
 /** Labelled cash-out figures are shown as magnitudes; the signed source value stays in tables and JSON. */
 export const outflow = (currency: string, value: string) => money(currency, value.replace(/^-/, ''));
 /** True when the current processing includes the visitor's own files rather than only the built-in fictional samples. */
@@ -38,7 +41,7 @@ export function SourceStrip({ context }: { context: ProcessingContext }) {
     const s = context.scope;
     return <div className="mb-5 flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--border)] bg-white p-3 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
         <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--teal-dark)]"><Fingerprint aria-hidden="true" size={15} />Processing {context.processingId}</span>
-        {s ? <span>{s.businessName} ({s.businessId}) · {s.period} · {s.currency}</span> : null}
+        {s ? <span>{s.businessName} ({s.businessId}) · {periodLabel(s.period)} · {s.currency}</span> : null}
         {context.documents.filter(d => d.decision === 'AUTO_ACCEPTED').map(d => <span key={d.sha256} className="min-w-0 break-all text-[var(--muted)]" title={d.sha256}>{d.role === 'BANK_STATEMENT' ? 'Bank' : d.role === 'GENERAL_LEDGER' ? 'Ledger' : 'History'} {d.sha256.slice(0, 12)}…</span>)}
         <Link href="/data" className="font-semibold text-[var(--teal-dark)] underline sm:ml-auto">Processing details</Link>
     </div>;
