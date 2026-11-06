@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { browserDemoRunner, type DocumentInput, type ProcessingContext, type Stage } from '@/lib/demo/pipeline';
 import { createGatewayInterpreter, gatewayStatus, replayInterpreter, type GatewayStatus } from '@/lib/interpretation/client';
 import type { InterpretationResult } from '@/lib/interpretation/contracts';
+import { interpretationsOf } from '@/lib/document-ingestion/ingest';
 import { replayExtractor, type StoredExtraction } from '@/lib/processing/extractions';
 import { submitServerJob, type ServerProcessingState } from './server-jobs';
 
@@ -114,7 +115,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
             }
             if (current !== run.current) return null;
             const at = new Date().toISOString();
-            const interpretations = Object.fromEntries(result.documents.flatMap(d => d.interpretation?.receipt ? [[d.sha256, { proposal: d.interpretation.proposal, receipt: d.interpretation.receipt }]] : []));
+            const interpretations = interpretationsOf(result.documents);
             setPersisted(writeStored({ processedAt: at, documents: inputs.map(d => ({ name: d.name, provenance: d.provenance, base64: toBase64(d.bytes) })), interpretations, ...(job ? { job, extractions } : {}) }));
             setContext(result); setInputs(inputs); setProcessedAt(at); setStatus('ready');
             return result;

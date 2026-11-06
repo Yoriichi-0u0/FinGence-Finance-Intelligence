@@ -18,6 +18,8 @@ FINGENCE_INGESTION_BENCHMARK=1 FINGENCE_BENCH_AGAMI_DIR=.local/datasets/agami \
 
 Results are written to `.local/benchmark/ingestion-<date>.json`, with a `.md` table next to it. `FINGENCE_BENCH_ONLY` filters documents by name.
 
+For the evaluation, also generate the held-out set (`CHROME=… node scripts/generate-statement-corpus.mjs --held-out`, written to `.local/benchmark/heldout`), then score the run with `node scripts/evaluate-ingestion.mjs .local/benchmark/ingestion-<date>.json --out results.md --sheet sheet.csv`.
+
 **Budget:** a full run is about 67 model calls, or about 250k tokens. That is close to the Groq free tier's daily token allowance, so run the corpus and the external set on different days, or use a paid key.
 
 ## Corpus
@@ -30,6 +32,15 @@ Results are written to `.local/benchmark/ingestion-<date>.json`, with a `.md` ta
 | AgamiAI/Indian-Bank-Statements | External, Apache-2.0, synthetic Indian business statements: 6 digital and 6 scanned PDFs, 6 pages each, about 160 transactions, quarterly, INR, with a diagonal watermark | The dataset's JSON |
 
 ## Results
+
+### Run 5 (6 Nov 2026, the evaluation run): 96 documents scored, 0 false acceptances
+
+The full write-up, with the targets fixed before the run, is [docs/evaluation/automated-ingestion-evaluation.md](../evaluation/automated-ingestion-evaluation.md).
+
+- **New set:** a **held-out** corpus (`generate-statement-corpus.mjs --held-out`, `FINGENCE_BENCH_HELDOUT_DIR`) of 8 layouts never used in development.
+- **Unchanged since run 4:** every development, FinGence and adversarial result.
+- **Held-out set:** 12 of 24 digital documents and 0 of 6 scans accepted exactly; the rest were refused, none wrongly accepted.
+- **Scoring:** `node scripts/evaluate-ingestion.mjs <run.json>` scores the protocol metrics and writes the manual verification sheet.
 
 ### Run 1 (4 Nov 2026, before the real-statement fixes): 67 documents, 0 false acceptances
 

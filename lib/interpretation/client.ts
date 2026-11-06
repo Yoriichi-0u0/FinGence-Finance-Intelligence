@@ -1,5 +1,5 @@
 /** Browser-side interpreters: the server gateway (live) and replay of an earlier live proposal after reload. */
-import { InterpreterUnavailable, type InterpretationResult, type LayoutInterpreter } from './contracts';
+import { InterpreterUnavailable, retryKey, type InterpretationResult, type LayoutInterpreter } from './contracts';
 
 export type GatewayStatus = { available: true; provider: 'GROQ'; model: string; sends: string } | { available: false };
 export async function gatewayStatus(): Promise<GatewayStatus> {
@@ -58,7 +58,8 @@ export const gatewayInterpreter = createGatewayInterpreter();
 export function replayInterpreter(saved: Record<string, InterpretationResult>, fallback: LayoutInterpreter | null): LayoutInterpreter {
     return {
         async propose(evidence) {
-            const hit = saved[evidence.sha256];
+            // A second attempt replays the second proposal, so the same sequence of checks is re-run.
+            const hit = saved[evidence.retry ? retryKey(evidence.sha256) : evidence.sha256];
             if (hit) return { proposal: hit.proposal, receipt: { ...hit.receipt, mode: 'REPLAYED' } };
             if (fallback) return fallback.propose(evidence);
             throw new InterpreterUnavailable('NOT_REPLAYABLE');

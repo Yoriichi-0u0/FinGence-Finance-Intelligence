@@ -108,6 +108,11 @@ export const evidenceSchema = z.strictObject({
         nonEmpty: z.number().int().min(0), numericLike: z.number().int().min(0), dateLike: z.number().int().min(0),
     })).max(24),
     profileHeaderLine: z.number().int().min(0).max(4999),
+    /**
+     * Present only on the single second attempt: the deterministic check the first proposal failed and its detail.
+     * The detail is derived from the document, so it is as untrusted as the rest of the evidence.
+     */
+    retry: z.strictObject({ check: z.string().min(1).max(40), detail: z.string().max(300) }).optional(),
 });
 export type LayoutEvidence = z.infer<typeof evidenceSchema>;
 
@@ -118,6 +123,8 @@ export type ModelReceipt = {
     mode: 'LIVE' | 'REPLAYED';
 };
 export type InterpretationResult = { proposal: unknown; receipt: ModelReceipt };
+/** Key under which a second attempt's result is kept for replay, beside the first attempt's (the document SHA-256). */
+export const retryKey = (sha256: string) => `${sha256}#retry`;
 export interface LayoutInterpreter { propose(evidence: LayoutEvidence): Promise<InterpretationResult> }
 /** `retryAfterSeconds` is set only for a provider refusal (HTTP 429), which is never billed and may be retried. */
 export class InterpreterUnavailable extends Error { constructor(readonly code: string, readonly retryAfterSeconds?: number) { super(code); } }
