@@ -8,7 +8,7 @@ import type { Stage, StageName, V2Result } from "@/lib/ai-ingestion/contracts";
 
 const labels: Record<StageName, string> = { extraction: "Read the document", inference: "AI document understanding", rule_synthesis: "Propose processing rules", verification: "Independently check decisions", financial_records: "Prepare financial records" };
 const examples = [ ["statement.csv", "CSV statement"], ["statement.xlsx", "Excel statement"], ["statement-digital.pdf", "Digital PDF"], ["statement-scan.pdf", "Scanned PDF"], ["statement.png", "PNG image"], ["statement.jpg", "JPEG image"], ["unreadable.png", "Low-quality image"] ];
-const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
 export default function AIIngestionPage() {
   const [file, setFile] = useState<File | null>(null); const [stages, setStages] = useState<Stage[]>([]);
   const [result, setResult] = useState<V2Result | null>(null); const [busy, setBusy] = useState(false); const [error, setError] = useState("");

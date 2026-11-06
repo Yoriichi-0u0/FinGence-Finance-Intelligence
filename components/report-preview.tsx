@@ -16,7 +16,7 @@ const keyMetrics = [
 
 export function ReportPreview() {
   return (
-    <article className="mx-auto w-full max-w-[900px] overflow-hidden rounded-sm border border-slate-300 bg-white shadow-[0_24px_70px_rgb(16_42_67/0.12)]">
+    <article className="mx-auto w-full max-w-[900px] overflow-hidden rounded-sm border border-slate-300 bg-[var(--surface)] shadow-[0_24px_70px_rgb(16_42_67/0.12)]">
       <header className="border-b-4 border-[var(--teal)] px-6 pb-6 pt-7 sm:px-10 sm:pt-10">
         <div className="flex items-start justify-between gap-5">
           <div>
@@ -45,7 +45,7 @@ export function ReportPreview() {
 
         <section className="grid gap-px overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2 lg:grid-cols-4" aria-label="Report key metrics">
           {keyMetrics.map((metric) => (
-            <div key={metric.label} className="bg-white p-4">
+            <div key={metric.label} className="bg-[var(--surface)] p-4">
               <p className="text-[11px] text-[var(--muted)]">{metric.label}</p>
               <p className="mt-1 text-xl font-semibold tracking-[-0.03em]">{formatCurrency(metric.value)}</p>
               <p className={`mt-2 inline-flex items-center gap-1 text-[11px] font-semibold ${metric.positive ? "text-[var(--green)]" : "text-[var(--red)]"}`}>
@@ -54,7 +54,7 @@ export function ReportPreview() {
               </p>
             </div>
           ))}
-          <div className="bg-white p-4">
+          <div className="bg-[var(--surface)] p-4">
             <p className="text-[11px] text-[var(--muted)]">Reconciliation</p>
             <p className="mt-1 text-xl font-semibold tracking-[-0.03em]">96.8%</p>
             <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--green)]"><CheckCircle2 aria-hidden="true" size={13} /> Target passed</p>
@@ -83,7 +83,7 @@ export function ReportPreview() {
               <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-[var(--teal-soft)] text-[var(--teal)]"><TrendingUp aria-hidden="true" size={17} /></span><div><p className="text-[11px] text-[var(--muted)]">September forecast</p><p className="text-lg font-semibold">RM 72,300</p></div></div>
               <div className="mt-4 h-16 rounded-md bg-[linear-gradient(180deg,transparent_49%,#dfe6ec_50%,transparent_51%)]">
                 <svg viewBox="0 0 300 64" className="h-full w-full" role="img" aria-label="Rising cash flow forecast">
-                  <path d="M4 51 C45 49, 57 42, 91 44 S145 29, 180 32 S240 18, 296 10" fill="none" stroke="#4f63d8" strokeWidth="3" strokeDasharray="6 5" strokeLinecap="round" />
+                  <path d="M4 51 C45 49, 57 42, 91 44 S145 29, 180 32 S240 18, 296 10" fill="none" stroke="var(--chart-out)" strokeWidth="3" strokeDasharray="6 5" strokeLinecap="round" />
                 </svg>
               </div>
               <p className="mt-2 text-[10px] text-[var(--muted)]">Prototype forecast accuracy: 92.4%</p>

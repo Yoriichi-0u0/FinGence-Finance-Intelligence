@@ -4,7 +4,7 @@ import Link from "next/link";
 import { PageHeader, Panel } from "@/components/ui";
 import type { Stage } from "@/lib/ai-ingestion/contracts";
 import type { Run03 } from "@/lib/server/ai-ingestion/increment-03/service";
-const button = "inline-flex min-h-11 items-center justify-center rounded-lg border border-[var(--border)] bg-white px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-50";
+const button = "inline-flex min-h-11 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm font-medium hover:bg-slate-50 disabled:opacity-50";
 const names: Record<Stage["name"], string> = { extraction: "Read your document", inference: "Interpret with AI", rule_synthesis: "Prepare processing rules", verification: "Independently verify", financial_records: "Prepare checked records" };
 const examples = [["h01.csv", "CSV"], ["h02.xlsx", "Excel"], ["h03.pdf", "Digital PDF"], ["h04.pdf", "Scanned PDF"], ["h05.png", "PNG"], ["h06.jpg", "JPEG"]];
 export function LiveDocument03() {

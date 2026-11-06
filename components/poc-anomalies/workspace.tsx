@@ -24,8 +24,8 @@ const reviewLabels: Record<ReviewState, string> = { OPEN: "Open", EXPLAINED: "Ex
 const money = (currency: string, value: string) => `${currency} ${groupDigits(value)}`;
 const query = (s: Selection) => new URLSearchParams(Object.entries({ source: s.sourceId, business: s.businessId, period: s.period, currency: s.currency }).filter((e): e is [string, string] => Boolean(e[1]))).toString();
 const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-800 px-4 text-sm font-semibold text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50";
-const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
-const field = "mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm";
+const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+const field = "mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
 
 function Severity({ value }: { value: "HIGH" | "MEDIUM" }) {
   const high = value === "HIGH";
@@ -252,7 +252,7 @@ export default function AnomalyWorkspace() {
             ["Open reviews", String(analysis.counts.byReview.OPEN), `${analysis.counts.byReview.EXPLAINED} explained · ${analysis.counts.byReview.ESCALATED} escalated`, Flag, "var(--teal)"],
             ["Net signed movement", money(analysis.selection.currency, analysis.cashMovement.net), "Source bank amounts; not revenue or profit", CircleGauge, "var(--teal)"],
           ] as const).map(([label, value, note, Icon, color], index) => (
-            <article key={label} className={`panel-shadow min-w-0 rounded-xl border border-[var(--border)] bg-white p-4 sm:p-5 ${index === 3 ? "col-span-2 xl:col-span-1" : ""}`}>
+            <article key={label} className={`panel-shadow min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5 ${index === 3 ? "col-span-2 xl:col-span-1" : ""}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0"><p className="text-xs text-[var(--muted)]">{label}</p><p className="mt-2 break-words text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{value}</p></div>
                 <span className="grid size-10 shrink-0 place-items-center rounded-full bg-slate-50" style={{ color }}><Icon aria-hidden="true" size={20} /></span>

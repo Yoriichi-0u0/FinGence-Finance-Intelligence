@@ -100,7 +100,7 @@ export default function ReconciliationPage() {
         </div>
       </Panel>
 
-      <div className="mt-4 grid grid-cols-3 rounded-xl border border-[var(--border)] bg-white p-1 panel-shadow" role="tablist" aria-label="Reconciliation status">
+      <div className="mt-4 grid grid-cols-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 panel-shadow" role="tablist" aria-label="Reconciliation status">
         {tabs.map((item) => (
           <button
             key={item}
@@ -161,7 +161,7 @@ export default function ReconciliationPage() {
                 </dl>
               </section>
 
-              <div className="mx-auto grid size-12 place-items-center rounded-full border border-[var(--border-strong)] bg-white text-xs font-bold text-[var(--muted-strong)]">VS</div>
+              <div className="mx-auto grid size-12 place-items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-xs font-bold text-[var(--muted-strong)]">VS</div>
 
               <section aria-labelledby="bank-record-title" className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
                 <p id="bank-record-title" className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">Bank</p>

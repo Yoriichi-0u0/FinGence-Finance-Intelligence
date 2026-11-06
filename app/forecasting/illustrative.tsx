@@ -56,8 +56,8 @@ export default function ForecastingPage() {
             <LineChart
               labels={labels}
               series={[
-                { label: "Historical Revenue", color: "#0e7c74", values: [...historical.map((item) => item.revenue), null, null, null], fill: true },
-                { label: `Forecast · ${model.name}`, color: "#4f63d8", values: forecastValues, dashed: true },
+                { label: "Historical Revenue", color: "var(--chart-in)", values: [...historical.map((item) => item.revenue), null, null, null], fill: true },
+                { label: `Forecast · ${model.name}`, color: "var(--chart-out)", values: forecastValues, dashed: true },
               ]}
               height={330}
               ariaLabel={`Historical revenue from January to August 2026 and ${model.name} forecast from September to November 2026`}
