@@ -23,9 +23,9 @@ const metricLabels: Record<Metric, string> = { credits: "Receipts (credits)", de
 const refusalTitles: Record<string, string> = { INSUFFICIENT_HISTORY: "Not enough history", NONCONSECUTIVE_MONTHS: "Months are not consecutive", CURRENCY_MIX: "More than one currency", SIGN_CONVENTION: "Sign convention mismatch", NO_ROWS: "No rows" };
 const percent = (value: string | null) => value === null ? "n/a" : `${value}%`;
 const points = (value: string | null) => value === null ? "n/a" : `${value.startsWith("-") ? "" : "+"}${value} pp`;
-const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
 const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-800 px-4 text-sm font-semibold text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50";
-const field = "mt-1 block min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm";
+const field = "mt-1 block min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
 const th = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]", td = "px-3 py-2 text-sm tabular-nums";
 
 function ScoreTable({ title, rows, currency }: { title: string; rows: { metric: Metric; methods: MethodScore[]; lowestWape: Method | null }[]; currency: string | null }) {
@@ -264,7 +264,7 @@ export default function ForecastWorkspace() {
             {([["credits", "Receipts forecast", ArrowDownLeft, f.credits], ["debits", "Payments forecast", ArrowUpRight, f.debits], ["net", "Net movement (derived)", Scale, f.net]] as const).map(([metric, title, Icon, value]) => {
               const six = f.backtest[metric].methods.find(m => m.method === "MEAN_6")!, net = metric === "net";
               return (
-                <article key={metric} className={`panel-shadow min-w-0 rounded-xl border p-4 sm:p-5 ${net ? "border-amber-300 bg-amber-50" : "border-[var(--border)] bg-white"}`}>
+                <article key={metric} className={`panel-shadow min-w-0 rounded-xl border p-4 sm:p-5 ${net ? "border-amber-300 bg-amber-50" : "border-[var(--border)] bg-[var(--surface)]"}`}>
                   <p className="flex items-center gap-2 text-[13px] font-medium text-[var(--muted-strong)]"><Icon aria-hidden="true" size={16} className={net ? "text-amber-700" : "text-[var(--teal)]"} />{title} · {monthLabel(f.period, true)}</p>
                   <p className="mt-2 break-words text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular-nums sm:text-[25px]">{money(currency, value)}</p>
                   <p className="mt-2 text-xs text-[var(--muted)]">Mean of {monthLabel(f.basis.first, true)} – {monthLabel(f.basis.last, true)}{net ? " receipts minus payments" : ""}</p>
@@ -276,7 +276,7 @@ export default function ForecastWorkspace() {
         )}
 
         {netTest && netSix ? (
-          <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-white p-3 text-xs leading-5 text-amber-950">
+          <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-[var(--surface)] p-3 text-xs leading-5 text-amber-950">
             <AlertTriangle aria-hidden="true" size={15} className="mt-0.5 shrink-0 text-amber-700" />
             <span>Net movement is the small difference between two large flows, so its relative error is large: six-month WAPE {percent(netSix.wape)} for this business{netLowest && netLowest.method !== "MEAN_6" ? `, worse than the ${methodLabels[netLowest.method].toLowerCase()} baseline (${percent(netLowest.wape)})` : ""}.{pooledSix && pooledLowest && pooledLowest.method !== "MEAN_6" ? ` Across all ${view?.portfolio.included.length} businesses the ${methodLabels[pooledLowest.method].toLowerCase()} baseline had lower net error (${percent(pooledLowest.wape)} vs ${percent(pooledSix.wape)}), so the six-month baseline is not better for net movement.` : ""} Do not use it for decisions.</span>
           </p>
@@ -287,9 +287,9 @@ export default function ForecastWorkspace() {
             {totals.length ? (
               <LineChart labels={labels} height={300}
                 series={[
-                  { label: "Receipts", color: "#0e7c74", values: [...credits, ...(available ? [null] : [])] },
-                  { label: "Payments", color: "#b45309", values: [...debits, ...(available ? [null] : [])] },
-                  ...(available ? [{ label: "Receipts forecast", color: "#0e7c74", values: tail(credits, available.credits), dashed: true }, { label: "Payments forecast", color: "#b45309", values: tail(debits, available.debits), dashed: true }] : []),
+                  { label: "Receipts", color: "var(--chart-in)", values: [...credits, ...(available ? [null] : [])] },
+                  { label: "Payments", color: "var(--chart-net)", values: [...debits, ...(available ? [null] : [])] },
+                  ...(available ? [{ label: "Receipts forecast", color: "var(--chart-in)", values: tail(credits, available.credits), dashed: true }, { label: "Payments forecast", color: "var(--chart-net)", values: tail(debits, available.debits), dashed: true }] : []),
                 ]}
                 ariaLabel={`Monthly bank receipts and payments for ${view.selection.businessName}${available ? ` with the ${monthLabel(available.period, true)} six-month-mean forecast` : ""}`} />
             ) : <EmptyState title="No monthly history" description="This business has no rows that can be aggregated into one currency." />}

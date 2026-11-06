@@ -79,24 +79,24 @@ export default function TransactionsPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search description, reference or ID"
-                className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-white pl-10 pr-3 text-sm placeholder:text-slate-400 hover:border-[var(--border-strong)]"
+                className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] pl-10 pr-3 text-sm placeholder:text-slate-400 hover:border-[var(--border-strong)]"
               />
             </label>
             <label>
               <span className="sr-only">Category filter</span>
-              <select value={category} onChange={(event) => setCategory(event.target.value)} className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-white px-3 text-sm">
+              <select value={category} onChange={(event) => setCategory(event.target.value)} className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm">
                 {categories.map((item) => <option key={item}>{item}</option>)}
               </select>
             </label>
             <label>
               <span className="sr-only">Status filter</span>
-              <select value={status} onChange={(event) => setStatus(event.target.value as (typeof statuses)[number])} className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-white px-3 text-sm">
+              <select value={status} onChange={(event) => setStatus(event.target.value as (typeof statuses)[number])} className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm">
                 {statuses.map((item) => <option key={item}>{item}</option>)}
               </select>
             </label>
             <label>
               <span className="sr-only">Source filter</span>
-              <select value={source} onChange={(event) => setSource(event.target.value as (typeof sources)[number])} className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-white px-3 text-sm">
+              <select value={source} onChange={(event) => setSource(event.target.value as (typeof sources)[number])} className="min-h-10 w-full rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm">
                 {sources.map((item) => <option key={item}>{item}</option>)}
               </select>
             </label>

@@ -6,11 +6,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { DemoProcessingProvider } from "@/components/demo/context";
 import { DemoBanner } from "@/components/demo/banner";
+import { ThemeSwitch } from "@/components/theme-switch";
 import {
   AlertTriangle,
-  Building2,
   ChartNoAxesCombined,
-  ChevronDown,
+  Ellipsis,
   Database,
   FileBarChart,
   Gauge,
@@ -24,9 +24,12 @@ import {
   X,
 } from "lucide-react";
 
-const navigation = [
+type NavItem = { href: string; label: string; icon: typeof House; short?: string };
+const workspace: NavItem[] = [
   { href: "/", label: "Overview", icon: House },
-  { href: "/data", label: "Data", icon: Database },
+  { href: "/data", label: "Data", icon: Database, short: "Data" },
+];
+const results: NavItem[] = [
   { href: "/transactions", label: "Transactions", icon: ReceiptText },
   { href: "/reconciliation", label: "Reconciliation", icon: RefreshCw },
   { href: "/analytics", label: "Analytics", icon: ChartNoAxesCombined },
@@ -34,6 +37,7 @@ const navigation = [
   { href: "/anomalies", label: "Anomalies", icon: AlertTriangle },
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];
+const navigation = [...workspace, ...results];
 // Local M5 only; the page itself enforces role-scoped access on the server.
 const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
 // Local combined PoC only; the page and API are absent elsewhere.
@@ -43,144 +47,191 @@ const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareT
 // Management (Technical): server processing jobs, flagged items and the pause switch; absent unless the server enables it.
 const management = { href: "/management", label: "Management", icon: Gauge };
 
-function Brand() {
+function Brand({ compact = false }: { compact?: boolean }) {
   return (
     <Link
       href="/"
-      className="flex items-center gap-3 rounded-lg text-white focus-visible:outline-white"
+      className="flex items-center gap-3 rounded-xl text-white focus-visible:outline-white"
       aria-label="FinGence overview"
     >
-      <Image src="/branding/FinGence_Logo_96.png" width={36} height={36} alt="" unoptimized className="size-9 shrink-0 rounded-lg" />
+      <Image src="/branding/FinGence_Logo_96.png" width={40} height={40} alt="" unoptimized className={`${compact ? "size-8" : "size-10"} shrink-0 rounded-xl ring-1 ring-white/10`} />
       <span className="min-w-0">
-        <span className="block text-[21px] font-semibold tracking-[-0.03em]">FinGence</span>
-        <span className="block truncate text-[11px] text-slate-300">
-          AI-Driven Financial Intelligence
-        </span>
+        <span className={`block font-semibold tracking-[-0.03em] ${compact ? "text-[17px]" : "text-[21px] leading-6"}`}>FinGence</span>
+        {compact ? null : <span className="block truncate text-[11px] text-[var(--rail-muted)]">Finance + Intelligence</span>}
       </span>
     </Link>
   );
 }
 
-function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: { onNavigate?: () => void; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; managementConsole?: boolean; serverJobs?: boolean }) {
+const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+
+function NavGroup({ label, items, pathname, onNavigate }: { label: string; items: NavItem[]; pathname: string; onNavigate?: () => void }) {
+  if (!items.length) return null;
+  return (
+    <div>
+      <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">{label}</p>
+      <ul className="space-y-0.5">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(pathname, item.href);
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                aria-current={active ? "page" : undefined}
+                className={`group relative flex min-h-10 items-center gap-3 rounded-xl px-3 text-[14px] font-medium transition-colors ${
+                  active ? "bg-white/[0.09] text-white" : "text-[var(--rail-ink)]/80 hover:bg-white/[0.05] hover:text-white"
+                }`}
+              >
+                {active ? <span aria-hidden="true" className="brand-gradient absolute inset-y-2 left-0 w-[3px] rounded-full" /> : null}
+                <Icon
+                  aria-hidden="true"
+                  size={18}
+                  strokeWidth={active ? 2.2 : 1.8}
+                  className={active ? "text-[#a5b4fc]" : "text-[var(--rail-muted)] group-hover:text-white"}
+                />
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; managementConsole?: boolean; serverJobs?: boolean };
+
+function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const ask = [...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : [])];
+  const technical = [...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])];
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-[var(--navy)] px-3 py-5 text-white">
-      <div className="px-2 pb-7">
+    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--rail)] text-white">
+      <div aria-hidden="true" className="pointer-events-none absolute -left-24 -top-24 size-64 rounded-full bg-[#4f46e5]/25 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -bottom-28 -right-20 size-64 rounded-full bg-[#22d3ee]/10 blur-3xl" />
+      <div className="relative px-5 pb-6 pt-6">
         <Brand />
       </div>
 
-      <nav aria-label="Primary navigation" className="space-y-1">
-        {[...navigation, ...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : []), ...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])].map((item) => {
-          const Icon = item.icon;
-          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={`group flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] font-medium transition-colors ${
-                active
-                  ? "bg-teal-500/25 text-white ring-1 ring-inset ring-teal-300/20"
-                  : "text-slate-200 hover:bg-white/7 hover:text-white"
-              }`}
-            >
-              <Icon
-                aria-hidden="true"
-                size={19}
-                strokeWidth={active ? 2.2 : 1.8}
-                className={active ? "text-teal-200" : "text-slate-300 group-hover:text-white"}
-              />
-              {item.label}
-            </Link>
-          );
-        })}
+      <nav aria-label="Primary navigation" className="thin-scrollbar relative min-h-0 flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        <NavGroup label="Workspace" items={workspace} pathname={pathname} onNavigate={onNavigate} />
+        <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} />
+        <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} />
+        <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} />
       </nav>
 
-      <div className="mt-auto border-t border-white/14 px-2 pt-5">
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-lg p-1 text-left hover:bg-white/7"
-          aria-label="Open company workspace menu"
-        >
-          <span className="grid size-10 shrink-0 place-items-center rounded-full border border-teal-300/50 text-teal-200">
-            <Building2 aria-hidden="true" size={20} />
+      <div className="relative space-y-3 border-t border-[var(--rail-line)] px-4 pb-5 pt-4">
+        <div className="flex items-start gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06]">
+          <span aria-hidden="true" className="mt-1 size-2 shrink-0 rounded-full bg-[#34d399] shadow-[0_0_0_3px_rgb(52_211_153/0.18)]" />
+          <span className="min-w-0">
+            <span className="block text-[13px] font-semibold">{localFinancialConsumers ? "Synthetic organization" : syntheticDemo ? "Synthetic demo" : "SAIC"}</span>
+            <span className="block text-xs text-[var(--rail-muted)]">{localFinancialConsumers ? "Local experimental workspace" : syntheticDemo ? serverJobs ? "No sign-in · server processing" : "No sign-in · browser only" : "Finance Workspace"}</span>
+            <span className="mt-0.5 block text-xs text-[var(--rail-muted)]/80">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Use fictional data only" : "August 2026"}</span>
           </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">{localFinancialConsumers ? "Synthetic organization" : syntheticDemo ? "Synthetic demo" : "SAIC"}</span>
-            <span className="block truncate text-xs text-slate-300">{localFinancialConsumers ? "Local experimental workspace" : syntheticDemo ? serverJobs ? "No sign-in · server processing" : "No sign-in · browser only" : "Finance Workspace"}</span>
-            <span className="mt-0.5 block text-xs text-slate-400">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Use fictional data only" : "August 2026"}</span>
-          </span>
-          <ChevronDown aria-hidden="true" size={16} className="text-slate-300" />
-        </button>
+        </div>
+        <ThemeSwitch />
       </div>
     </div>
+  );
+}
+
+/** Phone navigation: the four most used pages in a bottom bar, and everything else behind "More". */
+function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDemo: boolean }) {
+  const pathname = usePathname();
+  const items: NavItem[] = [
+    { href: "/", label: "Overview", icon: House },
+    { href: "/data", label: "Data", icon: Database },
+    { href: "/reconciliation", label: "Reconcile", icon: RefreshCw },
+    syntheticDemo ? { href: "/ask", label: "Ask", icon: MessageSquareText } : { href: "/reports", label: "Reports", icon: FileBarChart },
+  ];
+  const elsewhere = !items.some((item) => isActive(pathname, item.href));
+  return (
+    <nav aria-label="Quick navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--surface)]/92 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden print:hidden">
+      <ul className="mx-auto grid max-w-md grid-cols-5">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(pathname, item.href);
+          return (
+            <li key={item.href}>
+              <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-[var(--brand)]" : "text-[var(--muted)]"}`}>
+                <Icon aria-hidden="true" size={20} strokeWidth={active ? 2.3 : 1.8} />
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
+        <li>
+          <button type="button" onClick={onMore} className={`flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${elsewhere ? "text-[var(--brand)]" : "text-[var(--muted)]"}`} aria-label="More pages">
+            <Ellipsis aria-hidden="true" size={20} />
+            More
+          </button>
+        </li>
+      </ul>
+    </nav>
   );
 }
 
 export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
+  const current = [...navigation, financeQuestions, demoQuestions, administration, management].find((item) => isActive(pathname, item.href));
 
   return (
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
-    <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)] print:block">
+    <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[248px_minmax(0,1fr)] print:block">
       <aside className="sticky top-0 hidden h-dvh lg:block print:hidden">
-        <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} syntheticDemo={syntheticDemo} managementConsole={managementConsole} serverJobs={serverJobs} />
+        <Sidebar {...flags} />
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 print:hidden items-center justify-between border-b border-[var(--border)] bg-white/96 px-4 backdrop-blur-sm lg:hidden">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-white/5 bg-[var(--rail)] px-3 text-white lg:hidden print:hidden">
+          <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="grid size-11 place-items-center rounded-lg text-[var(--ink)] hover:bg-slate-100"
+              className="grid size-10 place-items-center rounded-xl text-white/90 hover:bg-white/10"
               aria-label="Open navigation"
               aria-expanded={mobileOpen}
             >
-              <Menu aria-hidden="true" size={23} />
+              <Menu aria-hidden="true" size={22} />
             </button>
-            <Link href="/" aria-label="FinGence overview" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
-              <Image src="/branding/FinGence_Logo_96.png" width={28} height={28} alt="" unoptimized className="size-7 shrink-0 rounded-md" />
-              FinGence
-            </Link>
+            <Brand compact />
           </div>
-          <span
-            className="grid size-9 place-items-center rounded-full bg-[var(--teal-soft)] text-sm font-semibold text-[var(--teal-dark)]"
-            aria-label={localFinancialConsumers ? "Local environment indicator, not account identity" : syntheticDemo ? "Synthetic demo, no sign-in" : "Demonstration avatar — authentication not implemented"}
-          >
-            {localFinancialConsumers ? "LC" : syntheticDemo ? "SD" : "AM"}
-          </span>
+          {current ? <span className="truncate rounded-full bg-white/[0.08] px-3 py-1 text-xs font-medium text-white/90">{current.label}</span> : null}
         </header>
 
-        <main className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
-          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
+        <main className="mx-auto min-h-dvh w-full max-w-[1480px] px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
+          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
           {children}
         </main>
       </div>
 
+      <BottomBar onMore={() => setMobileOpen(true)} syntheticDemo={syntheticDemo} />
+
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <button
             type="button"
-            className="absolute inset-0 bg-slate-950/45 backdrop-blur-[1px]"
+            className="absolute inset-0 bg-[#050816]/60 backdrop-blur-[2px]"
             onClick={() => setMobileOpen(false)}
             aria-label="Close navigation"
           />
-          <aside className="relative h-full w-[min(82vw,310px)] shadow-2xl">
+          <aside className="rise-in relative h-full w-[min(86vw,320px)] shadow-2xl">
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="absolute right-3 top-4 z-10 grid size-10 place-items-center rounded-lg text-slate-200 hover:bg-white/10 hover:text-white"
+              className="absolute right-3 top-5 z-10 grid size-10 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white"
               aria-label="Close navigation"
             >
               <X aria-hidden="true" size={21} />
             </button>
-            <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} syntheticDemo={syntheticDemo} managementConsole={managementConsole} serverJobs={serverJobs} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar {...flags} onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       ) : null}

@@ -13,18 +13,24 @@ export function PageHeader({
   title,
   description,
   actions,
+  eyebrow,
 }: {
   title: string;
   description: string;
   actions?: React.ReactNode;
+  eyebrow?: React.ReactNode;
 }) {
   return (
-    <header className="mb-5 flex flex-col gap-4 sm:mb-6 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h1 className="text-[27px] font-semibold leading-tight tracking-[-0.035em] text-[var(--ink)] sm:text-[30px]">
+    <header className="rise-in mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
+          <span aria-hidden="true" className="brand-gradient h-1 w-6 rounded-full" />
+          {eyebrow ?? "FinGence"}
+        </p>
+        <h1 className="text-[28px] font-semibold leading-[1.1] tracking-[-0.035em] text-[var(--ink)] sm:text-[34px]">
           {title}
         </h1>
-        <p className="mt-1 text-sm text-[var(--muted)] sm:text-[15px]">{description}</p>
+        <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-[var(--muted)]">{description}</p>
       </div>
       {actions ? <div className="min-w-0 max-w-full sm:w-auto sm:shrink-0">{actions}</div> : null}
     </header>
@@ -37,24 +43,26 @@ export function Panel({
   action,
   children,
   className = "",
+  id,
 }: {
   title?: string;
   eyebrow?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
+  id?: string;
 }) {
   return (
-    <section className={`panel-shadow min-w-0 rounded-xl border border-[var(--border)] bg-white ${className}`}>
+    <section id={id} className={`panel-shadow min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] ${className}`}>
       {title || action ? (
-        <div className="flex items-center justify-between gap-4 border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
+          <div className="min-w-0">
             {eyebrow ? (
-              <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--teal)]">
+              <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand)]">
                 {eyebrow}
               </p>
             ) : null}
-            {title ? <h2 className="text-[15px] font-semibold text-[var(--ink)] sm:text-base">{title}</h2> : null}
+            {title ? <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)] sm:text-base">{title}</h2> : null}
           </div>
           {action}
         </div>
@@ -82,7 +90,7 @@ export function MetricCard({
   const positive = trend >= 0;
   const TrendIcon = positive ? ArrowUpRight : ArrowDownRight;
   return (
-    <article className="panel-shadow min-w-0 rounded-xl border border-[var(--border)] bg-white p-4 sm:p-5">
+    <article className="panel-shadow min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[13px] font-medium text-[var(--muted-strong)]">{label}</p>
@@ -93,7 +101,7 @@ export function MetricCard({
         <span
           className={`grid size-10 shrink-0 place-items-center rounded-full border ${
             tone === "teal"
-              ? "border-teal-200 bg-[var(--teal-soft)] text-[var(--teal)]"
+              ? "border-[var(--brand-line)] bg-[var(--brand-soft)] text-[var(--brand)]"
               : "border-indigo-200 bg-indigo-50 text-[var(--indigo)]"
           }`}
         >
@@ -215,7 +223,7 @@ export function ConfidenceRing({ value, size = "md" }: { value: number; size?: "
       className={`grid shrink-0 place-items-center rounded-full font-semibold ${dimensions}`}
       style={{
         color: tone,
-        background: `radial-gradient(circle closest-side, white 81%, transparent 82%), conic-gradient(${tone} ${value}%, #e8edf2 0)`,
+        background: `radial-gradient(circle closest-side, var(--surface) 81%, transparent 82%), conic-gradient(${tone} ${value}%, var(--surface-sunken) 0)`,
       }}
       aria-label={`${value}% confidence`}
     >

@@ -34,7 +34,7 @@ export function describeQuery(q: ToolCall): string {
 
 function Sentence({ segments }: { segments: Segment[] }) {
     return <>{segments.map((s, i) => 'text' in s ? <span key={i}>{s.text}</span>
-        : <mark key={i} title={`${s.label} · ${s.sources.length} source record${s.sources.length === 1 ? '' : 's'}`} className="rounded bg-[var(--teal-soft)] px-1 font-semibold tabular-nums text-[var(--text)]">{s.value}</mark>)} </>;
+        : <mark key={i} title={`${s.label} · ${s.sources.length} source record${s.sources.length === 1 ? '' : 's'}`} className="rounded bg-[var(--teal-soft)] px-1 font-semibold tabular-nums text-[var(--brand-ink)]">{s.value}</mark>)} </>;
 }
 
 /** One model-assisted answer. Anything but an accepted answer shows why, and the caller shows the rule-based answer. */

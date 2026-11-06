@@ -1,11 +1,11 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { FileSearch, LoaderCircle } from 'lucide-react';
+import { ArrowRight, FileSearch, FileText, LoaderCircle, ZoomIn, ZoomOut } from 'lucide-react';
 import { Panel } from '@/components/ui';
 import type { DocumentInput, ProcessedDocument, ProcessingContext } from '@/lib/demo/pipeline';
 import type { PageCoords } from '@/lib/interpretation/extract';
 import type { CellBox, RowGeometry } from '@/lib/interpretation/positioned';
-import { button, money } from './shared';
+import { chip, money } from './shared';
 
 /**
  * Side by side: the document as supplied (left) and what FinGence read from it (right). Each verified record points to
@@ -44,6 +44,9 @@ function recordRows(c: ProcessingContext, d: ProcessedDocument): Row[] {
 export function DocumentEvidence({ context, inputs }: { context: ProcessingContext; inputs: DocumentInput[] }) {
     const docs = context.documents.filter(d => d.reading);
     const [index, setIndex] = useState(0), [active, setActive] = useState<number | null>(null);
+    // On a phone the document and the records each get the full width, one at a time; a drawn page starts zoomed in.
+    const [view, setView] = useState<'document' | 'records'>('document');
+    const [zoom, setZoom] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 640px)').matches ? 2 : 1);
     const doc = docs[Math.min(index, docs.length - 1)];
     const [file, setFile] = useState<{ sha: string; input: DocumentInput } | null>(null);
     const fileSha = doc?.source?.kind === 'WORKSHEET' ? doc.source.workbookSha256 : doc?.source ? doc.source.fileSha256 : doc?.sha256;
@@ -63,39 +66,61 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
     const extracted = doc.source && doc.source.kind !== 'WORKSHEET' ? doc.source : null;
     const currency = context.scope?.currency ?? doc.currency ?? '';
     const shown = [...new Set(r.columns.map(c => fieldKey(c.field)).filter(Boolean))] as string[];
+    const drawn = !!(extracted?.geometry && extracted.coords && original);
 
-    return <Panel title="What FinGence read" eyebrow="Document and reading, side by side">
-        <div className="space-y-3 p-4 sm:p-5">
-            <div role="tablist" aria-label="Documents" className="flex flex-wrap gap-2">
-                {docs.map((d, i) => <button key={d.sha256} type="button" role="tab" aria-selected={d === doc} className={`${button} min-h-9 px-3 py-1 text-xs ${d === doc ? 'border-[var(--teal)] bg-[var(--teal-soft)]' : ''}`} onClick={() => { setIndex(i); setActive(null); }}>{d.role ? ROLE[d.role] : 'Not identified'} · <span className="max-w-[14rem] truncate">{d.name}</span></button>)}
+    const selected = active === null ? null : rows.find(x => x.line === active) ?? null;
+    const pick = (line: number) => { setActive(line); setView('document'); };
+
+    return <Panel id="document-evidence" title="What FinGence read" eyebrow="Document and reading, side by side">
+        <div className="space-y-4 p-4 sm:p-5">
+            <div role="tablist" aria-label="Documents" className="thin-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+                {docs.map((d, i) => <button key={d.sha256} type="button" role="tab" aria-selected={d === doc} className={`${chip(d === doc)} shrink-0`} onClick={() => { setIndex(i); setActive(null); }}><FileText aria-hidden="true" size={14} />{d.role ? ROLE[d.role] : 'Not identified'} · <span className="max-w-[11rem] truncate font-medium">{d.name}</span></button>)}
             </div>
-            <p className="text-sm text-[var(--muted-strong)]">
+            <p className="text-sm leading-relaxed text-[var(--muted-strong)]">
                 {r.records.length ? <>FinGence read <strong>{r.records.length} records</strong> from {r.rows.length} lines of this document{r.aiLines.length ? <>; the AI model was shown <strong>{r.aiLines.length} lines</strong> (headings and samples) to propose the layout, and the code then read and checked every line</> : <>, by its exact column names (no AI)</>}. Lines nothing was read from (headings, totals, page text) stay dim.</>
                     : <>No records were taken from this document: {doc.reason}</>}
             </p>
             <div className="flex flex-wrap items-center gap-1.5 text-xs" aria-label="Legend">
-                {shown.map(f => <span key={f} className={`rounded px-1.5 py-0.5 ${FIELD[f].color}`}>{FIELD[f].label}</span>)}
-                {r.aiLines.length ? <span className="rounded border border-dashed border-indigo-400 px-1.5 py-0.5 text-indigo-900">AI was shown this line</span> : null}
-                {disputes.size ? <span className="rounded px-1.5 py-0.5 outline outline-2 -outline-offset-2 outline-red-500">Two OCR passes disagreed</span> : null}
+                {shown.map(f => <span key={f} className={`rounded-md px-1.5 py-0.5 font-medium ${FIELD[f].color}`}>{FIELD[f].label}</span>)}
+                {r.aiLines.length ? <span className="rounded-md border border-dashed border-indigo-400 px-1.5 py-0.5 text-indigo-900">AI was shown this line</span> : null}
+                {disputes.size ? <span className="rounded-md px-1.5 py-0.5 outline outline-2 -outline-offset-2 outline-red-500">Two OCR passes disagreed</span> : null}
             </div>
-            <div className="grid min-w-0 gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-                <section aria-label="Document as supplied" className="min-w-0 rounded-lg border border-[var(--border)]">
-                    <h3 className="border-b border-[var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Document as supplied</h3>
-                    <div className="thin-scrollbar max-h-[45vh] lg:max-h-[70vh] overflow-auto">
-                        {extracted?.geometry && extracted.coords && original
-                            ? <Pages input={original} coords={extracted.coords} geometry={extracted.geometry} read={read} ai={ai} active={active} setActive={setActive} cellField={cellField} disputes={disputes} />
+            <div role="group" aria-label="Show" className="grid grid-cols-2 gap-1 rounded-xl bg-[var(--surface-sunken)] p-1 lg:hidden">
+                {(['document', 'records'] as const).map(v => <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)} className={`min-h-10 rounded-lg text-sm font-semibold transition-colors ${view === v ? 'bg-[var(--surface)] text-[var(--ink)] shadow-sm' : 'text-[var(--muted)]'}`}>{v === 'document' ? 'Document' : `Records · ${rows.length}`}</button>)}
+            </div>
+            {selected ? <div className="flex min-w-0 items-start gap-3 rounded-xl border border-[var(--brand-line)] bg-[var(--brand-soft)] px-3 py-2 text-sm lg:hidden">
+                <span className="min-w-0 flex-1"><span className="block text-xs text-[var(--muted)]">Selected · line {selected.line + 1} · {selected.id}</span><span className="block break-words font-medium">{selected.date} · {selected.text}</span></span>
+                <span className="shrink-0 font-semibold tabular-nums">{money(currency, selected.signed)}</span>
+            </div> : null}
+            <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                <section aria-label="Document as supplied" className={`min-w-0 overflow-hidden rounded-xl border border-[var(--border)] ${view === 'records' ? 'hidden lg:block' : ''}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5">
+                        <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Document as supplied</h3>
+                        {drawn ? <div role="group" aria-label="Zoom" className="flex items-center gap-1">
+                            <button type="button" className={zoomButton} aria-label="Zoom out" disabled={zoom <= ZOOMS[0]} onClick={() => setZoom(ZOOMS[Math.max(0, ZOOMS.indexOf(zoom) - 1)])}><ZoomOut aria-hidden="true" size={15} /></button>
+                            <button type="button" className={`${zoomButton} w-14 text-xs font-semibold`} aria-label="Fit page width" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
+                            <button type="button" className={zoomButton} aria-label="Zoom in" disabled={zoom >= ZOOMS[ZOOMS.length - 1]} onClick={() => setZoom(ZOOMS[Math.min(ZOOMS.length - 1, ZOOMS.indexOf(zoom) + 1)])}><ZoomIn aria-hidden="true" size={15} /></button>
+                        </div> : null}
+                    </div>
+                    <div className="thin-scrollbar max-h-[68vh] overflow-auto lg:max-h-[72vh]">
+                        {drawn
+                            ? <Pages input={original!} coords={extracted!.coords!} geometry={extracted!.geometry!} read={read} ai={ai} active={active} setActive={setActive} cellField={cellField} disputes={disputes} zoom={zoom} />
                             : <Grid rows={r.rows} read={read} ai={ai} active={active} setActive={setActive} cellField={cellField} disputes={disputes} />}
                     </div>
                     {extracted && !extracted.geometry ? <p className="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)]">This processing kept no word positions; showing the lines as read.</p> : null}
+                    {drawn ? <p className="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)] lg:hidden">Drag to move around the page. Tap a highlighted line to see its record.</p> : null}
                 </section>
-                <section aria-label="What FinGence read" className="min-w-0 rounded-lg border border-[var(--border)]">
-                    <h3 className="border-b border-[var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Verified records</h3>
-                    <ol className="thin-scrollbar max-h-[45vh] lg:max-h-[70vh] divide-y divide-[var(--border)] overflow-auto text-sm">
-                        {rows.map(x => <li key={x.id} id={`rec-${doc.sha256.slice(0, 8)}-${x.line}`} tabIndex={0} onMouseEnter={() => setActive(x.line)} onFocus={() => setActive(x.line)} onClick={() => setActive(x.line)}
-                            className={`grid cursor-default grid-cols-[3.2rem_minmax(0,1fr)_auto] gap-2 px-3 py-2 ${active === x.line ? 'bg-[var(--teal-soft)]' : ''}`}>
-                            <span className="text-xs text-[var(--muted)]">line {x.line + 1}</span>
-                            <span className="min-w-0"><span className={`mr-1 rounded px-1 text-xs ${FIELD.date.color}`}>{x.date}</span><span className="break-words">{x.text}</span>{x.reference ? <span className={`ml-1 rounded px-1 text-xs ${FIELD.reference.color}`}>{x.reference}</span> : null}<span className="block text-[11px] text-[var(--muted)]">{x.id}</span></span>
-                            <span className={`self-start rounded px-1 text-right text-xs tabular-nums ${FIELD.amount.color}`}>{money(currency, x.signed)}</span>
+                <section aria-label="What FinGence read" className={`min-w-0 overflow-hidden rounded-xl border border-[var(--border)] ${view === 'document' ? 'hidden lg:block' : ''}`}>
+                    <h3 className="border-b border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Verified records</h3>
+                    <ol className="thin-scrollbar max-h-[68vh] divide-y divide-[var(--border)] overflow-auto text-sm lg:max-h-[72vh]">
+                        {rows.map(x => <li key={x.id} id={`rec-${doc.sha256.slice(0, 8)}-${x.line}`} tabIndex={0} onMouseEnter={() => setActive(x.line)} onFocus={() => setActive(x.line)} onClick={() => pick(x.line)} onKeyDown={e => { if (e.key === 'Enter') pick(x.line); }}
+                            className={`cursor-pointer px-3 py-2.5 transition-colors ${active === x.line ? 'bg-[var(--brand-soft)] shadow-[inset_3px_0_0_var(--brand)]' : 'hover:bg-[var(--surface-subtle)]'}`}>
+                            <div className="flex items-center justify-between gap-2">
+                                <span className={`rounded-md px-1.5 py-0.5 text-xs font-medium ${FIELD.date.color}`}>{x.date}</span>
+                                <span className={`rounded-md px-1.5 py-0.5 text-xs font-semibold tabular-nums ${FIELD.amount.color}`}>{money(currency, x.signed)}</span>
+                            </div>
+                            <p className="mt-1 break-words leading-snug">{x.text}</p>
+                            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-[var(--muted)]">{x.reference ? <span className={`rounded px-1 ${FIELD.reference.color}`}>{x.reference}</span> : null}<span className="break-all">{x.id}</span><span>· line {x.line + 1}</span></p>
                         </li>)}
                         {!rows.length ? <li className="px-3 py-3 text-[var(--muted)]">No verified records.</li> : null}
                     </ol>
@@ -104,6 +129,9 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
         </div>
     </Panel>;
 }
+
+const ZOOMS = [1, 1.5, 2, 2.5, 3];
+const zoomButton = 'grid size-8 place-items-center rounded-lg text-[var(--muted-strong)] hover:bg-[var(--surface)] disabled:opacity-40';
 
 type Shared = { read: Set<number>; active: number | null; setActive: (line: number | null) => void; cellField: Map<number, string | null>; disputes: Set<string> };
 
@@ -116,7 +144,7 @@ function Grid({ rows, read, ai, active, setActive, cellField, disputes }: Shared
             const used = read.has(line);
             return <tr key={line} ref={active === line ? ref : undefined} onMouseEnter={() => used && setActive(line)} onClick={() => used && setActive(line)}
                 className={`border-b border-[var(--border)] align-top ${active === line ? 'bg-[var(--teal-soft)]' : ''} ${used ? '' : 'text-[var(--muted)] opacity-60'} ${ai.has(line) ? 'outline outline-1 -outline-offset-1 outline-dashed outline-indigo-400' : ''}`}>
-                <td className="w-9 select-none px-1.5 py-1 text-right text-[10px] text-[var(--muted)]">{line + 1}</td>
+                <td className="sticky left-0 w-9 select-none bg-[var(--surface-subtle)] px-1.5 py-1 text-right text-[10px] text-[var(--muted)]">{line + 1}</td>
                 {cells.map((c, k) => { const f = used ? cellField.get(k) : null; return <td key={k} className={`whitespace-nowrap px-1.5 py-1 ${f ? FIELD[f].color : ''} ${disputes.has(`${line}:${k}`) ? 'outline outline-2 -outline-offset-2 outline-red-500' : ''}`}>{c}</td>; })}
             </tr>;
         })}
@@ -124,7 +152,7 @@ function Grid({ rows, read, ai, active, setActive, cellField, disputes }: Shared
 }
 
 /** A PDF or image: each page drawn as supplied, with a box over every cell read, coloured by its field. */
-function Pages({ input, coords, geometry, read, ai, active, setActive, cellField, disputes }: Shared & { input: DocumentInput; coords: PageCoords[]; geometry: RowGeometry[]; ai: Set<number> }) {
+function Pages({ input, coords, geometry, read, ai, active, setActive, cellField, disputes, zoom }: Shared & { input: DocumentInput; coords: PageCoords[]; geometry: RowGeometry[]; ai: Set<number>; zoom: number }) {
     const [pages, setPages] = useState<{ number: number; src: string; width: number; height: number }[] | null>(null), [failed, setFailed] = useState(false);
     useEffect(() => {
         let live = true;
@@ -154,12 +182,12 @@ function Pages({ input, coords, geometry, read, ai, active, setActive, cellField
         return () => { live = false; };
     }, [input, coords]);
     const ref = useRef<HTMLDivElement>(null);
-    useEffect(() => { ref.current?.scrollIntoView({ block: 'nearest' }); }, [active]);
+    useEffect(() => { ref.current?.scrollIntoView({ block: 'nearest', inline: 'center' }); }, [active, zoom]);
     if (failed) return <p className="p-3 text-sm text-[var(--muted)]">The document could not be drawn in this browser.</p>;
     if (!pages) return <p className="flex items-center gap-2 p-3 text-sm text-[var(--muted)]"><LoaderCircle aria-hidden="true" className="animate-spin" size={14} />Drawing the document…</p>;
     const pct = (v: number, of: number) => `${(v / of) * 100}%`;
-    return <div className="space-y-2 bg-slate-100 p-2">
-        {pages.map(p => <div key={p.number} className="relative mx-auto w-full bg-white shadow-sm">
+    return <div className="space-y-3 bg-[var(--surface-sunken)] p-2 sm:p-3" style={{ width: `${zoom * 100}%` }}>
+        {pages.map(p => <div key={p.number} className="relative mx-auto w-full bg-white shadow-md ring-1 ring-black/5">
             {/* eslint-disable-next-line @next/next/no-img-element -- a local data URL of the user's own page, drawn in this browser */}
             <img src={p.src} alt={`Page ${p.number} of ${input.name}`} className="block w-full" />
             {geometry.map((g, line) => {
@@ -191,5 +219,9 @@ export function DocumentEvidenceEntry({ context, inputs }: { context: Processing
     const [open, setOpen] = useState(false);
     if (!context.documents.some(d => d.reading)) return null;
     return open ? <DocumentEvidence context={context} inputs={inputs} />
-        : <button type="button" className={button} onClick={() => setOpen(true)}><FileSearch aria-hidden="true" size={16} />Compare each document with what FinGence read</button>;
+        : <button type="button" onClick={() => setOpen(true)} className="group flex w-full items-center gap-4 rounded-2xl border border-[var(--brand-line)] bg-[var(--brand-soft)] p-4 text-left transition-colors hover:border-[var(--brand)] sm:p-5">
+            <span className="brand-gradient grid size-11 shrink-0 place-items-center rounded-xl text-white shadow-[0_8px_20px_-8px_rgb(79_70_229/0.7)]"><FileSearch aria-hidden="true" size={20} /></span>
+            <span className="min-w-0 flex-1"><span className="block font-semibold text-[var(--ink)]">Compare each document with what FinGence read</span><span className="block text-sm text-[var(--muted-strong)]">See every page as supplied next to the verified records, with each value it read highlighted.</span></span>
+            <ArrowRight aria-hidden="true" size={18} className="shrink-0 text-[var(--brand)] transition-transform group-hover:translate-x-0.5" />
+        </button>;
 }

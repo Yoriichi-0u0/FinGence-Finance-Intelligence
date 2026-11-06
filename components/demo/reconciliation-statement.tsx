@@ -14,7 +14,7 @@ function Items({ items, currency }: { items: StatementItem[]; currency: string }
 
 /** Bank-side and ledger-side reconciling items that take both movements to one adjusted figure; a proposal, never a posting. */
 export function ReconciliationStatementPanel({ statement: s }: { statement: ReconciliationStatement }) {
-    const side = (title: string, movement: string, items: StatementItem[], adjusted: string) => <section className="min-w-0 rounded-lg border border-[var(--border)] p-3">
+    const side = (title: string, movement: string, items: StatementItem[], adjusted: string) => <section className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
         <h3 className="text-sm font-semibold">{title}</h3>
         <div className="mt-1 flex justify-between gap-3 text-sm"><span>Movement for {s.period}</span><span className="tabular-nums">{money(s.currency, movement)}</span></div>
         <Items items={items} currency={s.currency} />
@@ -31,7 +31,7 @@ export function ReconciliationStatementPanel({ statement: s }: { statement: Reco
                 {side('Ledger side: corrections to the books (prepared, not posted)', s.ledger.movement, s.ledger.items, s.ledger.adjusted)}
             </div>
             {s.other.length ? <section><h3 className="text-sm font-semibold">{s.other.some(i => i.category === 'UNEXPLAINED') ? 'Unexplained and no-amount items' : 'Items with no amount effect'}</h3><Items items={s.other} currency={s.currency} /></section> : null}
-            <ul className="space-y-1 text-xs">{s.checks.map(k => <li key={k.id} className="flex gap-2"><span aria-hidden="true" className={k.passed ? 'text-[var(--green)]' : 'text-amber-700'}>{k.passed ? '✓' : '!'}</span><span><strong>{k.label}</strong> <span className="sr-only">{k.passed ? 'passed' : 'not passed'}</span>· {k.detail}</span></li>)}</ul>
+            <ul className="space-y-1 text-xs">{s.checks.map(k => <li key={k.id} className="flex gap-2"><span aria-hidden="true" className={k.passed ? 'text-[var(--good)]' : 'text-[var(--warn)]'}>{k.passed ? '✓' : '!'}</span><span><strong>{k.label}</strong> <span className="sr-only">{k.passed ? 'passed' : 'not passed'}</span>· {k.detail}</span></li>)}</ul>
             <p className="text-xs text-[var(--muted)]">Movement basis: the documents give the period&apos;s cash movements, not opening and closing balances. Every item is classified by a stated rule and the matcher&apos;s outcomes stay as recorded. FinGence prepares the correcting entries automatically; they are not posted to any accounting system.</p>
         </div>
     </Panel>;
