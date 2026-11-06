@@ -175,6 +175,28 @@ describe('two OCR readings that disagree: the arithmetic may choose, but only on
         expect(v.decision).toBe('QUARANTINED');
         expect(v.checks.find(k => k.id === 'anchor')).toMatchObject({ passed: false, detail: expect.stringMatching(/^stated money in .* contradicts computed/) });
     });
+    it('a stated total follows its label, not the column its figure happens to be printed under', async () => {
+        const { verifyProposal } = await import('../../lib/interpretation/gates');
+        const { readTable } = await import('../../lib/interpretation/evidence');
+        const read = await extractDocument(BANK_PDF, file(DIR, BANK_PDF).bytes, 'x') as { bytes: Uint8Array };
+        const t = readTable(read.bytes)!, header = CORRECT[BANK_PDF].headerLine, width = t.rows[header].length;
+        const { moneyIn, moneyOut } = CORRECT[BANK_PDF].columns;
+        // Print each labelled total as a full-width line with its figure under the OTHER side's column (as a printed
+        // footer of a credit-first statement does): the label decides, so the totals still confirm the amounts.
+        const moved = { ...t, rows: t.rows.map(r => {
+            const label = r.join(' ');
+            if (!/^Total (withdrawals|deposits)/.test(label)) return [...r];
+            const figure = r.find(v => /\d/.test(v))!, row = Array<string>(width).fill('');
+            row[0] = r[0]; row[/withdrawals/.test(label) ? moneyIn! : moneyOut!] = figure;
+            return row;
+        }) };
+        const v = verifyProposal(moved, wire(CORRECT[BANK_PDF]), { extracted: 'PDF_TEXT' });
+        expect(v.decision).toBe('AUTO_ACCEPTED');
+        expect(v.checks.find(k => k.id === 'anchor')!.detail).toMatch(/^stated totals equal money in/);
+        // A bare "Total" names no side, so its column still binds it: under the wrong column it contradicts.
+        const bare = { ...moved, rows: moved.rows.map(r => /^Total (withdrawals|deposits)/.test(r[0] ?? '') ? ['Total', ...r.slice(1)] : r) };
+        expect(verifyProposal(bare, wire(CORRECT[BANK_PDF]), { extracted: 'PDF_TEXT' }).checks.find(k => k.id === 'anchor')).toMatchObject({ passed: false });
+    });
     it('without stated totals, the first amount is confirmed only by the stated opening balance', async () => {
         const { verifyProposal } = await import('../../lib/interpretation/gates');
         const { readTable } = await import('../../lib/interpretation/evidence');

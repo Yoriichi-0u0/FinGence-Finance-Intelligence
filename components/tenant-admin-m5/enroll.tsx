@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { CircleCheck, Eye, EyeOff, KeyRound } from "lucide-react";
 import { PageHeader, Panel } from "@/components/ui";
 
-const field = "mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm";
+const field = "mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
 const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-800 px-4 text-sm font-semibold text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50";
 const messages: Record<number, string> = {
   409: "This enrollment code cannot be used. It may have expired, been used, revoked or replaced, or it was issued for a different email address. Ask your Admin for a new code.",
@@ -62,7 +62,7 @@ export default function EnrollmentForm() {
             <label className="text-sm font-medium">Enrollment code
               <span className="mt-1 flex gap-2">
                 <input className={field.replace("mt-1 ", "")} type={showCode ? "text" : "password"} autoComplete="off" spellCheck={false} value={code} onChange={e => setCode(e.target.value)} aria-describedby="code-help" />
-                <button type="button" className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--border-strong)] bg-white" onClick={() => setShowCode(v => !v)} aria-label={showCode ? "Hide enrollment code" : "Show enrollment code"}>{showCode ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}</button>
+                <button type="button" className="grid min-h-11 min-w-11 place-items-center rounded-lg border border-[var(--border-strong)] bg-[var(--surface)]" onClick={() => setShowCode(v => !v)} aria-label={showCode ? "Hide enrollment code" : "Show enrollment code"}>{showCode ? <EyeOff aria-hidden="true" size={18} /> : <Eye aria-hidden="true" size={18} />}</button>
               </span>
             </label>
             <p id="code-help" className="-mt-2 text-xs text-[var(--muted)]">{code ? "Code loaded from your link and removed from the address bar." : "Open the link your Admin sent, or paste the code."}</p>

@@ -13,9 +13,9 @@ import type { PocSource } from '@/lib/server/poc-anomalies/service';
 const auth = '/api/ai-ingestion/m2', api = auth + '/finance-questions';
 const scopeKey = (p: M2ClientPrincipal) => JSON.stringify([principalScope(p), p.role, p.membershipVersion]);
 const params = (q: PocSelection) => new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])).toString();
-const field = 'mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm';
-const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50';
-const chip = 'min-h-11 rounded-full border border-[var(--border-strong)] bg-white px-4 py-2 text-left text-sm hover:border-teal-600 hover:bg-teal-50 disabled:opacity-50';
+const field = 'mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm';
+const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50';
+const chip = 'min-h-11 rounded-full border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 text-left text-sm hover:border-teal-600 hover:bg-teal-50 disabled:opacity-50';
 const display = (f: Fact) => f.unit === 'MONEY' ? `${f.currency} ${groupDigits(f.value)}` : f.unit === 'PERCENT' && /\d/.test(f.value) ? `${f.value}%` : f.value;
 const tone = { ANSWERED: 'border-teal-200 bg-teal-50 text-teal-900', UNAVAILABLE: 'border-amber-200 bg-amber-50 text-amber-950', REFUSED: 'border-slate-300 bg-slate-100 text-slate-900' } as const;
 const statusLabel = { ANSWERED: 'Answered from source', UNAVAILABLE: 'Unavailable', REFUSED: 'Refused' } as const;
@@ -156,7 +156,7 @@ export default function FinanceQuestionsWorkspace() {
 
 function AnswerCard({ answer: a }: { answer: QaAnswer }) {
     const s = a.selection;
-    return <article className="panel-shadow min-w-0 rounded-xl border border-[var(--border)] bg-white">
+    return <article className="panel-shadow min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)]">
         <header className="flex min-w-0 flex-wrap items-start justify-between gap-3 border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
             <p className="flex min-w-0 items-start gap-2 text-sm font-semibold"><MessageSquareText aria-hidden="true" size={17} className="mt-0.5 shrink-0 text-[var(--teal)]" /><span className="min-w-0 break-words">{a.question}</span></p>
             <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${tone[a.status]}`}>{statusLabel[a.status]}{a.code ? ` · ${a.code.replaceAll('_', ' ').toLowerCase()}` : ''}</span>

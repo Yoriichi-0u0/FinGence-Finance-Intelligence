@@ -2,7 +2,7 @@ import { Panel } from "@/components/ui";
 import { CANONICAL_FIELDS, type CanonicalField, type ColumnMapping, type DatasetProfile, type IngestionOptions } from "@/lib/ingestion/models";
 import { columnExamples, FIELD_LABELS, mappingProblem } from "./presentation";
 
-const inputStyle = "mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm";
+const inputStyle = "mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
 const amountLabels = {
   debit_credit: "Separate Debit and Credit columns",
   signed_amount: "One amount column with positive/negative signs",

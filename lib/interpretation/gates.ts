@@ -29,9 +29,9 @@ const ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** Headings that name a record identifier (not a reference or cheque number, which are separate fields). */
 const ID_HEADING = /^\s*(?:(?:txn|transaction|trans|entry|voucher|journal|jv|record|line|posting)(?:\s*(?:id|no\.?|number|#))?|id|id transaksi|no\.?\s*(?:baucar|rekod|transaksi|kemasukan))\s*$/i;
 const ACCOUNT_HEADING = /^\s*(account|acct|akaun|gl account|account code|account no\.?|kod akaun)\b/i;
-const TOTAL_LINE = /\b(totals?|jumlah)\b/i;
-const OPENING_LINE = /\b(opening|brought forward|b\/f|baki awal|baki dibawa)\b/i;
-const BALANCE_LINE = /\b(opening|closing|brought forward|carried forward|b\/f|c\/f|baki awal|baki akhir|baki dibawa)\b/i;
+const TOTAL_LINE = /\b(totals?|jumlah|summe)\b/i;
+const OPENING_LINE = /\b(opening|brought forward|b\/f|baki awal|baki dibawa|saldo awal|anfangssaldo|alter saldo)\b/i;
+const BALANCE_LINE = /\b(opening|closing|brought forward|carried forward|b\/f|c\/f|baki awal|baki akhir|baki dibawa|saldo awal|saldo akhir|anfangssaldo|endsaldo|alter saldo|neuer saldo)\b/i;
 const csvCell = (v: string) => /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 const csv = (header: string[], rows: Record<string, string>[]) => [header.join(','), ...rows.map(r => header.map(h => csvCell(r[h] ?? '')).join(','))].join('\n') + '\n';
 export const CANONICAL_BANK_HEADER = ['BankTransactionID', 'BusinessID', 'BusinessName', 'AccountNumber', 'Currency', 'ValueDate', 'StatementMonth', 'BankReference', 'BankDescription', 'BankDirection', 'BankAmountMYR', 'SignedCashMovementMYR', 'Counterparty', 'SourceTransactionID'];
@@ -52,8 +52,8 @@ function swappedReading(literal: string, format: DateFormat): string | null {
 /** The side a stated total names, read for whose books these are: a bank's debit is money out, a cash ledger's money in. */
 function totalSide(label: string, ledger: boolean): 'IN' | 'OUT' | null {
     const t = label.toLowerCase();
-    const inWord = /\b(deposits?|receipts?|money in|inflows?|masuk|terimaan)\b/.test(t), outWord = /\b(withdrawals?|payments?|money out|outflows?|keluar|pengeluaran)\b/.test(t);
-    const debit = /\b(debits?|dr)\b/.test(t), credit = /\b(credits?|kredit|cr)\b/.test(t);
+    const inWord = /\b(deposits?|receipts?|money in|inflows?|masuk|terimaan|setoran|gutschriften)\b/.test(t), outWord = /\b(withdrawals?|payments?|money out|outflows?|keluar|pengeluaran|penarikan|lastschriften)\b/.test(t);
+    const debit = /\b(debits?|debet|dr|soll)\b/.test(t), credit = /\b(credits?|kredit|cr|haben)\b/.test(t);
     const isIn = inWord || (ledger ? debit : credit), isOut = outWord || (ledger ? credit : debit);
     return isIn === isOut ? null : isIn ? 'IN' : 'OUT';
 }
@@ -215,16 +215,18 @@ export function verifyProposal(table: Table, raw: unknown, options: GateOptions 
         if (!gate('date-sequence', 'Transactions are in date order', back < 0, back < 0 ? `${dates.length} dates in order` : `line ${body[back].line + 1} is dated before the line above it`)) return result('The extracted transactions are not in date order.');
         const inflow = signed.filter(v => v > 0n).reduce((a, b) => a + b, 0n), outflow = signed.filter(v => v < 0n).reduce((a, b) => a - b, 0n);
         const totalLines = excluded.filter(({ row }) => TOTAL_LINE.test(row.join(' ')) && !BALANCE_LINE.test(row.join(' ')));
-        // Each stated total is bound to the side it states: by the mapped money column it sits under, or by its label
-        // read for this document's role (a bank's debit is money out, a cash ledger's debit is money in). A total
-        // compared only with the side it names cannot be satisfied by swapped debits and credits.
+        // Each stated total is bound to the side it states: by its label read for this document's role (a bank's
+        // debit is money out, a cash ledger's debit is money in), or, when the label names no side ("Total"), by the
+        // mapped money column it sits under. The label decides when both are present: a printed footer's figure can
+        // land under any column ("Total withdrawals" under Credit when credit is printed first). A total compared only
+        // with the side it names cannot be satisfied by swapped debits and credits.
         const [inColumn, outColumn] = rep === 'SPLIT_IN_OUT' ? [c.moneyIn, c.moneyOut] : rep === 'DEBIT_CREDIT' ? [c.debit, c.credit] : [null, null];
         const stated = totalLines.flatMap(({ row }) => {
             const label = totalSide(row.filter(v => typeof parseAmount(v.trim(), numberFormat) !== 'bigint').join(' '), ledger);
             return row.flatMap((v, i) => {
                 const a = parseAmount(v.trim(), numberFormat);
                 if (typeof a !== 'bigint') return [];
-                const side = row.length === width && i === inColumn ? 'IN' as const : row.length === width && i === outColumn ? 'OUT' as const : label;
+                const side = label ?? (row.length === width && i === inColumn ? 'IN' as const : row.length === width && i === outColumn ? 'OUT' as const : null);
                 return [{ side, value: a < 0n ? -a : a }];
             });
         });

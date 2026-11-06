@@ -15,8 +15,8 @@ import {
   type CanonicalField, type ColumnMapping, type Dataset, type IngestionOptions, type IngestionResult, type LoadedFile, type ProcessedRow,
 } from "@/lib/ingestion";
 
-const buttonStyle = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-3 py-2 text-sm font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
-const inputStyle = "mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm";
+const buttonStyle = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-2 text-sm font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+const inputStyle = "mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
 type FileFailure = { filename: string; code: string; message: string };
 const samples = [["Load ledger CSV", "ledger.csv"], ["Load bank XLSX", "bank_statement.xlsx"], ["Load edge cases", "edge_cases.csv"]] as const;
 
@@ -248,14 +248,14 @@ export default function DataPage() {
       <h2 className="text-lg font-semibold">6. Combined records and downloads</h2>
       <p className="mt-1 text-sm text-[var(--muted-strong)]">Only current checked results are combined here. This session does not populate other FinGence pages.</p>
       {results.length ? <>
-        <ul className="mt-4 space-y-2" aria-label="Checked datasets">{results.map(completed => <li key={completed.dataset.id} className="rounded-lg border border-[var(--border)] bg-white p-3">
+        <ul className="mt-4 space-y-2" aria-label="Checked datasets">{results.map(completed => <li key={completed.dataset.id} className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-3">
           <button type="button" disabled={busy} onClick={() => prepare(completed.dataset.file, completed.dataset.sheet.index)} className="min-h-11 break-words text-left text-sm font-semibold text-[var(--teal-dark)] underline underline-offset-2">
             Review checked dataset: {completed.dataset.file.name} · {completed.dataset.sheet.name ?? "CSV"}
           </button><p className="text-xs text-[var(--muted-strong)]">Checked · {completed.summary.accepted} included ({completed.summary.warning} need attention) · {completed.summary.rejected} cannot include</p>
         </li>)}</ul>
         <QualityView summary={combined.summary} fileErrors={failures.length} />
         <CanonicalView records={combined.normalized} onInspect={inspect} />
-        <div className="mt-5 space-y-3 rounded-lg border border-[var(--border)] bg-white p-4" aria-label="Ingestion downloads">
+        <div className="mt-5 space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4" aria-label="Ingestion downloads">
           <h3 className="text-sm font-semibold">Download this session</h3>
           <p className="text-xs text-[var(--muted-strong)]">Included records: {combined.normalized.length} rows, including {combined.summary.warning} needing attention. Excluded-row problems can contain more than one issue per row. The full JSON report includes original evidence and excluded rows; it is a technical check report.</p>
           <div className="flex flex-wrap gap-2">
@@ -264,7 +264,7 @@ export default function DataPage() {
             <button type="button" onClick={() => download(evidenceJSON(results), "ingestion-evidence.json", "application/json")} className={buttonStyle}><Download size={16} aria-hidden="true" />Download full check report — JSON, technical</button>
           </div>
         </div>
-      </> : <p className="mt-4 rounded-lg border border-[var(--border)] bg-white p-5 text-sm text-[var(--muted-strong)]">Combined records will appear after you review and check a file. Only current checked results are included.</p>}
+      </> : <p className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5 text-sm text-[var(--muted-strong)]">Combined records will appear after you review and check a file. Only current checked results are included.</p>}
     </section>
     {results.length > 0 && <LiveAnalytics results={results} onInspect={inspect} />}
     {inspected && <RecordInspector row={inspected.row} result={inspected.result} onClose={closeInspector} />}

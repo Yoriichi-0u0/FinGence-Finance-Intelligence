@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { CirclePause, CirclePlay, LoaderCircle, RefreshCw } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
-import { button, primaryButton, Stat, Table, money, periodLabel } from '@/components/demo/shared';
+import { button, field, primaryButton, Stat, Table, money, periodLabel } from '@/components/demo/shared';
 import type { FlaggedItem, StageSummary } from '@/lib/processing/job-result';
 
 type Scope = { businessId: string; businessName: string; period: string; currency: string } | null;
@@ -16,7 +16,7 @@ const when = (iso: string | null) => iso ? new Date(iso).toLocaleString('en-GB',
 const seconds = (a: string | null, b: string | null) => a && b ? `${((Date.parse(b) - Date.parse(a)) / 1000).toFixed(1)} s` : '—';
 const KIND: Record<string, string> = { DOCUMENT: 'Document', RECONCILIATION_EXCEPTION: 'Reconciliation', ANOMALY_CANDIDATE: 'Anomaly', HISTORY: 'Bank history' };
 const STATUS: Record<string, string> = { COMPLETED: 'text-emerald-800 bg-emerald-50', RUNNING: 'text-sky-900 bg-sky-50', QUEUED: 'text-slate-700 bg-slate-100', FAILED: 'text-red-800 bg-red-50' };
-const badge = (status: string, label = status) => <span className={`rounded px-1.5 py-0.5 text-xs font-semibold ${STATUS[status] ?? 'text-amber-900 bg-amber-50'}`}>{label}</span>;
+const badge = (status: string, label = status) => <span className={`inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS[status] ?? 'text-amber-900 bg-amber-50'}`}>{label}</span>;
 const scopeText = (s: Scope) => s ? `${s.businessId} · ${periodLabel(s.period)} · ${s.currency}` : '—';
 
 /** Management (Technical): every server processing job, the items FinGence flagged, and the switch that pauses processing. */
@@ -51,30 +51,30 @@ export function ManagementConsole() {
     const p = data?.processing;
 
     return <>
-        <PageHeader title="Management" description="For your technical team: every server processing job, the items FinGence could not resolve, and the switch that pauses processing." actions={<button type="button" className={button} onClick={() => void load()}><RefreshCw aria-hidden="true" size={16} />Refresh</button>} />
-        <p role="note" className="mb-5 rounded-lg border border-amber-200 bg-[var(--amber-soft)] p-3 text-sm">FinGence processes every document on its own; nothing here waits for approval. Flagged items are what its rules could not settle, for you to investigate. This console has no sign-in yet and is only switched on locally (or where the owner opened it) until the workspace roles are turned on.</p>
-        {error ? <p role="alert" className="mb-5 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p> : null}
+        <PageHeader eyebrow="Technical team · Management" title="Management" description="For your technical team: every server processing job, the items FinGence could not resolve, and the switch that pauses processing." actions={<button type="button" className={button} onClick={() => void load()}><RefreshCw aria-hidden="true" size={16} />Refresh</button>} />
+        <p role="note" className="mb-6 rounded-2xl border border-[var(--warn-line)] bg-[var(--warn-soft)] px-4 py-3 text-sm leading-relaxed">FinGence processes every document on its own; nothing here waits for approval. Flagged items are what its rules could not settle, for you to investigate. This console has no sign-in yet and is only switched on locally (or where the owner opened it) until the workspace roles are turned on.</p>
+        {error ? <p role="alert" className="mb-5 rounded-2xl border border-[var(--bad-line)] bg-[var(--bad-soft)] px-4 py-3 text-sm text-[var(--bad-ink)]">{error}</p> : null}
         {data && p ? <div className="space-y-5">
             <Panel title="Processing" eyebrow={p.paused ? 'Paused' : 'Running'}>
                 <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                     <div className="space-y-2 text-sm">
-                        <p className="flex items-center gap-2 text-base font-semibold">{p.paused ? <CirclePause aria-hidden="true" className="text-amber-700" size={20} /> : <CirclePlay aria-hidden="true" className="text-[var(--green)]" size={20} />}{p.paused ? 'Processing is paused' : 'Processing is on'}</p>
+                        <p className="flex items-center gap-2.5 text-lg font-semibold tracking-[-0.01em]"><span aria-hidden="true" className={`size-2.5 rounded-full ${p.paused ? 'bg-[var(--warn)] shadow-[0_0_0_4px_var(--warn-soft)]' : 'bg-[var(--good)] shadow-[0_0_0_4px_var(--good-soft)]'}`} />{p.paused ? <CirclePause aria-hidden="true" className="text-[var(--warn)]" size={20} /> : <CirclePlay aria-hidden="true" className="text-[var(--good)]" size={20} />}{p.paused ? 'Processing is paused' : 'Processing is on'}</p>
                         <p className="text-[var(--muted-strong)]">{p.paused ? <>Since {when(p.changedAt)}. Reason shown to Finance users: <strong>{p.reason}</strong></> : p.changedAt ? `Last resumed ${when(p.changedAt)}.` : 'Never paused.'} New jobs are {p.paused ? 'refused' : 'accepted'}; a job already running finishes.</p>
                     </div>
                     {p.paused
                         ? <div className="flex items-start"><button type="button" className={primaryButton} disabled={busy} onClick={() => void setPaused(false)}>{busy ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <CirclePlay aria-hidden="true" size={16} />}Resume processing</button></div>
                         : <form className="flex flex-col gap-2 sm:flex-row" onSubmit={e => { e.preventDefault(); void setPaused(true); }}>
-                            <label className="min-w-0 flex-1 text-sm"><span className="sr-only">Reason for pausing</span><input value={reason} onChange={e => setReason(e.target.value)} maxLength={300} required placeholder="Reason (Finance users see it)" className="min-h-11 w-full rounded-lg border border-[var(--border-strong)] px-3" /></label>
+                            <label className="min-w-0 flex-1 text-sm"><span className="sr-only">Reason for pausing</span><input value={reason} onChange={e => setReason(e.target.value)} maxLength={300} required placeholder="Reason (Finance users see it)" className={field} /></label>
                             <button type="submit" className={button} disabled={busy || !reason.trim()}>{busy ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <CirclePause aria-hidden="true" size={16} />}Pause processing</button>
                         </form>}
                 </div>
                 {notice ? <p role="status" className="border-t border-[var(--border)] px-4 py-2 text-sm sm:px-5">{notice}</p> : null}
             </Panel>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <Stat label="Jobs" value={String(data.counts.jobs)} detail="All server processing jobs" />
-                <Stat label="Running now" value={String(data.counts.running)} />
-                <Stat label="Failed" value={String(data.counts.failed)} detail="Stopped before storing a result" />
-                <Stat label="Flagged items" value={String(data.flagged.length)} detail="Latest run of each processing" />
+                <Stat tone="brand" label="Jobs" value={String(data.counts.jobs)} detail="All server processing jobs" />
+                <Stat tone="brand" label="Running now" value={String(data.counts.running)} />
+                <Stat tone={data.counts.failed ? 'bad' : 'plain'} label="Failed" value={String(data.counts.failed)} detail="Stopped before storing a result" />
+                <Stat tone={data.flagged.length ? 'warn' : 'good'} label="Flagged items" value={String(data.flagged.length)} detail="Latest run of each processing" />
             </div>
             <Panel title="Flagged items" eyebrow="Needs investigation">
                 {data.flagged.length ? <Table caption="Flagged items" columns={['What', 'Kind', 'Amount', 'Business and period', 'Why', 'Job']} rows={data.flagged.map(f => [
@@ -83,21 +83,21 @@ export function ManagementConsole() {
                     f.signedAmount && f.currency ? money(f.currency, Number(f.signedAmount).toFixed(2)) : '—',
                     <span key="s" className="text-xs">{scopeText(f.scope)}{f.date ? ` · ${f.date}` : ''}</span>,
                     <span key="r" className="text-xs text-[var(--muted-strong)]">{f.reason}</span>,
-                    <button key="j" type="button" className="text-left text-xs font-semibold text-[var(--teal-dark)] underline" onClick={() => void open(f.jobId)}>{f.jobId.slice(0, 8)}</button>,
+                    <button key="j" type="button" className="text-left text-xs font-semibold text-[var(--brand-ink)] underline underline-offset-2" onClick={() => void open(f.jobId)}>{f.jobId.slice(0, 8)}</button>,
                 ])} /> : <p className="p-5 text-sm">Nothing is flagged: every reconciliation exception and anomaly in the latest runs was resolved by a stated rule.</p>}
             </Panel>
             <Panel title="Processing jobs" eyebrow={`${data.jobs.length} most recent`}>
                 {data.jobs.length ? <Table caption="Processing jobs" columns={['Job', 'Status', 'Started', 'Time', 'Documents', 'Business and period', 'Result']} rows={data.jobs.map(j => [
-                    <button key="i" type="button" className="text-left font-mono text-xs font-semibold text-[var(--teal-dark)] underline" onClick={() => void open(j.id)}>{j.id.slice(0, 8)}</button>,
-                    <span key="s" className="grid gap-1">{badge(j.status)}{j.status === 'RUNNING' && j.stage ? <span className="text-xs text-[var(--muted)]">after {j.stage.toLowerCase()}</span> : null}</span>,
+                    <button key="i" type="button" className="text-left font-mono text-xs font-semibold text-[var(--brand-ink)] underline underline-offset-2" onClick={() => void open(j.id)}>{j.id.slice(0, 8)}</button>,
+                    <span key="s" className="grid justify-items-start gap-1">{badge(j.status)}{j.status === 'RUNNING' && j.stage ? <span className="text-xs text-[var(--muted)]">after {j.stage.toLowerCase()}</span> : null}</span>,
                     <span key="c" className="text-xs">{when(j.createdAt)}</span>, seconds(j.startedAt, j.finishedAt), j.documents,
                     <span key="b" className="text-xs">{scopeText(j.scope)}</span>,
-                    <span key="r" className="text-xs">{j.error ? <span className="text-red-800">Failed: {j.error}</span> : j.summary ?? '—'}{j.outcome ? <span className="mt-0.5 block text-[var(--muted)]">{j.outcome}{j.flaggedCount ? ` · ${j.flaggedCount} flagged` : ''}</span> : null}</span>,
+                    <span key="r" className="text-xs">{j.error ? <span className="text-[var(--bad-ink)]">Failed: {j.error}</span> : j.summary ?? '—'}{j.outcome ? <span className="mt-0.5 block text-[var(--muted)]">{j.outcome}{j.flaggedCount ? ` · ${j.flaggedCount} flagged` : ''}</span> : null}</span>,
                 ])} /> : <p className="p-5 text-sm">No jobs yet. Process documents on the Data page.</p>}
             </Panel>
             {detail ? <div id="job-detail" className="scroll-mt-20"><Panel title={`Job ${detail.id}`} eyebrow={detail.status} action={<button type="button" className={button} onClick={() => setDetail(null)}>Close</button>}>
                 <div className="space-y-4 p-4 text-sm sm:p-5">
-                    <p className="text-[var(--muted-strong)]">Created {when(detail.createdAt)} · ran {seconds(detail.startedAt, detail.finishedAt)} · processing ID <code>{detail.processingId ?? '—'}</code> · ingestion run <code>{detail.ingestionRunId ?? '—'}</code>{detail.error ? <> · <span className="text-red-800">failed: {detail.error}</span></> : null}</p>
+                    <p className="text-[var(--muted-strong)]">Created {when(detail.createdAt)} · ran {seconds(detail.startedAt, detail.finishedAt)} · processing ID <code>{detail.processingId ?? '—'}</code> · ingestion run <code>{detail.ingestionRunId ?? '—'}</code>{detail.error ? <> · <span className="text-[var(--bad-ink)]">failed: {detail.error}</span></> : null}</p>
                     <div><h3 className="mb-1 font-semibold">Stages</h3>
                         <ol className="space-y-1">{detail.stages.map(s => <li key={s.id}><span className="mr-2">{badge(s.decision === 'AUTO_ACCEPTED' ? 'COMPLETED' : s.decision === 'QUARANTINED' ? 'QUARANTINED' : 'QUEUED', s.decision)}</span><strong>{s.title}.</strong> {s.summary}{s.failedChecks.length ? <ul className="ml-5 list-disc text-xs text-amber-900">{s.failedChecks.map(k => <li key={k.id}>{k.label}: {k.detail}</li>)}</ul> : null}</li>)}</ol>
                     </div>

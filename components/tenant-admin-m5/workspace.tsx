@@ -45,8 +45,8 @@ const time = (value: string) => new Date(value).toLocaleString(undefined, { date
 const membershipStatus = (m: AdministrationMember) => m.active ? "Active" : m.version === 1 ? "Pending activation" : "Inactive";
 const invitationStatus = (i: AdministrationInvitation) => i.state === "PENDING" ? (i.expired ? "Expired" : "Pending") : i.state === "ACCEPTED" ? "Accepted" : "Revoked";
 const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-800 px-4 text-sm font-semibold text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50";
-const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
-const field = "mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm";
+const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+const field = "mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
 
 export default function AdministrationWorkspace() {
   const fence = useRef(new M2ClientFence()), authenticating = useRef(false);
@@ -225,7 +225,7 @@ export default function AdministrationWorkspace() {
         </Panel>
       ) : (
         <>
-          <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex min-w-0 items-center gap-3">
               <span className="grid size-10 shrink-0 place-items-center rounded-full bg-[var(--teal-soft)] text-[var(--teal-dark)]"><ShieldCheck aria-hidden="true" size={20} /></span>
               <div className="min-w-0">
@@ -365,7 +365,7 @@ export default function AdministrationWorkspace() {
 
 function Tile({ label, value, tone }: { label: string; value: number; tone?: "amber" | "red" }) {
   return (
-    <div className="panel-shadow rounded-xl border border-[var(--border)] bg-white p-4">
+    <div className="panel-shadow rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
       <p className="text-xs font-medium text-[var(--muted)]">{label}</p>
       <p className={`mt-1 text-2xl font-semibold tracking-[-0.02em] ${tone === "amber" ? "text-[var(--amber)]" : tone === "red" ? "text-[var(--red)]" : "text-[var(--ink)]"}`}>{value}</p>
     </div>
@@ -393,7 +393,7 @@ function MemberRow({ member: m, self, busy, actions, layout }: { member: Adminis
   const identity = <><p className="flex min-w-0 items-center gap-2 font-medium"><span className="truncate" title={m.email}>{m.email}</span>{self && <span className="shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-600">You</span>}</p><p className="text-xs text-[var(--muted)]">Membership version {m.version}</p></>;
   const roleControl = (
     <div className="flex items-center gap-2">
-      <select aria-label={`Role for ${m.email}`} className="min-h-11 rounded-lg border border-[var(--border-strong)] bg-white px-2 text-sm" value={role} disabled={disabled} onChange={e => setRole(e.target.value as Role)}>
+      <select aria-label={`Role for ${m.email}`} className="min-h-11 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-2 text-sm" value={role} disabled={disabled} onChange={e => setRole(e.target.value as Role)}>
         {roles.map(r => <option key={r}>{r}</option>)}
       </select>
       {role !== m.role && <button className={primary} disabled={disabled} onClick={() => actions.role(m, role)}>Save</button>}
