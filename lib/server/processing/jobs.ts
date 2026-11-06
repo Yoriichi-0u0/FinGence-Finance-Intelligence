@@ -19,17 +19,34 @@ import { PROCESSING_ORGANIZATION, rpc, StoreError, type ProcessingStore } from '
  */
 export const MAX_JOB_DOCUMENTS = 8;
 /**
- * A hosted function accepts at most 4.5 MB per request, so there a job's documents must total about 3 MB (base64 adds a
- * third). A local server has no such limit: up to MAX_JOB_DOCUMENTS documents of at most 4 MB each.
+ * A hosted function accepts at most 4.5 MB per request, so there a job's documents, sent as raw bytes in one multipart
+ * form, must total about 4.3 MB. A local server has no such limit: up to MAX_JOB_DOCUMENTS documents of at most 4 MB each.
  */
 export const HOSTED_JOB_BODY_BYTES = 4_400_000;
-export const maxJobBodyBytes = (env: Readonly<Record<string, string | undefined>> = process.env) => env.VERCEL ? HOSTED_JOB_BODY_BYTES : 44_000_000;
-export const jobRequestSchema = z.strictObject({
-    documents: z.array(z.strictObject({
-        name: z.string().min(1).max(160), provenance: z.enum(['PUBLIC_SYNTHETIC_SAMPLE', 'USER_SUPPLIED']),
-        base64: z.string().min(1).max(Math.ceil(MAX_DOCUMENT_BYTES / 3) * 4).regex(/^[A-Za-z0-9+/]+={0,2}$/),
-    })).min(1).max(MAX_JOB_DOCUMENTS),
-});
+export const maxJobBodyBytes = (env: Readonly<Record<string, string | undefined>> = process.env) => env.VERCEL ? HOSTED_JOB_BODY_BYTES : 40_000_000;
+/** The form's `manifest` field: each document's name and provenance, in the order of its `document` file parts. */
+export const jobManifestSchema = z.array(z.strictObject({
+    name: z.string().min(1).max(160), provenance: z.enum(['PUBLIC_SYNTHETIC_SAMPLE', 'USER_SUPPLIED']),
+})).min(1).max(MAX_JOB_DOCUMENTS);
+type Refusal = { status: 400 | 413; code: string; issue?: string | null };
+
+/** The job's documents from a submitted form: a manifest plus exactly one non-empty file part per manifest entry. */
+export async function decodeJobForm(form: FormData): Promise<DocumentInput[] | Refusal> {
+    const raw = form.get('manifest');
+    let manifest: unknown;
+    try { manifest = typeof raw === 'string' ? JSON.parse(raw) : undefined; } catch { manifest = undefined; }
+    const parsed = jobManifestSchema.safeParse(manifest);
+    if (!parsed.success) return { status: 400, code: 'INVALID_JOB', issue: parsed.error.issues[0]?.path.join('.') ?? null };
+    const files = form.getAll('document');
+    if (files.length !== parsed.data.length || [...form.keys()].some(k => k !== 'manifest' && k !== 'document')) return { status: 400, code: 'INVALID_JOB', issue: 'document' };
+    const out: DocumentInput[] = [];
+    for (const [i, file] of files.entries()) {
+        if (typeof file === 'string') return { status: 400, code: 'INVALID_JOB', issue: `document.${i}` };
+        if (!file.size || file.size > MAX_DOCUMENT_BYTES) return { status: 413, code: 'DOCUMENT_TOO_LARGE' };
+        out.push({ name: parsed.data[i].name, provenance: parsed.data[i].provenance, bytes: new Uint8Array(await file.arrayBuffer()) });
+    }
+    return out;
+}
 export type JobStatus = 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED';
 export type ProcessingState = { paused: boolean; reason: string | null; changedAt: string | null };
 export type JobView = {
@@ -44,16 +61,6 @@ type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpre
 export const JOB_TIMEOUT_MS = 280_000;
 class JobTimeout extends Error {}
 const call = <T>(fn: string, args: Record<string, unknown>, deps: Deps) => rpc<T>(fn, args, deps.store, deps.transport);
-
-export function decodeDocuments(documents: z.infer<typeof jobRequestSchema>['documents']): DocumentInput[] | { error: string } {
-    const out: DocumentInput[] = [];
-    for (const d of documents) {
-        const bytes = Uint8Array.from(Buffer.from(d.base64, 'base64'));
-        if (!bytes.byteLength || bytes.byteLength > MAX_DOCUMENT_BYTES) return { error: 'DOCUMENT_TOO_LARGE' };
-        out.push({ name: d.name, provenance: d.provenance, bytes });
-    }
-    return out;
-}
 
 export const processingState = (deps: Deps = {}) => call<ProcessingState>('fingence_processing_state', { org: deps.organization ?? PROCESSING_ORGANIZATION }, deps);
 
