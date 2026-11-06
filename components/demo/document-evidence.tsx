@@ -27,6 +27,19 @@ const fieldKey = (f: string) => MONEY.has(f) ? 'amount' : FIELD[f] ? f : null;
 const ROLE: Record<string, string> = { BANK_STATEMENT: 'Bank statement', GENERAL_LEDGER: 'General ledger', BANK_HISTORY: 'Bank history' };
 type Row = { id: string; line: number; date: string; text: string; reference: string; signed: string };
 
+/**
+ * Brings a highlighted line or record into view inside its own pane only. The page itself never scrolls, so a
+ * selection made by hovering cannot move other lines under a still pointer and start a hover-scroll loop.
+ */
+function reveal(el: HTMLElement | null) {
+    const box = el?.closest<HTMLElement>('[data-scroll]');
+    if (!el || !box) return;
+    const e = el.getBoundingClientRect(), b = box.getBoundingClientRect();
+    if (!b.height) return;
+    if (e.top < b.top || e.bottom > b.bottom) box.scrollTop += e.top - b.top - Math.max(0, (b.height - e.height) / 2);
+    if (e.left < b.left || e.right > b.right) box.scrollLeft += e.left - b.left - Math.max(0, (b.width - e.width) / 2);
+}
+
 async function hex(bytes: Uint8Array) {
     const copy = new Uint8Array(bytes.byteLength); copy.set(bytes);
     return [...new Uint8Array(await crypto.subtle.digest('SHA-256', copy.buffer))].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -58,7 +71,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
     const original = file?.sha === fileSha ? file.input : null;
     const rows = doc ? recordRows(context, doc) : [];
     // Selecting a line on the document scrolls the record list to it (and the reverse, in the document panes).
-    useEffect(() => { if (active !== null && doc) document.getElementById(`rec-${doc.sha256.slice(0, 8)}-${active}`)?.scrollIntoView({ block: 'nearest' }); }, [active, doc]);
+    useEffect(() => { if (active !== null && doc) reveal(document.getElementById(`rec-${doc.sha256.slice(0, 8)}-${active}`)); }, [active, doc]);
     if (!doc?.reading) return null;
     const r = doc.reading, read = new Set(r.records.map(x => x.line)), ai = new Set(r.aiLines);
     const cellField = new Map(r.columns.map(c => [c.column, fieldKey(c.field)]));
@@ -88,9 +101,11 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
             <div role="group" aria-label="Show" className="grid grid-cols-2 gap-1 rounded-xl bg-[var(--surface-sunken)] p-1 lg:hidden">
                 {(['document', 'records'] as const).map(v => <button key={v} type="button" aria-pressed={view === v} onClick={() => setView(v)} className={`min-h-10 rounded-lg text-sm font-semibold transition-colors ${view === v ? 'bg-[var(--surface)] text-[var(--ink)] shadow-sm' : 'text-[var(--muted)]'}`}>{v === 'document' ? 'Document' : `Records · ${rows.length}`}</button>)}
             </div>
-            {selected ? <div className="flex min-w-0 items-start gap-3 rounded-xl border border-[var(--brand-line)] bg-[var(--brand-soft)] px-3 py-2 text-sm lg:hidden">
-                <span className="min-w-0 flex-1"><span className="block text-xs text-[var(--muted)]">Selected · line {selected.line + 1} · {selected.id}</span><span className="block break-words font-medium">{selected.date} · {selected.text}</span></span>
-                <span className="shrink-0 font-semibold tabular-nums">{money(currency, selected.signed)}</span>
+            {rows.length ? <div aria-live="polite" className={`flex h-[3.25rem] min-w-0 items-center gap-3 rounded-xl border px-3 text-sm lg:hidden ${selected ? 'border-[var(--brand-line)] bg-[var(--brand-soft)]' : 'border-dashed border-[var(--border-strong)] text-[var(--muted)]'}`}>
+                {selected ? <>
+                    <span className="min-w-0 flex-1"><span className="block truncate text-xs text-[var(--muted)]">Selected · line {selected.line + 1} · {selected.id}</span><span className="block truncate font-medium">{selected.date} · {selected.text}</span></span>
+                    <span className="shrink-0 font-semibold tabular-nums">{money(currency, selected.signed)}</span>
+                </> : <span className="text-xs">Tap a highlighted line or a record to see it here.</span>}
             </div> : null}
             <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
                 <section aria-label="Document as supplied" className={`min-w-0 overflow-hidden rounded-xl border border-[var(--border)] ${view === 'records' ? 'hidden lg:block' : ''}`}>
@@ -102,7 +117,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
                             <button type="button" className={zoomButton} aria-label="Zoom in" disabled={zoom >= ZOOMS[ZOOMS.length - 1]} onClick={() => setZoom(ZOOMS[Math.min(ZOOMS.length - 1, ZOOMS.indexOf(zoom) + 1)])}><ZoomIn aria-hidden="true" size={15} /></button>
                         </div> : null}
                     </div>
-                    <div className="thin-scrollbar max-h-[68vh] overflow-auto lg:max-h-[72vh]">
+                    <div data-scroll className="thin-scrollbar max-h-[68vh] overflow-auto lg:max-h-[72vh]">
                         {drawn
                             ? <Pages input={original!} coords={extracted!.coords!} geometry={extracted!.geometry!} read={read} ai={ai} active={active} setActive={setActive} cellField={cellField} disputes={disputes} zoom={zoom} />
                             : <Grid rows={r.rows} read={read} ai={ai} active={active} setActive={setActive} cellField={cellField} disputes={disputes} />}
@@ -112,7 +127,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
                 </section>
                 <section aria-label="What FinGence read" className={`min-w-0 overflow-hidden rounded-xl border border-[var(--border)] ${view === 'document' ? 'hidden lg:block' : ''}`}>
                     <h3 className="border-b border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Verified records</h3>
-                    <ol className="thin-scrollbar max-h-[68vh] divide-y divide-[var(--border)] overflow-auto text-sm lg:max-h-[72vh]">
+                    <ol data-scroll className="thin-scrollbar max-h-[68vh] divide-y divide-[var(--border)] overflow-auto text-sm lg:max-h-[72vh]">
                         {rows.map(x => <li key={x.id} id={`rec-${doc.sha256.slice(0, 8)}-${x.line}`} tabIndex={0} onMouseEnter={() => setActive(x.line)} onFocus={() => setActive(x.line)} onClick={() => pick(x.line)} onKeyDown={e => { if (e.key === 'Enter') pick(x.line); }}
                             className={`cursor-pointer px-3 py-2.5 transition-colors ${active === x.line ? 'bg-[var(--brand-soft)] shadow-[inset_3px_0_0_var(--brand)]' : 'hover:bg-[var(--surface-subtle)]'}`}>
                             <div className="flex items-center justify-between gap-2">
@@ -138,7 +153,7 @@ type Shared = { read: Set<number>; active: number | null; setActive: (line: numb
 /** A CSV, worksheet, or a PDF without positions: the table line by line, each read cell coloured by its field. */
 function Grid({ rows, read, ai, active, setActive, cellField, disputes }: Shared & { rows: string[][]; ai: Set<number> }) {
     const ref = useRef<HTMLTableRowElement>(null);
-    useEffect(() => { ref.current?.scrollIntoView({ block: 'nearest' }); }, [active]);
+    useEffect(() => { reveal(ref.current); }, [active]);
     return <table className="w-full text-xs"><tbody>
         {rows.map((cells, line) => {
             const used = read.has(line);
@@ -182,7 +197,7 @@ function Pages({ input, coords, geometry, read, ai, active, setActive, cellField
         return () => { live = false; };
     }, [input, coords]);
     const ref = useRef<HTMLDivElement>(null);
-    useEffect(() => { ref.current?.scrollIntoView({ block: 'nearest', inline: 'center' }); }, [active, zoom]);
+    useEffect(() => { reveal(ref.current); }, [active, zoom]);
     if (failed) return <p className="p-3 text-sm text-[var(--muted)]">The document could not be drawn in this browser.</p>;
     if (!pages) return <p className="flex items-center gap-2 p-3 text-sm text-[var(--muted)]"><LoaderCircle aria-hidden="true" className="animate-spin" size={14} />Drawing the document…</p>;
     const pct = (v: number, of: number) => `${(v / of) * 100}%`;
