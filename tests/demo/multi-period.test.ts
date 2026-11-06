@@ -148,6 +148,11 @@ describe('several months and another currency, end to end', () => {
         expect(failed(verifyAnswer(ans('The payment flagged was {F3.amount} to {F3.counterparty} on {F3.date}.', ['F3']), facts, ctx))).toEqual(['outcomes']);
         expect(failed(verifyAnswer(ans('The payment of {F2.amount} was confirmed by the books.', ['F2']), facts, ctx))).toEqual(['outcomes']);
         expect(failed(verifyAnswer(ans('The payment of {F3.amount} on {F3.date} was confirmed by the books.', ['F3']), facts, ctx))).toEqual([]);
+        // Negated wording states the opposite outcome.
+        expect(failed(verifyAnswer(ans('The payment of {F3.amount} was confirmed by the books and was not flagged.', ['F3']), facts, ctx))).toEqual([]);
+        expect(failed(verifyAnswer(ans('The payment of {F3.amount} on {F3.date} wasn\'t flagged.', ['F3']), facts, ctx))).toEqual([]);
+        expect(failed(verifyAnswer(ans('The payment of {F2.amount} was not flagged.', ['F2']), facts, ctx))).toEqual(['outcomes']);
+        expect(failed(verifyAnswer(ans('The payment of {F3.amount} was not confirmed by the books.', ['F3']), facts, ctx))).toEqual(['outcomes']);
     });
 
 });
