@@ -127,11 +127,17 @@ function run(index: GroundingIndex, q: ToolCall): Draft[] {
             })];
         }
         case 'anomalies': {
-            const items = o.anomalies.filter(a => q.severity === 'ANY' || a.severity === q.severity);
+            // Flagged candidates first, so the few that need attention are always among the listed facts; each is labelled
+            // by its outcome, never as a bare "candidate", so a confirmed record cannot be presented as flagged.
+            const flaggedIds = new Set((o.anomalyResolution?.items ?? []).filter(r => r.resolution === 'FLAGGED').map(r => r.row.rowId));
+            const all = o.anomalies.filter(a => q.severity === 'ANY' || a.severity === q.severity);
+            const items = [...all.filter(a => flaggedIds.has(a.row.rowId)), ...all.filter(a => !flaggedIds.has(a.row.rowId))];
+            const flagged = items.filter(a => flaggedIds.has(a.row.rowId)).length;
+            let nf = 0, nc = 0;
             return [
-                { label: `Anomaly review candidates (${q.severity === 'ANY' ? 'all severities' : q.severity})`, primary: 'candidates', fields: { candidates: count(items.length), note: text('A candidate is a reason to review, never a finding of error or fraud.') }, sources: items.map(a => ({ kind: 'ANOMALY', id: a.row.rowId })) },
-                ...items.slice(0, 8).map((a, i): Draft => ({
-                    label: `Review candidate #${i + 1}`, primary: 'amount',
+                { label: `Anomaly review candidates (${q.severity === 'ANY' ? 'all severities' : q.severity})`, primary: 'candidates', fields: { candidates: count(items.length), ...(o.anomalyResolution ? { flagged: count(flagged), confirmedByBooks: count(items.length - flagged) } : {}), note: text('A candidate is a reason to review, never a finding of error or fraud.') }, sources: items.map(a => ({ kind: 'ANOMALY', id: a.row.rowId })) },
+                ...items.slice(0, 8).map((a): Draft => ({
+                    label: !o.anomalyResolution ? `Review candidate #${++nc}` : flaggedIds.has(a.row.rowId) ? `Flagged anomaly #${++nf}` : `Anomaly confirmed by the books #${++nc}`, primary: 'amount',
                     fields: { ...rowFields(a.row, currency), severity: text(a.severity), rules: text(a.findings.map(f => RULES[f.ruleId].title).join('; ')), rationale: text(a.findings.map(f => f.rationale).join(' ')), ...outcomeField(o, a.row.rowId) },
                     sources: [{ kind: 'ANOMALY', id: a.row.rowId }, rowRef(a.row)],
                 })),
