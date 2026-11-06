@@ -83,7 +83,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
                     <h3 className="border-b border-[var(--border)] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Document as supplied</h3>
                     <div className="thin-scrollbar max-h-[45vh] lg:max-h-[70vh] overflow-auto">
                         {extracted?.geometry && extracted.coords && original
-                            ? <Pages input={original} coords={extracted.coords} geometry={extracted.geometry} read={read} active={active} setActive={setActive} cellField={cellField} disputes={disputes} />
+                            ? <Pages input={original} coords={extracted.coords} geometry={extracted.geometry} read={read} ai={ai} active={active} setActive={setActive} cellField={cellField} disputes={disputes} />
                             : <Grid rows={r.rows} read={read} ai={ai} active={active} setActive={setActive} cellField={cellField} disputes={disputes} />}
                     </div>
                     {extracted && !extracted.geometry ? <p className="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)]">This processing kept no word positions; showing the lines as read.</p> : null}
@@ -124,7 +124,7 @@ function Grid({ rows, read, ai, active, setActive, cellField, disputes }: Shared
 }
 
 /** A PDF or image: each page drawn as supplied, with a box over every cell read, coloured by its field. */
-function Pages({ input, coords, geometry, read, active, setActive, cellField, disputes }: Shared & { input: DocumentInput; coords: PageCoords[]; geometry: RowGeometry[] }) {
+function Pages({ input, coords, geometry, read, ai, active, setActive, cellField, disputes }: Shared & { input: DocumentInput; coords: PageCoords[]; geometry: RowGeometry[]; ai: Set<number> }) {
     const [pages, setPages] = useState<{ number: number; src: string; width: number; height: number }[] | null>(null), [failed, setFailed] = useState(false);
     useEffect(() => {
         let live = true;
@@ -162,6 +162,15 @@ function Pages({ input, coords, geometry, read, active, setActive, cellField, di
         {pages.map(p => <div key={p.number} className="relative mx-auto w-full bg-white shadow-sm">
             {/* eslint-disable-next-line @next/next/no-img-element -- a local data URL of the user's own page, drawn in this browser */}
             <img src={p.src} alt={`Page ${p.number} of ${input.name}`} className="block w-full" />
+            {geometry.map((g, line) => {
+                // A line the AI model was shown is outlined whether or not a record came from it (headings, samples).
+                if (!g || g.page !== p.number || !ai.has(line)) return null;
+                const all = g.cells.filter(Boolean) as [number, number, number, number][];
+                if (!all.length) return null;
+                const [x0, y0, x1, y1] = [Math.min(...all.map(b => b[0])), Math.min(...all.map(b => b[1])), Math.max(...all.map(b => b[2])), Math.max(...all.map(b => b[3]))];
+                return <div key={`ai-${line}`} aria-hidden="true" className="pointer-events-none absolute rounded-sm border border-dashed border-indigo-500"
+                    style={{ left: pct(x0 - 5, p.width), top: pct(y0 - 4, p.height), width: pct(x1 - x0 + 10, p.width), height: pct(y1 - y0 + 8, p.height) }} />;
+            })}
             {geometry.map((g, line) => {
                 if (!g || g.page !== p.number) return null;
                 const used = read.has(line), boxes = g.cells.map((b, k) => [b, k] as [CellBox, number]).filter(([b]) => b);
