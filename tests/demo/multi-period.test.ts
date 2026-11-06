@@ -133,4 +133,21 @@ describe('several months and another currency, end to end', () => {
         expect(JSON.stringify(b.outputs.resolution)).toBe(JSON.stringify(a.outputs.resolution));
         expect(JSON.stringify(b.outputs.anomalyResolution)).toBe(JSON.stringify(a.outputs.anomalyResolution));
     });
+
+    it('answers which payment was flagged from the flagged record, and withholds a confirmed one called flagged', async () => {
+        const c = await processDocuments(sample()), index = groundingIndex(c)!, cat = catalogue(index), ctx = { question: 'Which payment was flagged and how much was it?', catalogue: cat };
+        const facts = runQueries(index, [{ tool: 'anomalies', severity: 'ANY' }]);
+        // The one flagged candidate is listed first and named by its outcome, even with more than eight candidates.
+        expect(facts[0].fields).toEqual(expect.objectContaining({ candidates: { kind: 'COUNT', n: 9 }, flagged: { kind: 'COUNT', n: 1 }, confirmedByBooks: { kind: 'COUNT', n: 8 } }));
+        expect(facts[1]).toEqual(expect.objectContaining({ label: 'Flagged anomaly #1', fields: expect.objectContaining({ id: { kind: 'TEXT', text: 'BANK-Q1-0101' } }) }));
+        expect(facts.slice(2).every(f => f.label.startsWith('Anomaly confirmed by the books #'))).toBe(true);
+        const ans = (t: string, cites: string[]) => ({ answer: { kind: 'ANSWERED', sentences: [{ text: t, cites }], derived: [] } });
+        const failed = (v: ReturnType<typeof verifyAnswer>) => v.checks.filter(k => !k.passed).map(k => k.id);
+        expect(failed(verifyAnswer(ans('The payment flagged was {F2.amount} to {F2.counterparty} on {F2.date}.', ['F2']), facts, ctx))).toEqual([]);
+        // The production answer of 6 Nov 2026: a confirmed record presented as flagged is withheld.
+        expect(failed(verifyAnswer(ans('The payment flagged was {F3.amount} to {F3.counterparty} on {F3.date}.', ['F3']), facts, ctx))).toEqual(['outcomes']);
+        expect(failed(verifyAnswer(ans('The payment of {F2.amount} was confirmed by the books.', ['F2']), facts, ctx))).toEqual(['outcomes']);
+        expect(failed(verifyAnswer(ans('The payment of {F3.amount} on {F3.date} was confirmed by the books.', ['F3']), facts, ctx))).toEqual([]);
+    });
+
 });
