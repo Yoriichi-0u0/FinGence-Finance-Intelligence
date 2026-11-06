@@ -5,6 +5,7 @@ import { FileSpreadsheet, LoaderCircle, Play, RotateCcw, Sparkles, Upload } from
 import { PageHeader, Panel } from '@/components/ui';
 import { STAGE_TITLES, type DocumentInput, type StageId } from '@/lib/demo/pipeline';
 import { useDemoProcessing } from './context';
+import { DocumentEvidenceEntry } from './document-evidence';
 import { InterpretationPanel } from './interpretation-panel';
 import { SaveRun } from './save-run';
 import { DecisionBadge, PendingBadge, Stat, Table, button, money, periodLabel, primaryButton } from './shared';
@@ -31,7 +32,7 @@ async function hex(bytes: Uint8Array) {
 
 /** Phase 1 Data experience: select documents once, process once, inspect every stage's evidence. */
 export default function DemoDataWorkspace() {
-    const { status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState } = useDemoProcessing();
+    const { status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState, inputs } = useDemoProcessing();
     const [selected, setSelected] = useState<DocumentInput[]>([]);
     const [notice, setNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -124,6 +125,7 @@ export default function DemoDataWorkspace() {
                     <code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>,
                 ])} />
             </Panel>
+            <DocumentEvidenceEntry context={context} inputs={inputs} />
             <InterpretationPanel context={context} />
             {scope && out?.reconciliation && out.totals ? <Panel title="4. Verified outputs" eyebrow={`${scope.businessName} · ${periodLabel(scope.period)} · ${scope.currency}`}>
                 <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
