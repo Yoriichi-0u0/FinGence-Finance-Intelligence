@@ -19,7 +19,7 @@ describe.skipIf(!available)('native PostgreSQL session and financial calculation
  let started=false;const org=randomUUID(),other=randomUUID(),user=randomUUID(),token=randomBytes(32).toString('base64url');
  const hash=createHash('sha256').update(token).digest('hex');
  const makePool=()=>new Pool({host:'127.0.0.1',port,user:'postgres',database:'postgres',max:4,connectionTimeoutMillis:3000,statement_timeout:5000});
- const control=(...args:string[])=>execFileSync(exe('pg_ctl'),['-D',folder,...args],{timeout:30000,stdio:'ignore'});
+ const control=(...args:string[])=>execFileSync(exe('pg_ctl'),['-D',folder,...args],{timeout:30000,stdio:'ignore',env:{...process.env,LC_ALL:'C'}}); // macOS postmaster refuses to start with no locale in the environment ("became multithreaded during startup").
  beforeAll(async()=>{
   folder=mkdtempSync(join(tmpdir(),'fingence-scope-pg-'));
   execFileSync(exe('initdb'),['-D',folder,'-U','postgres','-A','trust','--no-locale','-E','UTF8'],{timeout:30000,stdio:'ignore'});

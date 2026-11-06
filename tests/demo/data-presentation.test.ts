@@ -12,7 +12,7 @@ vi.mock('../../components/demo/context',()=>({useDemoProcessing:()=>state.value}
 vi.mock('next/navigation',()=>({usePathname:()=>'/data',useSearchParams:()=>new URLSearchParams(),useRouter:()=>({replace:vi.fn()})}));
 const {default:Data}=await import('../../components/demo/data-workspace');
 const sample=await processDocuments(['demo-bank-statement-2026-03.csv','demo-general-ledger-2026-03.csv','demo-bank-history-2025-04-to-2026-03.csv'].map(name=>({name,bytes:new Uint8Array(readFileSync('public/demo/'+name)),provenance:'PUBLIC_SYNTHETIC_SAMPLE' as const})));
-beforeEach(()=>{state.value={enabled:true,status:'empty',context:null,liveStages:[],processedAt:null,persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null};});
+beforeEach(()=>{state.value={enabled:true,status:'empty',context:null,liveStages:[],processedAt:null,persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null,aiWait:null,serverJobs:false,serverState:null};});
 const render=()=>renderToStaticMarkup(createElement(Data));
 describe('Data display states follow the runner',()=>{
  it('keeps exactly three truthful workflow steps and distinguishes readiness from verification',()=>{
@@ -29,7 +29,7 @@ describe('Data display states follow the runner',()=>{
   expect(dataStatus('empty',null,0).label).toBe('No documents selected');expect(dataStatus('empty',null,2).label).toBe('Ready to process');
   expect(dataStatus('loading',null,0).label).toBe('Restoring session');expect(dataStatus('empty',null,0,true).label).toBe('Loading sample documents');
   expect(dataStatus('processing',null,2).label).toBe('Processing');expect(dataStatus('failed',null,2).tone).toBe('danger');
-  expect(dataStatus('ready',sample,0).label).toBe('Completed with issues');expect(dataStatus('ready',{...sample,status:'COMPLETED'},0).label).toBe('Completed');
+  expect(dataStatus('ready',{...sample,status:'COMPLETED_WITH_EXCEPTIONS'},0).label).toBe('Completed with issues');expect(dataStatus('ready',{...sample,status:'COMPLETED'},0).label).toBe('Completed');
  });
  it('counts only distinct reported stage IDs, not elapsed time or verification success',()=>{
   expect(reportedProgress([])).toEqual({reported:0,total:8});expect(reportedProgress(sample.stages.slice(0,3))).toEqual({reported:3,total:8});
@@ -39,9 +39,9 @@ describe('Data display states follow the runner',()=>{
   expect(stagePresentation({...verify,checks:[]}).label).toBe('Auto-accepted');expect(stagePresentation({...verify,decision:'QUARANTINED'}).label).toContain('Quarantined');
   expect(stagePresentation(undefined).label).toBe('Waiting');expect(stagePresentation(undefined,true).label).toBe('Not run');
  });
- it('renders accessible selection/CSV-only controls without starting processing',()=>{
-  const html=render();expect(html).toContain('Data Processing');expect(html).toContain('Financial Documents');expect(html).toContain('accept=".csv,text/csv"');
-  expect(html).toContain('aria-label="Choose CSV files"');expect(html).toContain('No documents selected');expect(html).toContain('value="0"');expect(html).toContain('max="8"');
+ it('renders accessible selection and main-supported format controls without starting processing',()=>{
+  const html=render();expect(html).toContain('Data Processing');expect(html).toContain('Financial Documents');for(const ext of ['.csv','.xlsx','.pdf','.png','.jpeg'])expect(html).toContain(ext);
+  expect(html).toContain('aria-label="Choose files"');expect(html).toContain('No documents selected');expect(html).toContain('value="0"');expect(html).toContain('max="8"');
   expect(html).toContain('View All Processing Stages');expect(html).not.toMatch(/<details class="data-stage-details"[^>]*\bopen/);
   expect(html).toContain('Verified Financial Summary');expect(html).not.toContain('Explore Your Results');expect(html).not.toContain('MYR 0.00');
   expect(state.value.process).not.toHaveBeenCalled();expect(state.value.clear).not.toHaveBeenCalled();

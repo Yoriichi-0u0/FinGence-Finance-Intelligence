@@ -16,7 +16,7 @@ vi.mock('../../components/demo/context',()=>({useDemoProcessing:()=>state.value}
 vi.mock('next/navigation',()=>({usePathname:()=>'/transactions',useSearchParams:()=>new URLSearchParams(),useRouter:()=>({replace:vi.fn()})}));
 const {DemoGate}=await import('../../components/demo/gate');
 const c=await processDocuments(['demo-bank-statement-2026-03.csv','demo-general-ledger-2026-03.csv','demo-bank-history-2025-04-to-2026-03.csv'].map(name=>({name,bytes:new Uint8Array(readFileSync('public/demo/'+name)),provenance:'PUBLIC_SYNTHETIC_SAMPLE' as const})));
-beforeEach(()=>{state.value={enabled:true,status:'empty',context:null,liveStages:[],processedAt:null,persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null};});
+beforeEach(()=>{state.value={enabled:true,status:'empty',context:null,liveStages:[],processedAt:null,persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null,aiWait:null,serverJobs:false,serverState:null};});
 const views=['transactions','reconciliation','analytics','forecasting','anomalies','reports','ask'] as const;
 describe('final connected frontend integration',()=>{
  it('keeps the Q&A history before suggestions and the question composer',()=>{
@@ -41,7 +41,7 @@ describe('final connected frontend integration',()=>{
   expect(filterCandidates(rows,'','','no-such-reference')).toEqual([]);expect(JSON.stringify(c)).toBe(before);
  });
  it('preserves the complete original Reports JSON schema and evidence projection',()=>{
-  expect(reportPayload(c)).toEqual({...c.outputs.report,stages:c.stages.map(({id,decision,summary,checks})=>({id,decision,summary,checks})),quarantine:c.quarantine});
+  expect(reportPayload(c)).toEqual({...c.outputs.report,reconciliationStatement:c.outputs.statement,reconciliation:c.outputs.resolution,anomalies:c.outputs.anomalyResolution,stages:c.stages.map(({id,decision,summary,checks})=>({id,decision,summary,checks})),quarantine:c.quarantine});
   const json=JSON.stringify(reportPayload(c));for(const d of c.documents)expect(json).toContain(d.sha256);expect(c.outputs.totals?.net).toBe('28232.01');
  });
  it('distinguishes observed history from the actual forecast month without relabeling its anchor',()=>{

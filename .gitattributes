@@ -8,3 +8,6 @@
 /public/samples/ai-ingestion*/*.jpeg binary
 # Public demo fingerprints pin the canonical LF bytes, including on Windows.
 /public/demo/*.csv text eol=lf
+
+# New quarter and alternate-format CSV samples retain their published bytes on Windows.
+/public/demo/**/*.csv text eol=lf

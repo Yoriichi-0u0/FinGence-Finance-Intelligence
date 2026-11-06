@@ -10,7 +10,7 @@ vi.mock('../../components/demo/context',()=>({useDemoProcessing:()=>state.value}
 vi.mock('next/navigation',()=>({usePathname:()=>'/',useSearchParams:()=>new URLSearchParams(),useRouter:()=>({replace:vi.fn()})}));
 const { OverviewWelcome }=await import('../../components/overview/welcome');
 const render=()=>renderToStaticMarkup(createElement(OverviewWelcome));
-beforeEach(()=>{state.value={enabled:true,status:'empty',context:null,liveStages:[],processedAt:null,persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null};});
+beforeEach(()=>{state.value={enabled:true,status:'empty',context:null,liveStages:[],processedAt:null,persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null,aiWait:null,serverJobs:false,serverState:null};});
 describe('public welcome entry',()=>{
  it('links Sign Up to workspace without processing or account creation',()=>{
   const html=render(); expect(html).toContain('href="/sign-up"');expect(html).toContain('href="/sign-in"');expect(html).toContain('Sign Up');

@@ -58,7 +58,7 @@ describe('verified monthly chart presentation', () => {
     });
     it('displays category counts and total directly, with no currency or monthly trend', () => {
         const html = renderToStaticMarkup(createElement(ReconciliationStatusChart, { counts: { exact: 2, shifted: 1, unresolved: 3, total: 6 } }));
-        expect(html).toContain('Exact matches: 2 outcomes'); expect(html).toContain('Date shift matches: 1 outcomes'); expect(html).toContain('Unresolved exceptions: 3 outcomes');
+        expect(html).toContain('Exact matches: 2 outcomes'); expect(html).toContain('Date shift matches: 1 outcomes'); expect(html).toContain('Matcher exceptions: 3 outcomes');
         expect(html).toContain('6 total outcomes'); expect(html).not.toContain('RM'); expect(html).not.toContain('2026-');
     });
     it('does not replace unavailable reconciliation with zero counts', () => {

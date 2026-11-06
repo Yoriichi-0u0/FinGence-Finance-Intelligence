@@ -16,8 +16,9 @@ export const isReady = (c: ProcessingContext | null): c is Ready => !!c?.scope &
 
 function Overview({ c, navigation }: { c: Ready; navigation?: React.ReactNode }) {
     const o = c.outputs;
-    const months = o.history.accepted ? o.history.months.map(period => ({ period, ...cashTotals(o.history.rows.filter(r => r.period === period)) })) : [];
-    return <OverviewDashboard currency={c.scope.currency} description={workspaceDescription(c.scope.businessName, c.scope.period)} navigation={navigation} processing={<SourceStrip compact context={c} />} bank={o.totals.net} bankTotals={o.totals} reconciliation={o.reconciliation} months={months} anomalies={o.anomalies.length} />;
+    const rows=o.history.accepted?o.history.rows:o.bankRows, observed=o.history.accepted?o.history.months:c.scope.months;
+    const months=observed.map(period=>({period,...cashTotals(rows.filter(r=>r.period===period))}));
+    return <OverviewDashboard currency={c.scope.currency} description={workspaceDescription(c.scope.businessName, c.scope.period)} navigation={navigation} processing={<SourceStrip compact context={c} />} bank={o.totals.net} bankTotals={o.totals} reconciliation={o.reconciliation} months={months} anomalies={o.anomalies.length} resolution={o.resolution} anomaliesFlagged={o.anomalyResolution?.flagged} />;
 }
 
 export function DemoModule({ view, context, overviewNavigation }: { view: DemoView; context: Ready | null; overviewNavigation?: React.ReactNode }) {

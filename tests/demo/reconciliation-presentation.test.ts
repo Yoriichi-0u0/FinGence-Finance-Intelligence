@@ -22,7 +22,7 @@ describe('Reconciliation presentation preserves verified outcomes',()=>{
   expect(selectOutcomes(r,'EXCEPTIONS','ALL').every(x=>!isMatched(x.status))).toBe(true);
  });
  it('uses clear headings and bounded twenty-row pagination with filtered counts',()=>{
-  expect(outcomeHeading('EXCEPTIONS','ALL',9)).toBe('All Quarantined Exceptions (9)');expect(outcomeHeading('ALL','ALL',59)).toBe('All Reconciliation Outcomes (59)');expect(outcomeHeading('EXCEPTIONS','BANK_ONLY',2)).toBe('Bank only exceptions (2)');
+  expect(outcomeHeading('EXCEPTIONS','ALL',9)).toBe('All Matcher Exceptions (9)');expect(outcomeHeading('ALL','ALL',59)).toBe('All Reconciliation Outcomes (59)');expect(outcomeHeading('EXCEPTIONS','BANK_ONLY',2)).toBe('Bank only exceptions (2)');
   expect(reconciliationPage(2,59)).toEqual({page:2,pages:3});expect(reconciliationPage(2,1)).toEqual({page:0,pages:1});expect(reconciliationPage(8,0)).toEqual({page:0,pages:1});
  });
  it('selects exact outcomes using context and source-scoped contents rather than visible row position',()=>{
@@ -47,7 +47,7 @@ describe('Reconciliation presentation preserves verified outcomes',()=>{
   const html=renderToStaticMarkup(createElement(EvidenceSide,{c,outcome,side:'bank'}));expect(html).toContain('Evidence unavailable for missing-source-field');
  });
  it('renders distinct static statistics, result tabs, selected filter state and a read-only modal drawer',()=>{
-  const html=renderToStaticMarkup(createElement(Reconciliation,{c}));expect(html).toContain('Review verified matches and unresolved exceptions.');expect(html).toContain('28,232.01');expect(html).toContain('-2,692.92');expect(html).toContain('Matching Overview');expect(html).toContain('Filter by Outcome');expect(html).toContain('aria-pressed="true"');expect(html).toContain('aria-controls="reconciliation-outcomes"');expect(html).toContain('All Quarantined Exceptions (9)');expect(html).toContain('<dialog');expect(html).toContain('aria-labelledby="source-evidence-title"');expect(html).toContain('authenticated local workflow only');expect(html).not.toMatch(/>Approve<|>Reject<|>Force Match<|>Clear Exception</);
+  const html=renderToStaticMarkup(createElement(Reconciliation,{c}));expect(html).toContain('Review verified matches and unresolved exceptions.');expect(html).toContain('28,232.01');expect(html).toContain('-2,692.92');expect(html).toContain('Matching Overview');expect(html).toContain('Filter by Outcome');expect(html).toContain('aria-pressed="true"');expect(html).toContain('aria-controls="reconciliation-outcomes"');expect(html).toContain('All Matcher Exceptions (9)');expect(html).toContain('<dialog');expect(html).toContain('aria-labelledby="source-evidence-title"');expect(html).toContain('authenticated local workflow only');expect(html).not.toMatch(/>Approve<|>Reject<|>Force Match<|>Clear Exception</);
   expect(html.match(/>Inspect<span/g)).toHaveLength(9);expect(html).not.toContain('Evidence is unavailable in the current processing context.</p></div></section>');
  });
  it('does not claim verification for quarantined or cleared processing',()=>{

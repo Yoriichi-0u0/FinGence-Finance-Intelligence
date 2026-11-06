@@ -14,7 +14,7 @@ const {default:DemoDataWorkspace}=await import('../../components/demo/data-works
 const files=['demo-bank-statement-2026-03.csv','demo-general-ledger-2026-03.csv','demo-bank-history-2025-04-to-2026-03.csv'].map(name=>({name,bytes:new Uint8Array(readFileSync('public/demo/'+name)),provenance:'PUBLIC_SYNTHETIC_SAMPLE' as const}));
 const sample=await processDocuments(files);
 const render=()=>renderToStaticMarkup(createElement(DemoGate,{view:'overview',illustrative:'Protected local workspace'}));
-beforeEach(()=>{state.search='';state.value={enabled:true,status:'ready',context:sample,liveStages:sample.stages,processedAt:'now',persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null};});
+beforeEach(()=>{state.search='';state.value={enabled:true,status:'ready',context:sample,liveStages:sample.stages,processedAt:'now',persisted:true,error:null,process:vi.fn(),clear:vi.fn(),ai:null,aiWait:null,serverJobs:false,serverState:null};});
 
 describe('separate financial workspace',()=>{
  it('shows complete empty panels without fabricated amounts, dates or outcomes',()=>{

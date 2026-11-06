@@ -8,7 +8,7 @@ export function analyticsDays(c: ProcessingContext) {
     let total = 0n;
     return [...map.entries()].sort().map(([date, value]) => { total += value; return { date, value: Number(total) / 100, exact: fromCents(total) }; });
 }
-export const analyticsMonths = (c: ProcessingContext) => c.outputs.history.accepted ? c.outputs.history.months.map(period => ({ period, ...cashTotals(c.outputs.history.rows.filter(r => r.period === period)) })) : [];
+export const analyticsMonths = (c: ProcessingContext) => { const rows=c.outputs.history.accepted ? c.outputs.history.rows : c.scope && c.scope.months.length>1 ? c.outputs.bankRows : []; const months=c.outputs.history.accepted ? c.outputs.history.months : c.scope && c.scope.months.length>1 ? c.scope.months : []; return months.map(period=>({period,...cashTotals(rows.filter(r=>r.period===period))})); };
 export type Counterparty = { name: string; incoming: bigint; outgoing: bigint; records: number };
 const compare = (a: bigint, b: bigint) => a > b ? -1 : a < b ? 1 : 0;
 export function analyticsCounterparties(c: ProcessingContext): Counterparty[] {

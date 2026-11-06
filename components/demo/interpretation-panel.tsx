@@ -17,7 +17,7 @@ export function InterpretationPanel({ context }: { context: ProcessingContext })
     if (!docs.length) return null;
     return <Panel title="AI layout interpretation" eyebrow="Model proposal · deterministic acceptance">
         <div className="space-y-6 p-4 sm:p-5">
-            <p className="text-sm text-[var(--muted-strong)]">A language model proposed how each unfamiliar document is laid out. It never supplies an amount: every row is re-read from the original file under the proposal, which is accepted only when every check below passes and is otherwise quarantined.</p>
+            <p className="text-sm text-[var(--muted-strong)]">A language model proposed how each unfamiliar document is laid out. It never supplies an amount: every row is re-read from the original file (for a workbook, from the cells of its worksheet) under the proposal, which is accepted only when every check below passes and is otherwise quarantined.</p>
             {docs.map(d => {
                 const i = d.interpretation!, r = i.receipt, rationale = (i.proposal as { rationale?: unknown } | null)?.rationale;
                 return <section key={d.sha256} aria-label={`AI interpretation of ${d.name}`} className="space-y-3 border-t border-[var(--border)] pt-4 first:border-0 first:pt-0">
@@ -37,7 +37,7 @@ export function InterpretationPanel({ context }: { context: ProcessingContext })
                         m.agreement ? AGREEMENT[m.agreement] : '—',
                     ])} /> : null}
                     {i.checks.length ? <ul className="space-y-1 text-xs">{i.checks.map(k => <li key={k.id} className="flex gap-2"><span aria-hidden="true" className={k.passed ? 'text-[var(--green)]' : 'text-amber-700'}>{k.passed ? '✓' : '!'}</span><span><strong>{k.label}</strong> <span className="sr-only">{k.passed ? 'passed' : 'not passed'}</span>· {k.detail}</span></li>)}</ul> : null}
-                    {i.disclosures.length ? <ul className="list-disc space-y-0.5 pl-5 text-xs text-[var(--muted)]">{i.disclosures.map(x => <li key={x}>{x}</li>)}</ul> : null}
+                    {i.disclosures.length || d.source ? <ul className="list-disc space-y-0.5 pl-5 text-xs text-[var(--muted)]">{[...(d.source?.notes ?? []), ...i.disclosures].map(x => <li key={x}>{x}</li>)}</ul> : null}
                 </section>;
             })}
         </div>

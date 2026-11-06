@@ -36,14 +36,17 @@ export function guessHeaderLine(rows: string[][]): number {
     return index < 0 ? 0 : index;
 }
 const clip = (cells: string[]) => cells.slice(0, 24).map(c => c.length > 80 ? c.slice(0, 77) + '…' : c);
-const numeric = /^\(?-?(?:RM|MYR)?\s?[\d.,]+\)?$/i, dateish = /\d{1,4}[-/.\s][A-Za-z\d]{1,9}[-/.\s]\d{2,4}|^\d{8}$/;
+const numeric = /^\(?[-+]?(?:RM|MYR|Rs\.?|INR|₹|\$)?\s?[\d.,]+\)?$/i, dateish = /\d{1,4}[-/.\s][A-Za-z\d]{1,9}[-/.\s]\d{2,4}|^\d{8}$/;
 
 export function buildEvidence(table: Table, sha256: string, fileName: string): LayoutEvidence {
     const { rows } = table, headerLine = guessHeaderLine(rows), width = rows[headerLine]?.length ?? 0;
     const body = rows.slice(headerLine + 1).filter(r => r.length === width);
     const headEnd = Math.min(rows.length, Math.max(headerLine + 7, 10), 18);
-    const head = rows.slice(0, headEnd).map((cells, line) => ({ line, cells: clip(cells) }));
-    const tail = rows.slice(Math.max(headEnd, rows.length - 3)).map((cells, i, all) => ({ line: rows.length - all.length + i, cells: clip(cells) }));
+    // A long letterhead pushes the table below the first lines: show the start, then the lines around the likely header.
+    const late = headerLine + 7 > 18;
+    const shown = late ? [...Array(10).keys(), ...Array.from({ length: 12 }, (_, i) => headerLine - 3 + i)].filter((l, i, all) => l >= 0 && l < rows.length && all.indexOf(l) === i) : [...Array(headEnd).keys()];
+    const head = shown.map(line => ({ line, cells: clip(rows[line]) }));
+    const tail = rows.slice(Math.max(late ? shown.at(-1)! + 1 : headEnd, rows.length - 3)).map((cells, i, all) => ({ line: rows.length - all.length + i, cells: clip(cells) }));
     const profiles = (rows[headerLine] ?? []).map((header, column) => {
         const values = body.map(r => r[column] ?? '');
         const nonEmpty = values.filter(Boolean);

@@ -58,6 +58,43 @@ describe('correct proposals are accepted and materialized', () => {
     });
 });
 
+describe('record identity does not depend on the model noticing the ID column', () => {
+    // Live M1 runs sometimes left the ledger's "Voucher No" unmapped, so the same document produced line-derived IDs and a different processing ID.
+    const bytes = (r: ReturnType<typeof verifyProposal>) => new TextDecoder().decode(r.canonical!.bytes);
+    it.each([[LEDGER, 'Voucher No'], [BANK, 'Txn ID'], [SIGNED, 'Entry']])('%s: an omitted "%s" column is adopted and the canonical rows are unchanged', (name, heading) => {
+        const full = verifyProposal(unfamiliar(name), CORRECT[name]);
+        const omitted = verifyProposal(unfamiliar(name), edit(CORRECT[name], p => { p.columns.recordId = null; }));
+        expect(failed(omitted)).toEqual([]);
+        expect(bytes(omitted)).toBe(bytes(full));
+        expect(omitted.mappingKey).toBe(full.mappingKey);
+        expect(omitted.mapping.find(m => m.field === 'recordId')).toMatchObject({ heading });
+        expect(omitted.disclosures.join(' ')).toContain(`Record ID column "${heading}" was not in the proposal; adopted`);
+        expect(omitted.checks.find(c => c.id === 'ids')!.detail).toBe(`57 unique of 57 in adopted column "${heading}"`);
+    });
+    // The Malay statement has no ID column; append one so the adoption rules can be probed on a table the gates otherwise accept.
+    const withColumns = (...extra: [string, (i: number) => string][]) => {
+        const t = unfamiliar(MALAY); let n = 0;
+        return { delimiter: t.delimiter, rows: t.rows.map((r, line) => line === 6 ? [...r, ...extra.map(([h]) => h)] : line > 6 && r.length === 7 ? (n++, [...r, ...extra.map(([, v]) => v(n))]) : r) };
+    };
+    const lineIds = (r: ReturnType<typeof verifyProposal>) => { expect(failed(r)).toEqual([]); expect(bytes(r).split('\n')[1]).toMatch(/^L8,DEMO-001,/); };
+    it('adopts a unique Malay "No. Baucar" column', () => {
+        const r = verifyProposal(withColumns(['No. Baucar', i => `BV-${String(i).padStart(4, '0')}`]), CORRECT[MALAY]);
+        expect(failed(r)).toEqual([]);
+        expect(bytes(r).split('\n')[1]).toMatch(/^BV-0001,DEMO-001,/);
+    });
+    it('does not adopt an identifier column with repeated values', () => lineIds(verifyProposal(withColumns(['Txn ID', i => `JV-${Math.ceil(i / 2)}`]), CORRECT[MALAY])));
+    it('does not adopt a cheque number, whose heading does not name a record', () => lineIds(verifyProposal(withColumns(['Cheque No', i => `CHQ${100000 + i}`]), CORRECT[MALAY])));
+    it('does not choose between two candidate ID columns', () => {
+        const r = verifyProposal(withColumns(['Txn ID', i => `T${i}`], ['Entry No', i => `E${i}`]), CORRECT[MALAY]);
+        lineIds(r);
+        expect(r.disclosures.join(' ')).toContain('2 columns could be the record ID ("Txn ID", "Entry No")');
+    });
+    it('a mapped record ID column with duplicates is still quarantined', () => {
+        const r = verifyProposal(withColumns(['Txn ID', i => `JV-${Math.ceil(i / 2)}`]), edit(CORRECT[MALAY], p => { p.columns.recordId = 7; }));
+        expect(failed(r)).toEqual(['ids']);
+    });
+});
+
 describe('wrong proposals are quarantined, never accepted with wrong figures', () => {
     const cases: [string, string, (p: LayoutProposal) => void, string][] = [
         ['swapped deposit/withdrawal', BANK, p => { p.columns.moneyIn = 5; p.columns.moneyOut = 6; }, 'balance'],

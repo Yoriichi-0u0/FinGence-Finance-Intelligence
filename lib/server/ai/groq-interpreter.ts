@@ -6,7 +6,7 @@ import { DEFAULT_GROQ_MODEL, GROQ_MODELS, portableJsonSchema, structuredCompleti
 export { GROQ_PRICES, type GroqTransport } from './groq';
 export const INTERPRETER_MODELS = GROQ_MODELS;
 export const DEFAULT_INTERPRETER_MODEL = DEFAULT_GROQ_MODEL;
-export const PROMPT_REVISION = 'layout-interpretation-2';
+export const PROMPT_REVISION = 'layout-interpretation-3';
 
 /**
  * The gateway answers only when the operator explicitly enabled it, the key is present AND a spend budget can be
@@ -44,9 +44,9 @@ If the role is unclear from the document's own title and headings, say so in "un
 
 headerLine: 0-based line index of the table header. Column numbers below are 0-based positions in that header line.
 
-columns (null when the document has no such column; date, reference and description are required):
+columns (null when the document has no such column; date and description are required):
 - recordId: unique transaction or entry identifier (e.g. Txn ID, Voucher No, Entry). Not the reference.
-- date: transaction/value/posting date. reference: bank, cheque or payment reference used to match bank and ledger.
+- date: transaction/value/posting date. reference: a separate bank, cheque or payment reference column used to match bank and ledger (null when references are only inside the description).
 - description: particulars/narration/memo. counterparty: payee/payer/party name.
 - balance: running account balance after each row. account (ledgers only): ledger account code/name column.
 - currency, businessId, businessName: only if a COLUMN holds them on every row; otherwise use scope evidence.

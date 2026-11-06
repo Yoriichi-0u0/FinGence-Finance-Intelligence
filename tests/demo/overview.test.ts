@@ -27,11 +27,11 @@ describe('source-backed Overview', () => {
   expect(html).not.toContain('These outcomes were not automatically matched and require further inspection.');
   expect(html.indexOf('ov-right-stack')).toBeLessThan(html.indexOf('ov-reconciliation-summary'));
   expect(html.indexOf('ov-needs-attention')).toBeLessThan(html.indexOf('ov-review-queue'));
-  expect(html).toContain('Exceptions require review');
+  expect(html).toContain('No unresolved exceptions');expect(c.outputs.resolution?.attention).toHaveLength(0);
   expect(page).toContain('RM 28,232.01'); expect(page).toContain('RM 30,924.93'); expect(page).toContain('RM -2,692.92');
-  expect(page).toContain('9 exceptions need review'); expect(html).toContain('Review in Reconciliation');
-  expect(page).toContain('50 / 59'); expect(page).toContain('Unresolved exceptions 9');
-  expect(page).toContain('Anomaly candidates Separate rule findings · may overlap 6');
+  expect(page).toContain('No pending exception review');expect(page).toContain('No items flagged for this source pair.');
+  expect(page).toContain('50 / 59'); expect(page).toContain('Matcher exceptions 9');
+  expect(page).toContain('Flagged anomaly findings Source-backed rule findings 0');
   expect(page).toContain('Exact matches 46'); expect(page).toContain('Date shift matches 4');
   expect(html).toContain('Cash Out'); expect(html).toContain('stroke-dasharray="6 6"');
   expect(html).toContain('View exact monthly values'); expect(html).toContain('2025-04');

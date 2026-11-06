@@ -1,0 +1,109 @@
+LedgerEntryID,BusinessID,PostingDate,CashAccount,Currency,LedgerReference,LedgerMemo,Counterparty,CashAccountDebitMYR,CashAccountCreditMYR,SignedCashMovementMYR,CategoryLabel
+GL-Q1-0001,DEMO-002,2026-01-02,1000-BANK,SGD,U38ZDNMCHG4A,Card terminal settlement,Card Sales Settlement,1079.14,0.00,1079.14,Sales receipts
+GL-Q1-0002,DEMO-002,2026-01-04,1000-BANK,SGD,2MK7D9Q8YSK5,Flour and dry goods,Tiong Flour Mills,0.00,346.69,-346.69,Ingredients
+GL-Q1-0003,DEMO-002,2026-01-04,1000-BANK,SGD,3DLL5F7N28BV,Card terminal settlement,Card Sales Settlement,1089.27,0.00,1089.27,Sales receipts
+GL-Q1-0004,DEMO-002,2026-01-04,1000-BANK,SGD,EZJL4UURTPSK,Delivery platform payout,FoodPanda Payout,801.78,0.00,801.78,Sales receipts
+GL-Q1-0005,DEMO-002,2026-01-05,1000-BANK,SGD,VHUJ3M9UGQDA,Dairy purchase,Harbour Dairy Supply,0.00,428.31,-428.31,Ingredients
+GL-Q1-0006,DEMO-002,2026-01-06,1000-BANK,SGD,M7MGGL6GJNTE,Card terminal settlement,Card Sales Settlement,1452.43,0.00,1452.43,Sales receipts
+GL-Q1-0007,DEMO-002,2026-01-08,1000-BANK,SGD,LBMB2CPVMJGY,Catering invoice receipt,Marina Office Catering,1457.81,0.00,1457.81,Sales receipts
+GL-Q1-0008,DEMO-002,2026-01-08,1000-BANK,SGD,M3MJEFYCS7EL,Card terminal settlement,Card Sales Settlement,904.48,0.00,904.48,Sales receipts
+GL-Q1-0009,DEMO-002,2026-01-08,1000-BANK,SGD,XPXAML8YL8KQ,Flour and dry goods,Tiong Flour Mills,0.00,481.67,-481.67,Ingredients
+GL-Q1-0010,DEMO-002,2026-01-09,1000-BANK,SGD,7PEYSWXQQXLE,Delivery platform payout,FoodPanda Payout,628.76,0.00,628.76,Sales receipts
+GL-Q1-0011,DEMO-002,2026-01-09,1000-BANK,SGD,GCH3EHC7QQAD,Card terminal settlement,Card Sales Settlement,1045.09,0.00,1045.09,Sales receipts
+GL-Q1-0012,DEMO-002,2026-01-11,1000-BANK,SGD,34U9VPPM6XM7,Card terminal settlement,Card Sales Settlement,1508.72,0.00,1508.72,Sales receipts
+GL-Q1-0013,DEMO-002,2026-01-11,1000-BANK,SGD,Y9E98TC9DJWW,Dairy purchase,Harbour Dairy Supply,0.00,432.86,-432.86,Ingredients
+GL-Q1-0014,DEMO-002,2026-01-12,1000-BANK,SGD,DN8NNK9B9LC3,Flour and dry goods,Tiong Flour Mills,0.00,559.45,-559.45,Ingredients
+GL-Q1-0015,DEMO-002,2026-01-13,1000-BANK,SGD,52E3V2GXEF8W,Catering invoice receipt,Marina Office Catering,1645.00,0.00,1645.00,Sales receipts
+GL-Q1-0016,DEMO-002,2026-01-13,1000-BANK,SGD,FZMUS65YJFD9,Card terminal settlement,Card Sales Settlement,911.30,0.00,911.30,Sales receipts
+GL-Q1-0017,DEMO-002,2026-01-14,1000-BANK,SGD,3PTMJTP4AWDZ,Card terminal settlement,Card Sales Settlement,1297.31,0.00,1297.31,Sales receipts
+GL-Q1-0018,DEMO-002,2026-01-14,1000-BANK,SGD,HLQKM78GVMSU,Payroll transfer,Staff Payroll,0.00,7967.89,-7967.89,Payroll
+GL-Q1-0019,DEMO-002,2026-01-14,1000-BANK,SGD,LDUZ7YKH8QDD,Delivery platform payout,FoodPanda Payout,824.29,0.00,824.29,Sales receipts
+GL-Q1-0020,DEMO-002,2026-01-14,1000-BANK,SGD,LQMJV3NNFRWV,Shop rent,Tanjong Demo Realty,0.00,3600.00,-3600.00,Rent
+GL-Q1-0021,DEMO-002,2026-01-14,1000-BANK,SGD,MU2S9G2CBJUU,Utilities bill,SP Utilities,0.00,384.48,-384.48,Utilities
+GL-Q1-0022,DEMO-002,2026-01-16,1000-BANK,SGD,KCFT2SGM6MWF,Flour and dry goods,Tiong Flour Mills,0.00,401.85,-401.85,Ingredients
+GL-Q1-0023,DEMO-002,2026-01-16,1000-BANK,SGD,PWJYLHSALX52,Card terminal settlement,Card Sales Settlement,1029.78,0.00,1029.78,Sales receipts
+GL-Q1-0024,DEMO-002,2026-01-17,1000-BANK,SGD,S2JZ59Z2QWX4,Dairy purchase,Harbour Dairy Supply,0.00,409.06,-409.06,Ingredients
+GL-Q1-0025,DEMO-002,2026-01-18,1000-BANK,SGD,DUTDZBRPKBM9,Card terminal settlement,Card Sales Settlement,1072.27,0.00,1072.27,Sales receipts
+GL-Q1-0026,DEMO-002,2026-01-18,1000-BANK,SGD,SP3P2XX8SW7F,Delivery platform payout,FoodPanda Payout,749.13,0.00,749.13,Sales receipts
+GL-Q1-0027,DEMO-002,2026-01-20,1000-BANK,SGD,7CZTZV7VKDYG,Catering invoice receipt,Marina Office Catering,2190.59,0.00,2190.59,Sales receipts
+GL-Q1-0028,DEMO-002,2026-01-20,1000-BANK,SGD,VPKWYVPWA2SF,Card terminal settlement,Card Sales Settlement,1129.77,0.00,1129.77,Sales receipts
+GL-Q1-0029,DEMO-002,2026-01-20,1000-BANK,SGD,VVZSLHGJMEAN,Flour and dry goods,Tiong Flour Mills,0.00,376.88,-376.88,Ingredients
+GL-Q1-0030,DEMO-002,2026-01-21,1000-BANK,SGD,S48FHLPEBJBC,Card terminal settlement,Card Sales Settlement,1070.16,0.00,1070.16,Sales receipts
+GL-Q1-0031,DEMO-002,2026-01-23,1000-BANK,SGD,DAWR54JG6KUB,Delivery platform payout,FoodPanda Payout,889.00,0.00,889.00,Sales receipts
+GL-Q1-0032,DEMO-002,2026-01-23,1000-BANK,SGD,FRH5BM2VZ5L9,Card terminal settlement,Card Sales Settlement,1331.41,0.00,1331.41,Sales receipts
+GL-Q1-0033,DEMO-002,2026-01-23,1000-BANK,SGD,WJPDNYCK3QWB,Dairy purchase,Harbour Dairy Supply,0.00,229.84,-229.84,Ingredients
+GL-Q1-0034,DEMO-002,2026-01-24,1000-BANK,SGD,VHY9FBVSJN79,Flour and dry goods,Tiong Flour Mills,0.00,620.30,-620.30,Ingredients
+GL-Q1-0035,DEMO-002,2026-01-25,1000-BANK,SGD,ZCV5YC8X9DDY,Card terminal settlement,Card Sales Settlement,958.89,0.00,958.89,Sales receipts
+GL-Q1-0036,DEMO-002,2026-01-31,1000-BANK,SGD,GV57PJKWYJDL,Card terminal settlement,Card Sales Settlement,1860.40,0.00,1860.40,Sales receipts
+GL-Q1-0037,DEMO-002,2026-02-02,1000-BANK,SGD,DSPDST9AT9AF,Card terminal settlement,Card Sales Settlement,1415.33,0.00,1415.33,Sales receipts
+GL-Q1-0038,DEMO-002,2026-02-04,1000-BANK,SGD,8TSK6EAVHGRX,Flour and dry goods,Tiong Flour Mills,0.00,480.11,-480.11,Ingredients
+GL-Q1-0039,DEMO-002,2026-02-04,1000-BANK,SGD,DPSRHUA9C6SS,Delivery platform payout,FoodPanda Payout,804.29,0.00,804.29,Sales receipts
+GL-Q1-0040,DEMO-002,2026-02-04,1000-BANK,SGD,XNR727WFCEQ8,Card terminal settlement,Card Sales Settlement,1469.45,0.00,1469.45,Sales receipts
+GL-Q1-0041,DEMO-002,2026-02-05,1000-BANK,SGD,8BRTZTYBN3YW,Dairy purchase,Harbour Dairy Supply,0.00,337.55,-337.55,Ingredients
+GL-Q1-0042,DEMO-002,2026-02-06,1000-BANK,SGD,23B5JTJ3LUQN,Card terminal settlement,Card Sales Settlement,978.37,0.00,978.37,Sales receipts
+GL-Q1-0043,DEMO-002,2026-02-08,1000-BANK,SGD,9FZZSH6Z4W6D,Catering invoice receipt,Marina Office Catering,1371.47,0.00,1371.47,Sales receipts
+GL-Q1-0044,DEMO-002,2026-02-08,1000-BANK,SGD,JN3ZVDYB27D4,Card terminal settlement,Card Sales Settlement,1116.22,0.00,1116.22,Sales receipts
+GL-Q1-0045,DEMO-002,2026-02-08,1000-BANK,SGD,NT4S9JL66SYR,Flour and dry goods,Tiong Flour Mills,0.00,386.78,-386.78,Ingredients
+GL-Q1-0046,DEMO-002,2026-02-09,1000-BANK,SGD,BMVWW2EL7TF6,Card terminal settlement,Card Sales Settlement,1114.75,0.00,1114.75,Sales receipts
+GL-Q1-0047,DEMO-002,2026-02-09,1000-BANK,SGD,C4XX978L4KZB,Delivery platform payout,FoodPanda Payout,713.82,0.00,713.82,Sales receipts
+GL-Q1-0048,DEMO-002,2026-02-11,1000-BANK,SGD,9N9PAJ96XHPH,Card terminal settlement,Card Sales Settlement,1041.90,0.00,1041.90,Sales receipts
+GL-Q1-0049,DEMO-002,2026-02-11,1000-BANK,SGD,QWHEZT75ULPV,Dairy purchase,Harbour Dairy Supply,0.00,274.41,-274.41,Ingredients
+GL-Q1-0050,DEMO-002,2026-02-12,1000-BANK,SGD,9YAZW5F73G46,Flour and dry goods,Tiong Flour Mills,0.00,547.16,-547.16,Ingredients
+GL-Q1-0051,DEMO-002,2026-02-13,1000-BANK,SGD,W3J9UCRKEMBD,Card terminal settlement,Card Sales Settlement,1080.74,0.00,1080.74,Sales receipts
+GL-Q1-0052,DEMO-002,2026-02-14,1000-BANK,SGD,3J3QGFU62ZJC,Shop rent,Tanjong Demo Realty,0.00,3600.00,-3600.00,Rent
+GL-Q1-0053,DEMO-002,2026-02-14,1000-BANK,SGD,92JSCJGE3QUS,Card terminal settlement,Card Sales Settlement,1254.10,0.00,1254.10,Sales receipts
+GL-Q1-0054,DEMO-002,2026-02-14,1000-BANK,SGD,FRFJH5PTUQ3T,Utilities bill,SP Utilities,0.00,504.69,-504.69,Utilities
+GL-Q1-0055,DEMO-002,2026-02-14,1000-BANK,SGD,PJ43JDKBELH9,Delivery platform payout,FoodPanda Payout,565.21,0.00,565.21,Sales receipts
+GL-Q1-0056,DEMO-002,2026-02-14,1000-BANK,SGD,WT7ZJTPUXACV,Payroll transfer,Staff Payroll,0.00,8090.26,-8090.26,Payroll
+GL-Q1-0057,DEMO-002,2026-02-16,1000-BANK,SGD,9YUWSN4AMCPM,Flour and dry goods,Tiong Flour Mills,0.00,338.43,-338.43,Ingredients
+GL-Q1-0058,DEMO-002,2026-02-16,1000-BANK,SGD,ALJQE9YCJZQK,Flour and dry goods,Tiong Flour Mills,0.00,4860.00,-4860.00,Ingredients
+GL-Q1-0059,DEMO-002,2026-02-16,1000-BANK,SGD,KNQXBU5QUXVW,Card terminal settlement,Card Sales Settlement,926.44,0.00,926.44,Sales receipts
+GL-Q1-0060,DEMO-002,2026-02-17,1000-BANK,SGD,LKKXZWUWXGXC,Dairy purchase,Harbour Dairy Supply,0.00,352.23,-352.23,Ingredients
+GL-Q1-0061,DEMO-002,2026-02-18,1000-BANK,SGD,275U6ZCQKR7W,Delivery platform payout,FoodPanda Payout,571.67,0.00,571.67,Sales receipts
+GL-Q1-0062,DEMO-002,2026-02-18,1000-BANK,SGD,8F7Z7DEKXDND,Card terminal settlement,Card Sales Settlement,1143.47,0.00,1143.47,Sales receipts
+GL-Q1-0063,DEMO-002,2026-02-20,1000-BANK,SGD,4ZVXWF8EXHPC,Card terminal settlement,Card Sales Settlement,1502.14,0.00,1502.14,Sales receipts
+GL-Q1-0064,DEMO-002,2026-02-20,1000-BANK,SGD,5W4CMFNDX5BV,Catering invoice receipt,Marina Office Catering,1356.59,0.00,1356.59,Sales receipts
+GL-Q1-0065,DEMO-002,2026-02-20,1000-BANK,SGD,LKXN9YN9VKHH,Flour and dry goods,Tiong Flour Mills,0.00,392.37,-392.37,Ingredients
+GL-Q1-0066,DEMO-002,2026-02-21,1000-BANK,SGD,FU8RYKNZ4M39,Card terminal settlement,Card Sales Settlement,1013.75,0.00,1013.75,Sales receipts
+GL-Q1-0067,DEMO-002,2026-02-23,1000-BANK,SGD,KXN3PMCFFHVJ,Delivery platform payout,FoodPanda Payout,861.62,0.00,861.62,Sales receipts
+GL-Q1-0068,DEMO-002,2026-02-23,1000-BANK,SGD,RF3HT6JU4PZL,Dairy purchase,Harbour Dairy Supply,0.00,268.67,-268.67,Ingredients
+GL-Q1-0069,DEMO-002,2026-02-23,1000-BANK,SGD,YKWD7AZGC3KL,Card terminal settlement,Card Sales Settlement,1053.95,0.00,1053.95,Sales receipts
+GL-Q1-0070,DEMO-002,2026-02-24,1000-BANK,SGD,9ZGGRCV8FVA9,Flour and dry goods,Tiong Flour Mills,0.00,653.53,-653.53,Ingredients
+GL-Q1-0071,DEMO-002,2026-02-24,1000-BANK,SGD,VM26QXKTN8EH,Cheque 000217 to Tiong Flour Mills,Tiong Flour Mills,0.00,524.80,-524.80,Ingredients
+GL-Q1-0072,DEMO-002,2026-02-25,1000-BANK,SGD,S5JWFPE2F9X6,Card terminal settlement,Card Sales Settlement,1223.84,0.00,1223.84,Sales receipts
+GL-Q1-0073,DEMO-002,2026-03-02,1000-BANK,SGD,3KCQYMM63G7C,Card terminal settlement,Card Sales Settlement,1323.12,0.00,1323.12,Sales receipts
+GL-Q1-0074,DEMO-002,2026-03-02,1000-BANK,SGD,VAE5D9766Y2Y,Dairy purchase,Harbour Dairy Supply,0.00,312.75,-312.75,Ingredients
+GL-Q1-0075,DEMO-002,2026-03-04,1000-BANK,SGD,3ZTSEYAWY9T2,Card terminal settlement,Card Sales Settlement,1473.36,0.00,1473.36,Sales receipts
+GL-Q1-0076,DEMO-002,2026-03-04,1000-BANK,SGD,4Q5WZJ8ZWG8H,Delivery platform payout,FoodPanda Payout,745.66,0.00,745.66,Sales receipts
+GL-Q1-0077,DEMO-002,2026-03-04,1000-BANK,SGD,VRD2GLGR5CLV,Flour and dry goods,Tiong Flour Mills,0.00,613.26,-613.26,Ingredients
+GL-Q1-0078,DEMO-002,2026-03-05,1000-BANK,SGD,MMWEVPG3HWQV,Dairy purchase,Harbour Dairy Supply,0.00,401.16,-401.16,Ingredients
+GL-Q1-0079,DEMO-002,2026-03-06,1000-BANK,SGD,S6NV5YAAFGV6,Card terminal settlement,Card Sales Settlement,1070.44,0.00,1070.44,Sales receipts
+GL-Q1-0080,DEMO-002,2026-03-08,1000-BANK,SGD,CAXEKZULZ3YX,Card terminal settlement,Card Sales Settlement,1054.47,0.00,1054.47,Sales receipts
+GL-Q1-0081,DEMO-002,2026-03-08,1000-BANK,SGD,SQCGFM9DL3QC,Flour and dry goods,Tiong Flour Mills,0.00,313.79,-313.79,Ingredients
+GL-Q1-0082,DEMO-002,2026-03-08,1000-BANK,SGD,ZU3RU5BZKNYA,Catering invoice receipt,Marina Office Catering,1625.26,0.00,1625.26,Sales receipts
+GL-Q1-0083,DEMO-002,2026-03-09,1000-BANK,SGD,E8DLG79XCBH3,Delivery platform payout,FoodPanda Payout,728.40,0.00,728.40,Sales receipts
+GL-Q1-0084,DEMO-002,2026-03-09,1000-BANK,SGD,KKRPM7G9T2H9,Card terminal settlement,Card Sales Settlement,1140.85,0.00,1140.85,Sales receipts
+GL-Q1-0085,DEMO-002,2026-03-11,1000-BANK,SGD,GL27QC4EUZ6Z,Dairy purchase,Harbour Dairy Supply,0.00,353.58,-353.58,Ingredients
+GL-Q1-0086,DEMO-002,2026-03-11,1000-BANK,SGD,W8DG8FVTZV7S,Card terminal settlement,Card Sales Settlement,1211.12,0.00,1211.12,Sales receipts
+GL-Q1-0087,DEMO-002,2026-03-12,1000-BANK,SGD,M4FRE4QAECLM,Flour and dry goods,Tiong Flour Mills,0.00,483.56,-483.56,Ingredients
+GL-Q1-0088,DEMO-002,2026-03-13,1000-BANK,SGD,CAAEQS347MUC,Card terminal settlement,Card Sales Settlement,1117.70,0.00,1117.70,Sales receipts
+GL-Q1-0089,DEMO-002,2026-03-14,1000-BANK,SGD,3CJTANDERW3D,Delivery platform payout,FoodPanda Payout,709.50,0.00,709.50,Sales receipts
+GL-Q1-0090,DEMO-002,2026-03-14,1000-BANK,SGD,4FQSEP345TAA,Utilities bill,SP Utilities,0.00,443.91,-443.91,Utilities
+GL-Q1-0091,DEMO-002,2026-03-14,1000-BANK,SGD,A9DNNSEZ7RN9,Shop rent,Tanjong Demo Realty,0.00,3600.00,-3600.00,Rent
+GL-Q1-0092,DEMO-002,2026-03-14,1000-BANK,SGD,UGGH66YJ4HL2,Payroll transfer,Staff Payroll,0.00,7911.29,-7911.29,Payroll
+GL-Q1-0093,DEMO-002,2026-03-14,1000-BANK,SGD,ZN8XXDYQ6VKJ,Card terminal settlement,Card Sales Settlement,969.04,0.00,969.04,Sales receipts
+GL-Q1-0094,DEMO-002,2026-03-16,1000-BANK,SGD,UT6WKRKPNPF2,Flour and dry goods,Tiong Flour Mills,0.00,623.99,-623.99,Ingredients
+GL-Q1-0095,DEMO-002,2026-03-16,1000-BANK,SGD,WHSN665DA8NM,Card terminal settlement,Card Sales Settlement,1227.66,0.00,1227.66,Sales receipts
+GL-Q1-0096,DEMO-002,2026-03-17,1000-BANK,SGD,GZ6US7JUPR8K,Dairy purchase,Harbour Dairy Supply,0.00,271.74,-271.74,Ingredients
+GL-Q1-0097,DEMO-002,2026-03-18,1000-BANK,SGD,3JLZVDTCC9PR,Card terminal settlement,Card Sales Settlement,1470.12,0.00,1470.12,Sales receipts
+GL-Q1-0098,DEMO-002,2026-03-18,1000-BANK,SGD,HEMB4YQ5PHLM,Delivery platform payout,FoodPanda Payout,789.26,0.00,789.26,Sales receipts
+GL-Q1-0099,DEMO-002,2026-03-20,1000-BANK,SGD,8TCLSCMSKGU7,Flour and dry goods,Tiong Flour Mills,0.00,512.19,-512.19,Ingredients
+GL-Q1-0100,DEMO-002,2026-03-20,1000-BANK,SGD,GXKSL564LTPP,Card terminal settlement,Card Sales Settlement,1565.41,0.00,1565.41,Sales receipts
+GL-Q1-0101,DEMO-002,2026-03-20,1000-BANK,SGD,W5ERS9ECUUUA,Catering invoice receipt,Marina Office Catering,1431.13,0.00,1431.13,Sales receipts
+GL-Q1-0102,DEMO-002,2026-03-21,1000-BANK,SGD,9SMQV8MPLCAY,Card terminal settlement,Card Sales Settlement,1514.87,0.00,1514.87,Sales receipts
+GL-Q1-0103,DEMO-002,2026-03-23,1000-BANK,SGD,5LTU9AFPXNE5,Delivery platform payout,FoodPanda Payout,838.35,0.00,838.35,Sales receipts
+GL-Q1-0104,DEMO-002,2026-03-23,1000-BANK,SGD,8XLJ95TGHJAQ,Card terminal settlement,Card Sales Settlement,1445.57,0.00,1445.57,Sales receipts
+GL-Q1-0105,DEMO-002,2026-03-23,1000-BANK,SGD,SZXKFP9JB9ZK,Dairy purchase,Harbour Dairy Supply,0.00,247.19,-247.19,Ingredients
+GL-Q1-0106,DEMO-002,2026-03-24,1000-BANK,SGD,YJ6H9E46UNAK,Flour and dry goods,Tiong Flour Mills,0.00,360.89,-360.89,Ingredients
+GL-Q1-0107,DEMO-002,2026-03-25,1000-BANK,SGD,6HY6L33FDKP3,Card terminal settlement,Card Sales Settlement,1563.46,0.00,1563.46,Sales receipts
+GL-Q1-0108,DEMO-002,2026-03-31,1000-BANK,SGD,HL59D39DG6FX,Card terminal settlement in transit,Card Sales Settlement,1423.10,0.00,1423.10,Sales receipts

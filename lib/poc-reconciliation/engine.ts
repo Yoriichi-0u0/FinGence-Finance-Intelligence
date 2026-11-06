@@ -23,8 +23,18 @@ export function formatCents(value: bigint): string {
     const digits = (value < 0n ? -value : value).toString().padStart(3, '0');
     return (value < 0n ? '-' : '') + digits.slice(0, -2) + '.' + digits.slice(-2);
 }
+/**
+ * What one cash source may cover. The Phase 1 rule is one calendar month in MYR. The reconciliation layer
+ * (`lib/reconciliation`) reads several months and any one ISO currency the document states; one business and
+ * one currency per source always.
+ */
+export type CashSourceScope = { months: 'ONE' | 'MANY'; currencies: 'MYR' | 'ANY' };
+export const PHASE1_CASH_SCOPE: CashSourceScope = { months: 'ONE', currencies: 'MYR' };
+/** A multi-month source's `period` is its first and last month, `YYYY-MM/YYYY-MM`; a single month stays `YYYY-MM`. */
+export const periodRange = (months: Iterable<string>) => { const m = [...new Set(months)].sort(); return m.length > 1 ? `${m[0]}/${m.at(-1)}` : m[0] ?? ''; };
+
 /** `sha256` is the lowercase hex digest of exactly `bytes`; callers compute it (Node or Web Crypto). */
-export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind, filename: string, sha256: string): CashSource {
+export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind, filename: string, sha256: string, scope: CashSourceScope = PHASE1_CASH_SCOPE): CashSource {
     if (!/\.csv$/i.test(filename) || !bytes.length || bytes.length > 512000) throw Error('BOUNDED_CSV_REQUIRED');
     const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes).replace(/^\uFEFF/, '');
     const parsed = Papa.parse<string[]>(text, { skipEmptyLines: 'greedy', dynamicTyping: false });
@@ -32,7 +42,7 @@ export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind
     if (parsed.errors.length || !header || new Set(header).size !== header.length || header.some(h => !h) || !data.length || data.length > 5000 || CASH_SOURCE_FIELDS[kind].some(f => !header.includes(f))) throw Error('UNSUPPORTED_CSV_SCHEMA');
     if (!/^[0-9a-f]{64}$/.test(sha256)) throw Error('INVALID_SOURCE_DIGEST');
     const source: CashSource = { kind, sha256, sourceId: sha256, filename: filename.split(/[/\\]/).pop()!.slice(0, 120), businessId: '', currency: '', period: '', rows: [], evidence: {} };
-    const seen = new Set<string>();
+    const seen = new Set<string>(), months = new Set<string>();
     for (const [index, cells] of data.entries()) {
         if (cells.length !== header.length || cells.some(c => c.length > 2000)) throw Error('MALFORMED_CSV_ROW');
         const raw = Object.fromEntries(header.map((h, i) => [h, cells[i]]));
@@ -40,7 +50,7 @@ export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind
         const date = raw[kind === 'bank' ? 'ValueDate' : 'PostingDate'];
         if (!recordId?.trim() || seen.has(recordId) || !raw.BusinessID?.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(date)) throw Error('INVALID_RECORD_ID_OR_DATE');
         seen.add(recordId); normalizeDate(date, 'ISO');
-        if (raw.Currency !== 'MYR') throw Error('UNSUPPORTED_CURRENCY_BASIS');
+        if (scope.currencies === 'MYR' ? raw.Currency !== 'MYR' : !/^[A-Z]{3}$/.test(raw.Currency)) throw Error('UNSUPPORTED_CURRENCY_BASIS');
         const signed = cashCents(raw.SignedCashMovementMYR);
         if (kind === 'bank') {
             const amount = cashCents(raw.BankAmountMYR);
@@ -50,8 +60,8 @@ export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind
             if (raw.CashAccount !== '1000-BANK' || debit < 0n || credit < 0n || (debit !== 0n && credit !== 0n) || signed !== cashCents(subtractDecimals(raw.CashAccountDebitMYR, raw.CashAccountCreditMYR))) throw Error('INCONSISTENT_LEDGER_CASH');
         }
         const period = kind === 'bank' ? raw.StatementMonth : date.slice(0, 7);
-        if (index && (source.businessId !== raw.BusinessID || source.currency !== raw.Currency || source.period !== period)) throw Error('MIXED_SOURCE_SCOPE');
-        source.businessId = raw.BusinessID; source.currency = raw.Currency; source.period = period;
+        if (index && (source.businessId !== raw.BusinessID || source.currency !== raw.Currency || (scope.months === 'ONE' && source.period !== period))) throw Error('MIXED_SOURCE_SCOPE');
+        source.businessId = raw.BusinessID; source.currency = raw.Currency; months.add(period); if (!index) source.period = period;
         const evidenceIds = CASH_SOURCE_FIELDS[kind].map(field => {
             const id = `${sha256}:record:${index + 2}:${field}`;
             source.evidence[id] = { sourceId: sha256, recordId, row: index + 2, field, literal: raw[field] };
@@ -59,6 +69,7 @@ export function normalizeCashSourceBytes(bytes: Uint8Array, kind: CashSourceKind
         });
         source.rows.push({ recordId, sourceId: sha256, row: index + 2, businessId: raw.BusinessID, currency: raw.Currency, date, reference: raw[kind === 'bank' ? 'BankReference' : 'LedgerReference'], description: raw[kind === 'bank' ? 'BankDescription' : 'LedgerMemo'], signedCents: signed.toString(), sourceTransactionId: kind === 'bank' ? raw.SourceTransactionID : null, evidenceIds });
     }
+    source.period = periodRange(months);
     return source;
 }
 const days = (a: CashSourceRow, b: CashSourceRow) => Math.abs(Date.parse(a.date) - Date.parse(b.date)) / 86400000;

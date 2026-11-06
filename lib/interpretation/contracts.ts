@@ -20,7 +20,7 @@ const evidence = z.strictObject({ line: z.number().int().min(0).max(4999), liter
  */
 export const proposalSchema = z.strictObject({
     role: z.enum(ROLES),
-    headerLine: z.number().int().min(0).max(40),
+    headerLine: z.number().int().min(0).max(400),
     columns: z.strictObject({
         recordId: column, date: column, reference: column, description: column, counterparty: column,
         amount: column, direction: column, moneyIn: column, moneyOut: column, debit: column, credit: column,
@@ -49,9 +49,10 @@ const signedAmount = z.strictObject({ representation: z.literal('SIGNED_AMOUNT')
 const amountAndDirection = z.strictObject({ representation: z.literal('AMOUNT_AND_DIRECTION'), amount: index, direction: index, inflowTokens: tokens, outflowTokens: tokens });
 const splitInOut = z.strictObject({ representation: z.literal('SPLIT_IN_OUT'), moneyIn: index, moneyOut: index });
 const debitCredit = z.strictObject({ representation: z.literal('DEBIT_CREDIT'), debit: index, credit: index });
-const textColumns = { recordId: column, date: index, reference: index, description: index, counterparty: column, balance: column, currency: column, businessId: column, businessName: column };
+// A reference column is common but not universal (many statements carry only a description), so it may be null.
+const textColumns = { recordId: column, date: index, reference: column, description: index, counterparty: column, balance: column, currency: column, businessId: column, businessName: column };
 const table = {
-    headerLine: z.number().int().min(0).max(40),
+    headerLine: z.number().int().min(0).max(400),
     dateFormat: z.enum(DATE_FORMATS).nullable(),
     numberFormat: z.enum(NUMBER_FORMATS).nullable(),
     scope: z.strictObject({ businessId: evidence, businessName: evidence, currency: evidence, statementPeriod: evidence }),
@@ -100,7 +101,7 @@ export const evidenceSchema = z.strictObject({
     fileName: z.string().max(80),
     delimiter: z.enum([',', ';', '\t', '|']),
     totalLines: z.number().int().min(1).max(5000),
-    head: z.array(lineSchema).max(18),
+    head: z.array(lineSchema).max(24),
     tail: z.array(lineSchema).max(3),
     profiles: z.array(z.strictObject({
         column: z.number().int().min(0).max(63), header: z.string().max(80), samples: z.array(z.string().max(60)).max(5),

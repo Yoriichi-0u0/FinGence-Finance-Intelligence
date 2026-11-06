@@ -10,6 +10,9 @@ import {pocLocalEnabled} from "@/lib/server/poc-reconciliation/runtime";
 import {syntheticDemoEnabled} from "@/lib/server/demo/mode";
 import {aiGatewayEnabled} from "@/lib/server/ai/groq-interpreter";
 
+import {budgetStore} from "@/lib/server/ai/budget";
+import {managementEnabled, processingStore} from "@/lib/server/processing/store";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -39,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full">
         <Script id="fingence-theme-preference" strategy="beforeInteractive">{themeInitialization}</Script>
-        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()}>{children}</AppShell>
+        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()}>{children}</AppShell>
       </body>
     </html>
   );

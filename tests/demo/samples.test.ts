@@ -18,7 +18,7 @@ describe('shared verified sample loading', () => {
         expect(phases).toEqual(['Loading sample documents','Verifying sample fingerprints']);
         expect(request.mock.calls.map(([url]) => url)).not.toContain('/demo/unfamiliar/manifest.json');
         const c = await processDocuments(files);
-        expect(c.status).toBe('COMPLETED_WITH_EXCEPTIONS'); expect(c.outputs.history.months).toHaveLength(12);
+        expect(c.status).toBe('COMPLETED'); expect(c.outputs.resolution?.attention).toHaveLength(0); expect(c.outputs.resolution?.entries).toHaveLength(6); expect(c.outputs.history.months).toHaveLength(12);
         expect(c.outputs.totals?.net).toBe('28232.01'); expect(c.outputs.reconciliation?.counts.MATCH_EXACT).toBe(46);
     });
     it.each(['http','manifest-http','network','missing-hash','bad-hash','changed-bytes'] as const)('rejects %s without sending any inputs to processing', async mode => {

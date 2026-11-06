@@ -16,8 +16,10 @@ function iso(y: number, m: number, d: number): string | null {
 const month = (name: string) => { const k = name.toLowerCase().slice(0, 3); const i = MONTHS.indexOf(k); return i >= 0 ? i + 1 : MALAY[k] ?? 0; };
 
 /** Returns an ISO date or null when the literal does not strictly match the format. */
+/** A time of day after the date ("01/01/2024 12:12:52 PM") says nothing about the date and is set aside. */
+const TIME_OF_DAY = /\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s?[AP]M)?$/i;
 export function parseDate(literal: string, format: DateFormat): string | null {
-    const v = literal.trim();
+    const v = literal.trim().replace(TIME_OF_DAY, '');
     let m: RegExpExecArray | null;
     switch (format) {
         case 'YYYY-MM-DD': return (m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)) ? iso(+m[1], +m[2], +m[3]) : null;
@@ -38,9 +40,11 @@ const PATTERNS: Record<NumberFormat, { re: RegExp; group: string; decimal: strin
     COMMA_THOUSANDS_DOT_DECIMAL: { re: /^(?:\d{1,3}(?:,\d{3})+|\d{1,13})(?:\.\d{1,2})?$/, group: ',', decimal: '.' },
     DOT_THOUSANDS_COMMA_DECIMAL: { re: /^(?:\d{1,3}(?:\.\d{3})+|\d{1,13})(?:,\d{1,2})?$/, group: '.', decimal: ',' },
 };
+const CURRENCY_PREFIX = /^(?:RM|MYR|Rs\.?|INR|₹|USD|US\$|\$|SGD|S\$|EUR|€|GBP|£|IDR|Rp\.?)\s*/i, CURRENCY_SUFFIX = /\s*(?:MYR|INR|USD|SGD|EUR|GBP|IDR)$/i;
 /** Exact cents; `undefined` for an empty cell, `null` when the literal is not valid in this format. */
 export function parseAmount(literal: string, format: NumberFormat): bigint | null | undefined {
-    let v = literal.trim().replace(/^(?:RM|MYR)\s*/i, '');
+    // A currency marker before or after the figure ("Rs. 6,086.63", "RM 12.00", "45.10 MYR") is not part of the amount.
+    let v = literal.trim().replace(CURRENCY_PREFIX, '').replace(CURRENCY_SUFFIX, '');
     if (!v || v === '-') return undefined;
     let negative = false;
     if (/^\(.*\)$/.test(v)) { negative = true; v = v.slice(1, -1).trim(); }

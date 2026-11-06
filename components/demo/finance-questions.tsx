@@ -5,6 +5,7 @@ import {Send} from 'lucide-react';
 import {PageHeader,Panel} from '@/components/ui';
 import type {ProcessingContext} from '@/lib/demo/pipeline';
 import {answerQuestion,suggestions,MAX_QUESTION,type QaAnswer} from '@/lib/poc-finance-qa/answer';
+import {toCents} from '@/lib/poc-anomalies/source';
 import {qaFacts} from '@/lib/demo/questions';
 import {askGrounded,gatewayQaModel,qaGatewayStatus,type GroundedRun,type QaGatewayStatus} from '@/lib/grounded-qa/client';
 import {groundingIndex} from '@/lib/grounded-qa/tools';
@@ -67,11 +68,17 @@ export default function Ask({ c }: { c: ProcessingContext | null }) {
                     <button type="button" aria-pressed={mode === 'RULES'} className={mode === 'RULES' ? primaryButton : button} onClick={() => setMode('RULES')}>Rule-based</button>
                     <button type="button" aria-pressed={mode === 'AI'} className={mode === 'AI' ? primaryButton : button} onClick={() => setMode('AI')}>AI-assisted (verified)</button>
                 </div> : null}
-                <div aria-label="Suggested questions" className="flex flex-wrap gap-2">{(aiMode ? AI_SUGGESTIONS : facts ? suggestions(facts) : ['How much cash moved?', 'How many transactions were matched?', 'Show monthly history']).map(q => <button key={q} type="button" className={button} disabled={busy || !facts} onClick={() => ask(q)}>{q}</button>)}</div>
+                <div aria-label="Suggested questions" className="flex flex-wrap gap-2">{(aiMode && c ? aiSuggestions(c) : facts ? suggestions(facts) : ['How much cash moved?', 'How many transactions were matched?', 'Show monthly history']).map(q => <button key={q} type="button" className={button} disabled={busy || !facts} onClick={() => ask(q)}>{q}</button>)}</div>
                 <form className="flex flex-col gap-2 sm:flex-row" onSubmit={e => { e.preventDefault(); ask(question); }}><label className="sr-only" htmlFor="demo-question">Question</label><input id="demo-question" className="min-h-11 min-w-0 flex-1 rounded-lg border border-[var(--border-strong)] px-3 text-sm" maxLength={MAX_QUESTION} value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about this processing, for example: How many transactions were matched?" /><button className={primaryButton} disabled={!facts || !question.trim() || busy}><Send aria-hidden="true" size={16} />{busy ? 'Answering…' : 'Ask'}</button></form>
             </div>
         </Panel>
 
     </>;
 }
-const AI_SUGGESTIONS = ['Who did we pay the most this month?', 'How much did we receive from GrabFood Marketplace Payout?', 'Which reconciliation items still need review, and what reason was recorded?', 'How much more money came in than went out?'];
+/** Scope and counterparty come from the same verified context as the answers. */
+export function aiSuggestions(c:ProcessingContext) {
+ const span=(c.scope?.months.length??0)>1?'over these months':'this month';
+ const inflow=new Map<string,bigint>();for(const r of c.outputs.bankRows)if(r.direction==='Credit')inflow.set(r.counterparty,(inflow.get(r.counterparty)??0n)+toCents(r.amount));
+ const top=[...inflow.entries()].sort((a,b)=>b[1]>a[1]?1:b[1]<a[1]?-1:0)[0]?.[0];
+ return [`Who did we pay the most ${span}?`,...(top?[`How much did we receive from ${top}?`]:[]),'Which reconciliation items still need review, and what reason was recorded?','How much more money came in than went out?'];
+}

@@ -1,6 +1,6 @@
-import { Bot, AlertTriangle, ChartNoAxesCombined, Database, FileBarChart, House, ReceiptText, RefreshCw, ShieldCheck, TrendingUp, type LucideIcon } from 'lucide-react';
+import { Bot, Gauge, AlertTriangle, ChartNoAxesCombined, Database, FileBarChart, House, ReceiptText, RefreshCw, ShieldCheck, TrendingUp, type LucideIcon } from 'lucide-react';
 import type { M2ClientPrincipal } from '@/lib/ai-ingestion/m2-client-state';
-export type NavigationMode = { syntheticDemo?: boolean; localFinancialConsumers?: boolean; localReconciliation?: boolean; localAdministration?: boolean; role?: M2ClientPrincipal['role'] | null };
+export type NavigationMode = { syntheticDemo?: boolean; management?: boolean; localFinancialConsumers?: boolean; localReconciliation?: boolean; localAdministration?: boolean; role?: M2ClientPrincipal['role'] | null };
 export type NavigationItem = { href: string; label: string; description: string; keywords: string; icon: LucideIcon };
 const modules: NavigationItem[] = [
     { href: '/', label: 'Dashboard', description: 'Your financial workspace at a glance', keywords: 'dashboard home summary', icon: House },
@@ -29,6 +29,7 @@ export function visibleNavigation(mode: NavigationMode): NavigationItem[] {
     else if (mode.syntheticDemo) items.push({ href: '/ask', label: 'Finance Q&A', description: 'Ask questions about the current verified processing', keywords: 'question ask answer finance qa', icon: Bot });
     // Existing M5 permits Technical members an operational view and Admins its admin view.
     if (mode.localAdministration && (mode.role === 'Admin' || mode.role === 'Technical (Management)')) items.push({ href: '/admin', label: 'Administration', description: mode.role === 'Admin' ? 'Manage the local organization and memberships' : 'View local operational administration', keywords: 'admin organization members operational', icon: ShieldCheck });
+    if (mode.management) items.push({ href:'/management', label:'Management', description:'Server processing jobs, flagged items and pause state', keywords:'management server processing jobs flagged pause', icon:Gauge });
     return items;
 }
 export function searchNavigation(items: NavigationItem[], query: string): NavigationItem[] {

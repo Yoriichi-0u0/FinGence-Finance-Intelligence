@@ -21,6 +21,26 @@
     "ledger-signed-march-2026.csv": {
       "sha256": "8ccce19b298cccc668f5517443bd9cd86c45a4fcd5f7e6c27319d81c90afb644",
       "bytes": 5213
+    },
+    "rimba-demo-kitchen-march-2026.xlsx": {
+      "sha256": "1c85a1295c8d3e5b763010600db3b46b72b172fef69cf698b97f4916ebae41cb",
+      "bytes": 10423
+    },
+    "bank-statement-march-2026.pdf": {
+      "sha256": "914c07ded3da6c8f5157e82a62f410b45af7f2f23a8d2a24b66f1b553bd06ff9",
+      "bytes": 22895
+    },
+    "general-ledger-cash-march-2026.pdf": {
+      "sha256": "39d941d1914f8ffa54600cfb3c023abbf02de4a45a551890062f05e423c4bda1",
+      "bytes": 19186
+    },
+    "bank-statement-march-2026-scan.pdf": {
+      "sha256": "8f04c485479688cce931c3071f8ccc55be490c59e1c2a7e9ce68192eef2b326f",
+      "bytes": 2563091
+    },
+    "general-ledger-cash-march-2026-scan.jpg": {
+      "sha256": "b7436d7337749516bf0f31119c610f946cfd2cd43ef6da1d4ff031c52ae1b237",
+      "bytes": 1437188
     }
   }
 }

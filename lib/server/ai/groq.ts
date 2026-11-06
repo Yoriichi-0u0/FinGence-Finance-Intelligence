@@ -34,23 +34,33 @@ const responseSchema = z.object({
     usage: z.object({ prompt_tokens: z.number(), completion_tokens: z.number() }).optional(),
 });
 
-export type GroqTransport = (body: Record<string, unknown>, signal: AbortSignal) => Promise<{ status: number; json: unknown; retryAfterSeconds?: number }>;
-const defaultTransport: GroqTransport = async (body, signal) => {
+/** `key` is the API key this attempt uses; transports in tests may ignore it. */
+export type GroqTransport = (body: Record<string, unknown>, signal: AbortSignal, key: string) => Promise<{ status: number; json: unknown; retryAfterSeconds?: number }>;
+const defaultTransport: GroqTransport = async (body, signal, key) => {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST', signal, redirect: 'error',
-        headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
     });
     const retryAfter = Number(response.headers.get('retry-after'));
     return { status: response.status, json: await response.json().catch(() => null), retryAfterSeconds: Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined };
 };
+/**
+ * Configured Groq keys, in order: GROQ_API_KEY, then GROQ_API_KEY2. Groq's rate limits are per organization, so the
+ * second key adds capacity only when it belongs to a different organization; in the same one, failover finds the same limit.
+ */
+export function groqKeys(): string[] {
+    return [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY2].filter((k): k is string => !!k);
+}
+let rotation = 0;
 
 export type StructuredRequest = {
     model: string; system: string; user: string; schemaName: string; schema: Record<string, unknown>;
     maxCompletionTokens: number; reasoningEffort: 'low' | 'medium' | 'high'; transport?: GroqTransport;
 };
 export async function structuredCompletion(req: StructuredRequest): Promise<{ content: unknown; receipt: ModelReceipt }> {
-    if (!process.env.GROQ_API_KEY && !req.transport) throw new InterpreterUnavailable('NOT_CONFIGURED');
+    const keys = groqKeys();
+    if (!keys.length && !req.transport) throw new InterpreterUnavailable('NOT_CONFIGURED');
     const body: Record<string, unknown> = {
         model: req.model, temperature: 0, max_completion_tokens: req.maxCompletionTokens,
         messages: [{ role: 'system', content: req.system }, { role: 'user', content: req.user }],
@@ -59,8 +69,15 @@ export async function structuredCompletion(req: StructuredRequest): Promise<{ co
     };
     const started = Date.now();
     let reply: Awaited<ReturnType<GroqTransport>>;
-    try { reply = await (req.transport ?? defaultTransport)(body, AbortSignal.timeout(45_000)); }
-    catch { throw new InterpreterUnavailable('PROVIDER_UNREACHABLE'); }
+    // Requests alternate between the configured keys. A 429 is a refusal before processing (never billed), so it moves
+    // once to each other key; any other outcome, billed or not, is final. At most one completion is ever produced.
+    const slots = keys.length ? keys : [''], first = rotation++ % slots.length, signal = AbortSignal.timeout(45_000);
+    try {
+        for (let attempt = 0; ; attempt++) {
+            reply = await (req.transport ?? defaultTransport)(body, signal, slots[(first + attempt) % slots.length]);
+            if (reply.status !== 429 || attempt === slots.length - 1) break;
+        }
+    } catch { throw new InterpreterUnavailable('PROVIDER_UNREACHABLE'); }
     if (reply.status === 429) throw new InterpreterUnavailable('RATE_LIMITED', reply.retryAfterSeconds);
     if (reply.status !== 200) {
         // Keep only the provider's machine code (e.g. json_validate_failed when strict decoding could not satisfy the

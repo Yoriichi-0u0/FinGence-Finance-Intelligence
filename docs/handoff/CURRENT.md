@@ -1,5 +1,105 @@
 # FinGence — current technical entrypoint
 
+## Server processing jobs, stored results and the Management console — 5 November 2026
+
+Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/architecture/server-processing-v1.md](../architecture/server-processing-v1.md).
+
+- **Jobs:** `POST /api/processing/jobs` answers 202 with a job ID and runs the unchanged pipeline after the response (`lib/server/processing/jobs.ts`). The AI layout reader is called in-process from the shared budget (`lib/server/ai/interpret.ts`), and PDFs and scans are read on the server.
+- **Stored results:** a finished job stores, in one transaction, its ingestion run (verified records), its reconciliation and anomaly results and every flagged item (`lib/processing/job-result.ts`, schema `fingence_processing`, `supabase/sql/processing-jobs-v1.sql`). Uploaded documents are never stored.
+- **Re-check:** the browser re-runs the pipeline on the same documents with the job's accepted readings and must reach the job's processing ID, or nothing is shown.
+- **Management console:** `/management` lists jobs and flagged items and pauses or resumes processing; a pause refuses new jobs with 423 and the reason Finance users see.
+- **Hosted PDFs and scans:** the job route's function includes the files pdf.js and tesseract.js load at run time (`outputFileTracingIncludes`); `pnpm check:job-trace` proves the traced files alone read a PDF and a scan.
+- **Off by default:** without `FINGENCE_PROCESSING_JOBS=1` the app is the browser-only demo exactly as before. Locally, `node scripts/dev-store.mjs` runs the same migrations in PGlite. Not applied to Production: the migration and the Vercel switches are owner decisions, and the console has no sign-in until #74.
+
+## Several months and any currency end to end; anomalies resolved autonomously — 5 November 2026
+
+`/data` now processes several months and any one stated currency through every stage (checkpoint 9, #78). The contract is [docs/architecture/multi-period-processing-v1.md](../architecture/multi-period-processing-v1.md).
+
+- **Scope:** `scope.period` is a month or a `YYYY-MM/YYYY-MM` range, and `scope.months` lists the statement months.
+- **Reconciliation:** every month both documents cover is reconciled (`outputs.periods`), with a combined whole-run snapshot (`outputs.reconciliation`). Months only one side covers are reported (`outputs.notReconciled`).
+- **Anomalies:** every anomaly candidate is checked against the books (`lib/anomalies/resolve.ts`). A record the ledger also shows is confirmed; only one the books cannot confirm is flagged to the technical team.
+- **Samples:**
+  - The March MYR sample keeps its figures and now completes with nothing flagged.
+  - A new quarter sample (DEMO-002, January–March 2026, SGD; `scripts/generate-quarter-documents.mjs`) shows timing differences clearing across months and one flagged payment.
+
+## Reconciliation layer v1 — 4 November 2026
+
+The reconciliation layer is `lib/reconciliation/reconcile.ts` (`reconcile`): verified bank and cash-ledger records in, a fully resolved reconciliation out. Its contract is [docs/architecture/reconciliation-layer-v1.md](../architecture/reconciliation-layer-v1.md).
+
+It is **autonomous** and has no review queue. Each month goes through the unchanged matcher. The layer then links one transaction recorded on different days or in different months, and gives every exception one resolution:
+
+- matched late or by amount;
+- a timing difference, cleared or still open;
+- a balanced correcting entry, prepared and never posted;
+- unexplained, which is the only outcome flagged, and is flagged to the technical team.
+
+The layer accepts several months and any one currency; since 5 November the `/data` pipeline uses that scope too (see the entry above). On the March sample its snapshot and statement are unchanged. All 9 exceptions are resolved, 6 correcting entries are prepared, and 0 items are unexplained. The Reconciliation page shows "What FinGence did" in plain language.
+
+## Ingestion layer v1 — 5 November 2026
+
+The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): documents in, verified records out. Its contract is
+[docs/architecture/ingestion-layer-v1.md](../architecture/ingestion-layer-v1.md).
+
+- **Formats:** CSV, XLSX, text PDF, scanned PDF and images. Real-statement layouts are handled, and the ingestion scope accepts several months and any stated currency.
+- **Durable store:** Supabase FinGence-Production, schema `fingence_ingestion` (`supabase/sql/ingestion-layer-v1.sql`), through `POST /api/ingestion/runs`. It needs `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
+- **Benchmark:** see [docs/integration/ingestion-benchmark.md](../integration/ingestion-benchmark.md). Full rerun 5 Nov 2026 (run 4): 67 documents, 0 false acceptances. All 24 generated digital documents and all 10 FinGence samples were accepted exactly. Quarantines that remain are OCR digit misreads and AgamiAI statements whose own balances break. For OCR only, a currency code with one wrong-case letter ("UsD") is read as its ISO code and disclosed.
+
+## AI M3: PDF statements and scans — 4 November 2026
+
+`/data` ingests CSV, XLSX, PDF (text or scanned) and PNG/JPEG:
+
+- `lib/interpretation/extract.ts` reads text PDFs through pdf.js, and scans and images by OCR in the browser (tesseract.js, two passes);
+- `positioned.ts` places the words into a table by geometry alone;
+- an extracted document always goes through the AI proposal and the gates, plus the date-order and arithmetic-anchor gates;
+- `verifyWithDisputes` may resolve a figure the two OCR passes disagree on. It searches one-cell and two-cell corrections every time, and accepts only when every passing choice gives the same dates and signed amounts.
+- The arithmetic anchor for an extracted document (tightened 5 Nov 2026 after Codex review):
+  - each stated total is bound to the side it names, by the column it sits under or by its label read for the document's role (a bank's debit is money out, a ledger's debit is money in);
+  - a running balance confirms the first amount only together with a stated opening balance.
+
+Groq calls alternate between `GROQ_API_KEY` and `GROQ_API_KEY2` (#70); the second key adds capacity only when it is from a different Groq organization, since limits are per organization. See the M1 runbook section "PDF statements and scans".
+
+## Proposed bank reconciliation statement — 4 November 2026
+
+`lib/poc-reconciliation/statement.ts` (`buildStatement`, exposed as `ProcessingContext.outputs.statement`) classifies every open
+exception by a stated deterministic rule:
+
+- deposit in transit;
+- unpresented cheque;
+- bank charge, receipt or payment not in the ledger;
+- ledger amount error (with a transposition hint);
+- duplicate ledger posting;
+- reference-only;
+- otherwise UNEXPLAINED.
+
+Each item goes on the bank or ledger side, and three identities are proven: the exceptions' effects equal the difference,
+each record is listed once, and adjusted bank − adjusted ledger = unexplained. Matcher outcomes are unchanged and nothing is
+cleared or posted. On the Phase 1 sample both adjusted movements are MYR 29,644.41, with MYR 0.00 unexplained. The statement is
+shown on Reconciliation and in Reports.
+
+## AI management commentary on Reports — 4 November 2026
+
+With the gateway on, Reports offers an AI-written commentary, built in `lib/grounded-qa/commentary.ts`:
+
+- FinGence runs fixed queries over the verified records;
+- one M2 answer-stage call words up to five sentences;
+- the M2 `verifyAnswer` gates fill every figure or withhold the text.
+
+The deterministic summary is unchanged. See the [M2 runbook](../integration/fingence2-ai-m2-grounded-qa.md).
+
+## FinGence 2.0 AI M3 step 1: Excel workbooks — 4 November 2026
+
+`/data` accepts `.xlsx` files. Each worksheet holding a table becomes one document, converted to text deterministically by
+`lib/interpretation/workbook.ts`:
+
+- verbatim text;
+- stored number digits, at Excel's 15-significant-digit precision;
+- ISO dates;
+- blocks padded as in a CSV export.
+
+It then goes through the unchanged exact-signature, M1 interpreter and gate path. `ProcessedDocument.source` records the
+workbook's SHA-256, worksheet number and conversion notes. Sample: `public/demo/unfamiliar/rimba-demo-kitchen-march-2026.xlsx`.
+Details are in the [M1 runbook, "Excel workbooks"](../integration/fingence2-ai-m1-layout-interpretation.md).
+
 ## FinGence 2.0 AI M2 grounded financial Q&A — 2 November 2026 (in progress)
 
 [M2 architecture](../architecture/fingence2-ai-m2-grounded-qa.md) and [runbook](../integration/fingence2-ai-m2-grounded-qa.md),

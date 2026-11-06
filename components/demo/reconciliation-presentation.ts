@@ -1,7 +1,8 @@
 import { reconciliationStatuses, type FinancePoCReconciliationV1, type ReconciliationStatus } from '@/lib/poc-reconciliation/contracts';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 
-export type Outcome = FinancePoCReconciliationV1['results'][number];
+export type Outcome = FinancePoCReconciliationV1['results'][number] & {period?:string};
+export function reconciliationOutcomes(c:ProcessingContext):Outcome[]{return c.outputs.periods.length>1?c.outputs.periods.flatMap(p=>p.snapshot.results.map(x=>({...x,period:p.period}))):c.outputs.reconciliation?.results??[];}
 export type ResultView = 'EXCEPTIONS' | 'ALL';
 export type OutcomeFilter = ReconciliationStatus | 'ALL';
 export const outcomeLabels: Record<ReconciliationStatus, string> = {
@@ -15,17 +16,17 @@ export function selectOutcomes(r: FinancePoCReconciliationV1, view: ResultView, 
     return r.results.filter(x => (view === 'ALL' || !isMatched(x.status)) && (filter === 'ALL' || x.status === filter));
 }
 export function outcomeHeading(view: ResultView, filter: OutcomeFilter, count: number) {
-    return `${filter === 'ALL' ? view === 'EXCEPTIONS' ? 'All Quarantined Exceptions' : 'All Reconciliation Outcomes' : `${outcomeLabels[filter]}${isMatched(filter) ? ' outcomes' : ' exceptions'}`} (${count})`;
+    return `${filter === 'ALL' ? view === 'EXCEPTIONS' ? 'All Matcher Exceptions' : 'All Reconciliation Outcomes' : `${outcomeLabels[filter]}${isMatched(filter) ? ' outcomes' : ' exceptions'}`} (${count})`;
 }
 /** Transparent UI identity only; never an economic identity or a replacement for source provenance. */
 export function reconciliationContextKey(c: ProcessingContext) {
     return JSON.stringify([c.processingId, c.outputs.reconciliation?.sources.bank.sourceId, c.outputs.reconciliation?.sources.ledger.sourceId]);
 }
 export function outcomeKey(c: ProcessingContext, x: Outcome) {
-    return JSON.stringify([reconciliationContextKey(c), x.status, x.bankRecordId, [...x.ledgerRecordIds].sort(), x.reason, [...x.bankEvidenceIds].sort(), [...x.ledgerEvidenceIds].sort()]);
+    return JSON.stringify([reconciliationContextKey(c), x.period ?? c.scope?.period, x.status, x.bankRecordId, [...x.ledgerRecordIds].sort(), x.reason, [...x.bankEvidenceIds].sort(), [...x.ledgerEvidenceIds].sort()]);
 }
 export function selectedOutcome(c: ProcessingContext, key: string | null) {
-    return key === null ? null : c.outputs.reconciliation?.results.find(x => outcomeKey(c, x) === key) ?? null;
+    return key === null ? null : reconciliationOutcomes(c).find(x => outcomeKey(c, x) === key) ?? null;
 }
 /** Return every provided evidence ID, including explicit unavailable entries; omit no source fields. */
 export function evidenceRecords(r: FinancePoCReconciliationV1, x: Outcome, side: 'bank' | 'ledger') {

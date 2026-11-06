@@ -60,6 +60,6 @@ describe('Analytics verified selectors and financial chart presentation',()=>{
   const html=renderToStaticMarkup(createElement(CashHistory,{months:[{...months[0],net:'-12.34'},months[1]],currency:'MYR',mode:'net'}));expect(html).toContain('RM -12.34');
  });
  it('keeps reconciliation categorical with outcome counts and compatible focus/tap readouts',()=>{
-  const html=renderToStaticMarkup(createElement(ReconciliationStatusChart,{counts:{exact:46,shifted:4,unresolved:9,total:59}}));expect(html).toContain('focus a category');expect(html).toContain('Exact matches: 46 outcomes');expect(html).toContain('Unresolved exceptions: 9 outcomes');expect(html).not.toContain('<svg');expect(html).not.toContain('RM ');expect(html.match(/role="button"/g)).toHaveLength(3);
+  const html=renderToStaticMarkup(createElement(ReconciliationStatusChart,{counts:{exact:46,shifted:4,unresolved:9,total:59}}));expect(html).toContain('focus a category');expect(html).toContain('Exact matches: 46 outcomes');expect(html).toContain('Matcher exceptions: 9 outcomes');expect(html).not.toContain('<svg');expect(html).not.toContain('RM ');expect(html.match(/role="button"/g)).toHaveLength(3);
  });
 });

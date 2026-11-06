@@ -14,7 +14,7 @@ import { installM3Schema, provisionM3Account, createManagementService, setLocalO
 const bin = process.env.FINGENCE_TEST_PG_BIN ?? '/opt/homebrew/opt/postgresql@18/bin', exe = (name: string) => join(bin, name + (process.platform === 'win32' ? '.exe' : ''));
 describe.skipIf(!existsSync(exe('initdb')) || !existsSync(exe('pg_ctl')))('M3 native selected-data and membership fencing', () => {
     let folder: string, pool: Pool, db: TransactionDatabase, started = false, port: number, token: string, admin: string, user: string, org: string, id: string;
-    const password = 'Synthetic-native-M3-password', control = (...args: string[]) => execFileSync(exe('pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore' });
+    const password = 'Synthetic-native-M3-password', control = (...args: string[]) => execFileSync(exe('pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore', env: { ...process.env, LC_ALL: 'C' } }); // macOS postmaster refuses to start with no locale in the environment ("became multithreaded during startup").
     beforeAll(async () => {
         folder = mkdtempSync(join(tmpdir(), 'fingence-m3-native-'));
         execFileSync(exe('initdb'), ['-D', folder, '-U', 'postgres', '-A', 'trust', '--no-locale', '-E', 'UTF8'], { timeout: 30000, stdio: 'ignore' });

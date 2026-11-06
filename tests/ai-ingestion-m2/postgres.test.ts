@@ -14,7 +14,8 @@ const executable = (name: string) => join(bin, name + (process.platform === 'win
 describe.skipIf(!existsSync(executable('initdb')) || !existsSync(executable('pg_ctl')))('M2 native PostgreSQL ownership and authorization fencing', () => {
     let folder: string, pool: Pool, database: TransactionDatabase, started = false, token: string, user: string, org: string, id: string, port: number;
     const password = 'Synthetic-native-test-password';
-    const control = (...args: string[]) => execFileSync(executable('pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore' });
+    // macOS postmaster refuses to start with no locale in the environment ("became multithreaded during startup").
+    const control = (...args: string[]) => execFileSync(executable('pg_ctl'), ['-D', folder, ...args], { timeout: 30000, stdio: 'ignore', env: { ...process.env, LC_ALL: 'C' } });
     const connect = () => new Pool({ host: '127.0.0.1', port, user: 'postgres', database: 'postgres', max: 4, statement_timeout: 5000, connectionTimeoutMillis: 3000 });
     beforeAll(async () => {
         folder = mkdtempSync(join(tmpdir(), 'fingence-m2-native-'));

@@ -11,9 +11,9 @@ import { useTheme } from "@/components/overview/theme";
 import { DemoProcessingProvider } from "@/components/demo/context";
 import { Building2, Menu, Pin, PinOff, X } from "lucide-react";
 
-function Sidebar({ onNavigate, desktop = false, pinned = false, onPin, localFinancialConsumers = false, syntheticDemo = false }: {
+function Sidebar({ onNavigate, desktop = false, pinned = false, onPin, localFinancialConsumers = false, syntheticDemo = false, serverJobs = false }: {
   onNavigate?: () => void; desktop?: boolean; pinned?: boolean; onPin?: () => void;
-  localFinancialConsumers?: boolean; syntheticDemo?: boolean;
+  localFinancialConsumers?: boolean; syntheticDemo?: boolean; serverJobs?: boolean;
 }) {
   const pathname = usePathname(), items = useNavigationItems();
   const workspace = localFinancialConsumers ? 'Synthetic organization' : syntheticDemo ? 'Synthetic demo' : 'SAIC';
@@ -36,12 +36,12 @@ function Sidebar({ onNavigate, desktop = false, pinned = false, onPin, localFina
     </nav>
     <div className="shell-workspace" aria-label={`${workspace} workspace`} title={workspace}>
       <span className="shell-workspace-icon"><Building2 size={19} aria-hidden="true" /></span>
-      <span className="shell-sidebar-label"><strong>{workspace}</strong><small>{localFinancialConsumers ? 'Local experimental workspace' : syntheticDemo ? 'No sign-in · browser only' : 'Finance workspace'}</small><small>{localFinancialConsumers ? 'Hosted access disabled' : syntheticDemo ? 'Use fictional data only' : 'Illustrative prototype'}</small></span>
+      <span className="shell-sidebar-label"><strong>{workspace}</strong><small>{localFinancialConsumers ? 'Local experimental workspace' : syntheticDemo ? serverJobs ? 'No sign-in · server processing' : 'No sign-in · browser only' : 'Finance workspace'}</small><small>{localFinancialConsumers ? 'Hosted access disabled' : syntheticDemo ? 'Use fictional data only' : 'Illustrative prototype'}</small></span>
     </div>
   </div>;
 }
 
-export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const theme = useTheme();
@@ -50,11 +50,11 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   if (pathname === "/sign-in" || pathname === "/sign-up") return <div data-shell-theme={theme}>{children}</div>;
 
   return (
-    <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway}>
-    <NavigationProvider mode={{ syntheticDemo, localFinancialConsumers, localAdministration, localReconciliation }}>
+    <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
+    <NavigationProvider mode={{ syntheticDemo, localFinancialConsumers, localAdministration, localReconciliation, management }}>
     <div data-shell-theme={theme} data-sidebar-pinned={pinned} className={`${(pathname === "/" || pathname === "/overview") ? "overview-shell " : ""}${usesFinancialWorkspaceBackground(pathname) ? "financial-workspace " : ""}app-layout min-h-dvh bg-[var(--canvas)] print:block ${usesFinancialWorkspaceBackground(pathname) ? workspaceStyles.theme : ""}`}>
       <aside className="desktop-sidebar-slot hidden lg:block print:hidden" aria-label="Desktop navigation">
-        <Sidebar desktop pinned={pinned} onPin={() => setPinned(value => !value)} localFinancialConsumers={localFinancialConsumers} syntheticDemo={syntheticDemo} />
+        <Sidebar desktop pinned={pinned} onPin={() => setPinned(value => !value)} localFinancialConsumers={localFinancialConsumers} syntheticDemo={syntheticDemo} serverJobs={serverJobs} />
       </aside>
 
       <div className="min-w-0">
@@ -104,7 +104,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             >
               <X aria-hidden="true" size={21} />
             </button>
-            <Sidebar localFinancialConsumers={localFinancialConsumers} syntheticDemo={syntheticDemo} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar localFinancialConsumers={localFinancialConsumers} syntheticDemo={syntheticDemo} serverJobs={serverJobs} onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       ) : null}
