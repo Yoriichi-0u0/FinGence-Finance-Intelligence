@@ -1,8 +1,8 @@
 import { after } from 'next/server';
 import { admit, budgetStore, clientAddress } from '@/lib/server/ai/budget';
-import { boundedJson, noStoreJson as json } from '@/lib/server/ai/request';
+import { boundedForm, noStoreJson as json } from '@/lib/server/ai/request';
 import { clientHash } from '@/lib/server/ingestion-store';
-import { createJob, decodeDocuments, jobRequestSchema, maxJobBodyBytes, processingState, runJob } from '@/lib/server/processing/jobs';
+import { createJob, decodeJobForm, maxJobBodyBytes, processingState, runJob } from '@/lib/server/processing/jobs';
 import { processingStore, StoreError } from '@/lib/server/processing/store';
 
 export const dynamic = 'force-dynamic';
@@ -11,26 +11,27 @@ export const maxDuration = 300;
 const notFound = () => new Response('Not found', { status: 404 });
 const storeCode = (error: unknown) => error instanceof StoreError ? error.code : 'STORE_FAILED';
 
-/** Whether server processing is on, and whether it is paused (with the reason Finance users see). */
+/**
+ * Whether server processing is on, whether it is paused (with the reason Finance users see), and the most a job's
+ * request may carry, so the browser can refuse an oversized set itself instead of meeting the platform's own refusal.
+ */
 export async function GET() {
     if (!processingStore() || !budgetStore()) return notFound();
-    try { return json({ available: true, processing: await processingState() }); }
+    try { return json({ available: true, processing: await processingState(), maxUploadBytes: maxJobBodyBytes() }); }
     catch (error) { return json({ available: false, code: storeCode(error) }, 503); }
 }
 
 /**
- * Submits documents as a processing job: same-origin, bounded, schema-checked and rate-limited per client, then
+ * Submits documents (one multipart form of raw file bytes) as a processing job: same-origin, bounded, schema-checked and rate-limited per client, then
  * refused with 423 while processing is paused. Answers 202 with the job ID at once; the job runs after the response.
  */
 export async function POST(request: Request) {
     const budget = budgetStore();
     if (!processingStore() || !budget) return notFound();
-    const read = await boundedJson(request, maxJobBodyBytes());
+    const read = await boundedForm(request, maxJobBodyBytes());
     if ('refusal' in read) return read.refusal;
-    const parsed = jobRequestSchema.safeParse(read.body);
-    if (!parsed.success) return json({ code: 'INVALID_JOB', issue: parsed.error.issues[0]?.path.join('.') ?? null }, 400);
-    const documents = decodeDocuments(parsed.data.documents);
-    if ('error' in documents) return json({ code: documents.error }, 413);
+    const documents = await decodeJobForm(read.form);
+    if ('code' in documents) return json({ code: documents.code, ...(documents.issue !== undefined ? { issue: documents.issue } : {}) }, documents.status);
     const client = clientAddress(request.headers);
     const admission = await admit({ client, worstCaseUsd: 0 }, budget);
     if (!admission.admitted) return json({ code: admission.code, ...(admission.retryAfterSeconds ? { retryAfterSeconds: admission.retryAfterSeconds } : {}) }, admission.status);

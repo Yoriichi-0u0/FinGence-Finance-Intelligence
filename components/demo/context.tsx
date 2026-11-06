@@ -52,13 +52,13 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
     const [aiWait, setAiWait] = useState<number | null>(null);
     const [serverState, setServerState] = useState<ServerProcessingState | null>(null);
     const [inputs, setInputs] = useState<DocumentInput[]>([]);
-    const run = useRef(0), probe = useRef<Promise<GatewayStatus> | null>(null);
+    const run = useRef(0), probe = useRef<Promise<GatewayStatus> | null>(null), uploadLimit = useRef<number | null>(null);
     useEffect(() => { if (enabled && aiGateway) { probe.current = gatewayStatus(); void probe.current.then(setAi); } }, [enabled, aiGateway]);
     useEffect(() => {
         if (!enabled || !serverJobs) return;
         // A pause or resume by Management reaches an open tab within 15 s, and at once when the tab is focused again.
         let live = true;
-        const refresh = () => { fetch('/api/processing/jobs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live && b) setServerState(b.processing ?? null); }).catch(() => undefined); };
+        const refresh = () => { fetch('/api/processing/jobs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live && b) { setServerState(b.processing ?? null); uploadLimit.current = typeof b.maxUploadBytes === 'number' ? b.maxUploadBytes : null; } }).catch(() => undefined); };
         const visible = () => { if (document.visibilityState === 'visible') refresh(); };
         refresh();
         const timer = setInterval(refresh, 15_000);
@@ -94,7 +94,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
             if (serverJobs) {
                 // The server runs the job and stores its results; this browser then re-runs the same pure pipeline on the
                 // same documents with the server's accepted layout readings (no model call) and must reach the same ID.
-                const outcome = await submitServerJob(inputs, stages => { if (current === run.current) setLiveStages(stages); });
+                const outcome = await submitServerJob(inputs, stages => { if (current === run.current) setLiveStages(stages); }, uploadLimit.current);
                 if (current !== run.current) return null;
                 if ('refusal' in outcome) {
                     if (outcome.state) setServerState(outcome.state);
