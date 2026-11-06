@@ -8,6 +8,7 @@ import { useDemoProcessing } from './context';
 import { DocumentEvidenceEntry } from './document-evidence';
 import { InterpretationPanel } from './interpretation-panel';
 import { SaveRun } from './save-run';
+import { ROLE_LABEL, useWorkspace } from '@/components/workspace/context';
 import { Callout, DecisionBadge, PendingBadge, Stat, Table, button, chip, money, periodLabel, primaryButton } from './shared';
 
 const SAMPLE = ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
@@ -36,7 +37,9 @@ export default function DemoDataWorkspace() {
     const [selected, setSelected] = useState<DocumentInput[]>([]);
     const [notice, setNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
-    const busy = status === 'processing' || loading, paused = !!serverState?.paused;
+    // Paused by the workspace's Management (signed in) or by server processing's pause switch: either stops new processing.
+    const workspace = useWorkspace(), paused = workspace.session?.processing.paused ? workspace.session.processing : serverState?.paused ? serverState : null;
+    const busy = status === 'processing' || loading;
 
     async function loadSample(paths = SAMPLE) {
         setLoading(true); setNotice(null);
@@ -65,6 +68,13 @@ export default function DemoDataWorkspace() {
     const stageDone = stages.filter(x => x.stage).length;
     const checks = liveStages.flatMap(x => x.checks), passed = checks.filter(c => c.passed).length;
 
+    if (workspace.session && workspace.session.role !== 'FINANCE') return <>
+        <PageHeader title="Data" description="Documents are processed by Finance users." />
+        <Panel title={`Signed in as ${ROLE_LABEL[workspace.session.role]}`}>
+            <div className="p-4 sm:p-5"><p className="text-sm">Your role does not process financial documents. {workspace.session.role === 'MANAGEMENT' ? 'Every run your Finance users process appears in Operations, with each check, model call and failure.' : 'Manage who can sign in, and with which role, in Team.'}</p>
+            <Link href={workspace.session.role === 'MANAGEMENT' ? '/operations' : '/team'} className={`${primaryButton} mt-4`}>{workspace.session.role === 'MANAGEMENT' ? 'Open Operations' : 'Open Team'}</Link></div>
+        </Panel>
+    </>;
     return <>
         <PageHeader eyebrow="Step 1 · your documents" title="Data" description="Provide a bank statement and a general ledger once. FinGence identifies, verifies, reconciles and analyses them in one run." />
         <section role="note" aria-label="Public prototype data notice" className="mb-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
@@ -89,7 +99,7 @@ export default function DemoDataWorkspace() {
                 </div>
             </details>
         </section>
-        {paused && serverState ? <Callout role="alert" tone="warn" className="mb-6" title="Processing is paused by your technical team.">{serverState.reason ? `Reason: ${serverState.reason}. ` : ''}New documents cannot be processed until it is resumed.</Callout> : null}
+        {paused ? <Callout role="alert" tone="bad" className="mb-6" title="Processing is paused by your technical team.">You can still look at earlier results; new documents cannot be processed until they resume it.{paused.reason ? ` Their note: ${paused.reason}` : ''}</Callout> : null}
         <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
             <Panel title="Choose documents" eyebrow="1 · Input">
                 <div className="space-y-4 p-4 sm:p-5">
@@ -117,7 +127,7 @@ export default function DemoDataWorkspace() {
                             : <p className="rounded-xl border border-dashed border-[var(--border)] px-3 py-3 text-sm text-[var(--muted)]">No documents selected.</p>}
                     </div>
                     <div className="flex flex-col gap-2 border-t border-[var(--border)] pt-4 sm:flex-row">
-                        <button type="button" className={`${primaryButton} sm:flex-1`} disabled={busy || paused || !selected.length} onClick={() => void process(selected)}>{status === 'processing' ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Play aria-hidden="true" size={16} />}Process Financial Documents</button>
+                        <button type="button" className={`${primaryButton} sm:flex-1`} disabled={busy || !selected.length || !!paused} onClick={() => void process(selected)}>{status === 'processing' ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Play aria-hidden="true" size={16} />}Process Financial Documents</button>
                         <button type="button" className={button} disabled={busy || (status !== 'ready' && status !== 'failed')} onClick={() => { clear(); setSelected([]); }}><RotateCcw aria-hidden="true" size={16} />Clear results</button>
                     </div>
                 </div>

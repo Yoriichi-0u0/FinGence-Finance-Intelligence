@@ -4,6 +4,7 @@ import { boundedForm, noStoreJson as json } from '@/lib/server/ai/request';
 import { clientHash } from '@/lib/server/ingestion-store';
 import { createJob, decodeJobForm, maxJobBodyBytes, processingState, runJob } from '@/lib/server/processing/jobs';
 import { processingStore, StoreError } from '@/lib/server/processing/store';
+import { processingRefusal } from '@/lib/server/workspace/session';
 
 export const dynamic = 'force-dynamic';
 /** A job runs after the response, for at most this long; one that never finishes is failed by the store after 10 minutes. */
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
     if (!processingStore() || !budget) return notFound();
     const read = await boundedForm(request, maxJobBodyBytes());
     if ('refusal' in read) return read.refusal;
+    // With the workspace on, only a signed-in Finance user of an organization whose processing is not paused may submit.
+    const gate = await processingRefusal(request.headers);
+    if (gate) return json({ code: gate.code, ...(gate.reason ? { reason: gate.reason } : {}) }, gate.status);
     const documents = await decodeJobForm(read.form);
     if ('code' in documents) return json({ code: documents.code, ...(documents.issue !== undefined ? { issue: documents.issue } : {}) }, documents.status);
     const client = clientAddress(request.headers);
