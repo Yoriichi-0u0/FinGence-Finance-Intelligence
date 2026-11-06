@@ -5,7 +5,11 @@
 // Chrome, headings repeated on every page) and, for some, a scanned PDF and a JPEG. Every document has exact ground
 // truth ({date, signed cents} per transaction) and arithmetic that holds. All names are fictional; seeded, so the
 // transactions are reproducible (Chrome-rendered bytes depend on the browser build).
-// Usage: CHROME=/path/to/chrome node scripts/generate-statement-corpus.mjs [outDir=.local/benchmark/corpus]
+// Usage: CHROME=/path/to/chrome node scripts/generate-statement-corpus.mjs [outDir=.local/benchmark/corpus] [--held-out]
+// --held-out writes the HELD-OUT set instead (default outDir .local/benchmark/heldout): eight further layouts, written
+// for the evaluation and never used while FinGence was developed or tuned, with their own seeds. They add headings in
+// German and Indonesian, dot-grouped numbers, THB, EUR and IDR, a credit-before-debit column order, a "Dr/Cr" column
+// before the amount and a ledger with one signed amount column.
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -13,7 +17,8 @@ import { join } from 'node:path';
 import { strToU8, zipSync } from 'fflate';
 import { PDFDocument } from 'pdf-lib';
 
-const OUT = process.argv[2] ?? join(process.cwd(), '.local', 'benchmark', 'corpus');
+const HELD_OUT = process.argv.includes('--held-out');
+const OUT = process.argv.slice(2).find(a => !a.startsWith('--')) ?? join(process.cwd(), '.local', 'benchmark', HELD_OUT ? 'heldout' : 'corpus');
 const CHROME = process.env.CHROME;
 mkdirSync(OUT, { recursive: true });
 
@@ -63,6 +68,26 @@ const LAYOUTS = [
         header: ['Tarikh', 'No. Baucar', 'Keterangan', 'Debit (RM)', 'Kredit (RM)'], cells: (t, _, L) => [dateAs(t.date, L.date), `BC-${t.ref.slice(0, 6)}`, t.description, t.cents > 0 ? money(t.cents, L.num) : '', t.cents < 0 ? money(-t.cents, L.num) : ''] },
 ];
 
+// ---- Held-out layouts (evaluation only; see --held-out). Same writers, new headings, languages, formats and currencies.
+const HELD_OUT_LAYOUTS = [
+    { id: 'labuan-myr-moneyinout', role: 'BANK', bank: 'Labuan Island Bank', currency: 'MYR', date: 'D Mon YYYY', num: 'COMMA', months: 2, start: '2026-02', count: 60, scale: 1.1,
+        header: ['Trans. Date', 'Description', 'Money Out (RM)', 'Money In (RM)', 'Running Balance'], cells: (t, bal, L) => [dateAs(t.date, L.date), `${t.description} / ${t.ref}`, t.cents < 0 ? money(-t.cents, L.num) : '', t.cents > 0 ? money(t.cents, L.num) : '', money(bal, L.num)] },
+    { id: 'tanjung-eur-german', role: 'BANK', bank: 'Tanjung Europa Bank', currency: 'EUR', date: 'DD.MM.YYYY', num: 'DOT', months: 1, start: '2026-04', count: 34, scale: 0.6,
+        header: ['Buchungstag', 'Verwendungszweck', 'Betrag (EUR)', 'Saldo (EUR)'], cells: (t, bal, L) => [dateAs(t.date, L.date), `${t.description} ${t.ref}`, money(t.cents, L.num), money(bal, L.num)] },
+    { id: 'mekong-thb-drcr-first', role: 'BANK', bank: 'Mekong Riverside Bank', currency: 'THB', date: 'YYYY-MM-DD', num: 'COMMA', months: 1, start: '2026-03', count: 44, scale: 24,
+        header: ['Date', 'Ref No.', 'Transaction', 'Dr/Cr', 'Amount (THB)', 'Balance (THB)'], cells: (t, bal, L) => [dateAs(t.date, L.date), t.ref, t.description, t.cents < 0 ? 'Dr' : 'Cr', money(Math.abs(t.cents), L.num), money(bal, L.num)] },
+    { id: 'nusantara-idr-indonesian', role: 'BANK', bank: 'Bank Nusantara Timur', currency: 'IDR', date: 'DD/MM/YYYY', num: 'DOT', months: 3, start: '2026-01', count: 75, scale: 3500, lang: 'id',
+        header: ['Tanggal', 'Keterangan', 'Debet', 'Kredit', 'Saldo'], cells: (t, bal, L) => [dateAs(t.date, L.date), `${t.description} ${t.ref}`, t.cents < 0 ? money(-t.cents, L.num) : '', t.cents > 0 ? money(t.cents, L.num) : '', money(bal, L.num)] },
+    { id: 'kinabalu-myr-credit-first', role: 'BANK', bank: 'Kinabalu Savings Bank', currency: 'MYR', date: 'DD-MM-YYYY', num: 'COMMA', months: 1, start: '2026-05', count: 28, scale: 0.9,
+        header: ['Value Date', 'Credit', 'Debit', 'Narrative', 'Balance'], cells: (t, bal, L) => [dateAs(t.date, L.date), t.cents > 0 ? money(t.cents, L.num) : '', t.cents < 0 ? money(-t.cents, L.num) : '', `${t.description} ${t.ref}`, money(bal, L.num)] },
+    { id: 'ledger-sgd-dr-cr', role: 'LEDGER', business: 'Harbourfront Bakery Pte Ltd (Fictional)', currency: 'SGD', date: 'DD-Mon-YYYY', num: 'COMMA', months: 1, start: '2026-04', count: 36, scale: 1.2,
+        header: ['Posting Date', 'Doc No', 'Particulars', 'Dr (SGD)', 'Cr (SGD)'], cells: (t, _, L) => [dateAs(t.date, L.date), `GL-${t.ref.slice(0, 7)}`, t.description, t.cents > 0 ? money(t.cents, L.num) : '', t.cents < 0 ? money(-t.cents, L.num) : ''] },
+    { id: 'lejar-bank-malay-dotdate', role: 'LEDGER', business: 'Bengkel Motor Sibu Enterprise (Rekaan)', currency: 'MYR', date: 'DD.MM.YYYY', num: 'COMMA', months: 1, start: '2026-02', count: 30, scale: 0.8, malay: true,
+        header: ['Tarikh Pos', 'Rujukan', 'Perihal', 'Debit', 'Kredit'], cells: (t, _, L) => [dateAs(t.date, L.date), `RJ-${t.ref.slice(0, 6)}`, t.description, t.cents > 0 ? money(t.cents, L.num) : '', t.cents < 0 ? money(-t.cents, L.num) : ''] },
+    { id: 'ledger-usd-signed', role: 'LEDGER', business: 'Coral Bay Logistics LLC (Fictional)', currency: 'USD', date: 'YYYY-MM-DD', num: 'PLAIN', months: 1, start: '2026-05', count: 40, scale: 0.7,
+        header: ['Date', 'Journal', 'Memo', 'Amount (USD)'], cells: (t, _, L) => [dateAs(t.date, L.date), `J${t.ref.slice(0, 5)}`, t.description, money(t.cents, L.num)] },
+];
+
 function documentOf(L, seed) {
     const r = rng(seed), tx = transactions(r, L), opening = Math.round((20000 + r() * 80000) * L.scale) * 100;
     const [y, m] = L.start.split('-').map(Number), endM = (m - 1 + L.months - 1) % 12 + 1, endY = y + Math.floor((m - 1 + L.months - 1) / 12);
@@ -71,12 +96,16 @@ function documentOf(L, seed) {
     let bal = opening; const rows = tx.map(t => { bal += t.cents; return L.cells(t, bal, L); });
     const id = `CUST-${Math.floor(r() * 900000 + 100000)}`, holder = L.role === 'BANK' ? ['Rimba Kitchen Enterprise (Fictional)', 'Sungai Hardware Trading (Fictional)', 'Dewan Catering Services (Fictional)'][seed % 3] : L.business;
     const ins = tx.filter(t => t.cents > 0).reduce((n, t) => n + t.cents, 0), outs = -tx.filter(t => t.cents < 0).reduce((n, t) => n + t.cents, 0);
-    const pre = L.role === 'BANK'
+    const pre = L.role === 'BANK' && L.lang === 'id'
+        ? [[`${L.bank} - Rekening Koran`], ['Nama nasabah', holder], ['ID nasabah', id], ['Periode', period], ['Mata uang', L.currency], ['Saldo awal', money(opening, L.num, L.prefix)]]
+        : L.role === 'BANK'
         ? (L.malay ? [[`${L.bank} - Penyata Akaun Semasa`], ['Pemegang akaun', holder], ['ID pelanggan', id], ['Tempoh penyata', period], ['Mata wang', L.currency], ['Baki awal', money(opening, L.num, L.prefix)]]
             : [[`${L.bank} - Current Account Statement`], ['Account holder', holder], ['Customer ID', id], ['Statement period', period], ['Currency', L.currency], ['Opening balance', money(opening, L.num, L.prefix)]])
         : (L.malay ? [[`${holder} - Lejar Am`], ['Kod entiti', id], ['Akaun', '1010 Tunai di Bank - Akaun Semasa'], ['Tempoh', period], ['Mata wang', L.currency]]
             : [[`${holder} - General Ledger Detail`], ['Entity code', id], ['Account', '1010 Cash at Bank - Current Account'], ['Period', period], ['Currency', L.currency]]);
-    const foot = L.role === 'BANK'
+    const foot = L.role === 'BANK' && L.lang === 'id'
+        ? [['Total debet', money(outs, L.num)], ['Total kredit', money(ins, L.num)], ['Saldo akhir', money(bal, L.num)]]
+        : L.role === 'BANK'
         ? (L.malay ? [['Jumlah debit', money(outs, L.num)], ['Jumlah kredit', money(ins, L.num)], ['Baki akhir', money(bal, L.num)]] : [['Total withdrawals', money(outs, L.num, L.prefix)], ['Total deposits', money(ins, L.num, L.prefix)], ['Closing balance', money(bal, L.num, L.prefix)]])
         : (L.malay ? [['Jumlah debit', money(ins, L.num)], ['Jumlah kredit', money(outs, L.num)]] : [['Total debits', money(ins, L.num)], ['Total credits', money(outs, L.num)]]);
     return { id: `${L.id}-${seed}`, layout: L, pre, header: L.header, rows, foot, truth: { role: L.role === 'BANK' ? 'BANK_STATEMENT' : 'GENERAL_LEDGER', currency: L.currency, transactions: tx.map(t => ({ date: t.date, cents: String(t.cents) })) } };
@@ -103,7 +132,7 @@ function xlsx(doc) {
 }
 const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 function html(doc, { scan = false, rows = doc.rows, first = true, last = true, page = 0, pages = 0 } = {}) {
-    const numeric = doc.header.map((h, i) => /Debit|Credit|Withdraw|Deposit|Balance|Amount|Kredit|Baki|Movement|Amt/i.test(h) || i === doc.header.length - 1 && doc.layout.role === 'BANK');
+    const numeric = doc.header.map((h, i) => /Debit|Credit|Withdraw|Deposit|Balance|Amount|Kredit|Baki|Movement|Amt|Money|Betrag|Saldo|Debet|Dr \(|Cr \(/i.test(h) || i === doc.header.length - 1 && doc.layout.role === 'BANK');
     return `<!doctype html><html><head><meta charset="utf-8"><style>
         @page { size: A4 landscape; margin: 14mm 12mm 16mm }
         body { font: ${scan ? '30px' : '9.5pt'}/1.35 Arial, Helvetica, sans-serif; color: #1c1c22; margin: 0; ${scan ? 'background:#f4f1ea; padding: 80px 90px; width: 3328px; height: 2320px; box-sizing: border-box; position: relative; overflow: hidden' : ''} }
@@ -153,7 +182,7 @@ async function chrome() {
     };
 }
 
-const docs = LAYOUTS.flatMap((L, i) => [documentOf(L, 101 + i)]);
+const docs = HELD_OUT ? HELD_OUT_LAYOUTS.map((L, i) => documentOf(L, 201 + i)) : LAYOUTS.flatMap((L, i) => [documentOf(L, 101 + i)]);
 const manifest = [];
 const browser = CHROME && existsSync(CHROME) ? await chrome() : null;
 if (!browser) console.warn('CHROME not set: writing CSV and XLSX only.');
@@ -177,5 +206,5 @@ for (const [i, doc] of docs.entries()) {
     if (doc.rows.length <= 32) write(`${doc.id}-photo.jpg`, await browser.jpeg(html(doc, { scan: true }), 3508, 2480), 'Image (JPEG)');
 }
 browser?.close();
-writeFileSync(join(OUT, 'manifest.json'), JSON.stringify({ generator: 'fingence-statement-corpus-v1', origin: 'FICTIONAL_SYNTHETIC', documents: manifest }, null, 1));
+writeFileSync(join(OUT, 'manifest.json'), JSON.stringify({ generator: 'fingence-statement-corpus-v1', set: HELD_OUT ? 'HELD_OUT' : 'DEVELOPMENT', origin: 'FICTIONAL_SYNTHETIC', documents: manifest }, null, 1));
 console.log(`Wrote ${manifest.length} documents for ${docs.length} statements to ${OUT}`);

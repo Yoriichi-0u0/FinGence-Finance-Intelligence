@@ -7,7 +7,11 @@
  *  - FinGence public samples in every format (CSV, XLSX, text PDF, scanned PDF, JPEG), ground truth = Phase 1 canonical files;
  *  - adversarial fixtures (expected quarantined, a few acceptable);
  *  - AgamiAI/Indian-Bank-Statements (Apache-2.0, synthetic), digital and scanned PDFs with JSON ground truth, from
- *    FINGENCE_BENCH_AGAMI_DIR (default .local/datasets/agami; not committed).
+ *    FINGENCE_BENCH_AGAMI_DIR (default .local/datasets/agami; not committed);
+ *  - the generated development corpus (FINGENCE_BENCH_CORPUS_DIR) and the HELD-OUT corpus (FINGENCE_BENCH_HELDOUT_DIR,
+ *    `generate-statement-corpus.mjs --held-out`): layouts never used while FinGence was developed, for the evaluation.
+ * Each result also records the role and currency FinGence decided, against the truth, and the accepted records
+ * (date, signed cents, description) for the manual verification sample (scripts/evaluate-ingestion.mjs).
  * FINGENCE_BENCH_OUT (JSON path; a .md summary is written next to it), FINGENCE_BENCH_ONLY (substring filter).
  */
 import { describe, expect, it, vi } from 'vitest';
@@ -25,6 +29,7 @@ import { stopOcr } from '../../lib/interpretation/ocr';
 const LIVE = process.env.FINGENCE_INGESTION_BENCHMARK === '1' && !!process.env.GROQ_API_KEY;
 const AGAMI = process.env.FINGENCE_BENCH_AGAMI_DIR ?? '.local/datasets/agami';
 const CORPUS = process.env.FINGENCE_BENCH_CORPUS_DIR ?? '.local/benchmark/corpus';
+const HELDOUT = process.env.FINGENCE_BENCH_HELDOUT_DIR ?? '.local/benchmark/heldout';
 const only = process.env.FINGENCE_BENCH_ONLY;
 type Truth = { date: string; cents: bigint }[];
 /**
@@ -55,13 +60,15 @@ function truthBalanceBreaks(json: string) {
     return tx.slice(1).filter((t, i) => bal(t) - bal(tx[i]) !== truth[i + 1].cents).length;
 }
 type Expect = 'ACCEPT' | 'QUARANTINE' | 'EXACT_OR_QUARANTINE';
-type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED'; file: string; expect: Expect; truth: (name: string) => Truth | null };
+type Meta = { role: string; currency: string };
+type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED' | 'HELD_OUT'; file: string; expect: Expect; truth: (name: string) => Truth | null; meta?: (name: string) => Meta };
 
 const cents = (v: string | number) => { const [w, f = ''] = String(typeof v === 'number' ? v.toFixed(2) : v).replace(/,/g, '').split('.'); const n = BigInt(w.replace('-', '')) * 100n + BigInt((f + '00').slice(0, 2)); return String(v).trim().startsWith('-') ? -n : n; };
 const csvRows = (path: string) => Papa.parse<Record<string, string>>(readFileSync(path, 'utf8'), { header: true, skipEmptyLines: true }).data;
 const bankTruth: Truth = csvRows('public/demo/demo-bank-statement-2026-03.csv').map(r => ({ date: r.ValueDate, cents: cents(r.SignedCashMovementMYR) }));
 const ledgerTruth: Truth = csvRows('public/demo/demo-general-ledger-2026-03.csv').map(r => ({ date: r.PostingDate, cents: cents(r.SignedCashMovementMYR) }));
 const byRole = (name: string) => /ledger|Cash ledger/i.test(name) ? ledgerTruth : bankTruth;
+const fingenceMeta = (name: string): Meta => ({ role: /ledger|Cash ledger/i.test(name) ? 'GENERAL_LEDGER' : 'BANK_STATEMENT', currency: 'MYR' });
 const iso = (d: string) => /^\d{2}\/\d{2}\/\d{4}/.test(d) ? `${d.slice(6, 10)}-${d.slice(3, 5)}-${d.slice(0, 2)}` : d.slice(0, 10);
 function agamiTruth(json: string): Truth {
     const d = JSON.parse(readFileSync(json, 'utf8')) as { transactions: Record<string, unknown>[] };
@@ -73,21 +80,22 @@ function agamiTruth(json: string): Truth {
 
 const U = 'public/demo/unfamiliar', F = 'tests/fixtures/interpretation';
 const cases: Case[] = [
-    ...['bank-statement-march-2026-export.csv', 'general-ledger-cash-march-2026.csv', 'penyata-bank-mac-2026.csv', 'ledger-signed-march-2026.csv'].map(f => ({ id: f, format: 'CSV', corpus: 'FINGENCE' as const, file: join(U, f), expect: 'ACCEPT' as const, truth: byRole })),
-    { id: 'rimba-demo-kitchen-march-2026.xlsx', format: 'XLSX', corpus: 'FINGENCE', file: join(U, 'rimba-demo-kitchen-march-2026.xlsx'), expect: 'ACCEPT', truth: byRole },
-    ...['bank-statement-march-2026.pdf', 'general-ledger-cash-march-2026.pdf'].map(f => ({ id: f, format: 'PDF (text)', corpus: 'FINGENCE' as const, file: join(U, f), expect: 'ACCEPT' as const, truth: byRole })),
-    ...['bank-statement-march-2026-scan.pdf', 'general-ledger-cash-march-2026-scan.jpg'].map(f => ({ id: f, format: f.endsWith('.pdf') ? 'PDF (scanned)' : 'Image (JPEG)', corpus: 'FINGENCE' as const, file: join(U, f), expect: 'ACCEPT' as const, truth: byRole })),
+    ...['bank-statement-march-2026-export.csv', 'general-ledger-cash-march-2026.csv', 'penyata-bank-mac-2026.csv', 'ledger-signed-march-2026.csv'].map(f => ({ id: f, format: 'CSV', corpus: 'FINGENCE' as const, file: join(U, f), expect: 'ACCEPT' as const, truth: byRole, meta: fingenceMeta })),
+    { id: 'rimba-demo-kitchen-march-2026.xlsx', format: 'XLSX', corpus: 'FINGENCE', file: join(U, 'rimba-demo-kitchen-march-2026.xlsx'), expect: 'ACCEPT', truth: byRole, meta: fingenceMeta },
+    ...['bank-statement-march-2026.pdf', 'general-ledger-cash-march-2026.pdf'].map(f => ({ id: f, format: 'PDF (text)', corpus: 'FINGENCE' as const, file: join(U, f), expect: 'ACCEPT' as const, truth: byRole, meta: fingenceMeta })),
+    ...['bank-statement-march-2026-scan.pdf', 'general-ledger-cash-march-2026-scan.jpg'].map(f => ({ id: f, format: f.endsWith('.pdf') ? 'PDF (scanned)' : 'Image (JPEG)', corpus: 'FINGENCE' as const, file: join(U, f), expect: 'ACCEPT' as const, truth: byRole, meta: fingenceMeta })),
     ...([['bank-debit-credit-no-balance.csv', 'ACCEPT'], ['bank-dr-cr-no-balance.csv', 'ACCEPT'], ['prompt-injection-in-cell.csv', 'EXACT_OR_QUARANTINE'],
         ...['opaque-headings-no-balance.csv', 'corrupted-running-balance.csv', 'mislabelled-withdrawal-deposit.csv', 'usd-statement.csv', 'staff-roster.csv', 'signed-amount-reversed-no-balance.csv', 'ledger-signed-opaque-no-balance.csv', 'ledger-multiple-accounts.csv', 'ledger-sales-account.csv', 'ledger-bank-loan-account.csv', 'ledger-no-account-evidence.csv', 'bank-ambiguous-debit-credit.csv'].map(f => [f, 'QUARANTINE'])] as [string, Expect][])
         .map(([f, expect]) => ({ id: f, format: 'CSV', corpus: 'ADVERSARIAL' as const, file: join(F, f), expect, truth: () => bankTruth })),
-    // The generated multi-bank corpus (scripts/generate-statement-corpus.mjs): every document is valid and must be read exactly.
-    ...(existsSync(join(CORPUS, 'manifest.json')) ? (JSON.parse(readFileSync(join(CORPUS, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string }[] }).documents.map(d => ({
-        id: `corpus/${d.file}`, format: d.format, corpus: 'GENERATED' as const, file: join(CORPUS, d.file), expect: 'ACCEPT' as const,
-        truth: () => (JSON.parse(readFileSync(join(CORPUS, d.truth), 'utf8')) as { transactions: { date: string; cents: string }[] }).transactions.map(t => ({ date: t.date, cents: BigInt(t.cents) })),
-    })) : []),
+    // The generated corpora (scripts/generate-statement-corpus.mjs): every document is valid and must be read exactly.
+    ...[[CORPUS, 'corpus', 'GENERATED'], [HELDOUT, 'heldout', 'HELD_OUT']].flatMap(([dir, prefix, corpus]) => existsSync(join(dir, 'manifest.json')) ? (JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string }[] }).documents.map(d => {
+        const truth = () => JSON.parse(readFileSync(join(dir, d.truth), 'utf8')) as Meta & { transactions: { date: string; cents: string }[] };
+        return { id: `${prefix}/${d.file}`, format: d.format, corpus: corpus as Case['corpus'], file: join(dir, d.file), expect: 'ACCEPT' as const,
+            truth: () => truth().transactions.map(t => ({ date: t.date, cents: BigInt(t.cents) })), meta: () => ({ role: truth().role, currency: truth().currency }) };
+    }) : []),
     ...(existsSync(AGAMI) ? readdirSync(AGAMI).flatMap(type => readdirSync(join(AGAMI, type)).filter(f => f.endsWith('.pdf')).map(f => ({
         id: `agami/${type}/${f}`, format: /Scanned/.test(type) ? 'PDF (scanned)' : 'PDF (text)', corpus: 'AGAMI' as const, file: join(AGAMI, type, f), expect: 'ACCEPT' as const,
-        truth: () => agamiTruth(join(AGAMI, type, f.replace(/\.pdf$/, '.json'))),
+        truth: () => agamiTruth(join(AGAMI, type, f.replace(/\.pdf$/, '.json'))), meta: () => ({ role: 'BANK_STATEMENT', currency: 'INR' }),
     }))) : []),
 ];
 // The USD fixture is a valid statement in another currency: under the ingestion scope it is acceptable, exactly.
@@ -135,10 +143,15 @@ describe.skipIf(!LIVE)('live ingestion-layer benchmark', () => {
                 const reading = d.interpretation?.proposal && truth ? readUnderProposal(tableOf(i), d.interpretation.proposal) : [];
                 const readExact = reading.filter((g, k) => truth?.[k] && g.date === truth[k].date && g.cents === truth[k].cents).length;
                 const sourceBreaks = c.corpus === 'AGAMI' ? truthBalanceBreaks(c.file.replace(/\.pdf$/, '.json')) : null;
-                const r = d.interpretation?.receipt;
+                const r = d.interpretation?.receipt, meta = c.meta?.(d.name) ?? null;
+                // Field by field, for every accepted row that has a truth row at its position.
+                const paired = truth ? got.map((g, k) => [g, truth[k]] as const).filter(([, t]) => !!t) : [];
                 const row = {
                     id: documents.length > 1 ? `${c.id} › ${d.source && 'sheet' in d.source ? d.source.sheet : i}` : c.id, corpus: c.corpus, format: c.format, expect: c.expect, outcome, meets,
                     rows: got.length, truthRows: truth?.length ?? null, firstMismatch: mismatches[0] ?? null,
+                    datesExact: paired.filter(([g, t]) => g.date === t.date).length, amountsExact: paired.filter(([g, t]) => g.cents === t.cents).length, fieldsCompared: paired.length,
+                    role: d.role, truthRole: meta?.role ?? null, truthCurrency: meta?.currency ?? null,
+                    records: rows.map(x => ({ date: x.ValueDate ?? x.PostingDate, cents: String(cents(x.SignedCashMovementMYR)), description: x.BankDescription ?? x.LedgerMemo ?? '' })),
                     readRows: reading.length, readExact, sourceBalanceBreaks: sourceBreaks,
                     months: accepted ? [...new Set(got.map(g => g.date.slice(0, 7)))].length : null, currency: rows[0]?.Currency ?? null,
                     source: d.source && 'kind' in d.source ? d.source.kind : null, ocrConfidence: d.source && 'confidence' in d.source ? d.source.confidence : null,
