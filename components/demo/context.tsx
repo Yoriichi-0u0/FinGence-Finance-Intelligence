@@ -2,7 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { browserDemoRunner, type DocumentInput, type ProcessingContext, type Stage } from '@/lib/demo/pipeline';
 import { createGatewayInterpreter, gatewayStatus, replayInterpreter, type GatewayStatus } from '@/lib/interpretation/client';
-import type { InterpretationResult } from '@/lib/interpretation/contracts';
+import { readStored, writeStored, restoreStored, toBase64 } from '@/lib/demo/session';
 import { replayExtractor, type StoredExtraction } from '@/lib/processing/extractions';
 import { submitServerJob, type ServerProcessingState } from './server-jobs';
 
@@ -12,8 +12,6 @@ import { submitServerJob, type ServerProcessingState } from './server-jobs';
  * deterministically from them, so a page can never show results from documents other than the current
  * ones. A reload replays stored proposals through the gates instead of calling the model again.
  */
-const STORAGE_KEY = 'fingence-demo-documents-v1';
-type Stored = { processedAt: string; documents: { name: string; provenance: DocumentInput['provenance']; base64: string }[]; interpretations?: Record<string, InterpretationResult>; job?: { id: string; processingId: string }; extractions?: Record<string, StoredExtraction> };
 export type DemoStatus = 'loading' | 'empty' | 'processing' | 'ready' | 'failed';
 type Value = {
     enabled: boolean; status: DemoStatus; context: ProcessingContext | null; liveStages: Stage[]; processedAt: string | null; persisted: boolean; error: string | null;
@@ -28,15 +26,6 @@ type Value = {
     serverState: ServerProcessingState | null;
 };
 const DemoContext = createContext<Value | null>(null);
-
-const toBase64 = (bytes: Uint8Array) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
-const fromBase64 = (value: string) => Uint8Array.from(atob(value), c => c.charCodeAt(0));
-function readStored(): Stored | null {
-    try { const raw = sessionStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) as Stored : null; } catch { return null; }
-}
-function writeStored(value: Stored | null) {
-    try { if (value) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(value)); else sessionStorage.removeItem(STORAGE_KEY); return true; } catch { return false; }
-}
 
 /** `aiGateway` is the server's own answer to "is the AI gateway enabled?": when it is false the browser never probes the (404) AI routes. */
 export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs = false, children }: { enabled: boolean; aiGateway?: boolean; serverJobs?: boolean; children: React.ReactNode }) {
@@ -67,7 +56,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
         if (!enabled) return;
         const stored = readStored(), current = ++run.current;
         if (!stored) { queueMicrotask(() => { if (current === run.current) setStatus('empty'); }); return; }
-        browserDemoRunner.run(stored.documents.map(d => ({ name: d.name, provenance: d.provenance, bytes: fromBase64(d.base64) })), undefined, { interpreter: replayInterpreter(stored.interpretations ?? {}, null), job: stored.job ? { id: stored.job.id, runner: 'BACKEND_JOB_RUNNER' } : null, extract: stored.extractions ? replayExtractor(stored.extractions) : undefined })
+        restoreStored(stored)
             .then(result => {
                 if (current !== run.current) return;
                 // A server job's result is shown again only while it still reproduces the job (same pipeline, same readings).
@@ -79,7 +68,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
             .catch(() => { if (current !== run.current) return; writeStored(null); setStatus('empty'); });
     }, [enabled]);
 
-    const process = useCallback(async (inputs: DocumentInput[]) => {
+    const processDocuments = useCallback(async (inputs: DocumentInput[]) => {
         // Clear first: a failed or abandoned run can never leave the previous documents' results on screen.
         const current = ++run.current;
         writeStored(null); setContext(null); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
@@ -120,7 +109,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
         }
     }, [ai, serverJobs]);
     const clear = useCallback(() => { run.current++; writeStored(null); setContext(null); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
-    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null, aiWait, serverJobs: enabled && serverJobs, serverState: enabled ? serverState : null }), [enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState]);
+    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process: processDocuments, clear, ai: enabled ? ai : null, aiWait, serverJobs: enabled && serverJobs, serverState: enabled ? serverState : null }), [enabled, status, context, liveStages, processedAt, persisted, error, processDocuments, clear, ai, aiWait, serverJobs, serverState]);
     return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
 

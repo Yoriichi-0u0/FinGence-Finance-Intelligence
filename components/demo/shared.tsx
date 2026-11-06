@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { ProcessingDetails } from '@/components/overview/processing-details';
 import { CheckCircle2, CircleDashed, CircleSlash, Fingerprint, ShieldAlert } from 'lucide-react';
 import { groupDigits } from '@/lib/poc-anomalies/format';
 import type { Decision, ProcessingContext } from '@/lib/demo/pipeline';
@@ -12,8 +13,8 @@ export const periodLabel = (period: string) => { const [a, b] = period.split('/'
 export const outflow = (currency: string, value: string) => money(currency, value.replace(/^-/, ''));
 /** True when the current processing includes the visitor's own files rather than only the built-in fictional samples. */
 export const usesOwnDocuments = (context: ProcessingContext) => context.documents.some(d => d.provenance === 'USER_SUPPLIED');
-export const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
-export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--teal-dark)] disabled:cursor-not-allowed disabled:opacity-50';
+export const button = 'workspace-button inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50';
+export const primaryButton = 'workspace-primary inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[var(--teal)] px-4 py-2 text-sm font-semibold text-[var(--ui-on-primary,white)] hover:bg-[var(--teal-dark)] disabled:cursor-not-allowed disabled:opacity-50';
 
 const DECISION: Record<Decision, { label: string; className: string; Icon: typeof CheckCircle2 }> = {
     AUTO_ACCEPTED: { label: 'Auto-accepted · verified', className: 'border-emerald-200 bg-[var(--green-soft)] text-[var(--green)]', Icon: CheckCircle2 },
@@ -37,8 +38,9 @@ export function Stat({ label, value, detail }: { label: string; value: string; d
 }
 
 /** Where every figure on a page comes from: one processing ID and its source fingerprints. */
-export function SourceStrip({ context }: { context: ProcessingContext }) {
+export function SourceStrip({ context, compact = false }: { context: ProcessingContext; compact?: boolean }) {
     const s = context.scope;
+    if (compact && s) return <ProcessingDetails business={s.businessName} period={s.period} currency={s.currency} processingId={context.processingId} fingerprints={context.documents.filter(d => d.decision === 'AUTO_ACCEPTED').map(d => ({ label: d.role === 'BANK_STATEMENT' ? 'Bank source' : d.role === 'GENERAL_LEDGER' ? 'Ledger source' : 'History source', value: d.sha256 }))}>{context.job?<p>Server job {context.job.id} · processed on the FinGence server, re-checked in your browser</p>:null}</ProcessingDetails>;
     return <div className="mb-5 flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--border)] bg-white p-3 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4">
         <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--teal-dark)]"><Fingerprint aria-hidden="true" size={15} />Processing {context.processingId}</span>
         {s ? <span>{s.businessName} ({s.businessId}) · {periodLabel(s.period)} · {s.currency}</span> : null}

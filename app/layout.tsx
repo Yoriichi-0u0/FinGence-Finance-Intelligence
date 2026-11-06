@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Script from "next/script";
+import { themeInitialization } from "@/components/overview/theme-preference";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
@@ -7,6 +9,7 @@ import {m5LocalEnabled} from "@/lib/server/tenant-admin-m5/flags";
 import {pocLocalEnabled} from "@/lib/server/poc-reconciliation/runtime";
 import {syntheticDemoEnabled} from "@/lib/server/demo/mode";
 import {aiGatewayEnabled} from "@/lib/server/ai/groq-interpreter";
+
 import {budgetStore} from "@/lib/server/ai/budget";
 import {managementEnabled, processingStore} from "@/lib/server/processing/store";
 
@@ -33,10 +36,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       data-scroll-behavior="smooth"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <Script id="fingence-theme-preference" strategy="beforeInteractive">{themeInitialization}</Script>
         <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()}>{children}</AppShell>
       </body>
     </html>

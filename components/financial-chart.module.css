@@ -1,0 +1,19 @@
+.financial { --fc-teal:var(--ui-primary,#087e82); --fc-blue:var(--ui-secondary,#4264c5); --fc-net:var(--ui-warning,#936421); --fc-surface:#fff; --fc-text:#13263e; --fc-muted:#53657b; background:transparent!important; }
+:global([data-shell-theme="dark"]) .financial { --fc-teal:var(--ui-primary,#60d1c5); --fc-blue:var(--ui-secondary,#87a5ff); --fc-net:var(--ui-warning,#e9be72); --fc-surface:#18243d; --fc-text:#f2f5ff; --fc-muted:#bdcae0; }
+.financial :global(.trading-stroke) { filter:none!important; }
+.financial :global(.ov-legend) { color:var(--fc-muted); }
+.financial :global(.trading-readout) { display:none; }
+.readout { min-height:116px; display:flex; align-items:flex-start; justify-content:flex-end; padding:0 8px 8px; font-size:12px; color:var(--fc-muted,var(--muted-strong)); }
+.readout>p { width:100%; padding-top:8px; }
+.tooltip { width:min(100%,390px); border:1px solid var(--border-strong); border-radius:10px; background:var(--fc-surface,#fff); color:var(--fc-text,var(--ink)); box-shadow:0 4px 12px #00000008; padding:10px 12px; display:grid; gap:5px; }
+.tooltip>strong { font-size:12px; margin-bottom:2px; }.tooltip>span { display:flex; align-items:baseline; gap:7px; min-width:0; line-height:1.5; }.tooltip i { width:7px; height:7px; flex-shrink:0; border-radius:50%; align-self:center; }.tooltip b { font-weight:650; margin-left:auto; text-align:right; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }.tooltip span>span { min-width:0; overflow-wrap:anywhere; }
+.financial svg { overflow:visible; touch-action:pan-y; }.financial [role="button"]:focus-visible { outline:2px solid var(--fc-blue)!important; outline-offset:-2px; }
+.financial svg [role="button"]:focus { outline:none; }
+.status { --fc-surface:#fff; --fc-text:#13263e; --fc-muted:#53657b; }
+:global([data-shell-theme="dark"]) .status { --fc-surface:#18243d; --fc-text:#f2f5ff; --fc-muted:#bdcae0; }
+.status .readout { min-height:78px; justify-content:flex-start; }
+@media(max-width:500px) { .readout { padding-inline:0; }.tooltip { font-size:11px; }.tooltip>span { flex-wrap:wrap; }.tooltip b { max-width:100%; } }
+
+.status [role="button"]:focus-visible { outline:2px solid var(--cash-out); outline-offset:4px; border-radius:6px; }
+
+:global(.ov-history) .financial { --fc-net:var(--ui-primary,#00729e); }

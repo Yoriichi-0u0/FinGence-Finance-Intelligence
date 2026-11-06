@@ -1,0 +1,33 @@
+'use client';
+import {useState} from 'react';
+import {AiCommentary} from './commentary';
+import type {GroundedRun} from '@/lib/grounded-qa/client';
+import {renderedText} from '@/lib/grounded-qa/commentary';
+import { Download, Printer } from 'lucide-react';
+import { PageHeader } from '@/components/ui';
+import type { ProcessingContext } from '@/lib/demo/pipeline';
+import { reconciliationStatuses } from '@/lib/poc-reconciliation/contracts';
+import { outcomeLabels } from './reconciliation-presentation';
+import { SourceStrip, Stat, button, money, outflow, primaryButton, periodLabel } from './shared';
+import styles from './workspace-final.module.css';
+
+/** Main's result/export contract; optional commentary is accepted only for this processing. */
+export function reportPayload(c:ProcessingContext,commentary:GroundedRun|null=null){
+ const aiCommentary=commentary?.status==='ANSWERED'&&commentary.verdict?.sentences?{model:commentary.receipts[0]?.model??null,sentences:renderedText(commentary.verdict.sentences),cites:commentary.verdict.cited.map(id=>({id,label:commentary.facts.find(f=>f.id===id)?.label??id})),receipts:commentary.receipts}:null;
+ return {...c.outputs.report,...(aiCommentary?{aiCommentary}:{}),...(c.outputs.statement?{reconciliationStatement:c.outputs.statement}:{}),...(c.outputs.periods.length>1?{reconciliationStatements:c.outputs.periods.map(p=>({period:p.period,statement:p.statement}))}:{}),...(c.outputs.resolution?{reconciliation:c.outputs.resolution}:{}),...(c.outputs.anomalyResolution?{anomalies:c.outputs.anomalyResolution}:{}),stages:c.stages.map(({id,decision,summary,checks})=>({id,decision,summary,checks})),quarantine:c.quarantine};
+}
+export default function Reports({c}:{c:ProcessingContext|null}){
+    const [accepted,setAccepted]=useState<{processingId:string;run:GroundedRun}|null>(null);
+    const rep=c?.outputs.report,r=c?.outputs.reconciliation,s=c?.scope,available=!!rep&&!!r&&!!s;
+    function download(){if(!c||!available)return;const url=URL.createObjectURL(new Blob([JSON.stringify(reportPayload(c,accepted?.processingId===c.processingId?accepted.run:null),null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=`fingence-summary-${c.processingId}.json`;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    return <div className={`${styles.page} ${styles.report}`}><PageHeader title="Reports" description="A source-backed management summary from the active processing context." actions={<div className="flex flex-wrap gap-2 print-control print:hidden"><button type="button" className={button} disabled={!available} onClick={download}><Download size={16}/>JSON Evidence</button><button type="button" className={primaryButton} disabled={!available} onClick={()=>window.print()}><Printer size={16}/>Print or Save PDF</button></div>}/>{c?<div className="print-control print:hidden"><SourceStrip compact context={c}/></div>:<p className={styles.context}>No valid report is available. Financial sections remain unavailable until verification.</p>}
+        {c&&available?<AiCommentary key={c.processingId} context={c} onResult={run=>setAccepted(run?{processingId:c.processingId,run}:null)}/>:null}
+        <section className={styles.panel}><h2>Bank Cash Movement</h2><div className={styles.cards}><Stat label="Cash In" value={rep&&s?money(s.currency,rep.cash.credits):'—'}/><Stat label="Cash Out" value={rep&&s?outflow(s.currency,rep.cash.debits):'—'}/><Stat label="Net Signed Movement" value={rep&&s?money(s.currency,rep.cash.net):'—'}/></div><p className={styles.note}>{rep?`${rep.cash.creditRows} credit records; ${rep.cash.debitRows} debit records.`:'Record analysis has not run.'} Cash movement is not revenue, profit or a cash flow statement.</p></section>
+        <section className={styles.panel}><h2>Reconciliation Summary</h2><p>{r&&s?`Bank ${money(s.currency,r.cashMovement.bank)} − ledger ${money(s.currency,r.cashMovement.ledger)} = ${money(s.currency,r.cashMovement.signedDifference)}.`:'—'}</p><div className={styles.table}><table><caption className="sr-only">Reconciliation outcome counts</caption><thead><tr><th>Outcome</th><th>Count</th></tr></thead><tbody>{reconciliationStatuses.map(status=><tr key={status}><th scope="row">{outcomeLabels[status]}</th><td>{r?r.counts[status]:'—'}</td></tr>)}</tbody></table></div><p className={styles.note}>Matcher outcomes remain unchanged. {c?.outputs.resolution?.summary ?? 'A signed difference does not establish its cause.'}</p></section>
+        {c?.outputs.notReconciled.length?<p className={styles.note}>Not reconciled (one document only): {c.outputs.notReconciled.map(n=>`${periodLabel(n.period)} (${n.side}, ${n.records} records)`).join('; ')}</p>:null}
+        <div className={styles.grid}><section className={styles.panel}><h2>Anomaly Candidates</h2><p>{rep?`${rep.anomalyCandidates} of ${rep.cash.rows} bank records have a rule finding.`:'—'}</p><p className={styles.note}>{c?.outputs.anomalyResolution?.summary} Candidates are not fraud findings.</p></section><section className={styles.panel}><h2>Forecast Baseline</h2><p>{rep?.forecast.status==='AVAILABLE'&&s?`${rep.forecast.period}: Cash In ${money(s.currency,rep.forecast.credits)}, Cash Out ${outflow(s.currency,rep.forecast.debits)}, derived Net ${money(s.currency,rep.forecast.net)} (six-month mean, backtested).`:rep?.forecast.status==='UNAVAILABLE'?`Unavailable: ${rep.forecast.detail}`:'—'}</p><p className={styles.note}>A baseline is an estimate, not a guaranteed financial outcome.</p></section></div>
+        <section className={styles.panel}><h2>Processing Verification</h2><p>{c?`${c.stages.filter(x=>x.decision==='AUTO_ACCEPTED').length} of ${c.stages.length} stages auto-accepted after automated checks; ${c.quarantine.length} items quarantined.`:'—'}</p>{c&&<div className={styles.table}><table><caption className="sr-only">Processing stage decisions</caption><thead><tr><th>Stage</th><th>Decision</th></tr></thead><tbody>{c.stages.map(stage=><tr key={stage.id}><th>{stage.title}</th><td>{stage.decision}</td></tr>)}</tbody></table></div>}</section>
+        <details className={styles.panel}><summary>Source Evidence</summary>{rep?rep.sources.map(x=><p className={styles.source} key={x.sha256}>{x.role.replace('_',' ').toLowerCase()}: {x.name} · SHA-256 {x.sha256}</p>):<p className={styles.note}>No source evidence available.</p>}</details>
+        <section className={styles.panel}><h2>Financial Limitations</h2>{rep?<ul className="list-disc pl-5">{rep.limitations.map(l=><li key={l} className={styles.note}>{l}</li>)}</ul>:<p className={styles.note}>No verified report exists. No financial results have been generated.</p>}</section>
+    </div>;
+}

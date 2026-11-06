@@ -1,0 +1,67 @@
+.explorer { --tx-accent:var(--ui-secondary,#b42323); --tx-positive:var(--ui-accepted,#086f65); --tx-negative:var(--ui-error,#b42323); min-width:0; }
+:global([data-shell-theme="dark"]) .explorer { --tx-accent:var(--ui-secondary,#b6a0ff); --tx-positive:var(--ui-accepted,#80d9ca); --tx-negative:var(--ui-red,#ff4545); }
+.context { min-width:0; margin-bottom:20px; }
+.context p,.scope { font-size:12px; color:var(--muted-strong); margin:8px 0 18px; }
+.context :global(.ov-verified) { color:var(--tx-positive); }
+.summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.summary article,.panel { background:var(--surface,#fff); border:1px solid var(--border); border-radius:16px; box-shadow:0 4px 16px #0b163805; }
+:global([data-shell-theme="dark"]) .summary article,:global([data-shell-theme="dark"]) .panel { background:#19243f; }
+.summary article { padding:20px; display:grid; gap:9px; }
+.summary article>span { display:flex; align-items:center; gap:8px; color:var(--muted-strong); font-size:13px; font-weight:600; }
+.summary strong { font-size:clamp(21px,2vw,30px); letter-spacing:-.035em; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.summary small { color:var(--muted); font-size:12px; }
+.panel { overflow:hidden; }
+.tabRow { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; padding:18px 20px; border-bottom:1px solid var(--border); }
+.tabRow>span { font-size:12px; color:var(--muted); }
+.tabRow [role="tablist"] { display:flex; gap:6px; }
+.explorer button { min-height:40px; border:1px solid var(--border-strong); border-radius:9px; padding:8px 13px; font-size:12px; font-weight:600; cursor:pointer; background:transparent; color:inherit; }
+.explorer button:disabled { opacity:.45; cursor:not-allowed; }
+.explorer button:hover:not(:disabled) { background:color-mix(in srgb,var(--tx-accent) 9%,transparent); }
+.explorer button:focus-visible,.explorer input:focus-visible,.explorer select:focus-visible,.explorer [tabindex]:focus-visible { outline:2px solid var(--tx-accent); outline-offset:3px; }
+.tabRow button[aria-selected="true"] { color:var(--tx-accent); border-color:var(--tx-accent); background:color-mix(in srgb,var(--tx-accent) 12%,transparent); }
+.filters { display:flex; flex-wrap:wrap; gap:12px; align-items:end; padding:20px; background:color-mix(in srgb,var(--border) 10%,transparent); }
+.filters label { display:grid; gap:7px; font-size:12px; font-weight:600; min-width:0; }
+.filters input,.filters select { min-height:40px; width:100%; min-width:0; border:1px solid var(--border-strong); border-radius:9px; background:transparent; color:inherit; padding:8px 10px; font-size:13px; }
+.filters select option { color:#17233d; background:white; }
+.search { flex:1 1 250px; }
+.search>div { display:flex; align-items:center; gap:6px; padding-left:10px; border:1px solid var(--border-strong); border-radius:9px; }
+.search input { border:0; }
+.search button { border:0; padding:7px; }
+.tableScroll { overflow:auto; }
+.tableScroll table { width:100%; min-width:890px; table-layout:fixed; border-collapse:collapse; font-size:13px; }
+.tableScroll th { text-align:left; padding:13px 16px; font-size:11px; color:var(--muted-strong); border-block:1px solid var(--border); }
+.tableScroll th:nth-child(1) { width:115px; }
+.tableScroll th:nth-child(2) { width:19%; }
+.tableScroll th:nth-child(3) { width:27%; }
+.tableScroll th:nth-child(5) { width:155px; text-align:right; }
+.tableScroll th:last-child { width:120px; }
+.tableScroll td { padding:17px 16px; border-bottom:1px solid var(--border); overflow-wrap:anywhere; vertical-align:top; }
+.tableScroll td:first-child { white-space:nowrap; font-size:12px; }
+.tableScroll td:nth-child(5) { text-align:right; white-space:nowrap; font-weight:650; font-variant-numeric:tabular-nums; }
+.tableScroll button { white-space:nowrap; padding-inline:9px; }
+.tableScroll strong { font-size:12px; font-weight:600; }
+.tableScroll small { display:block; margin-top:5px; color:var(--muted); font-size:11px; }
+.tableScroll tr:hover td { background:color-mix(in srgb,var(--tx-accent) 5%,transparent); cursor:pointer; }
+.tableScroll tr:focus-within td { background:color-mix(in srgb,var(--tx-accent) 8%,transparent); }
+.description { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.incoming { color:var(--tx-positive); }
+.outgoing { color:var(--tx-negative); }
+.empty { padding:36px 20px; text-align:center; }
+.empty h2 { font-weight:600; }.empty p { color:var(--muted); font-size:13px; margin:8px 0; }
+.empty a,.dialog a { color:var(--tx-accent); text-decoration:underline; }
+.pager { padding:16px 20px; display:flex; align-items:center; flex-wrap:wrap; gap:10px; }
+.pager p { margin-right:auto; font-size:12px; color:var(--muted-strong); }
+.error { color:var(--ui-error,var(--tx-negative)); padding:0 20px 14px; font-size:13px; }
+.dialog { margin:auto; border:1px solid var(--border-strong); border-radius:18px; width:min(640px,calc(100vw - 32px)); max-height:calc(100dvh - 40px); padding:24px; background:#fff; color:inherit; overflow:auto; }
+:global([data-shell-theme="dark"]) .dialog { background:#19243f; color:#f2f4ff; }
+.dialog::backdrop { background:#030919b8; }
+.dialog header { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.dialog header span { font-size:10px; letter-spacing:.1em; color:var(--muted); }.dialog h2 { font-size:22px; font-weight:650; }
+.dialog dl { display:grid; gap:14px; margin:20px 0; }.dialog dt { font-size:11px; color:var(--muted-strong); }.dialog dd { margin-top:4px; font-size:13px; white-space:pre-wrap; overflow-wrap:anywhere; }
+.dialog>p { font-size:12px; color:var(--muted); }.dialog .detailAmount { font-size:28px; color:inherit; font-weight:650; font-variant-numeric:tabular-nums; margin-top:20px; }
+@media(max-width:700px) { .summary { grid-template-columns:1fr; }.filters>label { flex:1 1 140px; }.filters .search { flex-basis:100%; }.summary article { padding:16px; }.tabRow { padding:14px; }.dialog { padding:18px; } }
+
+.summary article { border-top-color:var(--ui-primary,var(--border)); }.summary article>span svg { color:var(--ui-primary); }
+
+.dialog .detailAmount.incoming { color:var(--tx-positive); }
+.dialog .detailAmount.outgoing { color:var(--tx-negative); }

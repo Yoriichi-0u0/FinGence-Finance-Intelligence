@@ -1,4 +1,5 @@
 'use client';
+import { useNavigationRole } from '@/components/navigation/context';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { PageHeader, Panel } from '@/components/ui';
@@ -28,6 +29,7 @@ export default function M2Workspace({financialConsumers=false,modelBoundary=fals
         name: string;
         state: string;
     }[]>([]), [pending, setPending] = useState<string | null>(null), [warnings, setWarnings] = useState<'exclude' | 'include'>('exclude'), [question, setQuestion] = useState(''), [answer, setAnswer] = useState(''), [scope,setScope]=useState(''),[storageBlocked,setStorageBlocked]=useState(false),[recoveringLegacy,setRecoveringLegacy]=useState(false);
+    useNavigationRole(active && (role === 'Finance' || role === 'Admin' || role === 'Technical (Management)') ? role : null);
     const fence = useRef(new M2ClientFence()), selection = useRef(0), signingIn = useRef(false), working = useRef(false),restoringLegacy=useRef(false);
     const clearFinancialState=useCallback(()=>{selection.current++;setJobs([]);setSelected('');setView(null);setAnswer('');setQuestion('');setStages([]);setPending(null);setFile(null);setWarnings('exclude');restoringLegacy.current=false;setRecoveringLegacy(false);},[]);
     const invalidate=useCallback(()=>{fence.current.invalidate();clearFinancialState();setActive(false);setRole('');setScope('');},[clearFinancialState]);

@@ -1,4 +1,5 @@
 "use client";
+import { useNavigationRole } from '@/components/navigation/context';
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -67,6 +68,7 @@ export default function ForecastWorkspace() {
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
 
   // Every financial figure is dropped on sign-out, session loss, or any user, organization, role or membership change.
+  useNavigationRole(principal?.role ?? null);
   const clear = useCallback(() => { request.current++; setSources(null); setView(null); setNavigation(""); setLoading(false); }, []);
   const invalidate = useCallback(() => { forgetSelection(browserSelectionStorage, fence.current.principal); fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);
   const load = useCallback(async (selection: Selection) => {

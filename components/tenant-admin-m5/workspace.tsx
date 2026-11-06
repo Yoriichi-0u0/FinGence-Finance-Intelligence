@@ -1,4 +1,5 @@
 "use client";
+import { useNavigationRole } from '@/components/navigation/context';
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -57,6 +58,8 @@ export default function AdministrationWorkspace() {
   const [notice, setNotice] = useState<Notice>(null), [busy, setBusy] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<Confirmation>(null), [issued, setIssued] = useState<Issued>(null);
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
+
+  useNavigationRole(principal?.role ?? null);
 
   const clear = useCallback(() => { setOverview(null); setEvents(null); setIssued(null); setConfirmation(null); setBusy(null); }, []);
   const invalidate = useCallback(() => { fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);

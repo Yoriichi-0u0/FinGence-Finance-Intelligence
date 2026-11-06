@@ -7,9 +7,11 @@ import { processDocuments, type DocumentInput } from '../../lib/demo/pipeline';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/data' }));
 const { DemoProcessingProvider } = await import('../../components/demo/context');
-const { DemoBanner } = await import('../../components/demo/banner');
+const { DemoBanner, CompactDemoNotice } = await import('../../components/demo/banner');
 const { default: DemoDataWorkspace } = await import('../../components/demo/data-workspace');
 const { usesOwnDocuments } = await import('../../components/demo/shared');
+const { AppShell } = await import('../../components/app-shell');
+const Shell = AppShell as (props: { syntheticDemo: boolean; children?: ReactNode }) => ReactNode;
 
 const BANK = 'demo-bank-statement-2026-03.csv', LEDGER = 'demo-general-ledger-2026-03.csv';
 const doc = (name: string, provenance: DocumentInput['provenance']): DocumentInput => ({ name, bytes: new Uint8Array(readFileSync(join('public/demo', name))), provenance });
@@ -18,19 +20,28 @@ const Provider = DemoProcessingProvider as (props: { enabled: boolean; children?
 const page = (child: ReactNode) => renderToStaticMarkup(createElement(Provider, { enabled: true }, child)).replace(/<[^>]+>/g, ' ').replace(/&#x27;/g, "'").replace(/\s+/g, ' ');
 
 describe('public demo notices', () => {
-    it('warns against confidential documents and explains local processing and sessionStorage on Data', () => {
+    it('keeps the shell free of obsolete prototype notices and automatic dialogs', () => {
+        const html = renderToStaticMarkup(createElement(Shell, { syntheticDemo: true }, createElement('p', null, 'Current page')));
+        expect(html).not.toContain('Illustrative prototype page');
+        expect(html).not.toContain('Hosted persistence, authentication and reconciliation are pending');
+        expect(html).not.toContain('Illustrative page notice');
+        expect(html).not.toContain('<dialog');
+        expect(html).toContain('Current page');
+    });
+    it('keeps local processing and sessionStorage disclosures without the removed header notice', () => {
         const text = page(createElement(DemoDataWorkspace));
-        expect(text).toContain('Public prototype: do not submit confidential or real financial documents.');
-        expect(text).toContain('The built-in sample documents are fictional.');
+        expect(text).not.toContain('Public Demo');
+        expect(text).toContain('Built-in samples are fictional.');
         expect(text).toContain('processed locally in this browser and are not uploaded to a server');
-        expect(text).toContain("kept temporarily in this tab's sessionStorage");
-        expect(text).toContain('This is not live AI inference.');
+        expect(text).toContain("Temporary document contents in this tab's sessionStorage");
+        expect(text).toContain('deterministic rules, not live AI');
         expect(text).not.toMatch(/fictional data(?! only)/i);
     });
-    it('keeps the banner rule-based and never calls every document fictional', () => {
-        const text = page(createElement(DemoBanner));
-        expect(text).toContain('rule-based processing in your browser, not live AI');
-        expect(text).toContain('do not use confidential or real financial documents');
+    it('keeps both retired shared notices absent', () => {
+        expect(page(createElement(DemoBanner))).toBe('');
+        const text = page(createElement(CompactDemoNotice, { context: null }));
+        expect(text).toBe('');
+        expect(text).not.toContain('Public Demo');
         expect(text).not.toMatch(/fictional data/i);
     });
     it('distinguishes the built-in samples from the visitor’s own files without changing the processing', async () => {

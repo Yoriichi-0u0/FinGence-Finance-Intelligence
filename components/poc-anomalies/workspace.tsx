@@ -1,4 +1,5 @@
 "use client";
+import { useNavigationRole } from '@/components/navigation/context';
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertOctagon, AlertTriangle, Check, CircleGauge, Download, FileJson, FileText, Flag, LogOut, RotateCcw, Upload } from "lucide-react";
@@ -42,6 +43,8 @@ export default function AnomalyWorkspace() {
   const [sources, setSources] = useState<PocSource[] | null>(null), [analysis, setAnalysis] = useState<PocAnalysis | null>(null), [selectedRow, setSelectedRow] = useState<string | null>(null);
   const [loading, setLoading] = useState(false), [busy, setBusy] = useState<string | null>(null), [notice, setNotice] = useState<Notice>(null);
   const [email, setEmail] = useState(""), [password, setPassword] = useState("");
+
+  useNavigationRole(principal?.role ?? null);
 
   const clear = useCallback(() => { request.current++; setSources(null); setAnalysis(null); setSelectedRow(null); setBusy(null); setLoading(false); }, []);
   const invalidate = useCallback(() => { forgetSelection(browserSelectionStorage, fence.current.principal); fence.current.invalidate(); clear(); setPrincipal(null); }, [clear]);

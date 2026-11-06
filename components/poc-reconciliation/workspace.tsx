@@ -1,4 +1,5 @@
 'use client';
+import { useNavigationRole } from '@/components/navigation/context';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { PageHeader, Panel } from '@/components/ui';
 import { M2ClientFence, type M2ClientPrincipal } from '@/lib/ai-ingestion/m2-client-state';
@@ -14,6 +15,7 @@ export default function ReconciliationWorkspace() {
     const [bank, setBank] = useState<File | null>(null), [ledger, setLedger] = useState<File | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
     const [selections, setSelections] = useState<ReconciliationSelection[]>([]), [selected, setSelected] = useState(''), [snapshot, setSnapshot] = useState<FinancePoCReconciliationV1 | null>(null);
     const [filter, setFilter] = useState<ReconciliationStatus | 'ALL'>('ALL'), [page, setPage] = useState(0), [detail, setDetail] = useState<number | null>(null);
+    useNavigationRole(principal?.role ?? null);
     const invalidate = useCallback(() => { fence.current.invalidate(); sequence.current++; setPrincipal(null); setSelections([]); setSelected(''); setSnapshot(null); setBusy(false); setDetail(null); setBank(null); setLedger(null); }, []);
     const load = useCallback(async (id: string) => {
         const epoch = fence.current.epoch, current = ++sequence.current;

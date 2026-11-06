@@ -1,137 +1,64 @@
 "use client";
 
 import Image from "next/image";
+import workspaceStyles from "./demo/workspace-final.module.css";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { NavigationProvider, useNavigationItems } from "@/components/navigation/context";
+import { usesFinancialWorkspaceBackground } from "@/components/navigation/routes";
+import { useTheme } from "@/components/overview/theme";
 import { DemoProcessingProvider } from "@/components/demo/context";
-import { DemoBanner } from "@/components/demo/banner";
-import {
-  AlertTriangle,
-  Building2,
-  ChartNoAxesCombined,
-  ChevronDown,
-  Database,
-  FileBarChart,
-  Gauge,
-  House,
-  Menu,
-  MessageSquareText,
-  ReceiptText,
-  RefreshCw,
-  ShieldCheck,
-  TrendingUp,
-  X,
-} from "lucide-react";
+import { Building2, Menu, Pin, PinOff, X } from "lucide-react";
 
-const navigation = [
-  { href: "/", label: "Overview", icon: House },
-  { href: "/data", label: "Data", icon: Database },
-  { href: "/transactions", label: "Transactions", icon: ReceiptText },
-  { href: "/reconciliation", label: "Reconciliation", icon: RefreshCw },
-  { href: "/analytics", label: "Analytics", icon: ChartNoAxesCombined },
-  { href: "/forecasting", label: "Forecasting", icon: TrendingUp },
-  { href: "/anomalies", label: "Anomalies", icon: AlertTriangle },
-  { href: "/reports", label: "Reports", icon: FileBarChart },
-];
-// Local M5 only; the page itself enforces role-scoped access on the server.
-const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
-// Local combined PoC only; the page and API are absent elsewhere.
-const financeQuestions = { href: "/finance-questions", label: "Finance questions", icon: MessageSquareText };
-// Browser-only synthetic demo: rule-based answers over the current processing context.
-const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareText };
-// Management (Technical): server processing jobs, flagged items and the pause switch; absent unless the server enables it.
-const management = { href: "/management", label: "Management", icon: Gauge };
-
-function Brand() {
-  return (
-    <Link
-      href="/"
-      className="flex items-center gap-3 rounded-lg text-white focus-visible:outline-white"
-      aria-label="FinGence overview"
-    >
-      <Image src="/branding/FinGence_Logo_96.png" width={36} height={36} alt="" unoptimized className="size-9 shrink-0 rounded-lg" />
-      <span className="min-w-0">
-        <span className="block text-[21px] font-semibold tracking-[-0.03em]">FinGence</span>
-        <span className="block truncate text-[11px] text-slate-300">
-          AI-Driven Financial Intelligence
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: { onNavigate?: () => void; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; managementConsole?: boolean; serverJobs?: boolean }) {
-  const pathname = usePathname();
-
-  return (
-    <div className="flex h-full min-h-0 flex-col bg-[var(--navy)] px-3 py-5 text-white">
-      <div className="px-2 pb-7">
-        <Brand />
-      </div>
-
-      <nav aria-label="Primary navigation" className="space-y-1">
-        {[...navigation, ...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : []), ...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])].map((item) => {
-          const Icon = item.icon;
-          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              aria-current={active ? "page" : undefined}
-              className={`group flex min-h-11 items-center gap-3 rounded-lg px-3 text-[14px] font-medium transition-colors ${
-                active
-                  ? "bg-teal-500/25 text-white ring-1 ring-inset ring-teal-300/20"
-                  : "text-slate-200 hover:bg-white/7 hover:text-white"
-              }`}
-            >
-              <Icon
-                aria-hidden="true"
-                size={19}
-                strokeWidth={active ? 2.2 : 1.8}
-                className={active ? "text-teal-200" : "text-slate-300 group-hover:text-white"}
-              />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-
-      <div className="mt-auto border-t border-white/14 px-2 pt-5">
-        <button
-          type="button"
-          className="flex w-full items-center gap-3 rounded-lg p-1 text-left hover:bg-white/7"
-          aria-label="Open company workspace menu"
-        >
-          <span className="grid size-10 shrink-0 place-items-center rounded-full border border-teal-300/50 text-teal-200">
-            <Building2 aria-hidden="true" size={20} />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">{localFinancialConsumers ? "Synthetic organization" : syntheticDemo ? "Synthetic demo" : "SAIC"}</span>
-            <span className="block truncate text-xs text-slate-300">{localFinancialConsumers ? "Local experimental workspace" : syntheticDemo ? serverJobs ? "No sign-in · server processing" : "No sign-in · browser only" : "Finance Workspace"}</span>
-            <span className="mt-0.5 block text-xs text-slate-400">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Use fictional data only" : "August 2026"}</span>
-          </span>
-          <ChevronDown aria-hidden="true" size={16} className="text-slate-300" />
-        </button>
-      </div>
+function Sidebar({ onNavigate, desktop = false, pinned = false, onPin, localFinancialConsumers = false, syntheticDemo = false, serverJobs = false }: {
+  onNavigate?: () => void; desktop?: boolean; pinned?: boolean; onPin?: () => void;
+  localFinancialConsumers?: boolean; syntheticDemo?: boolean; serverJobs?: boolean;
+}) {
+  const pathname = usePathname(), items = useNavigationItems();
+  const workspace = localFinancialConsumers ? 'Synthetic organization' : syntheticDemo ? 'Synthetic demo' : 'SAIC';
+  return <div className={`shell-sidebar${desktop ? ' shell-sidebar-desktop' : ''}`}>
+    <div className="shell-brand-row">
+      <Link href="/" className="shell-brand" aria-label="FinGence home" onClick={onNavigate}>
+        <Image src="/branding/FinGence_Logo_96.png" width={34} height={34} alt="" unoptimized />
+        <span className="shell-sidebar-label"><strong>FinGence</strong><small>Financial Intelligence</small></span>
+      </Link>
     </div>
-  );
+    {desktop && <div className="shell-pin-row"><button type="button" onClick={onPin} className="shell-pin" aria-label={pinned ? 'Unpin sidebar' : 'Pin sidebar expanded'} aria-pressed={pinned} title={pinned ? 'Unpin sidebar' : 'Pin sidebar expanded'}>{pinned ? <PinOff size={16} aria-hidden="true" /> : <Pin size={16} aria-hidden="true" />}<span className="shell-sidebar-label">{pinned ? 'Unpin navigation' : 'Pin navigation'}</span></button></div>}
+    <nav aria-label="Primary navigation" className="shell-navigation" tabIndex={0}>
+      {items.map(item => {
+        const active = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
+        return <Link key={item.href} href={item.href} onClick={onNavigate} aria-label={item.label} title={item.label} aria-current={active ? 'page' : undefined} className="shell-nav-link">
+          <item.icon size={20} strokeWidth={active ? 2.1 : 1.7} aria-hidden="true" />
+          <span className="shell-sidebar-label">{item.label}</span>
+        </Link>;
+      })}
+    </nav>
+    <div className="shell-workspace" aria-label={`${workspace} workspace`} title={workspace}>
+      <span className="shell-workspace-icon"><Building2 size={19} aria-hidden="true" /></span>
+      <span className="shell-sidebar-label"><strong>{workspace}</strong><small>{localFinancialConsumers ? 'Local experimental workspace' : syntheticDemo ? serverJobs ? 'No sign-in · server processing' : 'No sign-in · browser only' : 'Finance workspace'}</small><small>{localFinancialConsumers ? 'Hosted access disabled' : syntheticDemo ? 'Use fictional data only' : 'Illustrative prototype'}</small></span>
+    </div>
+  </div>;
 }
 
-export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const theme = useTheme();
   const pathname = usePathname();
+
+  if (pathname === "/sign-in" || pathname === "/sign-up") return <div data-shell-theme={theme}>{children}</div>;
 
   return (
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
-    <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[232px_minmax(0,1fr)] print:block">
-      <aside className="sticky top-0 hidden h-dvh lg:block print:hidden">
-        <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} syntheticDemo={syntheticDemo} managementConsole={managementConsole} serverJobs={serverJobs} />
+    <NavigationProvider mode={{ syntheticDemo, localFinancialConsumers, localAdministration, localReconciliation, management }}>
+    <div data-shell-theme={theme} data-sidebar-pinned={pinned} className={`${(pathname === "/" || pathname === "/overview") ? "overview-shell " : ""}${usesFinancialWorkspaceBackground(pathname) ? "financial-workspace " : ""}app-layout min-h-dvh bg-[var(--canvas)] print:block ${usesFinancialWorkspaceBackground(pathname) ? workspaceStyles.theme : ""}`}>
+      <aside className="desktop-sidebar-slot hidden lg:block print:hidden" aria-label="Desktop navigation">
+        <Sidebar desktop pinned={pinned} onPin={() => setPinned(value => !value)} localFinancialConsumers={localFinancialConsumers} syntheticDemo={syntheticDemo} serverJobs={serverJobs} />
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-16 print:hidden items-center justify-between border-b border-[var(--border)] bg-white/96 px-4 backdrop-blur-sm lg:hidden">
+        <header className="shell-mobile-header sticky top-0 z-30 flex h-16 print:hidden items-center justify-between border-b px-4 backdrop-blur-sm lg:hidden">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -142,7 +69,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             >
               <Menu aria-hidden="true" size={23} />
             </button>
-            <Link href="/" aria-label="FinGence overview" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
+            <Link href="/" aria-label="FinGence home" className="flex items-center gap-2 font-semibold tracking-[-0.02em]">
               <Image src="/branding/FinGence_Logo_96.png" width={28} height={28} alt="" unoptimized className="size-7 shrink-0 rounded-md" />
               FinGence
             </Link>
@@ -155,10 +82,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
           </span>
         </header>
 
-        <main className="mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
-          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950" aria-label="Illustrative page notice">
-            <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
-          </aside>}
+        <main className="shell-main mx-auto min-h-dvh w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-6 xl:px-8 xl:py-7">
           {children}
         </main>
       </div>
@@ -175,16 +99,17 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="absolute right-3 top-4 z-10 grid size-10 place-items-center rounded-lg text-slate-200 hover:bg-white/10 hover:text-white"
+              className="shell-close absolute right-3 top-4 z-10 grid size-10 place-items-center rounded-lg"
               aria-label="Close navigation"
             >
               <X aria-hidden="true" size={21} />
             </button>
-            <Sidebar localFinancialConsumers={localFinancialConsumers} localAdministration={localAdministration} localReconciliation={localReconciliation} syntheticDemo={syntheticDemo} managementConsole={managementConsole} serverJobs={serverJobs} onNavigate={() => setMobileOpen(false)} />
+            <Sidebar localFinancialConsumers={localFinancialConsumers} syntheticDemo={syntheticDemo} serverJobs={serverJobs} onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       ) : null}
     </div>
+    </NavigationProvider>
     </DemoProcessingProvider>
   );
 }
