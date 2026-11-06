@@ -29,15 +29,15 @@ describe('PR82 combines frontend presentation with main contracts',()=>{
   expect(march.status).toBe('COMPLETED');expect(march.outputs.reconciliation!.counts).toMatchObject({MATCH_EXACT:46,MATCH_DATE_SHIFT:4});
   expect(march.outputs.resolution!.attention).toHaveLength(0);expect(march.outputs.resolution!.entries).toHaveLength(6);
   const page=html('overview',march);expect(page).toContain('Flagged Items');expect(page).toContain('No items flagged');expect(page).not.toContain('9 exceptions need review');
-  const recon=html('reconciliation',march);expect(recon).toContain('What FinGence did');expect(recon).toContain('Download entries (CSV)');expect(recon).toContain('Source Evidence');expect(recon).toContain('All Matcher Exceptions (9)');
+  const recon=html('reconciliation',march);expect(recon).not.toContain('What FinGence did');expect(recon).toContain('Source Evidence');expect(recon).toContain('All Matcher Exceptions (9)');
  });
- it('retains every quarter month, resolution, statement, missing-side explanation and source-bound drawer identity',()=>{
+ it('retains every quarter outcome and source-bound drawer identity without rendering the proposed statement',()=>{
   expect(quarter.scope!.months).toEqual(['2026-01','2026-02','2026-03']);expect(quarter.scope!.currency).toBe('SGD');
   const before=JSON.stringify(quarter),rows=reconciliationOutcomes(quarter);
   expect(rows).toHaveLength(quarter.outputs.reconciliation!.results.length);expect(new Set(rows.map(x=>outcomeKey(quarter,x))).size).toBe(rows.length);
   for(const row of rows){const key=outcomeKey(quarter,row),chosen=selectedOutcome(quarter,key)!;expect(chosen).toEqual(row);expect(quarter.outputs.periods.find(p=>p.period===row.period)!.snapshot.results).toContainEqual(Object.fromEntries(Object.entries(row).filter(([k])=>k!=='period')));expect(evidenceRecords(quarter.outputs.reconciliation!,row,'bank').unavailable).toEqual([]);}
   expect(selectedOutcome(march,outcomeKey(quarter,rows[0]))).toBeNull();
-  const page=html('reconciliation');for(const p of quarter.outputs.periods)expect(page).toContain(p.period);expect(page).toContain('Statement month');expect(page).toContain('What FinGence did');expect(page).toContain('Source Evidence');expect(JSON.stringify(quarter)).toBe(before);
+  const page=html('reconciliation');for(const p of quarter.outputs.periods)expect(page).toContain(p.period);expect(page).not.toContain('Statement month');expect(page).not.toContain('Bank reconciliation statement (proposed)');expect(page).not.toContain('EVERY EXCEPTION CLASSIFIED BY A STATED RULE');expect(page).not.toContain('What FinGence did');expect(page).toContain('Source Evidence');expect(JSON.stringify(quarter)).toBe(before);
  });
  it('uses actual statement months for analytics when no separate history is supplied',()=>{
   expect(quarter.outputs.history.accepted).toBe(false);expect(analyticsMonths(quarter).map(m=>m.period)).toEqual(quarter.scope!.months);
@@ -47,8 +47,8 @@ describe('PR82 combines frontend presentation with main contracts',()=>{
   const before=JSON.stringify(quarter),payload=reportPayload(quarter);
   expect(payload.reconciliation).toEqual(quarter.outputs.resolution);expect(payload.anomalies).toEqual(quarter.outputs.anomalyResolution);expect(payload.reconciliationStatements).toEqual(quarter.outputs.periods.map(p=>({period:p.period,statement:p.statement})));
   expect(payload.cash).toEqual(quarter.outputs.report!.cash);expect(payload.quarantine).toEqual(quarter.quarantine);
-  const anomaly=html('anomalies');expect(anomaly).toContain(quarter.outputs.anomalyResolution!.summary);expect(anomaly).toContain('Anomaly resolution');expect(anomaly).toContain('Confirmed by books');
-  const reports=html('reports');expect(reports).toContain('Print or Save PDF');expect(reports).toContain('What FinGence did');expect(reports).toContain('January 2026');expect(JSON.stringify(quarter)).toBe(before);
+  const anomaly=html('anomalies');expect(anomaly).not.toContain('What FinGence found and did');expect(anomaly).toContain('Anomaly resolution');expect(anomaly).toContain('Confirmed by books');
+  const reports=html('reports');expect(reports).toContain('Print or Save PDF');expect(reports).not.toContain('What FinGence did');expect(reports).not.toContain('Report Identity and Reporting Period');expect(reports).not.toContain('Bank reconciliation statement (proposed)');expect(reports).toContain(quarter.scope!.period);expect(JSON.stringify(quarter)).toBe(before);
  });
  it('keeps pause reasons, format choices, server-job identity and accurate upload disclosures',()=>{
   Object.assign(state.value,{serverJobs:true,serverState:{paused:true,reason:'Maintenance test'},context:{...march,job:{id:'test-server-job'}},ai:{available:true,model:'test-model'}});

@@ -1,7 +1,5 @@
 'use client';
 import Link from 'next/link';
-import {ReconciliationOutcomePanel} from './reconciliation-outcome';
-import {ReconciliationStatementPanel} from './reconciliation-statement';
 import { useRef, useState } from 'react';
 import { Check, CheckCircle2, Clock3, ShieldAlert, X } from 'lucide-react';
 import { PageHeader } from '@/components/ui';
@@ -21,8 +19,7 @@ function Badge({ status }: { status: Outcome['status'] }) {
 }
 function ReconciliationWorkspace({ c }: { c: ProcessingContext | null }) {
     const r = c?.outputs.reconciliation, scope = c?.scope, periods=c?.outputs.periods??[];
-    const [month,setMonth]=useState(Math.max(0,periods.length-1));
-    const outcomes=c?reconciliationOutcomes(c):[], multi=periods.length>1, statement=multi?periods[month]?.statement:c?.outputs.statement??periods[0]?.statement;
+    const outcomes=c?reconciliationOutcomes(c):[], multi=periods.length>1;
     const [view, setView] = useState<ResultView>('EXCEPTIONS'), [filter, setFilter] = useState<OutcomeFilter>('ALL'), [page, setPage] = useState(0), [open, setOpen] = useState<string | null>(null);
     const drawer = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement | null>(null);
     const base=outcomes.filter(x=>view==='ALL'||!isMatched(x.status)), visible=base.filter(x=>filter==='ALL'||x.status===filter), paging = reconciliationPage(page, visible.length), start = paging.page * 20;
@@ -34,13 +31,10 @@ function ReconciliationWorkspace({ c }: { c: ProcessingContext | null }) {
     return <div className={styles.workspace}>
         <PageHeader title="Reconciliation" description="Review verified matches and unresolved exceptions." />
         <div className={styles.context}>{c ? <SourceStrip compact context={c} /> : <p>Reconciliation unavailable until documents pass verification.</p>}{c?.outputs.history.accepted && <p>History scope: {c.outputs.history.months[0]} to {c.outputs.history.months.at(-1)} · {c.outputs.history.months.length} observed months</p>}</div>
-        {c?.outputs.resolution?<ReconciliationOutcomePanel outcome={c.outputs.resolution}/>:null}
         <section className={styles.summary} aria-label={r ? "Verified source cash movement" : "Source cash movement unavailable"}>
             {[['Bank Cash Movement', r?.cashMovement.bank, 'Signed movement · bank statement'], ['Ledger Cash Movement', r?.cashMovement.ledger, 'Signed movement · cash-account ledger'], ['Signed Bank and Ledger Difference', r?.cashMovement.signedDifference, 'Bank − ledger · cause is not inferred']].map(([label, value, detail]) => <article key={label}><h2>{label}</h2><strong>{value && scope ? money(scope.currency, value) : '—'}</strong><p>{detail}</p></article>)}
         </section>
         {c?.outputs.notReconciled.length?<p className={styles.rules}>Not reconciled (one document only): {c.outputs.notReconciled.map(n=>`${periodLabel(n.period)} (${n.side==='BANK'?'bank statement only':'books only'}, ${n.records} records)`).join('; ')}. These records are never matched against nothing.</p>:null}
-        {multi?<div role="group" aria-label="Statement month" className={styles.tabs}>{periods.map((p,i)=><button key={p.period} type="button" aria-pressed={month===i} onClick={()=>setMonth(i)}>{periodLabel(p.period)}</button>)}</div>:null}
-        {statement?<ReconciliationStatementPanel statement={statement}/>:null}
         <section className={styles.overview} aria-labelledby="matching-overview-title"><header><span>{r ? 'VERIFIED RECONCILIATION OUTPUT' : 'AWAITING VERIFIED OUTPUT'}</span><h2 id="matching-overview-title">Matching Overview</h2><p>Counts describe reconciliation outcomes, not unique transactions. Filters below control the table.</p></header><dl><div><dt><CheckCircle2 size={16} aria-hidden="true" />Exact Matches</dt><dd>{r?.counts.MATCH_EXACT ?? '—'}</dd></div><div><dt><Clock3 size={16} aria-hidden="true" />Posting Date Shift Matches</dt><dd>{r?.counts.MATCH_DATE_SHIFT ?? '—'}</dd></div><div><dt><ShieldAlert size={16} aria-hidden="true" />Matcher Exception Outcomes</dt><dd>{r ? exceptions : '—'}</dd></div></dl></section>
         <section className={styles.results} aria-label="Reconciliation results">
             <div role="tablist" aria-label="Result view" className={styles.tabs}>{([['EXCEPTIONS', 'Matcher Exceptions'], ['ALL', 'All Outcomes']] as const).map(([key, label]) => <button key={key} id={`reconciliation-tab-${key}`} type="button" role="tab" aria-selected={view === key} tabIndex={view === key ? 0 : -1} aria-controls="reconciliation-outcomes" onClick={() => changeView(key)} onKeyDown={e => { if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) { e.preventDefault(); const next = e.key === 'Home' ? 'EXCEPTIONS' : e.key === 'End' ? 'ALL' : view === 'ALL' ? 'EXCEPTIONS' : 'ALL'; changeView(next); document.getElementById(`reconciliation-tab-${next}`)?.focus(); } }}>{label}<span>{key === 'ALL' ? (r?.results.length ?? 0) : exceptions}</span></button>)}</div>
