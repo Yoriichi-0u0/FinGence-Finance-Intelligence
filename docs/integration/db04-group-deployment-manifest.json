@@ -1,0 +1,79 @@
+{
+  "version": "db01-db04-group-review/1",
+  "target": {
+    "project": "FinGence-Production",
+    "projectRef": "zmtdozblpvtjniehwjrw",
+    "database": "postgres"
+  },
+  "approval": "NOT_AUTHORIZED_FOR_HOSTED_EXECUTION",
+  "reportedCatalog": {
+    "publicTables": 0,
+    "reconciliation": false,
+    "m2": false,
+    "m3": false,
+    "independentlyCheckedHere": false
+  },
+  "source": "901109b9057bfeb927367955bdc69d2e346a09e4",
+  "inputs": [
+    {
+      "file": "supabase/sql/phase1-clean-setup.sql",
+      "sha256": "aa9a2397574a8eabe2bc51bc6b0e2cda3e1be6dc53b3bd20ce18e42f579927f4"
+    },
+    {
+      "file": "supabase/sql/c3b1-grouped-persistence-upgrade.sql",
+      "sha256": "1b17099761f806cafb899ca6f6af936bef33b9559c495c9b7ba322c1aff87106"
+    },
+    {
+      "file": "supabase/sql/db02-001-warning-mutation-fence.sql",
+      "sha256": "8a991309f2f4d4192ac9a782cc369348c93c0f098ce31c370424940897a33089"
+    },
+    {
+      "file": "supabase/sql/db04-development/install-review.sql",
+      "commit": "901109b9057bfeb927367955bdc69d2e346a09e4",
+      "sha256": "3f9617498f5b3df7658d8bf74387b17b18a57ddca35939885628077524b082d8"
+    },
+    {
+      "file": "supabase/sql/db04-development/synthetic-seed-review.sql",
+      "commit": "901109b9057bfeb927367955bdc69d2e346a09e4",
+      "sha256": "749f241da91e70260f1c02ca3a72b8e0ac4f3e52d31bde96a086a260a3e83334"
+    }
+  ],
+  "sql": [
+    {
+      "file": "supabase/sql/db04-group-review/install-review.sql",
+      "sha256": "21ea11b4eaf63897e9379ee0cb6cefb3cc973662cdc65c733a3eb84ec60b6df9"
+    },
+    {
+      "file": "supabase/sql/db04-group-review/synthetic-seed-review.sql",
+      "sha256": "77ff0daa71cb64513d22b40244a6017081a821739905a5e466720d4148741e46"
+    },
+    {
+      "file": "supabase/sql/db04-group-review/activate-logins-review.sql",
+      "sha256": "f323717dbec88e6ef2ba2cc488a4ca9bac623919648c069d892fdc29ba56661e"
+    }
+  ],
+  "objects": {
+    "publicTables": [
+      "ingestion_batches",
+      "financial_records",
+      "validation_issues",
+      "persistence_attempts"
+    ],
+    "schemas": [
+      "fingence_reconciliation",
+      "fingence_db04_group_synthetic"
+    ],
+    "roles": [
+      "fingence_db04_group_runtime",
+      "fingence_db04_group_broker",
+      "db04_group_test_runtime",
+      "db04_group_test_broker"
+    ]
+  },
+  "limits": [
+    "No real authentication or general C1/V2 cash bridge",
+    "Public foundation runtime remains disabled pending team ownership policies",
+    "Hosted server version/access/recovery and approval unverified",
+    "No automatic installer or hosted execution"
+  ]
+}
