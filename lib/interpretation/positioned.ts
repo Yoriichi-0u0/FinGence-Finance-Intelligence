@@ -13,7 +13,11 @@ export type Word = { text: string; x0: number; x1: number; y0: number; y1: numbe
 export type Dispute = { line: number; column: number; readings: string[] };
 type Cell = { text: string; x0: number; x1: number; h: number; alts: string[] };
 type Line = { page: number; y: number; height: number; cells: Cell[] };
-export type PositionedTable = { bytes: Uint8Array; rows: number; columns: number; notes: string[]; disputes: Dispute[] };
+/** Where a cell sits on its page, [x0, y0, x1, y1] in the words' coordinates (top-left origin); null for an empty cell. */
+export type CellBox = [number, number, number, number] | null;
+/** Per table line (the CSV line index): its page and one box per cell; null for a blank separator line. */
+export type RowGeometry = { page: number; cells: CellBox[] } | null;
+export type PositionedTable = { bytes: Uint8Array; rows: number; columns: number; notes: string[]; disputes: Dispute[]; geometry: RowGeometry[] };
 
 const DATE_LIKE = /\d{1,4}[-/.\s][A-Za-z\d]{1,9}[-/.\s]\d{2,4}|^\d{8}$/;
 const NUMERIC = /^\(?[-+]?(?:RM|MYR|Rs\.?|INR|₹|USD|US\$|\$|SGD|S\$|EUR|€|GBP|£)?\s?[\d.,]+\)?(?:\s?(?:MYR|INR|USD|SGD|EUR|GBP|CR|DR))?$/i;
@@ -94,19 +98,23 @@ export function wordsToTable(input: Word[]): PositionedTable {
         const prev = kept[i - 1];
         if (!prev || prev.page !== l.page || l.y - prev.y > pitch * 1.6) blocks.push([l]); else blocks.at(-1)!.push(l);
     }
-    const rows: string[][] = [], disputes: Dispute[] = [];
+    const rows: string[][] = [], disputes: Dispute[] = [], geometry: RowGeometry[] = [];
+    const boxOf = (c: Cell, y: number): CellBox => [c.x0, y - c.h / 2, c.x1, y + c.h / 2];
+    const union = (a: CellBox, b: CellBox): CellBox => !a ? b : !b ? a : [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])];
+    const push = (row: string[], g: RowGeometry) => { rows.push(row); geometry.push(g); };
+    const plain = (l: Line) => push(l.cells.map(c => c.text), { page: l.page, cells: l.cells.map(c => boxOf(c, l.y)) });
     let header: Line | null = null, repeated = 0, wrapped = 0;
-    type Aligned = { row: string[]; alts: string[][]; y: number; h: number; x0: (number | undefined)[] };
+    type Aligned = { row: string[]; alts: string[][]; y: number; h: number; x0: (number | undefined)[]; page: number; boxes: CellBox[] };
     const align = (l: Line): Aligned => {
-        const cols = header!.cells, row = cols.map(() => ''), alts: string[][] = cols.map(() => []), x0: (number | undefined)[] = cols.map(() => undefined);
+        const cols = header!.cells, row = cols.map(() => ''), alts: string[][] = cols.map(() => []), x0: (number | undefined)[] = cols.map(() => undefined), boxes: CellBox[] = cols.map(() => null);
         for (const c of l.cells) {
             const mid = (c.x0 + c.x1) / 2;
             let k = cols.findIndex((h, j) => mid < (j + 1 < cols.length ? (h.x1 + cols[j + 1].x0) / 2 : Infinity));
             if (k < 0) k = cols.length - 1;
             alts[k] = row[k] ? [...alts[k].map(a => join(a, c.text)), ...c.alts.map(a => join(row[k], a))] : c.alts;
-            row[k] = join(row[k], c.text); x0[k] ??= c.x0;
+            row[k] = join(row[k], c.text); x0[k] ??= c.x0; boxes[k] = union(boxes[k], boxOf(c, l.y));
         }
-        return { row, alts, y: l.y, h: l.height, x0 };
+        return { row, alts, y: l.y, h: l.height, x0, page: l.page, boxes };
     };
     // A line of a table with neither a date nor a figure continues a transaction whose text wrapped (a long
     // description, a time printed under the date): it joins the nearest dated or figured line, above or below.
@@ -119,12 +127,12 @@ export function wordsToTable(input: Word[]): PositionedTable {
             const near = anchors.reduce((best, j) => best < 0 || Math.abs(lines[j].y - a.y) < Math.abs(lines[best].y - a.y) ? j : best, -1);
             if (near < 0 || Math.abs(lines[near].y - a.y) > pitch * 1.6) { parts.set(i, [a]); continue; }
             // Wrapped text keeps the left edge of the text it continues, which can lie under a neighbouring heading.
-            const anchor = lines[near], moved: Aligned = { ...a, row: a.row.map(() => ''), alts: a.alts.map(() => []) };
+            const anchor = lines[near], moved: Aligned = { ...a, row: a.row.map(() => ''), alts: a.alts.map(() => []), boxes: a.boxes.map(() => null) };
             a.row.forEach((text, k) => {
                 if (!text) return;
                 const j = anchor.row.findIndex((t, jj) => t && !NUMERIC.test(t) && anchor.x0[jj] !== undefined && Math.abs(anchor.x0[jj]! - a.x0[k]!) <= a.h * 0.5);
                 const to = j >= 0 && !a.row[j] ? j : k;
-                moved.row[to] = text; moved.alts[to] = a.alts[k];
+                moved.row[to] = text; moved.alts[to] = a.alts[k]; moved.boxes[to] = a.boxes[k];
             });
             parts.get(near)!.push(moved); wrapped++;
         }
@@ -135,7 +143,7 @@ export function wordsToTable(input: Word[]): PositionedTable {
                 const readings = group.flatMap((g, gi) => g.alts[k].map(alt => group.map((h, hi) => hi === gi ? alt : h.row[k]).filter(Boolean).join(' ')));
                 if (readings.length) disputes.push({ line: rows.length, column: k, readings: [...new Set(readings)] });
             }
-            rows.push(row);
+            push(row, { page: group[0].page, cells: Array.from({ length: width }, (_, k) => group.reduce<CellBox>((b, g) => union(b, g.boxes[k]), null)) });
         }
     };
     let furniture = 0, joinedHeadings = 0;
@@ -168,11 +176,11 @@ export function wordsToTable(input: Word[]): PositionedTable {
             continue;
         }
         if (header && start < 0 && isDated(block[0])) { emit(block.map(align)); continue; }
-        if (rows.length) rows.push([]);
-        if (start < 0) { header = null; for (const l of block) rows.push(l.cells.map(c => c.text)); continue; }
-        for (const l of block.slice(0, start)) rows.push(l.cells.map(c => c.text));
+        if (rows.length) push([], null);
+        if (start < 0) { header = null; for (const l of block) plain(l); continue; }
+        for (const l of block.slice(0, start)) plain(l);
         header = block[start];
-        rows.push(header.cells.map(c => c.text));
+        plain(header);
         emit(block.slice(start + 1).map(align));
     }
     if (joinedHeadings) notes.push(`Column headings printed on two lines joined${joinedHeadings > 1 ? ` (${joinedHeadings} times)` : ''}${header ? `: ${header.cells.map(c => `"${c.text}"`).join(', ')}` : ''}.`);
@@ -180,5 +188,5 @@ export function wordsToTable(input: Word[]): PositionedTable {
     if (wrapped) notes.push(`${wrapped} wrapped line${wrapped === 1 ? '' : 's'} (text continuing a transaction) joined to the transaction they belong to.`);
     if (repeated) notes.push(`${repeated} repeated column-heading line${repeated === 1 ? '' : 's'} on later pages not read.`);
     const text = rows.map(r => r.map(csvCell).join(',')).join('\n') + '\n';
-    return { bytes: new TextEncoder().encode(text), rows: rows.length, columns: Math.max(0, ...rows.map(r => r.length)), notes, disputes };
+    return { bytes: new TextEncoder().encode(text), rows: rows.length, columns: Math.max(0, ...rows.map(r => r.length)), notes, disputes, geometry };
 }

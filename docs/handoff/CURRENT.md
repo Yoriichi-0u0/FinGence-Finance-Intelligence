@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Document evidence view — 6 November 2026
+
+On the Data page, each processed document can be shown side by side with what FinGence read from it. See [docs/architecture/document-evidence-view-v1.md](../architecture/document-evidence-view-v1.md).
+- **Left:** the PDF pages, photo or table, with every read cell coloured by its field.
+- **Right:** the verified records, each linked to its source line.
+- The lines the AI model was shown are marked, and so are the cells where the OCR passes disagreed.
+- Built from `ProcessedDocument.reading` and `ExtractedSource.geometry`. Processing results and IDs are unchanged.
+
 ## Server processing jobs, stored results and the Management console — 5 November 2026
 
 Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/architecture/server-processing-v1.md](../architecture/server-processing-v1.md).
