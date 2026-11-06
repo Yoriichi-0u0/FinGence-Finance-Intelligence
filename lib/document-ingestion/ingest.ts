@@ -10,7 +10,7 @@
 import Papa from 'papaparse';
 import { CASH_SOURCE_FIELDS } from '../poc-reconciliation/engine';
 import { EVALUATOR_COLUMNS } from '../poc-anomalies/source';
-import { InterpreterUnavailable, type LayoutInterpreter, type ModelReceipt } from '../interpretation/contracts';
+import { InterpreterUnavailable, retryKey, type InterpretationResult, type LayoutInterpreter, type ModelReceipt } from '../interpretation/contracts';
 import { buildEvidence, readTable } from '../interpretation/evidence';
 import { verifyProposal, verifyWithDisputes, type FieldMapping, type GateOptions } from '../interpretation/gates';
 import { expandWorkbook, isWorkbook, type WorksheetSource } from '../interpretation/workbook';
@@ -45,7 +45,26 @@ export type InterpretationRecord = {
     method: 'AI_LAYOUT_PROPOSAL'; receipt: ModelReceipt | null; proposal: unknown; error: string | null;
     decision: Decision; summary: string; checks: Check[]; mapping: FieldMapping[]; disclosures: string[];
     canonicalSha256: string | null; canonicalNet: string | null; mappingHash: string | null;
+    /** The first proposal, when it failed a check the model can fix and the model was asked once more (`proposal` is then the second). */
+    firstAttempt?: { proposal: unknown; receipt: ModelReceipt; check: string; detail: string } | null;
 };
+/**
+ * Checks whose failure is the model's own reading of the layout (a column mapped twice or not at all, a role or a
+ * direction the document's words contradict, dates read in the wrong format). Only these earn one more attempt, told
+ * which check failed; the second proposal passes through exactly the same checks. A document whose own arithmetic,
+ * account, scope or OCR figures fail is never re-asked: a different layout cannot make it valid.
+ */
+export const RETRYABLE_CHECKS = new Set(['schema', 'mapping', 'header', 'role-evidence', 'direction', 'dates']);
+/** The model results a run used, keyed for replay: each document's first attempt by SHA-256, a second by `retryKey`. */
+export function interpretationsOf(documents: ProcessedDocument[]): Record<string, InterpretationResult> {
+    return Object.fromEntries(documents.flatMap(d => {
+        const i = d.interpretation;
+        if (!i?.receipt) return [];
+        return i.firstAttempt
+            ? [[d.sha256, { proposal: i.firstAttempt.proposal, receipt: i.firstAttempt.receipt }], [retryKey(d.sha256), { proposal: i.proposal, receipt: i.receipt }]]
+            : [[d.sha256, { proposal: i.proposal, receipt: i.receipt }]];
+    }));
+}
 export type Digest = (bytes: Uint8Array) => Promise<string>;
 
 /** Web Crypto SHA-256 (browsers and Node 20+). */
@@ -154,9 +173,23 @@ export async function ingestDocuments(inputs: DocumentInput[], options: Ingestio
                 options.onTable?.(input.bytes.slice());
                 const evidence = buildEvidence(table, sha256, name);
                 aiLines = [...evidence.head, ...evidence.tail].map(l => l.line);
-                const { proposal, receipt } = await options.interpreter!.propose(evidence);
-                const verdict = input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted, scope }) : verifyProposal(table, proposal, { extracted, scope });
+                const verify = (proposal: unknown) => input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted, scope }) : verifyProposal(table, proposal, { extracted, scope });
+                let { proposal, receipt } = await options.interpreter!.propose(evidence);
+                let verdict = verify(proposal);
+                const failed = verdict.decision === 'AUTO_ACCEPTED' ? undefined : verdict.checks.find(k => !k.passed);
+                if (failed && RETRYABLE_CHECKS.has(failed.id)) {
+                    const first = { proposal, receipt, check: failed.id, detail: `${failed.label}: ${failed.detail}`.slice(0, 300) };
+                    try {
+                        ({ proposal, receipt } = await options.interpreter!.propose({ ...evidence, retry: { check: first.check, detail: first.detail } }));
+                        verdict = verify(proposal);
+                        record.firstAttempt = first;
+                    } catch {
+                        // The second call failed (refused or unavailable): the first proposal's verdict stands.
+                        ({ proposal, receipt } = first);
+                    }
+                }
                 Object.assign(record, { proposal, receipt, decision: verdict.decision, summary: verdict.summary, checks: verdict.checks, mapping: verdict.mapping, disclosures: verdict.disclosures });
+                if (record.firstAttempt) record.disclosures = [`The first AI proposal failed the "${record.firstAttempt.check}" check (${record.firstAttempt.detail}); the model was asked once more, and its second proposal went through every check again.`, ...record.disclosures];
                 if (verdict.canonical && verdict.mappingKey) {
                     bytes = verdict.canonical.bytes; lineage = { canonical: bytes, lines: verdict.canonical.lineage };
                     record.canonicalSha256 = await digest(bytes); record.canonicalNet = verdict.canonical.net;

@@ -10,6 +10,9 @@
 // for the evaluation and never used while FinGence was developed or tuned, with their own seeds. They add headings in
 // German and Indonesian, dot-grouped numbers, THB, EUR and IDR, a credit-before-debit column order, a "Dr/Cr" column
 // before the amount and a ledger with one signed amount column.
+// --held-out-b writes HELD-OUT SET B (default outDir .local/benchmark/heldout-b), fixed after run 5 and before run 6,
+// for re-testing the fixes made in between on layouts that played no part in them: a D/C indicator column, PHP, BND,
+// French headings, an Indonesian ledger, a signed bank amount and a signed ledger column whose heading states the convention.
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -17,8 +20,8 @@ import { join } from 'node:path';
 import { strToU8, zipSync } from 'fflate';
 import { PDFDocument } from 'pdf-lib';
 
-const HELD_OUT = process.argv.includes('--held-out');
-const OUT = process.argv.slice(2).find(a => !a.startsWith('--')) ?? join(process.cwd(), '.local', 'benchmark', HELD_OUT ? 'heldout' : 'corpus');
+const HELD_OUT_B = process.argv.includes('--held-out-b'), HELD_OUT = !HELD_OUT_B && process.argv.includes('--held-out');
+const OUT = process.argv.slice(2).find(a => !a.startsWith('--')) ?? join(process.cwd(), '.local', 'benchmark', HELD_OUT_B ? 'heldout-b' : HELD_OUT ? 'heldout' : 'corpus');
 const CHROME = process.env.CHROME;
 mkdirSync(OUT, { recursive: true });
 
@@ -88,6 +91,26 @@ const HELD_OUT_LAYOUTS = [
         header: ['Date', 'Journal', 'Memo', 'Amount (USD)'], cells: (t, _, L) => [dateAs(t.date, L.date), `J${t.ref.slice(0, 5)}`, t.description, money(t.cents, L.num)] },
 ];
 
+// ---- Held-out set B (evaluation run 6 only; see --held-out-b). Every layout states its own conventions.
+const HELD_OUT_B_LAYOUTS = [
+    { id: 'sabah-myr-dc-indicator', role: 'BANK', bank: 'Sabah Coastal Bank', currency: 'MYR', date: 'DD/MM/YYYY', num: 'COMMA', months: 1, start: '2026-06', count: 48, scale: 1,
+        header: ['Posting Date', 'Transaction Description', 'Cheque No', 'Amount (RM)', 'D/C', 'Balance (RM)'], cells: (t, bal, L) => [dateAs(t.date, L.date), t.description, t.ref, money(Math.abs(t.cents), L.num), t.cents < 0 ? 'D' : 'C', money(bal, L.num)] },
+    { id: 'mindanao-php-two-months', role: 'BANK', bank: 'Mindanao Rural Bank', currency: 'PHP', date: 'YYYY-MM-DD', num: 'COMMA', months: 2, start: '2026-04', count: 32, scale: 40,
+        header: ['Date', 'Particulars', 'Check No.', 'Debit', 'Credit', 'Running Balance'], cells: (t, bal, L) => [dateAs(t.date, L.date), t.description, t.ref, t.cents < 0 ? money(-t.cents, L.num) : '', t.cents > 0 ? money(t.cents, L.num) : '', money(bal, L.num)] },
+    { id: 'lyon-eur-french', role: 'BANK', bank: 'Banque du Rhone', currency: 'EUR', date: 'DD/MM/YYYY', num: 'DOT', months: 1, start: '2026-03', count: 42, scale: 0.6,
+        header: ['Date opération', 'Libellé', 'Débit', 'Crédit', 'Solde'], cells: (t, bal, L) => [dateAs(t.date, L.date), `${t.description} ${t.ref}`, t.cents < 0 ? money(-t.cents, L.num) : '', t.cents > 0 ? money(t.cents, L.num) : '', money(bal, L.num)] },
+    { id: 'kuching-myr-net-amount', role: 'BANK', bank: 'Kuching Heritage Bank', currency: 'MYR', date: 'D Mon YYYY', num: 'COMMA', months: 1, start: '2026-06', count: 30, scale: 0.9,
+        header: ['Date', 'Reference', 'Details', 'Net Cash Movement (RM)', 'Balance (RM)'], cells: (t, bal, L) => [dateAs(t.date, L.date), t.ref, t.description, money(t.cents, L.num), money(bal, L.num)] },
+    { id: 'brunei-bnd-quarter', role: 'BANK', bank: 'Bank Borneo Darussalam', currency: 'BND', date: 'DD-Mon-YYYY', num: 'COMMA', months: 3, start: '2026-04', count: 80, scale: 0.5,
+        header: ['Txn Date', 'Description', 'Withdrawal', 'Deposit', 'Balance'], cells: (t, bal, L) => [dateAs(t.date, L.date), `${t.description} ${t.ref}`, t.cents < 0 ? money(-t.cents, L.num) : '', t.cents > 0 ? money(t.cents, L.num) : '', money(bal, L.num)] },
+    { id: 'ledger-myr-two-months', role: 'LEDGER', business: 'Miri Seafood Wholesale Sdn Bhd (Fictional)', currency: 'MYR', date: 'DD/MM/YYYY', num: 'COMMA', months: 2, start: '2026-05', count: 50, scale: 1.1,
+        header: ['Entry Date', 'Entry No', 'Account Description', 'Debit (MYR)', 'Credit (MYR)'], cells: (t, _, L) => [dateAs(t.date, L.date), `E${t.ref.slice(0, 6)}`, t.description, t.cents > 0 ? money(t.cents, L.num) : '', t.cents < 0 ? money(-t.cents, L.num) : ''] },
+    { id: 'buku-besar-idr', role: 'LEDGER', business: 'CV Pontianak Makmur (Fiktif)', currency: 'IDR', date: 'DD-MM-YYYY', num: 'DOT', months: 1, start: '2026-05', count: 36, scale: 3000, lang: 'id',
+        header: ['Tanggal', 'No. Bukti', 'Keterangan', 'Debet', 'Kredit'], cells: (t, _, L) => [dateAs(t.date, L.date), `BK-${t.ref.slice(0, 6)}`, t.description, t.cents > 0 ? money(t.cents, L.num) : '', t.cents < 0 ? money(-t.cents, L.num) : ''] },
+    { id: 'ledger-usd-cash-movement', role: 'LEDGER', business: 'Reef Point Trading LLC (Fictional)', currency: 'USD', date: 'YYYY-MM-DD', num: 'PLAIN', months: 1, start: '2026-06', count: 38, scale: 0.6,
+        header: ['Date', 'Journal', 'Memo', 'Cash Movement (USD)'], cells: (t, _, L) => [dateAs(t.date, L.date), `J${t.ref.slice(0, 5)}`, t.description, money(t.cents, L.num)] },
+];
+
 function documentOf(L, seed) {
     const r = rng(seed), tx = transactions(r, L), opening = Math.round((20000 + r() * 80000) * L.scale) * 100;
     const [y, m] = L.start.split('-').map(Number), endM = (m - 1 + L.months - 1) % 12 + 1, endY = y + Math.floor((m - 1 + L.months - 1) / 12);
@@ -101,12 +124,14 @@ function documentOf(L, seed) {
         : L.role === 'BANK'
         ? (L.malay ? [[`${L.bank} - Penyata Akaun Semasa`], ['Pemegang akaun', holder], ['ID pelanggan', id], ['Tempoh penyata', period], ['Mata wang', L.currency], ['Baki awal', money(opening, L.num, L.prefix)]]
             : [[`${L.bank} - Current Account Statement`], ['Account holder', holder], ['Customer ID', id], ['Statement period', period], ['Currency', L.currency], ['Opening balance', money(opening, L.num, L.prefix)]])
+        : L.lang === 'id' ? [[`${holder} - Buku Besar`], ['Kode entitas', id], ['Akun', '1010 Kas di Bank - Rekening Giro'], ['Periode', period], ['Mata uang', L.currency]]
         : (L.malay ? [[`${holder} - Lejar Am`], ['Kod entiti', id], ['Akaun', '1010 Tunai di Bank - Akaun Semasa'], ['Tempoh', period], ['Mata wang', L.currency]]
             : [[`${holder} - General Ledger Detail`], ['Entity code', id], ['Account', '1010 Cash at Bank - Current Account'], ['Period', period], ['Currency', L.currency]]);
     const foot = L.role === 'BANK' && L.lang === 'id'
         ? [['Total debet', money(outs, L.num)], ['Total kredit', money(ins, L.num)], ['Saldo akhir', money(bal, L.num)]]
         : L.role === 'BANK'
         ? (L.malay ? [['Jumlah debit', money(outs, L.num)], ['Jumlah kredit', money(ins, L.num)], ['Baki akhir', money(bal, L.num)]] : [['Total withdrawals', money(outs, L.num, L.prefix)], ['Total deposits', money(ins, L.num, L.prefix)], ['Closing balance', money(bal, L.num, L.prefix)]])
+        : L.lang === 'id' ? [['Total debet', money(ins, L.num)], ['Total kredit', money(outs, L.num)]]
         : (L.malay ? [['Jumlah debit', money(ins, L.num)], ['Jumlah kredit', money(outs, L.num)]] : [['Total debits', money(ins, L.num)], ['Total credits', money(outs, L.num)]]);
     return { id: `${L.id}-${seed}`, layout: L, pre, header: L.header, rows, foot, truth: { role: L.role === 'BANK' ? 'BANK_STATEMENT' : 'GENERAL_LEDGER', currency: L.currency, transactions: tx.map(t => ({ date: t.date, cents: String(t.cents) })) } };
 }
@@ -132,7 +157,7 @@ function xlsx(doc) {
 }
 const esc = v => String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;');
 function html(doc, { scan = false, rows = doc.rows, first = true, last = true, page = 0, pages = 0 } = {}) {
-    const numeric = doc.header.map((h, i) => /Debit|Credit|Withdraw|Deposit|Balance|Amount|Kredit|Baki|Movement|Amt|Money|Betrag|Saldo|Debet|Dr \(|Cr \(/i.test(h) || i === doc.header.length - 1 && doc.layout.role === 'BANK');
+    const numeric = doc.header.map((h, i) => /Debit|Credit|Withdraw|Deposit|Balance|Amount|Kredit|Baki|Movement|Amt|Money|Betrag|Saldo|Debet|Dr \(|Cr \(|Débit|Crédit|Solde/i.test(h) || i === doc.header.length - 1 && doc.layout.role === 'BANK');
     return `<!doctype html><html><head><meta charset="utf-8"><style>
         @page { size: A4 landscape; margin: 14mm 12mm 16mm }
         body { font: ${scan ? '30px' : '9.5pt'}/1.35 Arial, Helvetica, sans-serif; color: #1c1c22; margin: 0; ${scan ? 'background:#f4f1ea; padding: 80px 90px; width: 3328px; height: 2320px; box-sizing: border-box; position: relative; overflow: hidden' : ''} }
@@ -182,7 +207,7 @@ async function chrome() {
     };
 }
 
-const docs = HELD_OUT ? HELD_OUT_LAYOUTS.map((L, i) => documentOf(L, 201 + i)) : LAYOUTS.flatMap((L, i) => [documentOf(L, 101 + i)]);
+const docs = HELD_OUT_B ? HELD_OUT_B_LAYOUTS.map((L, i) => documentOf(L, 301 + i)) : HELD_OUT ? HELD_OUT_LAYOUTS.map((L, i) => documentOf(L, 201 + i)) : LAYOUTS.flatMap((L, i) => [documentOf(L, 101 + i)]);
 const manifest = [];
 const browser = CHROME && existsSync(CHROME) ? await chrome() : null;
 if (!browser) console.warn('CHROME not set: writing CSV and XLSX only.');
@@ -206,5 +231,5 @@ for (const [i, doc] of docs.entries()) {
     if (doc.rows.length <= 32) write(`${doc.id}-photo.jpg`, await browser.jpeg(html(doc, { scan: true }), 3508, 2480), 'Image (JPEG)');
 }
 browser?.close();
-writeFileSync(join(OUT, 'manifest.json'), JSON.stringify({ generator: 'fingence-statement-corpus-v1', set: HELD_OUT ? 'HELD_OUT' : 'DEVELOPMENT', origin: 'FICTIONAL_SYNTHETIC', documents: manifest }, null, 1));
+writeFileSync(join(OUT, 'manifest.json'), JSON.stringify({ generator: 'fingence-statement-corpus-v1', set: HELD_OUT_B ? 'HELD_OUT_B' : HELD_OUT ? 'HELD_OUT' : 'DEVELOPMENT', origin: 'FICTIONAL_SYNTHETIC', documents: manifest }, null, 1));
 console.log(`Wrote ${manifest.length} documents for ${docs.length} statements to ${OUT}`);

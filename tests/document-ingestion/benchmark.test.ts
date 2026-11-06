@@ -9,7 +9,8 @@
  *  - AgamiAI/Indian-Bank-Statements (Apache-2.0, synthetic), digital and scanned PDFs with JSON ground truth, from
  *    FINGENCE_BENCH_AGAMI_DIR (default .local/datasets/agami; not committed);
  *  - the generated development corpus (FINGENCE_BENCH_CORPUS_DIR) and the HELD-OUT corpus (FINGENCE_BENCH_HELDOUT_DIR,
- *    `generate-statement-corpus.mjs --held-out`): layouts never used while FinGence was developed, for the evaluation.
+ *    `generate-statement-corpus.mjs --held-out`): layouts never used while FinGence was developed, for the evaluation,
+ *    and held-out set B (FINGENCE_BENCH_HELDOUT_B_DIR, `--held-out-b`), fixed after run 5 to re-test its fixes.
  * Each result also records the role and currency FinGence decided, against the truth, and the accepted records
  * (date, signed cents, description) for the manual verification sample (scripts/evaluate-ingestion.mjs).
  * FINGENCE_BENCH_OUT (JSON path; a .md summary is written next to it), FINGENCE_BENCH_ONLY (substring filter).
@@ -30,6 +31,7 @@ const LIVE = process.env.FINGENCE_INGESTION_BENCHMARK === '1' && !!process.env.G
 const AGAMI = process.env.FINGENCE_BENCH_AGAMI_DIR ?? '.local/datasets/agami';
 const CORPUS = process.env.FINGENCE_BENCH_CORPUS_DIR ?? '.local/benchmark/corpus';
 const HELDOUT = process.env.FINGENCE_BENCH_HELDOUT_DIR ?? '.local/benchmark/heldout';
+const HELDOUT_B = process.env.FINGENCE_BENCH_HELDOUT_B_DIR ?? '.local/benchmark/heldout-b';
 const only = process.env.FINGENCE_BENCH_ONLY;
 type Truth = { date: string; cents: bigint }[];
 /**
@@ -61,7 +63,7 @@ function truthBalanceBreaks(json: string) {
 }
 type Expect = 'ACCEPT' | 'QUARANTINE' | 'EXACT_OR_QUARANTINE';
 type Meta = { role: string; currency: string };
-type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED' | 'HELD_OUT'; file: string; expect: Expect; truth: (name: string) => Truth | null; meta?: (name: string) => Meta };
+type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED' | 'HELD_OUT' | 'HELD_OUT_B'; file: string; expect: Expect; truth: (name: string) => Truth | null; meta?: (name: string) => Meta };
 
 const cents = (v: string | number) => { const [w, f = ''] = String(typeof v === 'number' ? v.toFixed(2) : v).replace(/,/g, '').split('.'); const n = BigInt(w.replace('-', '')) * 100n + BigInt((f + '00').slice(0, 2)); return String(v).trim().startsWith('-') ? -n : n; };
 const csvRows = (path: string) => Papa.parse<Record<string, string>>(readFileSync(path, 'utf8'), { header: true, skipEmptyLines: true }).data;
@@ -88,7 +90,7 @@ const cases: Case[] = [
         ...['opaque-headings-no-balance.csv', 'corrupted-running-balance.csv', 'mislabelled-withdrawal-deposit.csv', 'usd-statement.csv', 'staff-roster.csv', 'signed-amount-reversed-no-balance.csv', 'ledger-signed-opaque-no-balance.csv', 'ledger-multiple-accounts.csv', 'ledger-sales-account.csv', 'ledger-bank-loan-account.csv', 'ledger-no-account-evidence.csv', 'bank-ambiguous-debit-credit.csv'].map(f => [f, 'QUARANTINE'])] as [string, Expect][])
         .map(([f, expect]) => ({ id: f, format: 'CSV', corpus: 'ADVERSARIAL' as const, file: join(F, f), expect, truth: () => bankTruth })),
     // The generated corpora (scripts/generate-statement-corpus.mjs): every document is valid and must be read exactly.
-    ...[[CORPUS, 'corpus', 'GENERATED'], [HELDOUT, 'heldout', 'HELD_OUT']].flatMap(([dir, prefix, corpus]) => existsSync(join(dir, 'manifest.json')) ? (JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string }[] }).documents.map(d => {
+    ...[[CORPUS, 'corpus', 'GENERATED'], [HELDOUT, 'heldout', 'HELD_OUT'], [HELDOUT_B, 'heldout-b', 'HELD_OUT_B']].flatMap(([dir, prefix, corpus]) => existsSync(join(dir, 'manifest.json')) ? (JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string }[] }).documents.map(d => {
         const truth = () => JSON.parse(readFileSync(join(dir, d.truth), 'utf8')) as Meta & { transactions: { date: string; cents: string }[] };
         return { id: `${prefix}/${d.file}`, format: d.format, corpus: corpus as Case['corpus'], file: join(dir, d.file), expect: 'ACCEPT' as const,
             truth: () => truth().transactions.map(t => ({ date: t.date, cents: BigInt(t.cents) })), meta: () => ({ role: truth().role, currency: truth().currency }) };
@@ -100,6 +102,9 @@ const cases: Case[] = [
 ];
 // The USD fixture is a valid statement in another currency: under the ingestion scope it is acceptable, exactly.
 for (const c of cases) if (c.id === 'usd-statement.csv') c.expect = 'EXACT_OR_QUARANTINE';
+// Protocol amendment for run 6 (fixed before it, see docs/evaluation): held-out set A's signed USD ledger never states
+// which sign is cash in and has no running balance, so refusing it is the correct outcome, not a miss.
+for (const c of cases) if (c.id.startsWith('heldout/ledger-usd-signed-')) c.expect = 'QUARANTINE';
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 /** The live interpreter; a 429 (refused, never billed) is waited out and asked again, as many times as needed. */
@@ -157,7 +162,7 @@ describe.skipIf(!LIVE)('live ingestion-layer benchmark', () => {
                     source: d.source && 'kind' in d.source ? d.source.kind : null, ocrConfidence: d.source && 'confidence' in d.source ? d.source.confidence : null,
                     ocrResolved: d.interpretation?.checks.find(k => k.id === 'ocr-readings')?.detail ?? null,
                     failedGates: d.interpretation?.checks.filter(k => !k.passed).map(k => `${k.id}: ${k.detail}`) ?? [], reason: d.reason,
-                    model: r?.model ?? null, latencyMs: r?.latencyMs ?? null, inputTokens: r?.inputTokens ?? null, outputTokens: r?.outputTokens ?? null, usd: r?.estimatedUsd ?? null, seconds: Math.round((Date.now() - started) / 100) / 10,
+                    model: r?.model ?? null, latencyMs: r?.latencyMs ?? null, inputTokens: r ? (r.inputTokens ?? 0) + (d.interpretation?.firstAttempt?.receipt.inputTokens ?? 0) : null, outputTokens: r ? (r.outputTokens ?? 0) + (d.interpretation?.firstAttempt?.receipt.outputTokens ?? 0) : null, usd: r ? (r.estimatedUsd ?? 0) + (d.interpretation?.firstAttempt?.receipt.estimatedUsd ?? 0) : null, retried: d.interpretation?.firstAttempt?.check ?? null, seconds: Math.round((Date.now() - started) / 100) / 10,
                 };
                 results.push(row);
                 console.log(JSON.stringify({ id: row.id, outcome, meets, rows: row.rows, truth: row.truthRows, failed: row.failedGates.slice(0, 2), seconds: row.seconds }));

@@ -37,10 +37,13 @@ const sum = (xs, f) => xs.reduce((n, x) => n + (f(x) ?? 0), 0);
 
 // ---- Sets.
 const DIGITAL = new Set(['CSV', 'XLSX', 'PDF (text)']), SCAN = new Set(['PDF (scanned)', 'Image (JPEG)']);
-const valid = results.filter(r => r.expect === 'ACCEPT' && ['FINGENCE', 'GENERATED', 'HELD_OUT'].includes(r.corpus));
+const valid = results.filter(r => r.expect === 'ACCEPT' && ['FINGENCE', 'GENERATED', 'HELD_OUT', 'HELD_OUT_B'].includes(r.corpus));
 const accepted = results.filter(r => r.outcome !== 'QUARANTINED');
 const exact = rs => rs.filter(r => r.outcome === 'ACCEPTED_EXACT').length;
+const retried = results.filter(r => r.retried);
 const mustRefuse = results.filter(r => r.corpus === 'ADVERSARIAL' && r.expect === 'QUARANTINE');
+// Valid-looking documents the protocol says must be refused because they do not state their own conventions.
+const ambiguous = results.filter(r => r.corpus !== 'ADVERSARIAL' && r.expect === 'QUARANTINE');
 const falseAcceptances = results.filter(r => r.outcome === 'FALSE_ACCEPTANCE');
 
 // M1: with zero events the one-sided 95% upper bound is 1 - 0.05^(1/n) (about 3/n).
@@ -49,7 +52,7 @@ const m1Upper = falseAcceptances.length ? wilson(falseAcceptances.length, accept
 const compared = sum(accepted, r => r.fieldsCompared), dates = sum(accepted, r => r.datesExact), amounts = sum(accepted, r => r.amountsExact);
 const recordsAccepted = sum(accepted, r => r.rows), truthOfAccepted = sum(accepted, r => r.truthRows);
 // M3.
-const digital = valid.filter(r => DIGITAL.has(r.format)), heldDigital = digital.filter(r => r.corpus === 'HELD_OUT'), scans = valid.filter(r => SCAN.has(r.format)), heldScans = scans.filter(r => r.corpus === 'HELD_OUT');
+const digital = valid.filter(r => DIGITAL.has(r.format)), heldDigital = digital.filter(r => r.corpus === 'HELD_OUT'), heldBDigital = digital.filter(r => r.corpus === 'HELD_OUT_B'), heldBScans = valid.filter(r => r.corpus === 'HELD_OUT_B' && SCAN.has(r.format)), scans = valid.filter(r => SCAN.has(r.format)), heldScans = scans.filter(r => r.corpus === 'HELD_OUT');
 // M5.
 const identified = accepted.filter(r => r.truthRole), roleOk = identified.filter(r => r.role === r.truthRole), currencyOk = identified.filter(r => r.currency === r.truthCurrency);
 // M6.
@@ -60,6 +63,7 @@ const targets = {
     M2: compared > 0 && dates / compared >= 0.99 && amounts / compared >= 0.99,
     M3: digital.length > 0 && exact(digital) / digital.length >= 0.9,
     M3h: heldDigital.length > 0 && exact(heldDigital) / heldDigital.length >= 0.8,
+    ...(heldBDigital.length ? { M3b: exact(heldBDigital) / heldBDigital.length >= 0.8 } : {}),
     M4: mustRefuse.length > 0 && mustRefuse.every(r => r.outcome === 'QUARANTINED'),
     M5: identified.length > 0 && roleOk.length === identified.length && currencyOk.length === identified.length,
 };
@@ -78,11 +82,14 @@ const md = [
     `| M2 | Data accuracy of accepted records | dates ${rate(dates, compared)}; signed amounts ${rate(amounts, compared)}; ${recordsAccepted} records accepted for ${truthOfAccepted} in the truth | ≥ 99% per field | ${verdict('M2')} |`,
     `| M3 | Straight-through, digital (FinGence + development + held-out) | ${rate(exact(digital), digital.length)} | ≥ 90% | ${verdict('M3')} |`,
     `| M3h | Straight-through, held-out digital | ${rate(exact(heldDigital), heldDigital.length)} | ≥ 80% | ${verdict('M3h')} |`,
-    `| M3s | Straight-through, scans and photos | ${rate(exact(scans), scans.length)}; held-out only ${rate(exact(heldScans), heldScans.length)} | Reported | — |`,
+    ...(heldBDigital.length ? [`| M3b | Straight-through, held-out set B digital | ${rate(exact(heldBDigital), heldBDigital.length)} | ≥ 80% | ${verdict('M3b')} |`] : []),
+    `| M3s | Straight-through, scans and photos | ${rate(exact(scans), scans.length)}; held-out only ${rate(exact(heldScans), heldScans.length)}${heldBScans.length ? `; set B only ${rate(exact(heldBScans), heldBScans.length)}` : ''} | Reported | — |`,
+    ...(ambiguous.length ? [`| — | Ambiguous-by-design documents refused | ${rate(ambiguous.filter(r => r.outcome === 'QUARANTINED').length, ambiguous.length)} | 100% | ${ambiguous.every(r => r.outcome === 'QUARANTINED') ? '**Met**' : '**Not met**'} |`] : []),
     `| M4 | Invalid documents refused | ${rate(mustRefuse.filter(r => r.outcome === 'QUARANTINED').length, mustRefuse.length)} | 100% | ${verdict('M4')} |`,
     `| M5 | Document type and currency identified | type ${roleOk.length} / ${identified.length}; currency ${currencyOk.length} / ${identified.length} | 100% | ${verdict('M5')} |`,
     `| M6 | Rows read exactly by the proposed layout (before the checks) | ${rate(sum(reading, r => r.readExact), sum(reading, r => r.truthRows))} | Reported | — |`,
     `| M7 | Time and cost | median ${median(results.map(r => r.seconds))} s per document; ${(sum(results, r => r.seconds) / Math.max(1, sum(results, r => r.truthRows)) * 100).toFixed(1)} s per 100 rows; model cost $${sum(results, r => r.usd).toFixed(4)} in all, $${(sum(results, r => r.usd) / Math.max(1, results.filter(r => r.usd).length)).toFixed(5)} per interpreted document | Reported | — |`,
+    `| — | Second attempts (one retry after a check the model can fix) | ${retried.length} documents; ${retried.filter(r => r.outcome === 'ACCEPTED_EXACT').length} then accepted exactly, ${retried.filter(r => r.outcome === 'FALSE_ACCEPTANCE').length} falsely | Reported | — |`,
     `| M8 | Manual verification of accepted records | Sheet of ${sheet ? sampleSize : 'N'} random records produced; awaiting the team's check | ≥ 99% agree | Pending |`,
     `| M9 | Ingestion time versus manual entry | Awaiting the team's timed manual entry | Reported | Pending |`,
     '',

@@ -4,6 +4,7 @@
  * ingestion run (its verified records). Pure, so the browser and tests can rebuild it from the same context.
  */
 import type { InterpretationResult } from '../interpretation/contracts';
+import { interpretationsOf } from '../document-ingestion/ingest';
 import type { ProcessingContext, Quarantined, Stage } from '../demo/pipeline';
 
 export const JOB_RESULT_VERSION = 'fingence-job-result-v1' as const;
@@ -69,7 +70,7 @@ export function jobResult(c: ProcessingContext): JobResult {
         version: JOB_RESULT_VERSION, pipelineVersion: c.version, processingId: c.processingId, outcome: c.status,
         scope: c.scope ? { businessId: c.scope.businessId, businessName: c.scope.businessName, period: c.scope.period, months: c.scope.months, currency: c.scope.currency } : null,
         summary,
-        interpretations: Object.fromEntries(c.documents.flatMap(d => d.interpretation?.receipt ? [[d.sha256, { proposal: d.interpretation.proposal, receipt: d.interpretation.receipt }]] : [])),
+        interpretations: interpretationsOf(c.documents),
         documents: c.documents.slice(0, 20).map(d => ({
             name: clip(d.name, 160), sha256: d.sha256, role: d.role, decision: d.decision, reason: clip(d.reason, 600),
             method: d.interpretation ? 'AI_LAYOUT_PROPOSAL' : d.role ? 'EXACT_SIGNATURE' : 'NONE', model: d.interpretation?.receipt?.model ?? null,

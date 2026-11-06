@@ -130,3 +130,32 @@ It does **not** support "fully automatic for any bank's statement". It does not 
 **M8, manual verification.** Open the sheet `manual-verification-r5.csv`: 200 records chosen at random (seeded) from the 2,570 accepted. For each row, open the named document and find the record. Write `Y` if its date, amount and direction match the document, or `N` with a note. Report agree / 200. The target is at least 99%: no more than 2 disagreements.
 
 **M9, manual entry time.** One team member keys one statement by hand into a spreadsheet: date, description, signed amount. Use `heldout/labuan-myr-moneyinout-201.pdf`, 60 rows. Time it with a stopwatch, including checking your own entries. Compare with FinGence's median for a text PDF, 11.2 s per document. Report the reduction, 1 − FinGence time ÷ manual time, against the brief's 60%.
+
+## Protocol amendment for run 6 (fixed after run 5, before run 6)
+
+**Changes made after run 5.** All are in `lib/interpretation` and `lib/document-ingestion`.
+
+1. **A stated total follows its label.** A total whose label names a side ("Total withdrawals", "Total debet") is bound to that side. Only a bare "Total" is bound by the column it is printed under. Swapped debits and credits are still refused by labelled totals.
+2. **Vocabulary.** The heading, role, opening-balance, total and cash-account words gain Indonesian ("Rekening Koran", "Saldo awal", "Debet", "Buku Besar", "Kas"…) and German ("Kontoauszug", "Soll", "Haben", "Buchungstag", "Hauptbuch"…). A heading that names both sides, or neither, is still opaque.
+3. **One more attempt.** When the model's proposal fails a check about its own reading of the layout (`schema`, `mapping`, `header`, `role-evidence`, `direction`, `dates`), the model is asked once more, told which check failed. The second proposal goes through every check again. A document whose arithmetic, account, scope or OCR figures fail is never re-asked. Both attempts are recorded and disclosed, and replay re-runs them in the same order.
+
+**Held-out set A is no longer unseen.** The fixes were made by looking at its failures, so its run 6 result is reported but is not evidence of generalisation.
+
+**Held-out set B.** It was written after run 5 and before run 6, and none of its layouts was looked at while making the fixes (`generate-statement-corpus.mjs --held-out-b`, seeds 301–308). It has 8 layouts and 30 documents:
+
+- a D/C indicator column (MYR);
+- PHP over two months;
+- **French** headings ("Date opération", "Libellé", "Débit", "Crédit", "Solde"), a language the vocabulary does not cover;
+- a signed bank column whose heading states the convention ("Net Cash Movement");
+- BND over three months;
+- a two-month MYR ledger;
+- an **Indonesian ledger** ("Buku Besar"), in a language that change 2 just added;
+- a signed ledger column whose heading states the convention ("Cash Movement").
+
+Every set-B layout states its own conventions.
+
+**Expectation corrected before run 6.** Set A's signed USD ledger ("Amount", no running balance) does not say which sign is cash in. Refusing it is the correct outcome, so from run 6 it is expected to be **refused**. Run 5's scores are left exactly as they were.
+
+**Targets are unchanged.** M3b, set-B digital straight-through **≥ 80%**, is now the generalisation test. M1 (0 false acceptances) still fails the evaluation on any single event.
+
+**Budget:** run 6 has more documents than one day of the free-tier token allowance (about 450k tokens, about 95 calls). It runs in parts, in this order: set B; set A; then the development, FinGence and adversarial regression; then AgamiAI. The parts are merged with `evaluate-ingestion.mjs`. Only `RATE_LIMITED` refusals are rerun.
