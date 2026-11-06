@@ -198,6 +198,21 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     const signWording = answer.sentences.flatMap((s, i) => COMPARISON.test(free[i]) && negative(s) ? [`sentence ${i + 1}: "${free[i].match(COMPARISON)![0]}" with a negative amount`] : []);
     if (!gate('sign-wording', 'Comparisons are not stated with a negative amount', signWording)) return result('WITHHELD');
 
+    // 5d. How an anomaly was resolved is a fact, not wording: a sentence that calls a record flagged (or unconfirmed) may
+    // cite only records FinGence flagged, and one that calls a record confirmed or known may cite only confirmed ones.
+    const FLAGGED_WORDS = /\b(flag\w*|unconfirmed|not confirmed|unresolved|unexplained|needs? (attention|review|investigation)|for (your|the) technical team)\b/i;
+    const NEGATED_FLAG = /(\bnot|\bnever|n't|\bno longer)\s+(been\s+|be\s+)?flag\w*/i;
+    const CONFIRMED_WORDS = /\b(confirm(ed|s)?|corroborat\w*|known transactions?|recorded in (your|the) books|no action needed)\b/i;
+    const outcomeOf = (id: string) => { const v = byId.get(id)?.fields.outcome; return v?.kind === 'TEXT' ? (v.text.startsWith('Flagged') ? 'FLAGGED' : 'CONFIRMED') : null; };
+    const outcomes = answer.sentences.flatMap((s, i) => {
+        const cited = expand(s.cites).map(id => [id, outcomeOf(id)] as const).filter(([, o]) => o);
+        // "was not flagged" says the record was NOT flagged: a negated flag is a confirmed claim, never a flagged one.
+        const t = free[i], unnegated = t.replace(new RegExp(NEGATED_FLAG.source, 'gi'), ' ');
+        const says = FLAGGED_WORDS.test(unnegated) ? 'FLAGGED' : NEGATED_FLAG.test(t) || CONFIRMED_WORDS.test(t) ? 'CONFIRMED' : null;
+        return says ? cited.filter(([, o]) => o !== says).map(([id]) => `sentence ${i + 1}: calls ${byId.get(id)!.label} ${says === 'FLAGGED' ? 'flagged' : 'confirmed'}, but it was ${says === 'FLAGGED' ? 'confirmed by the books' : 'flagged'}`) : [];
+    });
+    if (!gate('outcomes', 'A record called flagged or confirmed was resolved that way', outcomes)) return result('WITHHELD');
+
     // 6. What the question names (a counterparty or a month) must be what the cited facts are about.
     const q = ctx.question.toLowerCase(), citedFacts = cited.map(id => byId.get(id)!);
     const about = (needle: string) => citedFacts.some(f => f.label.toLowerCase().includes(needle) || Object.values(f.fields).some(v => formatValue(v).toLowerCase().includes(needle)));

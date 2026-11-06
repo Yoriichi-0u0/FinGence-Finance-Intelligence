@@ -22,6 +22,8 @@ type Value = {
     ai: GatewayStatus | null;
     /** Seconds the browser is waiting for the AI provider's per-minute limit before retrying, or null. */
     aiWait: number | null;
+    /** The documents of the current processing, as supplied (for the side-by-side document view); empty when none. */
+    inputs: DocumentInput[];
     /** Server processing: on when the server runs processing jobs (then the browser only re-checks their result). */
     serverJobs: boolean;
     /** Whether the technical team paused processing, and why; null while unknown or when server processing is off. */
@@ -49,13 +51,14 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
     const [ai, setAi] = useState<GatewayStatus | null>(null);
     const [aiWait, setAiWait] = useState<number | null>(null);
     const [serverState, setServerState] = useState<ServerProcessingState | null>(null);
-    const run = useRef(0), probe = useRef<Promise<GatewayStatus> | null>(null);
+    const [inputs, setInputs] = useState<DocumentInput[]>([]);
+    const run = useRef(0), probe = useRef<Promise<GatewayStatus> | null>(null), uploadLimit = useRef<number | null>(null);
     useEffect(() => { if (enabled && aiGateway) { probe.current = gatewayStatus(); void probe.current.then(setAi); } }, [enabled, aiGateway]);
     useEffect(() => {
         if (!enabled || !serverJobs) return;
         // A pause or resume by Management reaches an open tab within 15 s, and at once when the tab is focused again.
         let live = true;
-        const refresh = () => { fetch('/api/processing/jobs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live && b) setServerState(b.processing ?? null); }).catch(() => undefined); };
+        const refresh = () => { fetch('/api/processing/jobs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live && b) { setServerState(b.processing ?? null); uploadLimit.current = typeof b.maxUploadBytes === 'number' ? b.maxUploadBytes : null; } }).catch(() => undefined); };
         const visible = () => { if (document.visibilityState === 'visible') refresh(); };
         refresh();
         const timer = setInterval(refresh, 15_000);
@@ -67,14 +70,15 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
         if (!enabled) return;
         const stored = readStored(), current = ++run.current;
         if (!stored) { queueMicrotask(() => { if (current === run.current) setStatus('empty'); }); return; }
-        browserDemoRunner.run(stored.documents.map(d => ({ name: d.name, provenance: d.provenance, bytes: fromBase64(d.base64) })), undefined, { interpreter: replayInterpreter(stored.interpretations ?? {}, null), job: stored.job ? { id: stored.job.id, runner: 'BACKEND_JOB_RUNNER' } : null, extract: stored.extractions ? replayExtractor(stored.extractions) : undefined })
+        const restored = stored.documents.map(d => ({ name: d.name, provenance: d.provenance, bytes: fromBase64(d.base64) }));
+        browserDemoRunner.run(restored, undefined, { interpreter: replayInterpreter(stored.interpretations ?? {}, null), job: stored.job ? { id: stored.job.id, runner: 'BACKEND_JOB_RUNNER' } : null, extract: stored.extractions ? replayExtractor(stored.extractions) : undefined })
             .then(result => {
                 if (current !== run.current) return;
                 // A server job's result is shown again only while it still reproduces the job (same pipeline, same readings).
                 if (stored.job && result.processingId !== stored.job.processingId) {
                     writeStored(null); setError(`The saved result of server job ${stored.job.id} no longer matches this version of FinGence, so it is not shown. Please process the documents again.`); setStatus('failed'); return;
                 }
-                setContext(result); setLiveStages(result.stages); setProcessedAt(stored.processedAt); setStatus('ready');
+                setContext(result); setInputs(restored); setLiveStages(result.stages); setProcessedAt(stored.processedAt); setStatus('ready');
             })
             .catch(() => { if (current !== run.current) return; writeStored(null); setStatus('empty'); });
     }, [enabled]);
@@ -82,7 +86,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
     const process = useCallback(async (inputs: DocumentInput[]) => {
         // Clear first: a failed or abandoned run can never leave the previous documents' results on screen.
         const current = ++run.current;
-        writeStored(null); setContext(null); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
+        writeStored(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
         try {
             // If the server says AI is on but the browser's status check has not answered yet (a fast click after a
             // fresh load), wait for it, so an unfamiliar document is never processed without the interpreter by accident.
@@ -90,7 +94,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
             if (serverJobs) {
                 // The server runs the job and stores its results; this browser then re-runs the same pure pipeline on the
                 // same documents with the server's accepted layout readings (no model call) and must reach the same ID.
-                const outcome = await submitServerJob(inputs, stages => { if (current === run.current) setLiveStages(stages); });
+                const outcome = await submitServerJob(inputs, stages => { if (current === run.current) setLiveStages(stages); }, uploadLimit.current);
                 if (current !== run.current) return null;
                 if ('refusal' in outcome) {
                     if (outcome.state) setServerState(outcome.state);
@@ -112,15 +116,15 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
             const at = new Date().toISOString();
             const interpretations = Object.fromEntries(result.documents.flatMap(d => d.interpretation?.receipt ? [[d.sha256, { proposal: d.interpretation.proposal, receipt: d.interpretation.receipt }]] : []));
             setPersisted(writeStored({ processedAt: at, documents: inputs.map(d => ({ name: d.name, provenance: d.provenance, base64: toBase64(d.bytes) })), interpretations, ...(job ? { job, extractions } : {}) }));
-            setContext(result); setProcessedAt(at); setStatus('ready');
+            setContext(result); setInputs(inputs); setProcessedAt(at); setStatus('ready');
             return result;
         } catch {
             if (current === run.current) { setError('Processing stopped unexpectedly. No result was kept.'); setStatus('failed'); }
             return null;
         }
     }, [ai, serverJobs]);
-    const clear = useCallback(() => { run.current++; writeStored(null); setContext(null); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
-    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null, aiWait, serverJobs: enabled && serverJobs, serverState: enabled ? serverState : null }), [enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState]);
+    const clear = useCallback(() => { run.current++; writeStored(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
+    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null, aiWait, serverJobs: enabled && serverJobs, serverState: enabled ? serverState : null, inputs: enabled ? inputs : [] }), [enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState, inputs]);
     return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
 

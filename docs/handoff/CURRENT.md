@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## Document evidence view — 6 November 2026
+
+On the Data page, each processed document can be shown side by side with what FinGence read from it. See [docs/architecture/document-evidence-view-v1.md](../architecture/document-evidence-view-v1.md).
+- **Left:** the PDF pages, photo or table, with every read cell coloured by its field.
+- **Right:** the verified records, each linked to its source line.
+- The lines the AI model was shown are marked, and so are the cells where the OCR passes disagreed.
+- Built from `ProcessedDocument.reading` and `ExtractedSource.geometry`. Processing results and IDs are unchanged.
+
 ## Server processing jobs, stored results and the Management console — 5 November 2026
 
 Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/architecture/server-processing-v1.md](../architecture/server-processing-v1.md).
@@ -8,6 +16,7 @@ Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/ar
 - **Stored results:** a finished job stores, in one transaction, its ingestion run (verified records), its reconciliation and anomaly results and every flagged item (`lib/processing/job-result.ts`, schema `fingence_processing`, `supabase/sql/processing-jobs-v1.sql`). Uploaded documents are never stored.
 - **Re-check:** the browser re-runs the pipeline on the same documents with the job's accepted readings and must reach the job's processing ID, or nothing is shown.
 - **Management console:** `/management` lists jobs and flagged items and pauses or resumes processing; a pause refuses new jobs with 423 and the reason Finance users see.
+- **Hosted PDFs and scans:** the job route's function includes the files pdf.js and tesseract.js load at run time (`outputFileTracingIncludes`); `pnpm check:job-trace` proves the traced files alone read a PDF and a scan.
 - **Off by default:** without `FINGENCE_PROCESSING_JOBS=1` the app is the browser-only demo exactly as before. Locally, `node scripts/dev-store.mjs` runs the same migrations in PGlite. Not applied to Production: the migration and the Vercel switches are owner decisions, and the console has no sign-in until #74.
 
 ## Several months and any currency end to end; anomalies resolved autonomously — 5 November 2026

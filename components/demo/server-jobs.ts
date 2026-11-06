@@ -12,11 +12,20 @@ type JobBody = { id: string; status: 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILE
 const POLL_MS = 700;
 /** A job the server has not finished in this long is treated as stopped (the store fails it after 10 minutes). */
 const GIVE_UP_MS = 6 * 60_000;
-const toBase64 = (bytes: Uint8Array) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
+/** Room left in a job request for the form's own framing (part headers, boundaries and the manifest). */
+const FORM_OVERHEAD_BYTES = 16_384;
+const megabytes = (bytes: number) => `${(bytes / 1_000_000).toFixed(1)} MB`;
+/** The documents as raw bytes in one multipart form, so a job may carry nearly the whole request limit. */
+export function jobForm(inputs: DocumentInput[]) {
+    const form = new FormData();
+    form.append('manifest', JSON.stringify(inputs.map(d => ({ name: d.name, provenance: d.provenance }))));
+    for (const d of inputs) form.append('document', new Blob([d.bytes as Uint8Array<ArrayBuffer>]), d.name);
+    return form;
+}
+const tooLarge = (total: number, max?: number) => `These documents total ${megabytes(total)}, more than the FinGence server accepts in one job${max ? ` (${megabytes(max - FORM_OVERHEAD_BYTES)})` : ''}. Nothing was processed. Try fewer files at a time, or smaller scans or photos.`;
 const asStage = (s: StageSummary): Stage => ({ id: s.id, title: s.title, decision: s.decision, method: 'Server processing job', summary: s.summary, checks: s.failedChecks.map(k => ({ ...k, passed: false })) });
 export const pausedMessage = (state: ServerProcessingState) => `Processing is paused by your technical team${state.reason ? `: ${state.reason}` : ''}. Your documents were not processed; please try again later.`;
 const REFUSAL: Record<string, string> = {
-    TOO_LARGE: 'The documents are too large to send to the FinGence server together (on the hosted service, about 3 MB in all). Try fewer or smaller files.',
     DOCUMENT_TOO_LARGE: 'One of the documents is larger than 4 MB.',
     CLIENT_RATE_LIMITED: 'Too many processing requests from this browser in the last minute. Please wait a minute and try again.',
     RATE_LIMITED: 'FinGence is busy processing other documents. Please wait a minute and try again.',
@@ -24,12 +33,18 @@ const REFUSAL: Record<string, string> = {
     DAILY_LIMIT: 'FinGence has reached today\'s processing limit. Please try again tomorrow.',
 };
 
-export async function submitServerJob(inputs: DocumentInput[], onStages: (stages: Stage[]) => void, sleep = (ms: number) => new Promise(r => setTimeout(r, ms))): Promise<{ job: FinishedJob } | { refusal: string; state?: ServerProcessingState }> {
+/**
+ * `maxUploadBytes` is the server's request limit (from its status), so a set too large to send is refused here with
+ * its size; a refusal by the hosting platform itself (413 without a FinGence body) is explained the same way.
+ */
+export async function submitServerJob(inputs: DocumentInput[], onStages: (stages: Stage[]) => void, maxUploadBytes?: number | null, sleep = (ms: number) => new Promise(r => setTimeout(r, ms))): Promise<{ job: FinishedJob } | { refusal: string; state?: ServerProcessingState }> {
+    const total = inputs.reduce((n, d) => n + d.bytes.byteLength, 0);
+    if (maxUploadBytes && total + FORM_OVERHEAD_BYTES > maxUploadBytes) return { refusal: tooLarge(total, maxUploadBytes) };
     let res: Response;
-    try {
-        res = await fetch('/api/processing/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ documents: inputs.map(d => ({ name: d.name, provenance: d.provenance, base64: toBase64(d.bytes) })) }) });
-    } catch { return { refusal: 'The FinGence server could not be reached. Nothing was processed.' }; }
-    const body = await res.json().catch(() => null) as { jobId?: string; code?: string; reason?: string | null; since?: string | null } | null;
+    try { res = await fetch('/api/processing/jobs', { method: 'POST', body: jobForm(inputs) }); }
+    catch { return { refusal: 'The FinGence server could not be reached. Nothing was processed.' }; }
+    const body = await res.json().catch(() => null) as { jobId?: string; code?: string; reason?: string | null; since?: string | null; maxBytes?: number } | null;
+    if (res.status === 413 && body?.code !== 'DOCUMENT_TOO_LARGE') return { refusal: tooLarge(total, body?.maxBytes ?? maxUploadBytes ?? undefined) };
     if (res.status === 423) { const state = { paused: true, reason: body?.reason ?? null, changedAt: body?.since ?? null }; return { refusal: pausedMessage(state), state }; }
     if (res.status !== 202 || !body?.jobId) return { refusal: REFUSAL[body?.code ?? ''] ?? `The server did not accept the documents for processing (${body?.code ?? `HTTP ${res.status}`}).` };
     const jobId = body.jobId, started = Date.now();

@@ -12,6 +12,7 @@
     "test:watch": "vitest",
     "typecheck": "next typegen && tsc --noEmit --incremental false",
     "check:server-boundary": "node scripts/verify-server-boundary.mjs",
+    "check:job-trace": "node scripts/verify-job-trace.mjs",
     "test:ingestion": "vitest run tests/ingestion",
     "test:analytics": "vitest run tests/analytics.test.ts tests/analytics-adapter.test.ts tests/integration/ingestion-analytics.test.ts",
     "test:persistence": "vitest run tests/persistence tests/integration/grouped-consultation.test.ts",
