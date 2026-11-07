@@ -15,8 +15,8 @@ type Query = Partial<InsightsQuery> & { source: string };
 const auth = '/api/ai-ingestion/m2', api = auth + '/insights';
 const scopeKey = (p: M2ClientPrincipal) => JSON.stringify([principalScope(p), p.role, p.membershipVersion]);
 const params = (q: Query) => new URLSearchParams(Object.entries(q).filter(([, v]) => v !== undefined).map(([k, v]) => [k, String(v)])).toString();
-const field = 'mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm';
-const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50';
+const field = 'mt-1 min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm';
+const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-semibold hover:bg-slate-50 disabled:opacity-50';
 const money = (currency: string, value: string) => `${currency} ${groupDigits(value)}`;
 
 export default function PocInsightsWorkspace({ view }: { view: 'transactions' | 'analytics' }) {
@@ -136,7 +136,7 @@ export default function PocInsightsWorkspace({ view }: { view: 'transactions' | 
 
 function Totals({ data: d }: { data: PocInsights }) {
     const items = [['Source rows', String(d.totals.rows), `${d.selection.businessId} · ${d.selection.period}`], ['Bank credits', money(d.selection.currency, d.totals.credits), `${d.totals.creditRows} credit rows`], ['Bank debits', money(d.selection.currency, d.totals.debits), `${d.totals.debitRows} debit rows`], ['Net signed movement', money(d.selection.currency, d.totals.net), 'Selected month; not revenue or profit']];
-    return <section aria-label="Selected month cash movement" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">{items.map(([label, value, hint]) => <div key={label} className="min-w-0 rounded-xl border border-[var(--border)] bg-white p-5"><p className="text-xs text-[var(--muted-strong)]">{label}</p><p className="my-2 whitespace-nowrap text-xl font-semibold tabular-nums">{value}</p><p className="text-xs text-[var(--muted)]">{hint}</p></div>)}</section>;
+    return <section aria-label="Selected month cash movement" className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">{items.map(([label, value, hint]) => <div key={label} className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5"><p className="text-xs text-[var(--muted-strong)]">{label}</p><p className="my-2 whitespace-nowrap text-xl font-semibold tabular-nums">{value}</p><p className="text-xs text-[var(--muted)]">{hint}</p></div>)}</section>;
 }
 function TransactionRows({ data: d }: { data: PocInsights }) {
     return <Panel title="Source transactions" eyebrow={`${d.filteredTotals.rows} filtered rows · net ${money(d.selection.currency, d.filteredTotals.net)}`}>

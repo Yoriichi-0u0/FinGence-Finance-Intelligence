@@ -6,7 +6,7 @@ import type { ProcessingContext } from '../demo/pipeline';
 import { RULES } from '../poc-anomalies/detector';
 import { reconciliationStatuses } from '../poc-reconciliation/contracts';
 import { toCents, type SourceRow } from '../poc-anomalies/source';
-import { QA_VERSION, MAX_FACTS, type Catalogue, type ToolCall } from './contracts';
+import { QA_VERSION, MAX_FACTS, CATALOGUE_MONTHS, type Catalogue, type ToolCall } from './contracts';
 import { count, money, text, type Fact, type SourceRef, type Value } from './facts';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -18,6 +18,8 @@ const MATCHED = new Set(['MATCH_EXACT', 'MATCH_DATE_SHIFT']);
 export type GroundingIndex = {
     processingId: string; scope: Catalogue['scope']; currency: string;
     rows: SourceRow[]; history: SourceRow[]; months: string[];
+    /** The months the bank statement covers; its rows answer for these months and for the whole range. */
+    statementMonths: string[];
     context: ProcessingContext;
 };
 
@@ -26,8 +28,16 @@ export function groundingIndex(context: ProcessingContext): GroundingIndex | nul
     const { scope, outputs } = context;
     if (!scope || !outputs.totals || !outputs.bankRows.length) return null;
     const history = outputs.history.accepted ? outputs.history.rows : outputs.bankRows;
-    const months = [...new Set([...history.map(r => r.period), scope.period])].sort();
-    return { processingId: context.processingId, scope: { businessId: scope.businessId, businessName: scope.businessName, period: scope.period, currency: scope.currency }, currency: scope.currency, rows: outputs.bankRows, history, months, context };
+    // Bounded to the catalogue limit: the most recent CATALOGUE_MONTHS single months, plus the whole range of a
+    // multi-month statement, which cash_summary always answers in full whatever its length.
+    const months = [...new Set([...history.map(r => r.period), ...scope.months])].sort().slice(-CATALOGUE_MONTHS);
+    if (scope.months.length > 1) months.push(scope.period);
+    return { processingId: context.processingId, scope: { businessId: scope.businessId, businessName: scope.businessName, period: scope.period, currency: scope.currency }, currency: scope.currency, rows: outputs.bankRows, history, months, statementMonths: scope.months, context };
+}
+/** The verified records for one month or for the statement range: statement rows where the statement covers it, else history. */
+function rowsFor(index: GroundingIndex, period: string) {
+    if (period === index.scope.period) return index.rows;
+    return index.statementMonths.includes(period) ? index.rows.filter(r => r.period === period) : index.history.filter(r => r.period === period);
 }
 
 export function catalogue(index: GroundingIndex): Catalogue {
@@ -53,12 +63,18 @@ function rowFields(r: SourceRow, currency: string): Record<string, Value> {
 }
 
 type Draft = Omit<Fact, 'id' | 'query'>;
+/** How FinGence resolved an anomaly candidate: confirmed by the books, or flagged to the technical team. */
+function outcomeField(o: ProcessingContext['outputs'], rowId: string): Record<string, Value> {
+    const r = o.anomalyResolution?.items.find(i => i.row.rowId === rowId);
+    if (!r) return {};
+    return { outcome: text(r.resolution === 'CORROBORATED_BY_BOOKS' ? `Confirmed by the books (${r.booked!.ledgerRecordIds.join(', ')}); no action needed` : 'Flagged for the technical team: the books do not confirm it') };
+}
 function run(index: GroundingIndex, q: ToolCall): Draft[] {
     const { currency } = index, o = index.context.outputs;
     switch (q.tool) {
         case 'cash_summary': {
-            const rows = q.period === index.scope.period ? index.rows : index.history.filter(r => r.period === q.period);
-            return [{ label: `Cash summary for ${q.period}`, primary: 'net', fields: { period: { kind: 'PERIOD', ym: q.period }, ...totalsFields(rows, currency) }, sources: [{ kind: q.period === index.scope.period ? 'TOTALS' : 'HISTORY', id: q.period }] }];
+            const rows = rowsFor(index, q.period);
+            return [{ label: `Cash summary for ${q.period}`, primary: 'net', fields: { period: { kind: 'PERIOD', ym: q.period }, ...totalsFields(rows, currency) }, sources: [{ kind: q.period === index.scope.period || index.statementMonths.includes(q.period) ? 'TOTALS' : 'HISTORY', id: q.period }] }];
         }
         case 'transactions': {
             const rows = index.rows.filter(r => (q.direction === 'ANY' || (q.direction === 'IN') === (cents(r) > 0n)) && (q.counterparty === null || r.counterparty === q.counterparty));
@@ -85,9 +101,16 @@ function run(index: GroundingIndex, q: ToolCall): Draft[] {
             if (!rec) return [{ label: 'Reconciliation', primary: 'status', fields: { status: text(o.reconciliationView.status === 'UNAVAILABLE' ? o.reconciliationView.reason : 'Unavailable') }, sources: [] }];
             const items = rec.results.filter(r => q.status === 'ALL_EXCEPTIONS' ? !MATCHED.has(r.status) : r.status === q.status);
             const bank = new Map(rec.rows.bank.map(r => [r.recordId, r])), ledger = new Map(rec.rows.ledger.map(r => [r.recordId, r]));
+            // The reconciliation covers only the months both documents cover: label it with those months, and disclose
+            // any statement month left out, so a partial reconciliation is never presented as the whole period's.
+            const reconciled = o.periods.length ? o.periods.map(p => p.period) : [rec.scope.period];
+            // Bounded: the label stays within the gateway's 160 characters; the months left out go in a field (≤ 400).
+            const side = (k: 'BANK' | 'LEDGER') => o.notReconciled.filter(n => n.side === k).map(n => n.period);
+            const left = [['bank statement only', side('BANK')], ['books only', side('LEDGER')]] as const, omitted = o.notReconciled.length;
             const summary: Draft = {
-                label: `Reconciliation of ${index.scope.period} (bank minus ledger)`, primary: 'difference',
+                label: `Reconciliation of ${reconciled.length > 1 ? `${reconciled[0]} to ${reconciled.at(-1)}` : reconciled[0]} (bank minus ledger)${omitted ? `; ${omitted} month${omitted === 1 ? '' : 's'} not reconciled` : ''}`, primary: 'difference',
                 fields: {
+                    reconciledMonths: text(reconciled.join(', ')), ...(omitted ? { notReconciled: text(`Not in these figures, because only one document covers ${omitted === 1 ? 'it' : 'them'}: ${left.filter(([, m]) => m.length).map(([who, m]) => `${who} ${m.join(', ')}`).join('; ')}`) } : {}),
                     difference: money(toCents(rec.cashMovement.signedDifference), currency), bankMovement: money(toCents(rec.cashMovement.bank), currency), ledgerMovement: money(toCents(rec.cashMovement.ledger), currency),
                     matched: count(rec.counts.MATCH_EXACT + rec.counts.MATCH_DATE_SHIFT), exceptions: count(rec.results.filter(r => !MATCHED.has(r.status)).length), selected: count(items.length),
                     ...Object.fromEntries(Object.entries(rec.counts).map(([s, n]) => [s.toLowerCase().replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()), count(n)])),
@@ -104,18 +127,24 @@ function run(index: GroundingIndex, q: ToolCall): Draft[] {
             })];
         }
         case 'anomalies': {
-            const items = o.anomalies.filter(a => q.severity === 'ANY' || a.severity === q.severity);
+            // Flagged candidates first, so the few that need attention are always among the listed facts; each is labelled
+            // by its outcome, never as a bare "candidate", so a confirmed record cannot be presented as flagged.
+            const flaggedIds = new Set((o.anomalyResolution?.items ?? []).filter(r => r.resolution === 'FLAGGED').map(r => r.row.rowId));
+            const all = o.anomalies.filter(a => q.severity === 'ANY' || a.severity === q.severity);
+            const items = [...all.filter(a => flaggedIds.has(a.row.rowId)), ...all.filter(a => !flaggedIds.has(a.row.rowId))];
+            const flagged = items.filter(a => flaggedIds.has(a.row.rowId)).length;
+            let nf = 0, nc = 0;
             return [
-                { label: `Anomaly review candidates (${q.severity === 'ANY' ? 'all severities' : q.severity})`, primary: 'candidates', fields: { candidates: count(items.length), note: text('A candidate is a reason to review, never a finding of error or fraud.') }, sources: items.map(a => ({ kind: 'ANOMALY', id: a.row.rowId })) },
-                ...items.slice(0, 8).map((a, i): Draft => ({
-                    label: `Review candidate #${i + 1}`, primary: 'amount',
-                    fields: { ...rowFields(a.row, currency), severity: text(a.severity), rules: text(a.findings.map(f => RULES[f.ruleId].title).join('; ')), rationale: text(a.findings.map(f => f.rationale).join(' ')) },
+                { label: `Anomaly review candidates (${q.severity === 'ANY' ? 'all severities' : q.severity})`, primary: 'candidates', fields: { candidates: count(items.length), ...(o.anomalyResolution ? { flagged: count(flagged), confirmedByBooks: count(items.length - flagged) } : {}), note: text('A candidate is a reason to review, never a finding of error or fraud.') }, sources: items.map(a => ({ kind: 'ANOMALY', id: a.row.rowId })) },
+                ...items.slice(0, 8).map((a): Draft => ({
+                    label: !o.anomalyResolution ? `Review candidate #${++nc}` : flaggedIds.has(a.row.rowId) ? `Flagged anomaly #${++nf}` : `Anomaly confirmed by the books #${++nc}`, primary: 'amount',
+                    fields: { ...rowFields(a.row, currency), severity: text(a.severity), rules: text(a.findings.map(f => RULES[f.ruleId].title).join('; ')), rationale: text(a.findings.map(f => f.rationale).join(' ')), ...outcomeField(o, a.row.rowId) },
                     sources: [{ kind: 'ANOMALY', id: a.row.rowId }, rowRef(a.row)],
                 })),
             ];
         }
         case 'monthly_history':
-            return index.months.map(m => ({ label: `Month ${m}`, primary: 'net', fields: { period: { kind: 'PERIOD', ym: m } as Value, ...totalsFields(m === index.scope.period ? index.rows : index.history.filter(r => r.period === m), currency) }, sources: [{ kind: 'HISTORY', id: m }] }));
+            return index.months.filter(m => !m.includes('/')).map(m => ({ label: `Month ${m}`, primary: 'net', fields: { period: { kind: 'PERIOD', ym: m } as Value, ...totalsFields(rowsFor(index, m), currency) }, sources: [{ kind: 'HISTORY', id: m }] }));
         case 'forecast': {
             const f = o.forecast?.forecast;
             if (!f || f.status !== 'AVAILABLE') return [{ label: 'Next-month cash baseline', primary: 'status', fields: { status: text(f ? f.detail : 'Forecast unavailable for this processing.') }, sources: [{ kind: 'FORECAST', id: 'unavailable' }] }];

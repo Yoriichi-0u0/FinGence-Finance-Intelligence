@@ -39,7 +39,7 @@ export default function AnalyticsPage() {
           const positive = ratio.label === "Expense-to-Revenue" || ratio.label === "Cash Conversion" ? ratio.trend < 0 : ratio.trend > 0;
           const TrendIcon = ratio.trend >= 0 ? ArrowUpRight : ArrowDownRight;
           return (
-            <article key={ratio.label} className="panel-shadow rounded-xl border border-[var(--border)] bg-white p-5">
+            <article key={ratio.label} className="panel-shadow rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs text-[var(--muted)]">{ratio.label}</p>
@@ -59,9 +59,9 @@ export default function AnalyticsPage() {
             <LineChart
               labels={monthlyFinancials.map((item) => item.month)}
               series={[
-                { label: "Revenue", color: "#0e7c74", values: monthlyFinancials.map((item) => item.revenue), fill: true },
-                { label: "Expenses", color: "#4f63d8", values: monthlyFinancials.map((item) => item.expenses) },
-                { label: "Net Cash Flow", color: "#d98700", values: monthlyFinancials.map((item) => item.revenue - item.expenses), dashed: true },
+                { label: "Revenue", color: "var(--chart-in)", values: monthlyFinancials.map((item) => item.revenue), fill: true },
+                { label: "Expenses", color: "var(--chart-out)", values: monthlyFinancials.map((item) => item.expenses) },
+                { label: "Net Cash Flow", color: "var(--chart-net)", values: monthlyFinancials.map((item) => item.revenue - item.expenses), dashed: true },
               ]}
               height={280}
               ariaLabel="Revenue, expenses and net cash flow trend"

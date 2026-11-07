@@ -13,10 +13,10 @@ export function sameOrigin(headers: Headers) {
 }
 
 /** Reads at most `max` bytes: a declared length is checked first, then the stream is counted and cancelled once over. */
-export async function readBounded(request: Request, max: number): Promise<string | 'TOO_LARGE' | 'INVALID'> {
+export async function readBoundedBytes(request: Request, max: number): Promise<Uint8Array<ArrayBuffer> | 'TOO_LARGE'> {
     const declared = request.headers.get('content-length');
     if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > max)) return 'TOO_LARGE';
-    if (!request.body) return '';
+    if (!request.body) return new Uint8Array(0);
     const reader = request.body.getReader(), chunks: Uint8Array[] = [];
     let size = 0;
     for (;;) {
@@ -29,7 +29,28 @@ export async function readBounded(request: Request, max: number): Promise<string
     const bytes = new Uint8Array(size);
     let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    return bytes;
+}
+
+/** The bounded body as UTF-8 text; invalid UTF-8 is refused, never replaced. */
+export async function readBounded(request: Request, max: number): Promise<string | 'TOO_LARGE' | 'INVALID'> {
+    const bytes = await readBoundedBytes(request, max);
+    if (bytes === 'TOO_LARGE') return bytes;
     try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { return 'INVALID'; }
+}
+
+/**
+ * Origin, content type and bounded body, then the multipart form parsed from the bytes already read (so the bound
+ * holds however the form is framed); returns the form or the refusal response.
+ */
+export async function boundedForm(request: Request, max: number): Promise<{ form: FormData } | { refusal: Response }> {
+    if (!sameOrigin(request.headers)) return { refusal: noStoreJson({ code: 'CROSS_ORIGIN' }, 403) };
+    const type = request.headers.get('content-type') ?? '';
+    if (!type.startsWith('multipart/form-data')) return { refusal: noStoreJson({ code: 'FORM_REQUIRED' }, 415) };
+    const bytes = await readBoundedBytes(request, max);
+    if (bytes === 'TOO_LARGE') return { refusal: noStoreJson({ code: 'TOO_LARGE', maxBytes: max }, 413) };
+    try { return { form: await new Response(bytes, { headers: { 'content-type': type } }).formData() }; }
+    catch { return { refusal: noStoreJson({ code: 'INVALID_FORM' }, 400) }; }
 }
 
 /** Origin, content type, bounded body and JSON, in that order; returns the parsed body or the refusal response. */

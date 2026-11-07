@@ -127,27 +127,44 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     if (!gate('placeholders', 'Every figure is a placeholder for a cited, verified fact', resolution)) return result('WITHHELD');
 
     // 3. The free text carries no figure, date, percentage or record identifier of its own. A bare month name is
-    // allowed only when it is the processing period's month or the month of a cited period/date fact (no year: digits stay banned).
+    // allowed only when it is the month of a cited period/date fact (no year: digits stay banned). A one-month processing
+    // also allows its own month. In a multi-month processing a month name must be the month of a single-month fact cited
+    // in THAT sentence: a whole-range fact never vouches for one month inside it.
     const free = answer.sentences.map(s => s.text.replace(PLACEHOLDER, ' '));
-    const citedIds = new Set(answer.sentences.flatMap(s => s.cites).flatMap(c => derivedById.get(c)?.from ?? [c]));
-    const verifiedMonths = new Set([+ctx.catalogue.scope.period.slice(5, 7), ...[...citedIds].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? [+v.ym.slice(5, 7)] : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []))]);
-    const allowedMonth = new RegExp(`\\b(${[...verifiedMonths].flatMap(m => MONTH_NAMES[m - 1]).join('|')})\\b`, 'gi');
-    const unverifiedMonth = (t: string) => { const rest = t.replace(allowedMonth, ' '); return MONTH_WORDS.test(rest) || /\bMay\b/.test(rest); };
-    const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', EXCLUSIVITY.test(t) ? `sentence ${i + 1}: an exclusivity claim ("${t.match(EXCLUSIVITY)![0]}") no fact establishes` : '', unverifiedMonth(t) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });
+    const expand = (cites: string[]) => cites.flatMap(c => derivedById.get(c)?.from ?? [c]);
+    const citedIds = new Set(expand(answer.sentences.flatMap(s => s.cites)));
+    const factMonths = (ids: Iterable<string>) => [...ids].flatMap(id => Object.values(byId.get(id)?.fields ?? {}).flatMap(v => v.kind === 'PERIOD' ? (v.ym.includes('/') ? [] : [+v.ym.slice(5, 7)]) : v.kind === 'DATE' ? [+v.iso.slice(5, 7)] : []));
+    const single = !ctx.catalogue.scope.period.includes('/');
+    const answerMonths = new Set([+ctx.catalogue.scope.period.slice(5, 7), ...factMonths(citedIds)]);
+    const monthsFor = (i: number) => single ? answerMonths : new Set(factMonths(expand(answer.sentences[i].cites)));
+    const unverifiedMonth = (t: string, i: number) => {
+        const months = [...monthsFor(i)], rest = months.length ? t.replace(new RegExp(`\\b(${months.flatMap(m => MONTH_NAMES[m - 1]).join('|')})\\b`, 'gi'), ' ') : t;
+        return MONTH_WORDS.test(rest) || /\bMay\b/.test(rest);
+    };
+    const figures = free.flatMap((t, i) => { const counted = t.replace(COUNT_IDIOMS, ' '); return [/\d/.test(t) ? `sentence ${i + 1}: digits outside placeholders` : '', NUMBER_WORDS.test(counted) ? `sentence ${i + 1}: number word "${counted.match(NUMBER_WORDS)![0]}"` : '', EXCLUSIVITY.test(t) ? `sentence ${i + 1}: an exclusivity claim ("${t.match(EXCLUSIVITY)![0]}") no fact establishes` : '', unverifiedMonth(t, i) ? `sentence ${i + 1}: a month name that is not a verified period of this answer` : '', /%/.test(t) ? `sentence ${i + 1}: percentage outside a placeholder` : ''].filter(Boolean); });
     if (!gate('no-free-figures', 'No amount, count, date, percentage or identifier typed by the model', figures)) return result('WITHHELD');
     // 3b. A rank word ("second-largest", "the third") must be the rank of the entity it describes: the ranked facts
-    // placed in its own clause (or, for an appositive like "The second-largest payee, {F2.name}, …", the next clause)
-    // must have exactly the ranks the clause states. Citing some other fact of that rank elsewhere does not count.
+    // placed in its own clause must have exactly the ranks the clause states. A rank clause with no entity of its own is
+    // an appositive: of the entity just before it only when the phrase is set off by commas after that entity
+    // ("{F2.name}, the second-largest payee, …"); otherwise, across a conjunction or any other boundary, of the entity
+    // just after it ("… and the second-largest payee, {F2.name}, …"). That entity must match exactly. Citing some other fact of that
+    // rank elsewhere does not count.
     const rankOf = (id: string) => { const m = /#(\d+)/.exec(byId.get(id)?.label ?? ''); return m ? Number(m[1]) : null; };
     const ranks = answer.sentences.flatMap((s, i) => {
-        const clauses = s.text.split(new RegExp(CLAUSE.source, 'gi')).map(c => ({
+        // Split keeping the delimiters: parts alternate clause, delimiter, clause, …
+        const parts = s.text.split(new RegExp(`(${CLAUSE.source})`, 'gi'));
+        const delimiters = parts.filter((_, n) => n % 2 === 1).map(d => d.trim());
+        const clauses = parts.filter((_, n) => n % 2 === 0).map(c => ({
             stated: ORDINALS.flatMap((word, n) => new RegExp(`\\b${word}\\b`, 'i').test(c.replace(PLACEHOLDER, ' ')) ? [n + 1] : []),
             ranked: [...c.matchAll(PLACEHOLDER)].flatMap(([, id]) => { const r = rankOf(id); return r === null ? [] : [r]; }),
         }));
         return clauses.flatMap((c, k) => {
             if (!c.stated.length) return [];
-            const ranked = c.ranked.length ? c.ranked : clauses[k + 1]?.ranked ?? [];
-            const same = ranked.length > 0 && new Set(ranked).size === new Set(c.stated).size && ranked.every(r => c.stated.includes(r));
+            const matches = (ranked: number[]) => ranked.length > 0 && new Set(ranked).size === new Set(c.stated).size && ranked.every(r => c.stated.includes(r));
+            // Backward only for a true appositive: a comma before the phrase, and a comma or the sentence end after it.
+            const before = clauses[k - 1]?.ranked ?? [];
+            const appositive = k > 0 && delimiters[k - 1] === ',' && (k === clauses.length - 1 || delimiters[k] === ',') && before.length > 0;
+            const same = matches(c.ranked.length ? c.ranked : appositive ? before : clauses[k + 1]?.ranked ?? []);
             return same ? [] : [`sentence ${i + 1}: "${ORDINALS[c.stated[0] - 1]}" is not the rank of the entity it describes`];
         });
     });
@@ -180,6 +197,21 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     const negative = (s: { text: string }) => [...s.text.matchAll(PLACEHOLDER)].some(([, id, field]) => { const v = byId.get(id) ? fieldOf(byId.get(id)!, field) : derivedById.get(id)?.value; return v?.kind === 'MONEY' && v.cents.startsWith('-'); });
     const signWording = answer.sentences.flatMap((s, i) => COMPARISON.test(free[i]) && negative(s) ? [`sentence ${i + 1}: "${free[i].match(COMPARISON)![0]}" with a negative amount`] : []);
     if (!gate('sign-wording', 'Comparisons are not stated with a negative amount', signWording)) return result('WITHHELD');
+
+    // 5d. How an anomaly was resolved is a fact, not wording: a sentence that calls a record flagged (or unconfirmed) may
+    // cite only records FinGence flagged, and one that calls a record confirmed or known may cite only confirmed ones.
+    const FLAGGED_WORDS = /\b(flag\w*|unconfirmed|not confirmed|unresolved|unexplained|needs? (attention|review|investigation)|for (your|the) technical team)\b/i;
+    const NEGATED_FLAG = /(\bnot|\bnever|n't|\bno longer)\s+(been\s+|be\s+)?flag\w*/i;
+    const CONFIRMED_WORDS = /\b(confirm(ed|s)?|corroborat\w*|known transactions?|recorded in (your|the) books|no action needed)\b/i;
+    const outcomeOf = (id: string) => { const v = byId.get(id)?.fields.outcome; return v?.kind === 'TEXT' ? (v.text.startsWith('Flagged') ? 'FLAGGED' : 'CONFIRMED') : null; };
+    const outcomes = answer.sentences.flatMap((s, i) => {
+        const cited = expand(s.cites).map(id => [id, outcomeOf(id)] as const).filter(([, o]) => o);
+        // "was not flagged" says the record was NOT flagged: a negated flag is a confirmed claim, never a flagged one.
+        const t = free[i], unnegated = t.replace(new RegExp(NEGATED_FLAG.source, 'gi'), ' ');
+        const says = FLAGGED_WORDS.test(unnegated) ? 'FLAGGED' : NEGATED_FLAG.test(t) || CONFIRMED_WORDS.test(t) ? 'CONFIRMED' : null;
+        return says ? cited.filter(([, o]) => o !== says).map(([id]) => `sentence ${i + 1}: calls ${byId.get(id)!.label} ${says === 'FLAGGED' ? 'flagged' : 'confirmed'}, but it was ${says === 'FLAGGED' ? 'confirmed by the books' : 'flagged'}`) : [];
+    });
+    if (!gate('outcomes', 'A record called flagged or confirmed was resolved that way', outcomes)) return result('WITHHELD');
 
     // 6. What the question names (a counterparty or a month) must be what the cited facts are about.
     const q = ctx.question.toLowerCase(), citedFacts = cited.map(id => byId.get(id)!);

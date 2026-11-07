@@ -75,7 +75,7 @@ export default function ReportsPage() {
 
             <div className="mt-6 flex flex-wrap gap-3">
               <button type="button" onClick={generateReport} disabled={generationState === "Generating"} className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[var(--teal)] px-4 text-sm font-semibold text-white hover:bg-[var(--teal-dark)] disabled:cursor-wait disabled:opacity-55"><Play aria-hidden="true" size={16} /> Generate report</button>
-              <button type="button" onClick={showPreview} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border)] bg-white px-4 text-sm font-semibold hover:bg-slate-50"><Eye aria-hidden="true" size={16} /> Preview</button>
+              <button type="button" onClick={showPreview} className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 text-sm font-semibold hover:bg-slate-50"><Eye aria-hidden="true" size={16} /> Preview</button>
               <button type="button" disabled title="Available in full implementation" className="inline-flex min-h-10 cursor-not-allowed items-center gap-2 rounded-lg border border-[var(--border)] bg-slate-100 px-4 text-sm font-semibold text-slate-400"><FileDown aria-hidden="true" size={16} /> Export PDF</button>
             </div>
             <p className="mt-2 text-[11px] text-[var(--muted)]">PDF export is available in the full implementation.</p>

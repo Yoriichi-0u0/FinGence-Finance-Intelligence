@@ -10,11 +10,11 @@
 import Papa from 'papaparse';
 import { CASH_SOURCE_FIELDS } from '../poc-reconciliation/engine';
 import { EVALUATOR_COLUMNS } from '../poc-anomalies/source';
-import { InterpreterUnavailable, type LayoutInterpreter, type ModelReceipt } from '../interpretation/contracts';
+import { InterpreterUnavailable, retryKey, type InterpretationResult, type LayoutInterpreter, type ModelReceipt } from '../interpretation/contracts';
 import { buildEvidence, readTable } from '../interpretation/evidence';
 import { verifyProposal, verifyWithDisputes, type FieldMapping, type GateOptions } from '../interpretation/gates';
 import { expandWorkbook, isWorkbook, type WorksheetSource } from '../interpretation/workbook';
-import { extractDocument, isExtractable, type ExtractedSource } from '../interpretation/extract';
+import { extractDocument, isExtractable, type ExtractedSource, type Extractor } from '../interpretation/extract';
 
 export type DocumentRole = 'BANK_STATEMENT' | 'GENERAL_LEDGER' | 'BANK_HISTORY';
 export type Provenance = 'PUBLIC_SYNTHETIC_SAMPLE' | 'USER_SUPPLIED';
@@ -30,13 +30,41 @@ export type ProcessedDocument = {
      * layer or OCR. `sha256` is then that table's fingerprint; the uploaded file's own is in the source.
      */
     source: WorksheetSource | ExtractedSource | null;
+    /** What FinGence read from the document, for the side-by-side document view; null when it could not be read as a table. */
+    reading: DocumentReading | null;
 };
+/**
+ * The document as read, line by line, and where each verified record came from. `rows` is the table (one entry per line
+ * of the document as a table; for a PDF or scan, per line placed by position). `records` maps each verified record to its
+ * line; `columns` is the column each field was read from; `aiLines` are the lines the AI model was shown (empty when no
+ * model was used): the model proposes the layout from those, and the code reads every line.
+ */
+export type DocumentReading = { rows: string[][]; records: { id: string; line: number }[]; columns: { field: string; column: number; heading: string }[]; aiLines: number[] };
 /** A model's layout proposal and what the deterministic gates concluded about it. */
 export type InterpretationRecord = {
     method: 'AI_LAYOUT_PROPOSAL'; receipt: ModelReceipt | null; proposal: unknown; error: string | null;
     decision: Decision; summary: string; checks: Check[]; mapping: FieldMapping[]; disclosures: string[];
     canonicalSha256: string | null; canonicalNet: string | null; mappingHash: string | null;
+    /** The first proposal, when it failed a check the model can fix and the model was asked once more (`proposal` is then the second). */
+    firstAttempt?: { proposal: unknown; receipt: ModelReceipt; check: string; detail: string } | null;
 };
+/**
+ * Checks whose failure is the model's own reading of the layout (a column mapped twice or not at all, a role or a
+ * direction the document's words contradict, dates read in the wrong format). Only these earn one more attempt, told
+ * which check failed; the second proposal passes through exactly the same checks. A document whose own arithmetic,
+ * account, scope or OCR figures fail is never re-asked: a different layout cannot make it valid.
+ */
+export const RETRYABLE_CHECKS = new Set(['schema', 'mapping', 'header', 'role-evidence', 'direction', 'dates']);
+/** The model results a run used, keyed for replay: each document's first attempt by SHA-256, a second by `retryKey`. */
+export function interpretationsOf(documents: ProcessedDocument[]): Record<string, InterpretationResult> {
+    return Object.fromEntries(documents.flatMap(d => {
+        const i = d.interpretation;
+        if (!i?.receipt) return [];
+        return i.firstAttempt
+            ? [[d.sha256, { proposal: i.firstAttempt.proposal, receipt: i.firstAttempt.receipt }], [retryKey(d.sha256), { proposal: i.proposal, receipt: i.receipt }]]
+            : [[d.sha256, { proposal: i.proposal, receipt: i.receipt }]];
+    }));
+}
 export type Digest = (bytes: Uint8Array) => Promise<string>;
 
 /** Web Crypto SHA-256 (browsers and Node 20+). */
@@ -45,6 +73,33 @@ export const sha256Hex: Digest = async bytes => {
     const digest = await globalThis.crypto.subtle.digest('SHA-256', view.buffer);
     return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
 };
+
+/** The record ID column of each role's canonical layout, and the field each canonical column holds. */
+const ID_FIELD: Record<DocumentRole, string> = { BANK_STATEMENT: 'BankTransactionID', GENERAL_LEDGER: 'LedgerEntryID', BANK_HISTORY: 'TransactionID' };
+const CANONICAL_FIELD: Record<string, string> = {
+    BankTransactionID: 'recordId', LedgerEntryID: 'recordId', TransactionID: 'recordId', ValueDate: 'date', PostingDate: 'date', TransactionDate: 'date',
+    BankDescription: 'description', LedgerMemo: 'description', RawBankDescription: 'description', BankReference: 'reference', LedgerReference: 'reference', Reference: 'reference',
+    Counterparty: 'counterparty', SignedCashMovementMYR: 'amount', BankAmountMYR: 'unsignedAmount', AmountMYR: 'unsignedAmount', BankDirection: 'direction',
+    CashAccountDebitMYR: 'debit', CashAccountCreditMYR: 'credit', Currency: 'currency', BusinessID: 'businessId',
+};
+function reading(bytes: Uint8Array, read: ReturnType<typeof readTable>, doc: ProcessedDocument, lineage: { canonical: Uint8Array; lines: number[] } | null, aiLines: number[]): DocumentReading | null {
+    const table = read ?? readTable(bytes);
+    if (!table) return null;
+    const accepted = doc.decision === 'AUTO_ACCEPTED' && doc.role;
+    let records: DocumentReading['records'] = [], columns: DocumentReading['columns'] = [];
+    if (accepted && lineage) {
+        // An AI-read document: each canonical row carries its source line.
+        const rows = Papa.parse<string[]>(new TextDecoder().decode(lineage.canonical), { skipEmptyLines: true }).data, k = rows[0]?.indexOf(ID_FIELD[doc.role!]) ?? -1;
+        records = k < 0 ? [] : rows.slice(1).map((r, i) => ({ id: r[k], line: lineage!.lines[i] }));
+        columns = (doc.interpretation?.mapping ?? []).map(m => ({ field: m.field, column: m.column, heading: m.heading }));
+    } else if (accepted) {
+        // A document in a supported schema: the header is its first line, and each later line is one record.
+        const header = table.rows[0] ?? [], k = header.indexOf(ID_FIELD[doc.role!]);
+        records = k < 0 ? [] : table.rows.flatMap((r, line) => line > 0 && r.length > 1 && r[k] ? [{ id: r[k], line }] : []);
+        columns = header.flatMap((h, column) => CANONICAL_FIELD[h] ? [{ field: CANONICAL_FIELD[h], column, heading: h }] : []);
+    }
+    return { rows: table.rows, records, columns, aiLines };
+}
 
 const BANK_FIELDS = [...CASH_SOURCE_FIELDS.bank, 'BusinessName', 'Counterparty'];
 const LEDGER_FIELDS = CASH_SOURCE_FIELDS.ledger;
@@ -70,7 +125,8 @@ function identify(fields: string[] | null): { role: DocumentRole | null; reason:
 /** What a document may cover: the Phase 1 pipeline reconciles one month in MYR; the ingestion layer alone accepts more. */
 export const INGESTION_SCOPE: NonNullable<GateOptions['scope']> = { months: 'MANY', currencies: 'ANY' };
 /** `onTable`: observes the table bytes each document is interpreted from (evaluation); it cannot change them. */
-export type IngestionOptions = { interpreter?: LayoutInterpreter | null; digest?: Digest; scope?: GateOptions['scope']; onTable?: (table: Uint8Array) => void };
+/** `extract` reads a PDF or image into a table (default: `extractDocument`); a server job's re-check replays the job's reading instead. */
+export type IngestionOptions = { interpreter?: LayoutInterpreter | null; digest?: Digest; scope?: GateOptions['scope']; onTable?: (table: Uint8Array) => void; extract?: Extractor };
 export type Ingested = {
     documents: ProcessedDocument[];
     /** The bytes each document continues as, index for index: canonical CSV for an AI-interpreted document, else its own table. */
@@ -83,13 +139,13 @@ export async function ingestDocuments(inputs: DocumentInput[], options: Ingestio
     // An XLSX workbook contributes one document per worksheet that holds a table; a PDF or image is read into one table.
     const entries: (DocumentInput & { source: WorksheetSource | ExtractedSource | null })[] = [];
     const unread = (input: DocumentInput, name: string, sha256: string, reason: string) => {
-        documents.push({ name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: null, decision: 'QUARANTINED', reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: null });
+        documents.push({ name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: null, decision: 'QUARANTINED', reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: null, reading: null });
         effective.push(input.bytes);
     };
     for (const input of inputs) {
         const name = input.name.split(/[/\\]/).pop()!.slice(0, 120);
         if (isExtractable(input.bytes)) {
-            const sha256 = await digest(input.bytes), read = await extractDocument(name, input.bytes, sha256);
+            const sha256 = await digest(input.bytes), read = await (options.extract ?? extractDocument)(name, input.bytes, sha256);
             if ('error' in read) unread(input, name, sha256, `Not read: ${read.error}`);
             else entries.push({ name, bytes: read.bytes, provenance: input.provenance, source: read.source });
             continue;
@@ -107,18 +163,35 @@ export async function ingestDocuments(inputs: DocumentInput[], options: Ingestio
             : extracted ? { role: null, reason: `Read from a ${extracted === 'OCR' ? 'scan or image by OCR' : 'PDF text layer'}; its layout and amounts must be verified by the AI layout proposal and arithmetic checks.`, unfamiliar: true }
                 : identify(header(input.bytes));
         const name = input.name;
-        const doc: ProcessedDocument = { name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: found.role, decision: found.role ? 'AUTO_ACCEPTED' : 'QUARANTINED', reason: found.reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: input.source };
+        const doc: ProcessedDocument = { name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: found.role, decision: found.role ? 'AUTO_ACCEPTED' : 'QUARANTINED', reason: found.reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: input.source, reading: null };
+        let lineage: { canonical: Uint8Array; lines: number[] } | null = null, aiLines: number[] = [];
         let bytes = input.bytes;
         const table = !found.role && found.unfamiliar && options.interpreter ? readTable(input.bytes) : null;
         if (table) {
             const record: InterpretationRecord = { method: 'AI_LAYOUT_PROPOSAL', receipt: null, proposal: null, error: null, decision: 'QUARANTINED', summary: '', checks: [], mapping: [], disclosures: [], canonicalSha256: null, canonicalNet: null, mappingHash: null };
             try {
                 options.onTable?.(input.bytes.slice());
-                const { proposal, receipt } = await options.interpreter!.propose(buildEvidence(table, sha256, name));
-                const verdict = input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted, scope }) : verifyProposal(table, proposal, { extracted, scope });
+                const evidence = buildEvidence(table, sha256, name);
+                aiLines = [...evidence.head, ...evidence.tail].map(l => l.line);
+                const verify = (proposal: unknown) => input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted, scope }) : verifyProposal(table, proposal, { extracted, scope });
+                let { proposal, receipt } = await options.interpreter!.propose(evidence);
+                let verdict = verify(proposal);
+                const failed = verdict.decision === 'AUTO_ACCEPTED' ? undefined : verdict.checks.find(k => !k.passed);
+                if (failed && RETRYABLE_CHECKS.has(failed.id)) {
+                    const first = { proposal, receipt, check: failed.id, detail: `${failed.label}: ${failed.detail}`.slice(0, 300) };
+                    try {
+                        ({ proposal, receipt } = await options.interpreter!.propose({ ...evidence, retry: { check: first.check, detail: first.detail } }));
+                        verdict = verify(proposal);
+                        record.firstAttempt = first;
+                    } catch {
+                        // The second call failed (refused or unavailable): the first proposal's verdict stands.
+                        ({ proposal, receipt } = first);
+                    }
+                }
                 Object.assign(record, { proposal, receipt, decision: verdict.decision, summary: verdict.summary, checks: verdict.checks, mapping: verdict.mapping, disclosures: verdict.disclosures });
+                if (record.firstAttempt) record.disclosures = [`The first AI proposal failed the "${record.firstAttempt.check}" check (${record.firstAttempt.detail}); the model was asked once more, and its second proposal went through every check again.`, ...record.disclosures];
                 if (verdict.canonical && verdict.mappingKey) {
-                    bytes = verdict.canonical.bytes;
+                    bytes = verdict.canonical.bytes; lineage = { canonical: bytes, lines: verdict.canonical.lineage };
                     record.canonicalSha256 = await digest(bytes); record.canonicalNet = verdict.canonical.net;
                     // Identity follows the verified canonical content, so equivalent proposals give the same processing ID.
                     record.mappingHash = record.canonicalSha256.slice(0, 16);
@@ -131,6 +204,7 @@ export async function ingestDocuments(inputs: DocumentInput[], options: Ingestio
             }
             doc.interpretation = record;
         }
+        doc.reading = reading(input.bytes, table, doc, lineage, aiLines);
         documents.push(doc); effective.push(bytes);
     }
     return { documents, effective };

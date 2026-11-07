@@ -19,11 +19,15 @@ export const REFUSALS = ['ADVICE', 'ALLEGATION', 'CAUSE_NOT_RECORDED', 'CLASSIFI
 export type Refusal = typeof REFUSALS[number];
 export const RECONCILIATION_FILTERS = ['ALL_EXCEPTIONS', ...reconciliationStatuses] as const;
 
-const PERIOD = /^\d{4}-(0[1-9]|1[0-2])$/;
+/** A month (YYYY-MM), or a multi-month processing's range (YYYY-MM/YYYY-MM). */
+const PERIOD_OR_RANGE = /^\d{4}-(0[1-9]|1[0-2])(\/\d{4}-(0[1-9]|1[0-2]))?$/;
+/** Single months a catalogue lists (the most recent ones); a multi-month processing adds its whole range as one more entry. */
+export const CATALOGUE_MONTHS = 24;
 export const catalogueSchema = z.strictObject({
     version: z.literal(QA_VERSION),
-    scope: z.strictObject({ businessId: z.string().max(64), businessName: z.string().max(120), period: z.string().regex(PERIOD), currency: z.string().regex(/^[A-Z]{3}$/) }),
-    months: z.array(z.string().regex(PERIOD)).min(1).max(24),
+    scope: z.strictObject({ businessId: z.string().max(64), businessName: z.string().max(120), period: z.string().regex(PERIOD_OR_RANGE), currency: z.string().regex(/^[A-Z]{3}$/) }),
+    // Observed months; a multi-month processing also lists its whole range, which cash_summary answers for all statement records.
+    months: z.array(z.string().regex(PERIOD_OR_RANGE)).min(1).max(CATALOGUE_MONTHS + 1),
     counterparties: z.array(z.string().min(1).max(120)).max(60),
     reconciliationStatuses: z.array(z.enum(RECONCILIATION_FILTERS)).max(8),
     anomalySeverities: z.array(z.enum(['HIGH', 'MEDIUM'])).max(2),

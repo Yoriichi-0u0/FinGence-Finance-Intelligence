@@ -52,7 +52,7 @@ function IllustrativeOverview() {
         description={`August 2026 · Consolidated financial performance · ${period}`}
         actions={
           <div
-            className="thin-scrollbar flex w-full max-w-full overflow-x-auto rounded-lg border border-[var(--border)] bg-white p-1 sm:w-auto"
+            className="thin-scrollbar flex w-full max-w-full overflow-x-auto rounded-lg border border-[var(--border)] bg-[var(--surface)] p-1 sm:w-auto"
             role="group"
             aria-label="Financial period"
           >
@@ -119,13 +119,13 @@ function IllustrativeOverview() {
               series={[
                 {
                   label: "Revenue",
-                  color: "#0e7c74",
+                  color: "var(--chart-in)",
                   values: monthlyFinancials.map((item) => item.revenue),
                   fill: true,
                 },
                 {
                   label: "Expenses",
-                  color: "#4f63d8",
+                  color: "var(--chart-out)",
                   values: monthlyFinancials.map((item) => item.expenses),
                   dashed: true,
                 },
@@ -185,12 +185,12 @@ function IllustrativeOverview() {
               series={[
                 {
                   label: "Historical",
-                  color: "#0e7c74",
+                  color: "var(--chart-in)",
                   values: cashFlowForecast.map((item, index) => (index <= 5 ? item.value : null)),
                 },
                 {
                   label: "Forecast",
-                  color: "#4f63d8",
+                  color: "var(--chart-out)",
                   values: cashFlowForecast.map((item, index) => (index >= 5 ? item.value : null)),
                   dashed: true,
                 },

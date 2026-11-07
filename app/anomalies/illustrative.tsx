@@ -43,7 +43,7 @@ export default function IllustrativeAnomaliesPage() {
           ["Medium risk", "4", Eye, "var(--amber)"],
           ["Model precision", "89%", ShieldCheck, "var(--teal)"],
         ].map(([label, value, Icon, color]) => (
-          <article key={String(label)} className="panel-shadow rounded-xl border border-[var(--border)] bg-white p-5">
+          <article key={String(label)} className="panel-shadow rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
             <div className="flex items-start justify-between gap-3">
               <div><p className="text-xs text-[var(--muted)]">{String(label)}</p><p className="mt-2 text-3xl font-semibold tracking-[-0.04em]">{String(value)}</p></div>
               <span className="grid size-10 place-items-center rounded-full bg-slate-50" style={{ color: String(color) }}><Icon aria-hidden="true" size={20} /></span>
@@ -81,7 +81,7 @@ export default function IllustrativeAnomaliesPage() {
                     <td className="whitespace-nowrap px-4 py-3.5 text-right font-semibold">{formatCurrency(item.amount)}</td>
                     <td className="px-4 py-3.5 text-right font-semibold">{item.score.toFixed(2)}</td>
                     <td className="px-4 py-3.5"><StatusBadge status={item.status} /></td>
-                    <td className="px-4 py-3.5"><button type="button" onClick={() => setSelectedId(item.id)} aria-label={`Inspect ${item.transaction}`} className="grid size-8 place-items-center rounded-md text-[var(--muted)] hover:bg-white hover:text-[var(--teal)]"><ChevronRight aria-hidden="true" size={17} /></button></td>
+                    <td className="px-4 py-3.5"><button type="button" onClick={() => setSelectedId(item.id)} aria-label={`Inspect ${item.transaction}`} className="grid size-8 place-items-center rounded-md text-[var(--muted)] hover:bg-[var(--surface)] hover:text-[var(--teal)]"><ChevronRight aria-hidden="true" size={17} /></button></td>
                   </tr>
                 ))}
               </tbody>

@@ -1,8 +1,8 @@
 'use client';
-import { Download } from 'lucide-react';
+import { ChevronRight, Download } from 'lucide-react';
 import { Panel } from '@/components/ui';
 import { entriesCsv, RESOLUTION_LABEL, RESOLUTIONS, type ReconciliationOutcome, type Resolution } from '@/lib/reconciliation/reconcile';
-import { button, money } from './shared';
+import { Callout, Table, button, money } from './shared';
 
 /** Plain-language order: what needs attention first, then what FinGence did. */
 const ORDER: Resolution[] = ['UNEXPLAINED', 'ENTRY_PREPARED', 'TIMING_OPEN', 'TIMING_CLEARED', 'MATCHED_LATE', 'MATCHED_BY_AMOUNT'];
@@ -26,23 +26,20 @@ export function ReconciliationOutcomePanel({ outcome: o }: { outcome: Reconcilia
     };
     return <Panel title="What FinGence did" eyebrow="Reconciled automatically · no approval needed">
         <div className="space-y-4 p-4 sm:p-5">
-            <p role="status" className={`rounded-lg border px-3 py-2.5 text-sm ${ok ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-300 bg-amber-50 text-amber-950'}`}>{o.summary}</p>
+            <Callout role="status" tone={ok ? 'good' : 'warn'}>{o.summary}</Callout>
             <ul className="grid gap-2 sm:grid-cols-3">
                 {[['Transactions matched', String(o.totals.transactions)], ['Differences resolved', String(o.totals.timing + o.totals.resolutions.ENTRY_PREPARED)], ['Flagged for attention', String(o.attention.length)]].map(([label, value]) =>
-                    <li key={label} className="rounded-lg border border-[var(--border)] px-3 py-2"><span className="block text-xs text-[var(--muted)]">{label}</span><span className="text-xl font-semibold tabular-nums">{value}</span></li>)}
+                    <li key={label} className="rounded-xl bg-[var(--surface-subtle)] px-3.5 py-2.5 ring-1 ring-inset ring-[var(--border)]"><span className="block text-xs text-[var(--muted)]">{label}</span><span className="text-2xl font-semibold tracking-[-0.02em] tabular-nums">{value}</span></li>)}
             </ul>
-            {ORDER.filter(r => shown.some(i => i.resolution === r)).map(r => <section key={r}>
-                <h3 className="text-sm font-semibold">{HEADING[r]}</h3>
-                <ul className="mt-1 divide-y divide-[var(--border)]">{shown.filter(i => i.resolution === r).map(i => <li key={i.id} className="py-2 text-sm">{i.summary}
-                    <details className="mt-0.5 text-xs text-[var(--muted)]"><summary className="cursor-pointer">Details</summary><p>{i.date} · {[i.bankRecordId, ...i.ledgerRecordIds].filter(Boolean).join(', ')} · {i.description}</p><p>{RESOLUTION_LABEL[i.resolution]}: {i.rule}{i.note ? ` ${i.note}` : ''}</p></details>
+            <div className="space-y-2">{ORDER.filter(r => shown.some(i => i.resolution === r)).map(r => <details key={r} open={r === 'UNEXPLAINED'} className="group rounded-xl border border-[var(--border)]">
+                <summary className="flex min-h-12 cursor-pointer items-center gap-2 px-3 py-2"><h3 className={`flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold ${r === 'UNEXPLAINED' ? 'text-[var(--warn-ink)]' : ''}`}><span aria-hidden="true" className={`size-2 rounded-full ${r === 'UNEXPLAINED' ? 'bg-[var(--warn)]' : r === 'ENTRY_PREPARED' || r === 'TIMING_OPEN' ? 'bg-[var(--brand)]' : 'bg-[var(--good)]'}`} />{HEADING[r]}</h3><span className="rounded-full bg-[var(--surface-sunken)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--muted-strong)]">{shown.filter(i => i.resolution === r).length}</span><ChevronRight aria-hidden="true" size={16} className="disclosure-chevron shrink-0 text-[var(--muted)] transition-transform" /></summary>
+                <ul className="divide-y divide-[var(--border)] border-t border-[var(--border)]">{shown.filter(i => i.resolution === r).map(i => <li key={i.id} className="px-3 py-2.5 text-sm leading-relaxed">{i.summary}
+                    <details className="mt-0.5 text-xs text-[var(--muted)]"><summary className="inline-flex min-h-8 cursor-pointer items-center font-semibold text-[var(--brand-ink)]">Details</summary><p>{i.date} · {[i.bankRecordId, ...i.ledgerRecordIds].filter(Boolean).join(', ')} · {i.description}</p><p>{RESOLUTION_LABEL[i.resolution]}: {i.rule}{i.note ? ` ${i.note}` : ''}</p></details>
                 </li>)}</ul>
-            </section>)}
+            </details>)}</div>
             {o.entries.length ? <section>
                 <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">Correcting entries ({o.entries.length})</h3><button type="button" className={button} onClick={download}><Download size={16} aria-hidden="true" />Download entries (CSV)</button></div>
-                <div className="mt-2 overflow-x-auto"><table className="w-full min-w-[640px] text-left text-xs"><caption className="sr-only">Correcting entries prepared by FinGence</caption>
-                    <thead><tr className="border-b border-[var(--border)] text-[var(--muted)]"><th className="py-1.5 pr-3 font-medium">Date</th><th className="py-1.5 pr-3 font-medium">Entry</th><th className="py-1.5 pr-3 font-medium">Debit</th><th className="py-1.5 pr-3 font-medium">Credit</th><th className="py-1.5 text-right font-medium">Amount</th></tr></thead>
-                    <tbody className="divide-y divide-[var(--border)]">{o.entries.map(e => <tr key={e.id}><td className="whitespace-nowrap py-1.5 pr-3">{e.date}</td><td className="py-1.5 pr-3">{e.description}</td><td className="py-1.5 pr-3">{e.debit.account}</td><td className="py-1.5 pr-3">{e.credit.account}</td><td className="whitespace-nowrap py-1.5 text-right tabular-nums">{money(currency, e.debit.amount)}</td></tr>)}</tbody>
-                </table></div>
+                <div className="mt-2 overflow-hidden rounded-xl border border-[var(--border)]"><Table caption="Correcting entries prepared by FinGence" columns={['Entry', 'Date', 'Debit', 'Credit', 'Amount']} rows={o.entries.map(e => [e.description, <span key="d" className="whitespace-nowrap">{e.date}</span>, e.debit.account, e.credit.account, <span key="a" className="whitespace-nowrap font-medium tabular-nums">{money(currency, e.debit.amount)}</span>])} /></div>
                 <p className="mt-1 text-xs text-[var(--muted)]">Prepared for your books. FinGence does not post them to an accounting system.</p>
             </section> : null}
             <details className="text-xs text-[var(--muted)]"><summary className="cursor-pointer font-medium">How FinGence decided (for technical users)</summary>

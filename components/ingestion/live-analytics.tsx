@@ -36,7 +36,7 @@ export function LiveAnalytics({ results, onInspect }: {
     <div className="space-y-5 p-4 sm:p-5">
       <p className="text-sm text-[var(--muted-strong)]">Computed from this session&apos;s current checked records, not the illustrative dashboards. Rechecking or removing a dataset recomputes this view. No uploaded records are sent to a server.</p>
       <label className="block text-sm font-semibold">Records needing attention in analysis
-        <select className="mt-2 min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-white px-3 sm:max-w-sm" value={warningPolicy} onChange={event => setWarningPolicy(event.target.value as WarningPolicy)}>
+        <select className="mt-2 min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 sm:max-w-sm" value={warningPolicy} onChange={event => setWarningPolicy(event.target.value as WarningPolicy)}>
           <option value="include">Include WARNING records and keep their messages</option>
           <option value="exclude">Exclude WARNING records from this analysis only</option>
         </select>
