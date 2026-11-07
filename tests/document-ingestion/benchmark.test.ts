@@ -34,6 +34,9 @@ const AGAMI = process.env.FINGENCE_BENCH_AGAMI_DIR ?? '.local/datasets/agami';
 const CORPUS = process.env.FINGENCE_BENCH_CORPUS_DIR ?? '.local/benchmark/corpus';
 const HELDOUT = process.env.FINGENCE_BENCH_HELDOUT_DIR ?? '.local/benchmark/heldout';
 const HELDOUT_B = process.env.FINGENCE_BENCH_HELDOUT_B_DIR ?? '.local/benchmark/heldout-b';
+// External documents made by others (Bankstatemently, Synthetic Indonesian Bank Statements; not committed): a manifest whose
+// truth is read with an independent PDF reader and checked against each statement's own arithmetic, expectations fixed in it.
+const EXTERNAL = process.env.FINGENCE_BENCH_EXTERNAL_DIR ?? '.local/datasets/external';
 const only = process.env.FINGENCE_BENCH_ONLY;
 const corpora = process.env.FINGENCE_BENCH_CORPUS?.split(',').map(c => c.trim()).filter(Boolean);
 // A result id may carry a worksheet ("book.xlsx › Sheet"); the case is the file, so only the part before " › " counts.
@@ -68,7 +71,7 @@ function truthBalanceBreaks(json: string) {
 }
 type Expect = 'ACCEPT' | 'QUARANTINE' | 'EXACT_OR_QUARANTINE';
 type Meta = { role: string; currency: string };
-type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED' | 'HELD_OUT' | 'HELD_OUT_B'; file: string; expect: Expect; truth: (name: string) => Truth | null; meta?: (name: string) => Meta };
+type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED' | 'HELD_OUT' | 'HELD_OUT_B' | 'EXTERNAL'; file: string; expect: Expect; truth: (name: string) => Truth | null; meta?: (name: string) => Meta };
 
 const cents = (v: string | number) => { const [w, f = ''] = String(typeof v === 'number' ? v.toFixed(2) : v).replace(/,/g, '').split('.'); const n = BigInt(w.replace('-', '')) * 100n + BigInt((f + '00').slice(0, 2)); return String(v).trim().startsWith('-') ? -n : n; };
 const csvRows = (path: string) => Papa.parse<Record<string, string>>(readFileSync(path, 'utf8'), { header: true, skipEmptyLines: true }).data;
@@ -95,9 +98,9 @@ const cases: Case[] = [
         ...['opaque-headings-no-balance.csv', 'corrupted-running-balance.csv', 'mislabelled-withdrawal-deposit.csv', 'usd-statement.csv', 'staff-roster.csv', 'signed-amount-reversed-no-balance.csv', 'ledger-signed-opaque-no-balance.csv', 'ledger-multiple-accounts.csv', 'ledger-sales-account.csv', 'ledger-bank-loan-account.csv', 'ledger-no-account-evidence.csv', 'bank-ambiguous-debit-credit.csv'].map(f => [f, 'QUARANTINE'])] as [string, Expect][])
         .map(([f, expect]) => ({ id: f, format: 'CSV', corpus: 'ADVERSARIAL' as const, file: join(F, f), expect, truth: () => bankTruth })),
     // The generated corpora (scripts/generate-statement-corpus.mjs): every document is valid and must be read exactly.
-    ...[[CORPUS, 'corpus', 'GENERATED'], [HELDOUT, 'heldout', 'HELD_OUT'], [HELDOUT_B, 'heldout-b', 'HELD_OUT_B']].flatMap(([dir, prefix, corpus]) => existsSync(join(dir, 'manifest.json')) ? (JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string }[] }).documents.map(d => {
+    ...[[CORPUS, 'corpus', 'GENERATED'], [HELDOUT, 'heldout', 'HELD_OUT'], [HELDOUT_B, 'heldout-b', 'HELD_OUT_B'], [EXTERNAL, 'external', 'EXTERNAL']].flatMap(([dir, prefix, corpus]) => existsSync(join(dir, 'manifest.json')) ? (JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string; expect?: Expect }[] }).documents.map(d => {
         const truth = () => JSON.parse(readFileSync(join(dir, d.truth), 'utf8')) as Meta & { transactions: { date: string; cents: string }[] };
-        return { id: `${prefix}/${d.file}`, format: d.format, corpus: corpus as Case['corpus'], file: join(dir, d.file), expect: 'ACCEPT' as const,
+        return { id: `${prefix}/${d.file}`, format: d.format, corpus: corpus as Case['corpus'], file: join(dir, d.file), expect: d.expect ?? 'ACCEPT' as Expect,
             truth: () => truth().transactions.map(t => ({ date: t.date, cents: BigInt(t.cents) })), meta: () => ({ role: truth().role, currency: truth().currency }) };
     }) : []),
     ...(existsSync(AGAMI) ? readdirSync(AGAMI).flatMap(type => readdirSync(join(AGAMI, type)).filter(f => f.endsWith('.pdf')).map(f => ({
