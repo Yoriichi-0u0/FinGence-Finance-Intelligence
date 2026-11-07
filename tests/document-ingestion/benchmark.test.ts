@@ -13,7 +13,9 @@
  *    and held-out set B (FINGENCE_BENCH_HELDOUT_B_DIR, `--held-out-b`), fixed after run 5 to re-test its fixes.
  * Each result also records the role and currency FinGence decided, against the truth, and the accepted records
  * (date, signed cents, description) for the manual verification sample (scripts/evaluate-ingestion.mjs).
- * FINGENCE_BENCH_OUT (JSON path; a .md summary is written next to it), FINGENCE_BENCH_ONLY (substring filter).
+ * FINGENCE_BENCH_OUT (JSON path; a .md summary is written next to it), FINGENCE_BENCH_ONLY (substring filter),
+ * FINGENCE_BENCH_CORPUS (comma-separated corpus names, e.g. FINGENCE,ADVERSARIAL, to run a regression part on its own),
+ * FINGENCE_BENCH_IDS (a file of document ids, one per line, to rerun only the documents a run left RATE_LIMITED).
  */
 import { describe, expect, it, vi } from 'vitest';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -33,6 +35,9 @@ const CORPUS = process.env.FINGENCE_BENCH_CORPUS_DIR ?? '.local/benchmark/corpus
 const HELDOUT = process.env.FINGENCE_BENCH_HELDOUT_DIR ?? '.local/benchmark/heldout';
 const HELDOUT_B = process.env.FINGENCE_BENCH_HELDOUT_B_DIR ?? '.local/benchmark/heldout-b';
 const only = process.env.FINGENCE_BENCH_ONLY;
+const corpora = process.env.FINGENCE_BENCH_CORPUS?.split(',').map(c => c.trim()).filter(Boolean);
+// A result id may carry a worksheet ("book.xlsx › Sheet"); the case is the file, so only the part before " › " counts.
+const ids = process.env.FINGENCE_BENCH_IDS ? new Set(readFileSync(process.env.FINGENCE_BENCH_IDS, 'utf8').split('\n').map(l => l.split(' › ')[0].trim()).filter(Boolean)) : null;
 type Truth = { date: string; cents: bigint }[];
 /**
  * Reading accuracy, independent of acceptance: the rows the model's proposed layout reads from the document's table
@@ -126,7 +131,7 @@ describe.skipIf(!LIVE)('live ingestion-layer benchmark', () => {
         const results: Record<string, unknown>[] = [];
         const out = process.env.FINGENCE_BENCH_OUT ?? `.local/benchmark/ingestion-${new Date().toISOString().slice(0, 10)}.json`;
         const save = (complete: boolean) => { mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), complete, results }, null, 2)); };
-        for (const c of cases.filter(x => !only || x.id.includes(only))) {
+        for (const c of cases.filter(x => (!only || x.id.includes(only)) && (!corpora?.length || corpora.includes(x.corpus)) && (!ids || ids.has(x.id)))) {
             const started = Date.now(), input: DocumentInput = { name: basename(c.file), bytes: new Uint8Array(readFileSync(c.file)), provenance: 'USER_SUPPLIED' };
             // The evidence the interpreter is shown carries the table it was read from; keep the tables, in order, for reading accuracy.
             const tables: Uint8Array[] = [];
