@@ -1,0 +1,11 @@
+posting_date,journal_id,account_code,debit,credit,description,currency
+2026-09-01,J-001,00100,1500,0,Synthetic ledger entry 1,MYR
+2026-09-02,J-002,00100,0,200,Synthetic ledger entry 2,MYR
+2026-09-03,J-003,00100,75.25,0,Synthetic ledger entry 3,MYR
+2026-09-04,J-004,00100,0,38.50,Synthetic ledger entry 4,MYR
+2026-09-05,J-005,00100,210,0,Synthetic ledger entry 5,MYR
+2026-09-06,J-006,00100,0,62.15,Synthetic ledger entry 6,MYR
+2026-09-07,J-007,00100,300.05,0,Synthetic ledger entry 7,MYR
+2026-09-08,J-008,00100,0,17.90,Synthetic ledger entry 8,MYR
+2026-09-09,J-009,00100,44.10,0,Synthetic ledger entry 9,MYR
+2026-09-10,J-010,00100,0,85,Synthetic ledger entry 10,MYR

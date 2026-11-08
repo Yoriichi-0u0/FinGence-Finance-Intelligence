@@ -1,0 +1,8 @@
+# Synthetic inputs are identified by their exact bytes on every platform.
+/public/samples/ai-ingestion*/** -text
+/public/samples/ai-ingestion*/*.csv whitespace=cr-at-eol
+/public/samples/ai-ingestion*/*.pdf binary
+/public/samples/ai-ingestion*/*.xlsx binary
+/public/samples/ai-ingestion*/*.png binary
+/public/samples/ai-ingestion*/*.jpg binary
+/public/samples/ai-ingestion*/*.jpeg binary

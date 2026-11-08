@@ -1,0 +1,44 @@
+{
+  "verifiedArchiveSHA256": "07fa162bdd65893de658018c9562d854d140cbc571e305c1f5a54c9b1d5ee697",
+  "scope": "Source-only extraction; external Python/model environment intentionally absent; no provider dispatch or credentials",
+  "commands": [
+    {
+      "command": "pnpm install --frozen-lockfile",
+      "exitCode": 0,
+      "log": "clean-final-0.txt"
+    },
+    {
+      "command": "pnpm test --maxWorkers=1",
+      "exitCode": 0,
+      "log": "clean-final-1.txt"
+    },
+    {
+      "command": "pnpm lint",
+      "exitCode": 0,
+      "log": "clean-final-2.txt"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exitCode": 0,
+      "log": "clean-final-3.txt"
+    },
+    {
+      "command": "pnpm check:server-boundary",
+      "exitCode": 0,
+      "log": "clean-final-4.txt"
+    },
+    {
+      "command": "pnpm build",
+      "exitCode": 0,
+      "log": "clean-final-5.txt"
+    }
+  ],
+  "tests": {
+    "passed": 513,
+    "skipped": 21,
+    "total": 534,
+    "filePassed": 45,
+    "fileSkipped": 3,
+    "additionalSkipsReason": "12 external Python/extraction tests; environment intentionally not bundled"
+  }
+}

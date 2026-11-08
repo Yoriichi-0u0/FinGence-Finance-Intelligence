@@ -1,0 +1,226 @@
+{
+  "heldout-before": {
+    "documents": 8,
+    "genuineInferenceRuns": 0,
+    "exactFields": 87,
+    "expectedFields": 87,
+    "exactRows": 15,
+    "expectedRows": 15,
+    "sumRuntimeMs": 91192,
+    "errors": [],
+    "quotaInadmissible": [],
+    "requestBounds": {
+      "h01.csv": 7751,
+      "h02.xlsx": 7886,
+      "h03.pdf": 7771,
+      "h04.pdf": 7771,
+      "h05.png": 7773,
+      "h06.jpg": 7773,
+      "h07.csv": 7589,
+      "h08.xlsx": 7528
+    },
+    "baselineSource": "baseline-heldout.log"
+  },
+  "heldout-after": {
+    "documents": 8,
+    "genuineInferenceRuns": 0,
+    "exactFields": 87,
+    "expectedFields": 87,
+    "exactRows": 15,
+    "expectedRows": 15,
+    "sumRuntimeMs": 29964,
+    "errors": [],
+    "quotaInadmissible": [],
+    "requestBounds": {
+      "h01.csv": 7945,
+      "h02.xlsx": 7917,
+      "h03.pdf": 7963,
+      "h04.pdf": 7963,
+      "h05.png": 7965,
+      "h06.jpg": 7965,
+      "h07.csv": 7834,
+      "h08.xlsx": 7736
+    },
+    "baselineSource": "final-source-heldout.log"
+  },
+  "regression-before-preserved": {
+    "documents": 26,
+    "genuineInferenceRuns": 0,
+    "exactFields": 242,
+    "expectedFields": 276,
+    "exactRows": 41,
+    "expectedRows": 48,
+    "sumRuntimeMs": 68108,
+    "errors": [
+      {
+        "file": "corrupt.pdf",
+        "error": "PROCESSING_FAILED"
+      }
+    ],
+    "quotaInadmissible": [
+      {
+        "file": "bank-narrative.csv",
+        "bound": 8188
+      },
+      {
+        "file": "bank-narrative.xlsx",
+        "bound": 8393
+      },
+      {
+        "file": "ledger-dmy.xlsx",
+        "bound": 8039
+      },
+      {
+        "file": "metadata.xlsx",
+        "bound": 8079
+      },
+      {
+        "file": "mixed-bank.pdf",
+        "bound": 8606
+      },
+      {
+        "file": "scan-bank.pdf",
+        "bound": 8606
+      }
+    ],
+    "requestBounds": {
+      "ambiguous.csv": 7214,
+      "ambiguous.xlsx": 7281,
+      "bank-direction.csv": 7709,
+      "bank-direction.xlsx": 7880,
+      "bank-movements.csv": 7453,
+      "bank-movements.pdf": 7486,
+      "bank-narrative.csv": 8188,
+      "bank-narrative.xlsx": 8393,
+      "corrupt.pdf": null,
+      "invoice.pdf": 7456,
+      "invoice.xlsx": 7526,
+      "ledger-dmy.csv": 7834,
+      "ledger-dmy.xlsx": 8039,
+      "low-quality.jpg": 7025,
+      "low-quality.png": 7025,
+      "metadata.csv": 7874,
+      "metadata.xlsx": 8079,
+      "mixed-bank.pdf": 8606,
+      "precision.csv": 7603,
+      "precision.pdf": 7636,
+      "receipt-photo.png": 7381,
+      "receipt.pdf": 7311,
+      "scan-bank.pdf": 8606,
+      "unknown-fee.csv": 7299,
+      "unknown-fee.png": 7334,
+      "validation-errors.csv": 7805
+    },
+    "baselineSource": "evaluation-regression-no-inference-1793022643505.json"
+  },
+  "regression-after": {
+    "documents": 26,
+    "genuineInferenceRuns": 0,
+    "exactFields": 242,
+    "expectedFields": 276,
+    "exactRows": 41,
+    "expectedRows": 48,
+    "sumRuntimeMs": 67775,
+    "errors": [
+      {
+        "file": "corrupt.pdf",
+        "error": "PROCESSING_FAILED"
+      }
+    ],
+    "quotaInadmissible": [
+      {
+        "file": "bank-narrative.csv",
+        "bound": 8198
+      },
+      {
+        "file": "bank-narrative.xlsx",
+        "bound": 8209
+      },
+      {
+        "file": "metadata.csv",
+        "bound": 8017
+      },
+      {
+        "file": "metadata.xlsx",
+        "bound": 8028
+      },
+      {
+        "file": "mixed-bank.pdf",
+        "bound": 8524
+      },
+      {
+        "file": "scan-bank.pdf",
+        "bound": 8524
+      }
+    ],
+    "requestBounds": {
+      "ambiguous.csv": 7618,
+      "ambiguous.xlsx": 7619,
+      "bank-direction.csv": 7903,
+      "bank-direction.xlsx": 7911,
+      "bank-movements.csv": 7749,
+      "bank-movements.pdf": 7780,
+      "bank-narrative.csv": 8198,
+      "bank-narrative.xlsx": 8209,
+      "corrupt.pdf": null,
+      "invoice.pdf": 7750,
+      "invoice.xlsx": 7723,
+      "ledger-dmy.csv": 7977,
+      "ledger-dmy.xlsx": 7988,
+      "low-quality.jpg": 7559,
+      "low-quality.png": 7559,
+      "metadata.csv": 8017,
+      "metadata.xlsx": 8028,
+      "mixed-bank.pdf": 8524,
+      "precision.csv": 7879,
+      "precision.pdf": 7910,
+      "receipt-photo.png": 7719,
+      "receipt.pdf": 7680,
+      "scan-bank.pdf": 8524,
+      "unknown-fee.csv": 7671,
+      "unknown-fee.png": 7703,
+      "validation-errors.csv": 7949
+    },
+    "baselineSource": "final-source-regression.log"
+  },
+  "verification": {
+    "node": "24.22.0",
+    "pnpm": "11.19.0",
+    "testsPassed": 547,
+    "testsSkipped": 8,
+    "testFilesPassed": 48,
+    "testFilesSkipped": 1,
+    "newTests": 21,
+    "nativePostgresExecuted": false,
+    "workbookRows": 6000,
+    "workbookAccepted": 6000,
+    "workbookRejected": 0,
+    "recordedHeldoutControlAccepted": 12,
+    "recordedHeldoutControlUnresolved": 3,
+    "newLiveInferenceRuns": 0,
+    "newTokens": 0,
+    "newEstimatedUsd": 0,
+    "retries": 0,
+    "audit": {
+      "before": {
+        "info": 0,
+        "low": 1,
+        "moderate": 7,
+        "high": 4,
+        "critical": 0
+      },
+      "after": {
+        "info": 0,
+        "low": 1,
+        "moderate": 7,
+        "high": 4,
+        "critical": 0
+      },
+      "sameAdvisoryIDs": true,
+      "added": [],
+      "removed": [],
+      "dependenciesChanged": false
+    }
+  },
+  "notice": "Credential-free extraction and deterministic controls, not model accuracy. Historical h01 is DEVELOPMENT_SEEN. Regression before is a preserved pre-change report, not a fresh 27 October rerun."
+}

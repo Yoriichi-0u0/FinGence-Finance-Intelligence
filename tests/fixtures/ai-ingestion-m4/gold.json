@@ -1,0 +1,365 @@
+{
+  "version": "m4-heldout-labels-v1",
+  "method": "Source-authored truth frozen before provider/control execution; no model output used; held out from live provider, not a claim of blind developer testing.",
+  "cases": {
+    "m401.csv": {
+      "caseId": "m401",
+      "sourceSha256": "5fb29d9e5a4a423d10d24821011676249b28116b4938592011b314c9c6b54721",
+      "headers": [
+        "Ccy",
+        "Date",
+        "Amount",
+        "Txn ID"
+      ],
+      "roles": [
+        "currency",
+        "transaction_date",
+        "amount",
+        "transaction_id"
+      ],
+      "rows": [
+        [
+          "MYR",
+          "2026-11-01",
+          "316.25",
+          "000901"
+        ],
+        [
+          "MYR",
+          "2026-11-02",
+          "-11.50",
+          "000902"
+        ]
+      ],
+      "documentKind": "BANK_STATEMENT",
+      "conventions": {
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "dateBasis": "transaction_date",
+        "monetaryMode": "signed_amount"
+      },
+      "accepted": [
+        {
+          "source_transaction_id": "000901",
+          "transaction_date": "2026-11-01",
+          "source_amount": "316.25",
+          "currency": "MYR",
+          "monetary_basis": "source_signed_amount"
+        },
+        {
+          "source_transaction_id": "000902",
+          "transaction_date": "2026-11-02",
+          "source_amount": "-11.5",
+          "currency": "MYR",
+          "monetary_basis": "source_signed_amount"
+        }
+      ],
+      "prohibitedAcceptance": false,
+      "allowedAssumptions": [],
+      "context": [
+        {
+          "text": "BANK STATEMENT",
+          "ruleId": "context.document-label",
+          "disposition": "SUPPORTING_METADATA"
+        }
+      ]
+    },
+    "m402.xlsx": {
+      "caseId": "m402",
+      "sourceSha256": "dc4e8ded578d62b6422da27e419aba345c6423542e4d0057214e3a5a9370b2e3",
+      "headers": [
+        "Credit amount",
+        "Txn date",
+        "Txn no",
+        "Debit amount",
+        "Currency"
+      ],
+      "roles": [
+        "credit",
+        "transaction_date",
+        "transaction_id",
+        "debit",
+        "currency"
+      ],
+      "rows": [
+        [
+          "0",
+          "2026-11-03",
+          "000911",
+          "45.60",
+          "MYR"
+        ],
+        [
+          "9.10",
+          "2026-11-04",
+          "000912",
+          "0",
+          "MYR"
+        ]
+      ],
+      "documentKind": "GENERAL_LEDGER",
+      "conventions": {
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "dateBasis": "transaction_date",
+        "monetaryMode": "debit_credit"
+      },
+      "accepted": [
+        {
+          "source_transaction_id": "000911",
+          "transaction_date": "2026-11-03",
+          "debit": "45.6",
+          "credit": "0",
+          "currency": "MYR",
+          "monetary_basis": "debit_credit"
+        },
+        {
+          "source_transaction_id": "000912",
+          "transaction_date": "2026-11-04",
+          "debit": "0",
+          "credit": "9.1",
+          "currency": "MYR",
+          "monetary_basis": "debit_credit"
+        }
+      ],
+      "prohibitedAcceptance": false,
+      "allowedAssumptions": [],
+      "context": [
+        {
+          "text": "GENERAL LEDGER",
+          "ruleId": "context.document-label",
+          "disposition": "SUPPORTING_METADATA"
+        }
+      ]
+    },
+    "m403.pdf": {
+      "caseId": "m403",
+      "sourceSha256": "cac29d5986eade063dd4e2e2bbb564dc44a54e250d330b9e374c0d1ced44e99e",
+      "headers": [
+        "Date",
+        "Ref",
+        "Transaction Amount",
+        "Currency",
+        "Txn ID"
+      ],
+      "roles": [
+        "transaction_date",
+        "reference",
+        "amount",
+        "currency",
+        "transaction_id"
+      ],
+      "rows": [
+        [
+          "2026-11-05",
+          "S-401",
+          "77.30",
+          "MYR",
+          "000921"
+        ],
+        [
+          "2026-11-06",
+          "S-402",
+          "-2.05",
+          "USD",
+          "000922"
+        ]
+      ],
+      "documentKind": "BANK_STATEMENT",
+      "conventions": {
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "dateBasis": "transaction_date",
+        "monetaryMode": "signed_amount"
+      },
+      "accepted": [
+        {
+          "source_transaction_id": "000921",
+          "transaction_date": "2026-11-05",
+          "source_amount": "77.3",
+          "currency": "MYR",
+          "monetary_basis": "source_signed_amount"
+        },
+        {
+          "source_transaction_id": "000922",
+          "transaction_date": "2026-11-06",
+          "source_amount": "-2.05",
+          "currency": "USD",
+          "monetary_basis": "source_signed_amount"
+        }
+      ],
+      "prohibitedAcceptance": false,
+      "allowedAssumptions": [],
+      "context": [
+        {
+          "text": "BANK STATEMENT - SYNTHETIC - NOT CLIENT DATA",
+          "ruleId": "context.document-label",
+          "disposition": "SUPPORTING_METADATA"
+        }
+      ]
+    },
+    "m404.pdf": {
+      "caseId": "m404",
+      "sourceSha256": "be00f4915377f86befbee49b512423964e15e62c209f550e1973c1bde1f8a0f8",
+      "headers": [
+        "Date",
+        "Ref",
+        "Transaction Amount",
+        "Currency",
+        "Txn ID"
+      ],
+      "roles": [
+        "transaction_date",
+        "reference",
+        "amount",
+        "currency",
+        "transaction_id"
+      ],
+      "rows": [
+        [
+          "2026-11-07",
+          "S-411",
+          "61.20",
+          "MYR",
+          "000931"
+        ],
+        [
+          "2026-11-08",
+          "S-412",
+          "-4.75",
+          "MYR",
+          "000932"
+        ]
+      ],
+      "documentKind": "BANK_STATEMENT",
+      "conventions": {
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "dateBasis": "transaction_date",
+        "monetaryMode": "signed_amount"
+      },
+      "accepted": [
+        {
+          "source_transaction_id": "000931",
+          "transaction_date": "2026-11-07",
+          "source_amount": "61.2",
+          "currency": "MYR",
+          "monetary_basis": "source_signed_amount"
+        },
+        {
+          "source_transaction_id": "000932",
+          "transaction_date": "2026-11-08",
+          "source_amount": "-4.75",
+          "currency": "MYR",
+          "monetary_basis": "source_signed_amount"
+        }
+      ],
+      "prohibitedAcceptance": false,
+      "allowedAssumptions": [],
+      "context": [
+        {
+          "text": "BANK STATEMENT - SYNTHETIC - NOT CLIENT DATA",
+          "ruleId": "context.document-label",
+          "disposition": "SUPPORTING_METADATA"
+        }
+      ]
+    },
+    "m405.png": {
+      "caseId": "m405",
+      "sourceSha256": "667dc1404ed4036d6da990fa8fbb5e65478064ceca10069511ac535a759e5442",
+      "headers": [
+        "Currency",
+        "Txn ID",
+        "Date",
+        "Amount",
+        "LiquidityTier"
+      ],
+      "roles": [
+        "currency",
+        "transaction_id",
+        "transaction_date",
+        "amount",
+        "unknown"
+      ],
+      "rows": [
+        [
+          "MYR",
+          "000941",
+          "2026-11-09",
+          "28.40",
+          "1"
+        ],
+        [
+          "MYR",
+          "000942",
+          "2026-11-10",
+          "-3.20",
+          "2"
+        ]
+      ],
+      "documentKind": "TRANSACTION_TABLE",
+      "conventions": {
+        "dateOrder": "ISO",
+        "numberFormat": "plain",
+        "dateBasis": "transaction_date",
+        "monetaryMode": "signed_amount"
+      },
+      "accepted": [],
+      "prohibitedAcceptance": true,
+      "allowedAssumptions": [],
+      "context": [
+        {
+          "text": "TRANSACTION TABLE",
+          "ruleId": "context.document-label",
+          "disposition": "SUPPORTING_METADATA"
+        }
+      ]
+    },
+    "m406.jpg": {
+      "caseId": "m406",
+      "sourceSha256": "6bba8347990d4749512955dc9043b5e63801e49cb36c08b7c2b21f5964e44def",
+      "headers": [
+        "Txn ID",
+        "Date",
+        "Money In",
+        "Money Out",
+        "Currency"
+      ],
+      "roles": [
+        "transaction_id",
+        "transaction_date",
+        "bank_in",
+        "bank_out",
+        "currency"
+      ],
+      "rows": [
+        [
+          "000951",
+          "2026-11-11",
+          "90.00",
+          "0",
+          "MYR"
+        ],
+        [
+          "000952",
+          "2026-11-12",
+          "0",
+          "7.20",
+          "MYR"
+        ]
+      ],
+      "documentKind": "BANK_STATEMENT",
+      "conventions": null,
+      "accepted": [],
+      "prohibitedAcceptance": true,
+      "allowedAssumptions": [],
+      "context": [
+        {
+          "text": "BANK STATEMENT",
+          "ruleId": "context.document-label",
+          "disposition": "SUPPORTING_METADATA"
+        }
+      ]
+    }
+  }
+}

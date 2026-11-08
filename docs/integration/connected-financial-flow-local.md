@@ -1,0 +1,7 @@
+# Connected synthetic financial flow (local only)
+
+The executable integration check `pnpm exec vitest run tests/integration/connected-financial-flow.integration.test.ts --maxWorkers=1` creates a disposable PGlite database, runs the existing deterministic producer on the three approved synthetic files, persists the resulting trusted `IngestionResult[]` through grouped persistence, provisions test-only session/membership/ownership rows, and selects two persisted accepted source records in one dataset. The server-side calculation, JSON report, and restricted deterministic question use the same resulting exact value and source references. Cross-tenant ownership change is denied. No V2 outcome is converted into C1.
+
+The only supported local deterministic question is “What is the sum of signed source amounts?”. The sum is algebraic and does not establish revenue, expenditure or cash flow. Unknown questions are unsupported; this is not a model-backed chatbot. The existing financial-report interface produces an internal JSON string, not an authenticated HTTP download.
+
+Test-provisioned sessions and ownership are synthetic fixtures, not real identity or an atomic tenant-owned write. This test does not connect a V2 upload to financial reporting. The experimental upload page explicitly shows financial intelligence and Ask AI as unavailable until those contracts exist. Do not expose a financial HTTP endpoint using these fixtures. Native PostgreSQL concurrency and restart outcomes remain unverified until disposable native PostgreSQL binaries are available.

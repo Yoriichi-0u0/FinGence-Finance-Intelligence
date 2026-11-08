@@ -1,0 +1,7 @@
+# Local grounded source-claim orchestration
+
+`createGroundedAnswerService` composes P2 scoped reads, durable auditing and the existing source-claim verifier for one persisted transaction. It accepts a bounded question and an optional server-supplied proposal adapter. There is no model transport or HTTP route. Without an adapter the result is `MODEL_NOT_CONFIGURED`; adapter failures are sanitized to `MODEL_FAILURE`.
+
+Each adapter proposal must contain only the existing allowlisted field/value claims. The service authorizes and durably audits the initial read before providing evidence to the adapter, then reauthorizes and rechecks the claims against current evidence before release. Fabricated fields, amounts and free-form prose are rejected. Access, membership and audit failures propagate without a financial answer.
+
+`VERIFIED_SOURCE_CLAIMS` means only that exact field values match the authorized source record. It does not establish that claims answer the question, validate free-form explanations, calculate financial totals or provide a complete chatbot. It does not create actual sessions, memberships or tenant ownership. The tests use synthetic identities and an injected simulated adapter; no model inference or customer data is involved. Any external provider adapter requires separately authorized dispatch, privacy controls, financial-policy review and independent claim validation.

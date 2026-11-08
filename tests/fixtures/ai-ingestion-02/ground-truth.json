@@ -1,0 +1,19 @@
+{
+  "notice": "Independently authored evaluation labels. Never loaded by runtime extraction, proposal binding, registry or replay.",
+  "families": {
+    "bank-narrative": {"kind":"BANK_STATEMENT","rows":3,"accepted":3,"rejected":0,"unresolved":0,"ids":["000001","000002","000003"],"amounts":["-1250.05","20","0"],"dates":["2026-10-19","2026-10-20","2026-10-21"],"postings":["2026-10-20","2026-10-21","2026-10-22"],"currencies":["MYR","MYR","USD"]},
+    "ledger-dmy": {"kind":"GENERAL_LEDGER","rows":2,"accepted":2,"rejected":0,"unresolved":0,"ids":["0010","0020"],"debits":["100.05","0"],"credits":["0","25.01"],"dates":["2026-10-19","2026-10-20"],"accountCodes":["000400","000500"]},
+    "bank-direction": {"kind":"BANK_STATEMENT","rows":2,"accepted":2,"rejected":0,"unresolved":0,"ids":["00001","00002"],"amounts":["12.5","10"],"directions":["DEBIT","CREDIT"],"dates":["2026-10-19","2026-10-20"]},
+    "metadata": {"kind":"TRANSACTION_TABLE","rows":2,"accepted":2,"rejected":0,"unresolved":0,"ids":["000009","000010"],"amounts":["25.05","-3.25"],"dates":["2026-10-19","2026-10-20"]},
+    "bank-movements": {"kind":"BANK_STATEMENT","rows":2,"accepted":0,"unresolved":2},
+    "invoice": {"kind":"INVOICE","rows":2,"accepted":0,"unresolved":2},
+    "receipt": {"kind":"RECEIPT","rows":1,"accepted":0,"unresolved":1},
+    "ambiguous": {"kind":"TRANSACTION_TABLE","rows":1,"accepted":0,"unresolved":1},
+    "unknown-fee": {"kind":"TRANSACTION_TABLE","rows":1,"accepted":0,"unresolved":1},
+    "precision": {"kind":"BANK_STATEMENT","rows":1,"accepted":1,"rejected":0,"unresolved":0,"ids":["00000001234"],"amounts":["9007199254740993.01"],"dates":["2026-10-19"],"postings":["2026-10-20"],"currencies":["MYR"]},
+    "low-quality": {"kind":"UNKNOWN","accepted":0,"expected":"UNREADABLE_OR_UNRESOLVED"},
+    "corrupt": {"kind":"UNKNOWN","accepted":0,"expected":"EXTRACTION_FAILURE"},
+    "validation-errors": {"kind":"TRANSACTION_TABLE","rows":4,"accepted":1,"rejected":2,"unresolved":1,"ids":["000001"],"amounts":["10"],"dates":["2026-10-19"]}
+  },
+  "formatFamilyAliases":{"scan-bank":"bank-narrative","mixed-bank":"bank-narrative","receipt-photo":"receipt"}
+}

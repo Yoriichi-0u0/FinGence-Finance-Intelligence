@@ -1,0 +1,4 @@
+transaction_date,posting_date,amount,reference,source_transaction_id,account_code,account_id,entity_id,description,currency
+2026-09-01,2026-09-03,9007199254740993.123456789,00017,00042,00100,00003,00004,Synthetic only,MYR
+2026-09-01,2026-09-03,9007199254740993.123456789,00017,00042,00100,00003,00004,Synthetic only,MYR
+invalid,2026-09-03,nope,R,ID,A,B,C,Synthetic,MYR

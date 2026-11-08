@@ -1,0 +1,563 @@
+{
+  "advisories": {
+    "1240103": {
+      "findings": [
+        {
+          "version": "5.0.9",
+          "paths": [
+            ".>eslint-config-next>eslint-import-resolver-typescript>eslint-plugin-import>eslint-module-utils>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-import-resolver-typescript>eslint-plugin-import>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-plugin-import>eslint-module-utils>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-plugin-import>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240103,
+      "title": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": ">=4.0.0 <5.0.12",
+      "patched_versions": ">=5.0.12",
+      "severity": "moderate",
+      "cwe": "CWE-400, CWE-407",
+      "github_advisory_id": "GHSA-q2hr-2g5m-vwhr",
+      "url": "https://github.com/advisories/GHSA-q2hr-2g5m-vwhr"
+    },
+    "1240107": {
+      "findings": [
+        {
+          "version": "5.0.9",
+          "paths": [
+            ".>eslint-config-next>eslint-import-resolver-typescript>eslint-plugin-import>eslint-module-utils>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-import-resolver-typescript>eslint-plugin-import>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-plugin-import>eslint-module-utils>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-plugin-import>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240107,
+      "title": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": ">=4.0.0 <5.0.11",
+      "patched_versions": ">=5.0.11",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-674",
+      "github_advisory_id": "GHSA-qhr7-859c-m2p7",
+      "url": "https://github.com/advisories/GHSA-qhr7-859c-m2p7"
+    },
+    "1240111": {
+      "findings": [
+        {
+          "version": "5.0.9",
+          "paths": [
+            ".>eslint-config-next>eslint-import-resolver-typescript>eslint-plugin-import>eslint-module-utils>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-import-resolver-typescript>eslint-plugin-import>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-plugin-import>eslint-module-utils>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>eslint-plugin-import>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/eslint-plugin>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/parser>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/typescript-estree>minimatch>brace-expansion",
+            ".>eslint-config-next>typescript-eslint>@typescript-eslint/utils>@typescript-eslint/typescript-estree>minimatch>brace-expansion"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1240111,
+      "title": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+      "module_name": "brace-expansion",
+      "vulnerable_versions": ">=4.0.0 <5.0.10",
+      "patched_versions": ">=5.0.10",
+      "severity": "high",
+      "cwe": "CWE-400, CWE-674",
+      "github_advisory_id": "GHSA-6j4f-fj2g-mc7p",
+      "url": "https://github.com/advisories/GHSA-6j4f-fj2g-mc7p"
+    },
+    "1241209": {
+      "findings": [
+        {
+          "version": "1.2.1",
+          "paths": [
+            ".>next>postcss>source-map-js",
+            ".>@tailwindcss/postcss>@tailwindcss/node>source-map-js",
+            ".>@tailwindcss/postcss>postcss>source-map-js",
+            ".>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            ".>vitest>vite>postcss>source-map-js"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241209,
+      "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+      "module_name": "source-map-js",
+      "vulnerable_versions": ">=1.0.0 <1.2.2",
+      "patched_versions": ">=1.2.2",
+      "severity": "high",
+      "cwe": "CWE-1284",
+      "github_advisory_id": "GHSA-68fv-2mgg-jv7q",
+      "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q"
+    },
+    "1241331": {
+      "findings": [
+        {
+          "version": "0.35.4",
+          "paths": [
+            ".>next>sharp"
+          ],
+          "dev": false,
+          "optional": true,
+          "bundled": false
+        }
+      ],
+      "id": 1241331,
+      "title": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+      "module_name": "sharp",
+      "vulnerable_versions": "<0.35.5",
+      "patched_versions": ">=0.35.5",
+      "severity": "high",
+      "cwe": "CWE-416, CWE-1395",
+      "github_advisory_id": "GHSA-wq5f-xc86-pv6w",
+      "url": "https://github.com/advisories/GHSA-wq5f-xc86-pv6w"
+    },
+    "1241489": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241489,
+      "title": "Next.js: Pending `use cache` fill can leak Draft Mode content into regular responses and persisted pages",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.3.0 <16.3.8",
+      "patched_versions": ">=16.3.8",
+      "severity": "moderate",
+      "cwe": "CWE-524",
+      "github_advisory_id": "GHSA-3w37-wq28-93x7",
+      "url": "https://github.com/advisories/GHSA-3w37-wq28-93x7"
+    },
+    "1241490": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241490,
+      "title": "Next.js has cache poisoning of SSG and ISR pages in self-hosted applications",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <16.3.8",
+      "patched_versions": ">=16.3.8",
+      "severity": "moderate",
+      "cwe": "CWE-524",
+      "github_advisory_id": "GHSA-4jqv-mc3x-m676",
+      "url": "https://github.com/advisories/GHSA-4jqv-mc3x-m676"
+    },
+    "1241492": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241492,
+      "title": "Next.js has information disclosure in development server's Model Context Protocol endpoint",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <16.3.8",
+      "patched_versions": ">=16.3.8",
+      "severity": "low",
+      "cwe": "CWE-346",
+      "github_advisory_id": "GHSA-39w2-rjm5-chcv",
+      "url": "https://github.com/advisories/GHSA-39w2-rjm5-chcv"
+    },
+    "1241493": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241493,
+      "title": "Next.js has information disclosure in App Router metadata image routes via dynamicParams bypass",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <16.3.8",
+      "patched_versions": ">=16.3.8",
+      "severity": "moderate",
+      "cwe": "CWE-346",
+      "github_advisory_id": "GHSA-f87g-xv8r-7p7x",
+      "url": "https://github.com/advisories/GHSA-f87g-xv8r-7p7x"
+    },
+    "1241495": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241495,
+      "title": "Next.js has cache poisoning in SSG/ISR rendering that leads to cross-user content substitution and persistent denial of service",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <16.3.8",
+      "patched_versions": ">=16.3.8",
+      "severity": "moderate",
+      "cwe": "CWE-524",
+      "github_advisory_id": "GHSA-mcj8-r9mp-w47p",
+      "url": "https://github.com/advisories/GHSA-mcj8-r9mp-w47p"
+    },
+    "1241496": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1241496,
+      "title": "Next.js has Server-Side Request Forgery in Image Optimization",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <16.3.8",
+      "patched_versions": ">=16.3.8",
+      "severity": "high",
+      "cwe": "CWE-918",
+      "github_advisory_id": "GHSA-cjq9-62q9-8jv4",
+      "url": "https://github.com/advisories/GHSA-cjq9-62q9-8jv4"
+    },
+    "1242626": {
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            ".>vitest>@vitest/mocker>vite",
+            ".>vitest>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242626,
+      "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+      "module_name": "vite",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "severity": "moderate",
+      "cwe": "CWE-78",
+      "github_advisory_id": "GHSA-698v-4r3x-3vcv",
+      "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv"
+    },
+    "1242655": {
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            ".>vitest>@vitest/mocker>vite",
+            ".>vitest>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242655,
+      "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+      "module_name": "vite",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "severity": "moderate",
+      "cwe": "CWE-88",
+      "github_advisory_id": "GHSA-r825-w8mm-5pxw",
+      "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw"
+    },
+    "1242662": {
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            ".>vitest>@vitest/mocker>vite",
+            ".>vitest>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242662,
+      "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+      "module_name": "vite",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "severity": "high",
+      "cwe": "CWE-77",
+      "github_advisory_id": "GHSA-587h-7wmj-h5pm",
+      "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm"
+    },
+    "1242728": {
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            ".>vitest>@vitest/mocker>vite",
+            ".>vitest>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242728,
+      "title": "Vite: Cross origin script execution through Vite custom middleware",
+      "module_name": "vite",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "severity": "low",
+      "cwe": "CWE-80",
+      "github_advisory_id": "GHSA-9jrq-w75r-8gcw",
+      "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw"
+    },
+    "1242734": {
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            ".>vitest>@vitest/mocker>vite",
+            ".>vitest>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242734,
+      "title": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+      "module_name": "vite",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "severity": "moderate",
+      "cwe": "CWE-22, CWE-284",
+      "github_advisory_id": "GHSA-rq7h-c2jc-7f22",
+      "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22"
+    },
+    "1242737": {
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            ".>vitest>@vitest/mocker>vite",
+            ".>vitest>vite"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242737,
+      "title": "Vite: First 4 bytes of files outside of `server.fs` setting is exposed by `?vite-wasm-instance`",
+      "module_name": "vite",
+      "vulnerable_versions": ">=8.3.0 <=8.3.2",
+      "patched_versions": ">=8.3.3",
+      "severity": "moderate",
+      "cwe": "CWE-22, CWE-200, CWE-209",
+      "github_advisory_id": "GHSA-vfpm-58rq-9qcg",
+      "url": "https://github.com/advisories/GHSA-vfpm-58rq-9qcg"
+    },
+    "1242767": {
+      "findings": [
+        {
+          "version": "4.1.11",
+          "paths": [
+            ".>vitest>@vitest/mocker"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242767,
+      "title": "Vitest: Code injection via unauthenticated manual mock registration",
+      "module_name": "@vitest/mocker",
+      "vulnerable_versions": ">=2.1.0-beta.7 <4.1.12",
+      "patched_versions": ">=4.1.12",
+      "severity": "moderate",
+      "cwe": "CWE-94, CWE-116, CWE-306",
+      "github_advisory_id": "GHSA-qxg6-89mg-rqv8",
+      "url": "https://github.com/advisories/GHSA-qxg6-89mg-rqv8"
+    },
+    "1242769": {
+      "findings": [
+        {
+          "version": "4.1.11",
+          "paths": [
+            ".>vitest>@vitest/mocker"
+          ],
+          "dev": true,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242769,
+      "title": "Vitest: Windows backslash traversal bypasses the @vitest/mocker redirect allowlist fix",
+      "module_name": "@vitest/mocker",
+      "vulnerable_versions": ">=4.1.11 <4.1.12",
+      "patched_versions": ">=4.1.12",
+      "severity": "moderate",
+      "cwe": "CWE-22",
+      "github_advisory_id": "GHSA-xp26-3454-mjgp",
+      "url": "https://github.com/advisories/GHSA-xp26-3454-mjgp"
+    },
+    "1242816": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242816,
+      "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <=16.4.0",
+      "patched_versions": ">=16.4.1",
+      "severity": "critical",
+      "cwe": "CWE-1395",
+      "github_advisory_id": "GHSA-2464-fhr4-w9xw",
+      "url": "https://github.com/advisories/GHSA-2464-fhr4-w9xw"
+    },
+    "1242818": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242818,
+      "title": "Next.js: Denial of Service in App Router using Server Actions",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <=16.4.0",
+      "patched_versions": ">=16.4.1",
+      "severity": "high",
+      "cwe": "CWE-770",
+      "github_advisory_id": "GHSA-p3m5-59mp-jv5r",
+      "url": "https://github.com/advisories/GHSA-p3m5-59mp-jv5r"
+    },
+    "1242825": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242825,
+      "title": "next.js cache leak across root param values in nested 'use cache' functions",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.3.0 <16.3.8",
+      "patched_versions": ">=16.3.8",
+      "severity": "moderate",
+      "cwe": "CWE-524",
+      "github_advisory_id": "GHSA-h694-7cp9-m8p3",
+      "url": "https://github.com/advisories/GHSA-h694-7cp9-m8p3"
+    },
+    "1242859": {
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            ".>next"
+          ],
+          "dev": false,
+          "optional": false,
+          "bundled": false
+        }
+      ],
+      "id": 1242859,
+      "title": "Next.js: Unauthenticated Remote Code Execution in `use cache` functions returning typed arrays",
+      "module_name": "next",
+      "vulnerable_versions": ">=16.0.0 <=16.4.0",
+      "patched_versions": ">=16.4.1",
+      "severity": "critical",
+      "cwe": "CWE-502",
+      "github_advisory_id": "GHSA-673q-mjm6-r5xr",
+      "url": "https://github.com/advisories/GHSA-673q-mjm6-r5xr"
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 2,
+      "moderate": 12,
+      "high": 7,
+      "critical": 2
+    },
+    "dependencies": 82,
+    "devDependencies": 406,
+    "optionalDependencies": 115,
+    "totalDependencies": 526
+  }
+}

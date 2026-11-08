@@ -1,0 +1,7 @@
+BANK STATEMENT
+Transaction ID,Transaction Date,Amount,Currency,Description,Reference
+M301,2026-09-01,0.10,MYR,Synthetic opening,S-301
+M302,2026-09-02,0.20,MYR,Synthetic movement,S-302
+M303,2026-10-01,-0.05,MYR,Synthetic adjustment,S-303
+U301,2026-09-01,9007199254740993.01,USD,Synthetic exact large value,S-304
+U302,2026-10-01,-9007199254740993.00,USD,Synthetic exact reversal,S-305

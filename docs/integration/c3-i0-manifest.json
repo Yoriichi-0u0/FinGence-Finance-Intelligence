@@ -1,0 +1,198 @@
+{
+  "purpose": "C3-I0 selective ingestion integration readiness; no shared transfer performed",
+  "source": {
+    "repository": "Yoriichi-0u0/FinGence-Finance-Intelligence",
+    "checkpoint_tag": "fingence-branding-v0.1",
+    "commit": "2ddcb7264a77c5467de3e311c3736be8d29a0d00",
+    "schema_version": "0.1",
+    "ruleset_version": "0.1",
+    "hash_scope": "Published checkpoint bytes, before the separately described comment correction"
+  },
+  "target": {
+    "repository": "Xinyr/FYP-A-B",
+    "inspection_date": "2026-10-13",
+    "inspection_scope": "Approved C3-R0/C3-I0 planning snapshots; not refreshed during this implementation",
+    "branch_snapshots": {
+      "features/backend-celester": "8e08dfc1391c442d7dbeaa0f571758d06c88bcc5",
+      "feature/analysis-reconciliation-fred": "6f536e5f0e3be07b588fe995d7f7c15b70acb1e8",
+      "feature/data-ingestion-chia": "161b489d2758160f46d6f8252dc866b595102735"
+    },
+    "gate": "Reinspect the eventual integration checkout with its owners before any transfer; stop on unexpected contents"
+  },
+  "transfer_actions": {
+    "COPY_EXACT_IF_ABSENT": "Add published bytes only if absent; reuse an identical existing file; review any different existing file",
+    "COPY_WITH_COMMENT_CORRECTION": "Copy published bytes then apply only deliberate_edits.example_comment; not a byte-identical final transfer",
+    "PATCH_EXPORTS_ONLY": "Keep the target barrel and add missing deliberate_edits.public_exports; do not overwrite the whole file",
+    "VERIFY_REUSE": "Verify and reuse the existing reviewed implementation; do not overwrite teammates' work",
+    "VERIFY_EXACT_FIXTURE": "Use exact published bytes; stop for review on a mismatch, including newline-only differences"
+  },
+  "source_files": [
+    {
+      "path": "lib/ingestion/accepted-data.ts", "bytes": 5743,
+      "sha256": "d6f3b769da10930c3d665475acb4afbec544dff89eb3423544e6788a9b7295a4",
+      "action": "COPY_EXACT_IF_ABSENT", "imports": ["lib/ingestion/models.ts", "lib/ingestion/pipeline.ts"]
+    },
+    {
+      "path": "lib/ingestion/run.ts", "bytes": 738,
+      "sha256": "c152ca362b9a00e223da259ea6f66e1ef95ccb20211df82aced224a4b713befa",
+      "action": "COPY_EXACT_IF_ABSENT", "imports": ["lib/ingestion/models.ts", "lib/ingestion/pipeline.ts"]
+    },
+    {
+      "path": "lib/ingestion/index.ts", "bytes": 688,
+      "sha256": "8b01e720230fc4f5aecfd905539ec585b15f0af58dcfa9652a537255357ca4e1",
+      "action": "PATCH_EXPORTS_ONLY"
+    },
+    {
+      "path": "tests/ingestion/accepted-data.test.ts", "bytes": 23856,
+      "sha256": "caf718acb08875185a642a6109d8734ded9670523579d26fe907320c53390f56",
+      "action": "COPY_EXACT_IF_ABSENT",
+      "imports": ["lib/ingestion/index.ts", "examples/ingestion/accepted-data.ts", "public/samples/ingestion/expected.json", "node:fs", "vitest"]
+    },
+    {
+      "path": "tests/ingestion/ingestion-run.test.ts", "bytes": 11843,
+      "sha256": "7aa994bddf5c5e667b2703dfd0afedb022fe418fd9b233c0ff73510314edcd0a",
+      "action": "COPY_EXACT_IF_ABSENT",
+      "imports": ["lib/ingestion/index.ts", "public/samples/ingestion/expected.json", "node:fs", "vitest"]
+    },
+    {
+      "path": "examples/ingestion/accepted-data.ts", "bytes": 1547,
+      "sha256": "ddd81f20b4a86eaa5007b096398f33cbf9bd43ada3ed7beac8aabe104d5df256",
+      "action": "COPY_WITH_COMMENT_CORRECTION", "imports": ["lib/ingestion/index.ts"]
+    },
+    {
+      "path": "docs/ingestion/accepted-data-contract.md", "bytes": 16951,
+      "sha256": "1b98c8055920fe5b064e236e56d41ae4546331839ea34ef2b525f326fedcff1b",
+      "action": "COPY_EXACT_IF_ABSENT"
+    },
+    {
+      "path": "lib/ingestion/models.ts", "bytes": 5613,
+      "sha256": "d06b50f07e5249bdb70274dbcc05389b5b3bd77e423712a8681730114b3f1b78",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/pipeline.ts", "bytes": 4318,
+      "sha256": "19750869950965647d9a5b7c166ea9f2577c78427a7abcdedd92d505fea8a1fd",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/mapper.ts", "bytes": 4580,
+      "sha256": "01f6c12c77a0dc8ad5d2d2c97ee69f97a4412640c754d4f080cb0a6cdbb20f0c",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/normalize-record.ts", "bytes": 5410,
+      "sha256": "86b68c5b9aa29d24fcff392ce5722d2953ead0bc296ee7703950d6d0a1e0418d",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/normalizer.ts", "bytes": 5723,
+      "sha256": "427c40af8cafc5841e498b1d76e86da9785ce61e2f94f9a39932a23d505057f5",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/profiler.ts", "bytes": 1438,
+      "sha256": "b2211d78c93ede89ca882b113774665bb3663f70ba83d07070d7939850421323",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/summary.ts", "bytes": 1467,
+      "sha256": "4a409a38fae9a774c201d78beb1b0ab0060ac8a68ec3f8f2c48f2baba5c9d1d8",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/validator.ts", "bytes": 3047,
+      "sha256": "dfa2b0598903deb949b3433615228ae1c2df25465fc909ad018d425cb457deac",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/readers.ts", "bytes": 6511,
+      "sha256": "6dcb298969b56c8cbf0a2e01b472363226a3911a18374579e23e3378fef14484",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/workbook-guard.ts", "bytes": 6316,
+      "sha256": "729085881a0ac2bba00cef0054ae7fa73e4302ebf5bff78d9f17e7c699868fb4",
+      "action": "VERIFY_REUSE"
+    },
+    {
+      "path": "lib/ingestion/exports.ts", "bytes": 3302,
+      "sha256": "d51757a2a784567472f2807f6b224bfda28335f044466998da511ec64fb29e05",
+      "action": "VERIFY_REUSE"
+    }
+  ],
+  "deliberate_edits": {
+    "public_exports": {
+      "path": "lib/ingestion/index.ts",
+      "add_if_missing": [
+        "export { ingestDatasetRun } from \"./run\";",
+        "export type { IngestionRunProviders } from \"./run\";",
+        "export { createAcceptedDataPayload } from \"./accepted-data\";",
+        "export type { AcceptedDataPayload, AcceptedDataset, AcceptedDatasetSummary, AcceptedTransaction, AcceptedWarning } from \"./accepted-data\";"
+      ],
+      "scope": "Future target-only additive edit; already present in the personal checkpoint"
+    },
+    "example_comment": {
+      "path": "examples/ingestion/accepted-data.ts",
+      "replace": "  // Caller batch IDs are preserved; the current UI still reuses its session ID on reprocessing.",
+      "with": [
+        "  // C1 preserves caller-provided ingestion context and generates no execution IDs.",
+        "  // C2's ingestDatasetRun() creates fresh context for each attempted execution."
+      ],
+      "scope": "Comment only; published source hash intentionally precedes this correction"
+    }
+  },
+  "fixtures": {
+    "public/samples/ingestion/ledger.csv": {
+      "bytes": 676, "sha256": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+      "action": "VERIFY_EXACT_FIXTURE", "line_endings": "CRLF"
+    },
+    "public/samples/ingestion/bank_statement.xlsx": {
+      "bytes": 5933, "sha256": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+      "action": "VERIFY_EXACT_FIXTURE", "encoding": "Original XLSX bytes"
+    },
+    "public/samples/ingestion/edge_cases.csv": {
+      "bytes": 511, "sha256": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd",
+      "action": "VERIFY_EXACT_FIXTURE", "line_endings": "CRLF"
+    },
+    "public/samples/ingestion/expected.json": {
+      "bytes": 2355, "sha256": "384500d57ebd379e743834fbcf8b6991163a5f5bdef82aeb10eee94dcff1dd84",
+      "action": "VERIFY_EXACT_FIXTURE"
+    }
+  },
+  "synthetic_expectations": {
+    "authority": "public/samples/ingestion/expected.json",
+    "classification": "SYNTHETIC TEST DATA ONLY; NOT CLIENT DATA",
+    "dataset_options": [
+      { "file": "ledger.csv", "sheet_index": 0, "sourceSystem": "Ledger", "monetaryMode": "debit_credit", "dateBasis": "posting_date",
+        "rowsReceived": 10, "valid": 10, "warning": 0, "rejected": 0, "accepted": 10 },
+      { "file": "bank_statement.xlsx", "sheet_index": 0, "sourceSystem": "Bank Statement", "monetaryMode": "amount_direction", "dateBasis": "transaction_date",
+        "manual_mapping": { "Details": "reference" }, "rowsReceived": 8, "valid": 8, "warning": 0, "rejected": 0, "accepted": 8 },
+      { "file": "edge_cases.csv", "sheet_index": 0, "sourceSystem": "Other", "monetaryMode": "signed_amount", "dateBasis": "transaction_date",
+        "rowsReceived": 8, "valid": 2, "warning": 3, "rejected": 3, "accepted": 5 }
+    ],
+    "aggregate": { "datasets": 3, "rowsReceived": 26, "valid": 20, "warning": 3, "rejected": 3, "accepted": 23, "duplicateRows": 1 },
+    "warning_policy": { "include": 23, "exclude": 20 },
+    "backend_target_not_implemented": { "persistence_attempts": 1, "dataset_batches": 3, "accepted_records": 23, "warning_issues": 3, "rejected_transaction_records": 0 },
+    "analytics_target_without_associated_ledger_convention": { "unavailable_ledger_rows": 10, "universal_cash_flow": "NOT_DERIVED" }
+  },
+  "existing_dependencies": {
+    "engine_packages": { "fflate": "0.8.3", "papaparse": "5.7.0", "read-excel-file": "9.3.10" },
+    "test_package": { "vitest": "4.1.11" },
+    "existing_type_packages": { "@types/node": "^20", "@types/papaparse": "5.5.2", "typescript": "^5" },
+    "fixture_guard_builtins": ["node:crypto", "node:fs"],
+    "run_defaults": ["globalThis.crypto.randomUUID", "Date"],
+    "package_manager": "pnpm@11.19.0",
+    "new_dependencies": []
+  },
+  "compatibility_gates": {
+    "producer_and_c1": "Schema 0.1 / ruleset 0.1 only; no new transport version; preserve exact decimal and identifier strings",
+    "c1_input": "Trusted engine results; external backend JSON requires separate runtime validation",
+    "c1_output": "datasets[].normalized with envelope and shared dataset context; VALID and WARNING only; not full CanonicalTransaction objects",
+    "identity": "Keep source_row_id, producer ingestion_batch_id and future backend attempt/database IDs separate",
+    "fixtures": "Backend snapshot has LF CSV copies; do not substitute them or normalize the published CRLF files",
+    "runtime": "Modern runtime with BigInt; C2 default providers also require Web Crypto randomUUID",
+    "typescript": "Current producer target is ES2017 using BigInt constructors; inspected analytics uses BigInt literals requiring ES2020 or an owner-reviewed syntax alternative",
+    "test_discovery": "Current ingestion include discovers the new guard; inspected analytics tests/analytics.test.ts requires a separately reviewed discovery change",
+    "ownership": "No backend grouping, analytics adapter, shared transfer or configuration changes are implemented by C3-I0"
+  }
+}

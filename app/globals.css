@@ -1,0 +1,344 @@
+@import "tailwindcss";
+
+/*
+ * FinGence design system: "verified ledger".
+ * Ink-navy chrome from the logo, an electric indigo brand accent, and plain status colours
+ * (verified green, attention amber, flagged rose). Every colour is a token so the whole app
+ * has a light and a dark theme: the system setting by default, or the choice saved by the
+ * theme switch (data-theme on <html>).
+ */
+:root {
+  color-scheme: light;
+  --canvas: #f4f5fa;
+  --surface: #ffffff;
+  --surface-subtle: #f8f9fc;
+  --surface-sunken: #eef0f6;
+  --ink: #0e1330;
+  --muted: #5d6585;
+  --muted-strong: #3c4466;
+  --border: #e2e5ef;
+  --border-strong: #cbd0e0;
+
+  --brand: #4f46e5;
+  --brand-strong: #4338ca;
+  --brand-ink: #3730a3;
+  --brand-soft: #eef0ff;
+  --brand-line: #c7cbfb;
+  --brand-solid: #4f46e5;
+  --brand-solid-hover: #4338ca;
+  --cyan: #0891b2;
+  --violet: #8b5cf6;
+
+  --good: #0d8a5c;
+  --good-ink: #0a6b48;
+  --good-soft: #e6f6ee;
+  --good-line: #b5e3cb;
+  --warn: #b25e09;
+  --warn-ink: #8a4a07;
+  --warn-soft: #fff5e5;
+  --warn-line: #f5d29b;
+  --bad: #c42a4a;
+  --bad-ink: #9f1d3a;
+  --bad-soft: #fff0f3;
+  --bad-line: #f6bccb;
+
+  --rail: #0a0f24;
+  --rail-raise: #141a36;
+  --rail-ink: #e8ebf8;
+  --rail-muted: #949cbf;
+  --rail-line: rgb(255 255 255 / 0.09);
+
+  --gradient-brand: linear-gradient(120deg, #2563eb 0%, #6d4aff 52%, #22d3ee 100%);
+  --shadow-panel: 0 1px 2px rgb(14 19 48 / 0.05), 0 6px 20px -8px rgb(14 19 48 / 0.08);
+  --shadow-raise: 0 2px 4px rgb(14 19 48 / 0.06), 0 16px 40px -16px rgb(14 19 48 / 0.22);
+  --chart-grid: #e6e9f2;
+  --chart-in: #4f46e5;
+  --chart-out: #0891b2;
+  --chart-net: #d97706;
+
+  /* Earlier names, kept as aliases so every page follows the theme. */
+  --teal: var(--brand);
+  --teal-dark: var(--brand-ink);
+  --teal-soft: var(--brand-soft);
+  --navy: var(--rail);
+  --navy-deep: var(--rail);
+  --indigo: var(--cyan);
+  --amber: var(--warn);
+  --amber-soft: var(--warn-soft);
+  --red: var(--bad);
+  --red-soft: var(--bad-soft);
+  --green: var(--good);
+  --green-soft: var(--good-soft);
+}
+
+/* Dark theme tokens (system setting unless the switch chose light, or the switch chose dark). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #080b1a;
+    --surface: #10142a;
+    --surface-subtle: #141935;
+    --surface-sunken: #0b0f22;
+    --ink: #e9ecfa;
+    --muted: #959dbd;
+    --muted-strong: #bcc2dc;
+    --border: #222949;
+    --border-strong: #323a60;
+    --brand: #8b8cff;
+    --brand-strong: #a5a6ff;
+    --brand-ink: #b9baff;
+    --brand-soft: #1d2150;
+    --brand-line: #3b3f86;
+    --brand-solid: #5850ec;
+    --brand-solid-hover: #6c66f2;
+    --cyan: #38c6e4;
+    --good: #3ccf8e;
+    --good-ink: #6be0a9;
+    --good-soft: #0e2a22;
+    --good-line: #1d5741;
+    --warn: #f2aa4c;
+    --warn-ink: #f8c47c;
+    --warn-soft: #2d200d;
+    --warn-line: #6a4a17;
+    --bad: #ff7a93;
+    --bad-ink: #ff9cb0;
+    --bad-soft: #321320;
+    --bad-line: #6d2a3f;
+    --rail: #060816;
+    --rail-raise: #10142c;
+    --shadow-panel: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
+    --shadow-raise: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 44px -18px rgb(0 0 0 / 0.8);
+    --chart-grid: #232a4a;
+    --chart-in: #8b8cff;
+    --chart-out: #38c6e4;
+    --chart-net: #f2aa4c;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #080b1a;
+  --surface: #10142a;
+  --surface-subtle: #141935;
+  --surface-sunken: #0b0f22;
+  --ink: #e9ecfa;
+  --muted: #959dbd;
+  --muted-strong: #bcc2dc;
+  --border: #222949;
+  --border-strong: #323a60;
+  --brand: #8b8cff;
+  --brand-strong: #a5a6ff;
+  --brand-ink: #b9baff;
+  --brand-soft: #1d2150;
+  --brand-line: #3b3f86;
+  --brand-solid: #5850ec;
+  --brand-solid-hover: #6c66f2;
+  --cyan: #38c6e4;
+  --good: #3ccf8e;
+  --good-ink: #6be0a9;
+  --good-soft: #0e2a22;
+  --good-line: #1d5741;
+  --warn: #f2aa4c;
+  --warn-ink: #f8c47c;
+  --warn-soft: #2d200d;
+  --warn-line: #6a4a17;
+  --bad: #ff7a93;
+  --bad-ink: #ff9cb0;
+  --bad-soft: #321320;
+  --bad-line: #6d2a3f;
+  --rail: #060816;
+  --rail-raise: #10142c;
+  --shadow-panel: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
+  --shadow-raise: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 44px -18px rgb(0 0 0 / 0.8);
+  --chart-grid: #232a4a;
+  --chart-in: #8b8cff;
+  --chart-out: #38c6e4;
+  --chart-net: #f2aa4c;
+}
+
+/*
+ * Dark theme for the Tailwind palette classes older pages still use (bg-slate-50, text-amber-950 …):
+ * light shades become deep tinted surfaces and dark shades become light text, so those pages follow the theme too.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-slate-50: #141935; --color-slate-100: #1a2040; --color-slate-200: #262d50; --color-slate-300: #3a4268; --color-slate-400: #6a7296; --color-slate-500: #8a92b4; --color-slate-600: #a9b0cc; --color-slate-700: #c3c8de; --color-slate-800: #d9ddec; --color-slate-900: #e9ecf7; --color-slate-950: #f3f5fc;
+    --color-amber-50: #2a1e0c; --color-amber-100: #36270f; --color-amber-200: #5a4116; --color-amber-300: #7a5a1d; --color-amber-700: #f2aa4c; --color-amber-800: #f6be72; --color-amber-900: #f9d29b; --color-amber-950: #fce6c4;
+    --color-red-50: #301420; --color-red-200: #6d2a3f; --color-red-500: #ff7a93; --color-red-800: #ff9cb0; --color-red-900: #ffbfcc;
+    --color-green-50: #0e2a22; --color-green-100: #12352b; --color-green-200: #1d5741; --color-green-800: #6be0a9;
+    --color-emerald-50: #0e2a22; --color-emerald-100: #12352b; --color-emerald-200: #1d5741; --color-emerald-800: #6be0a9; --color-emerald-900: #8fe8bd; --color-emerald-950: #c4f3dc;
+    --color-teal-50: #1d2150; --color-teal-100: #232861; --color-teal-200: #3b3f86; --color-teal-300: #5a5fc0; --color-teal-500: #8b8cff; --color-teal-600: #9d9eff; --color-teal-700: #b0b1ff; --color-teal-800: #c3c4ff; --color-teal-900: #d5d6ff; --color-teal-950: #e6e6ff;
+    --color-indigo-50: #1d2150; --color-indigo-200: #3b3f86; --color-indigo-400: #8b8cff; --color-indigo-500: #9d9eff; --color-indigo-700: #c3c4ff; --color-indigo-900: #dcdcff; --color-indigo-950: #ececff;
+    --color-blue-50: #0f2240; --color-blue-200: #234a7a; --color-blue-700: #8cc2ff; --color-blue-900: #c4e0ff;
+    --color-sky-50: #0c2333; --color-sky-100: #0f2c40; --color-sky-900: #bfe8fb; --color-sky-950: #def4fd;
+    --color-violet-100: #2a1c4d; --color-violet-950: #ece4ff;
+    --color-rose-100: #3a1424; --color-rose-950: #ffe4ea;
+  }
+}
+:root[data-theme="dark"] {
+  --color-slate-50: #141935; --color-slate-100: #1a2040; --color-slate-200: #262d50; --color-slate-300: #3a4268; --color-slate-400: #6a7296; --color-slate-500: #8a92b4; --color-slate-600: #a9b0cc; --color-slate-700: #c3c8de; --color-slate-800: #d9ddec; --color-slate-900: #e9ecf7; --color-slate-950: #f3f5fc;
+  --color-amber-50: #2a1e0c; --color-amber-100: #36270f; --color-amber-200: #5a4116; --color-amber-300: #7a5a1d; --color-amber-700: #f2aa4c; --color-amber-800: #f6be72; --color-amber-900: #f9d29b; --color-amber-950: #fce6c4;
+  --color-red-50: #301420; --color-red-200: #6d2a3f; --color-red-500: #ff7a93; --color-red-800: #ff9cb0; --color-red-900: #ffbfcc;
+  --color-green-50: #0e2a22; --color-green-100: #12352b; --color-green-200: #1d5741; --color-green-800: #6be0a9;
+  --color-emerald-50: #0e2a22; --color-emerald-100: #12352b; --color-emerald-200: #1d5741; --color-emerald-800: #6be0a9; --color-emerald-900: #8fe8bd; --color-emerald-950: #c4f3dc;
+  --color-teal-50: #1d2150; --color-teal-100: #232861; --color-teal-200: #3b3f86; --color-teal-300: #5a5fc0; --color-teal-500: #8b8cff; --color-teal-600: #9d9eff; --color-teal-700: #b0b1ff; --color-teal-800: #c3c4ff; --color-teal-900: #d5d6ff; --color-teal-950: #e6e6ff;
+  --color-indigo-50: #1d2150; --color-indigo-200: #3b3f86; --color-indigo-400: #8b8cff; --color-indigo-500: #9d9eff; --color-indigo-700: #c3c4ff; --color-indigo-900: #dcdcff; --color-indigo-950: #ececff;
+  --color-blue-50: #0f2240; --color-blue-200: #234a7a; --color-blue-700: #8cc2ff; --color-blue-900: #c4e0ff;
+  --color-sky-50: #0c2333; --color-sky-100: #0f2c40; --color-sky-900: #bfe8fb; --color-sky-950: #def4fd;
+  --color-violet-100: #2a1c4d; --color-violet-950: #ece4ff;
+  --color-rose-100: #3a1424; --color-rose-950: #ffe4ea;
+}
+
+@theme inline {
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--canvas);
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input,
+select,
+textarea {
+  background-color: var(--surface);
+}
+
+button,
+a,
+input,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 38%, transparent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+
+code {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+}
+
+.panel-shadow {
+  box-shadow: var(--shadow-panel);
+}
+
+.thin-scrollbar {
+  scrollbar-color: var(--border-strong) transparent;
+  scrollbar-width: thin;
+}
+
+/* The brand gradient, used sparingly: the active navigation mark, the hero rule and the logo word. */
+.brand-gradient {
+  background-image: var(--gradient-brand);
+}
+.brand-text {
+  background-image: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* A faint ledger grid behind page heroes. */
+.ledger-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--brand) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--brand) 7%, transparent) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* Disclosure markers that rotate with <details>. */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details[open] > summary .disclosure-chevron {
+  transform: rotate(90deg);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 0.35s ease-out both;
+}
+
+/* Printed reports are always light, whatever theme is on screen. */
+@media print {
+  :root,
+  :root[data-theme="dark"],
+  :root:not([data-theme="light"]) {
+    color-scheme: light;
+    --canvas: #fff;
+    --surface: #fff;
+    --surface-subtle: #f8f9fc;
+    --surface-sunken: #eef0f6;
+    --ink: #0e1330;
+    --muted: #5d6585;
+    --muted-strong: #3c4466;
+    --border: #e2e5ef;
+    --border-strong: #cbd0e0;
+    --brand: #4f46e5;
+    --brand-ink: #3730a3;
+    --brand-soft: #eef0ff;
+    --brand-line: #c7cbfb;
+    --good-ink: #0a6b48;
+    --good-soft: #e6f6ee;
+    --good-line: #b5e3cb;
+    --warn-ink: #8a4a07;
+    --warn-soft: #fff5e5;
+    --warn-line: #f5d29b;
+  }
+  .panel-shadow {
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

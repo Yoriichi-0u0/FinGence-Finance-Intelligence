@@ -1,0 +1,105 @@
+{
+  "synthetic": true,
+  "schema_version": "0.1",
+  "files": [
+    {
+      "file": "ledger.csv",
+      "sheet_index": 0,
+      "sourceSystem": "Ledger",
+      "monetaryMode": "debit_credit",
+      "dateBasis": "posting_date",
+      "expected": {
+        "rowsReceived": 10,
+        "valid": 10,
+        "warning": 0,
+        "rejected": 0,
+        "accepted": 10
+      }
+    },
+    {
+      "file": "bank_statement.xlsx",
+      "sheet_index": 0,
+      "sourceSystem": "Bank Statement",
+      "monetaryMode": "amount_direction",
+      "dateBasis": "transaction_date",
+      "manual_mapping": {
+        "Details": "reference"
+      },
+      "expected": {
+        "rowsReceived": 8,
+        "valid": 8,
+        "warning": 0,
+        "rejected": 0,
+        "accepted": 8
+      }
+    },
+    {
+      "file": "edge_cases.csv",
+      "sheet_index": 0,
+      "sourceSystem": "Other",
+      "monetaryMode": "signed_amount",
+      "dateBasis": "transaction_date",
+      "expected": {
+        "rowsReceived": 8,
+        "valid": 2,
+        "warning": 3,
+        "rejected": 3,
+        "accepted": 5
+      }
+    }
+  ],
+  "consolidated": {
+    "filesProcessed": 3,
+    "datasetsProcessed": 3,
+    "rowsReceived": 26,
+    "valid": 20,
+    "warning": 3,
+    "rejected": 3,
+    "accepted": 23,
+    "duplicateRows": 1,
+    "missingDates": 1,
+    "missingMoney": 1,
+    "missingReferences": 1,
+    "unmappedColumns": 1
+  },
+  "rates_displayed": {
+    "successRate": "88.46%",
+    "cleanValidityRate": "76.92%",
+    "requiredCompleteness": "96.15%"
+  },
+  "canonical_examples": {
+    "ledger_first_dates": {
+      "transaction_date": null,
+      "posting_date": "2026-09-01",
+      "canonical_date": "2026-09-01",
+      "canonical_date_basis": "POSTING_DATE"
+    },
+    "bank_first_dates": {
+      "transaction_date": "2026-09-01",
+      "posting_date": null,
+      "canonical_date": "2026-09-01",
+      "canonical_date_basis": "TRANSACTION_DATE"
+    },
+    "ledger_account_code": "00100",
+    "bank_first_amount": "125.5",
+    "bank_first_entry_side": "DEBIT",
+    "ledger_first_derived_net": "1500",
+    "ledger_second_derived_net": "-200",
+    "bank_source_amounts": [
+      "125.5",
+      "1500",
+      "30.25",
+      "62",
+      "220",
+      "90.1",
+      "17.9",
+      "300"
+    ]
+  },
+  "quarantine_source_rows": [
+    7,
+    8,
+    9
+  ],
+  "ruleset_version": "0.1"
+}

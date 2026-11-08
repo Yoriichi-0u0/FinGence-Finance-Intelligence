@@ -1,0 +1,276 @@
+{
+  "notice": "Manually specified literal source values. Evaluation-only; trailing decimal zeros here are distinct from canonical normalized strings in ground-truth.json.",
+  "h01.csv": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Posting Date",
+      "Amount",
+      "Currency",
+      "Reference"
+    ],
+    "rows": [
+      [
+        "0000701",
+        "2026-10-23",
+        "2026-10-24",
+        "9007199254740995.07",
+        "MYR",
+        "000091"
+      ],
+      [
+        "0000702",
+        "2026-10-24",
+        "2026-10-25",
+        "-31.20",
+        "USD",
+        "000092"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "posting_date",
+      "amount",
+      "currency",
+      "reference"
+    ]
+  },
+  "h02.xlsx": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Debit",
+      "Credit",
+      "Currency",
+      "Account Code"
+    ],
+    "rows": [
+      [
+        "0000801",
+        "23/10/2026",
+        "131.05",
+        "0",
+        "MYR",
+        "000210"
+      ],
+      [
+        "0000802",
+        "24/10/2026",
+        "0",
+        "17.03",
+        "MYR",
+        "000310"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "debit",
+      "credit",
+      "currency",
+      "account_code"
+    ]
+  },
+  "h03.pdf": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Posting Date",
+      "Amount",
+      "Currency",
+      "Reference"
+    ],
+    "rows": [
+      [
+        "0000931",
+        "2026-10-23",
+        "2026-10-24",
+        "271.19",
+        "MYR",
+        "000031"
+      ],
+      [
+        "0000932",
+        "2026-10-24",
+        "2026-10-25",
+        "-42.08",
+        "MYR",
+        "000032"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "posting_date",
+      "amount",
+      "currency",
+      "reference"
+    ]
+  },
+  "h04.pdf": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Posting Date",
+      "Amount",
+      "Currency",
+      "Reference"
+    ],
+    "rows": [
+      [
+        "0000941",
+        "2026-10-23",
+        "2026-10-24",
+        "271.19",
+        "MYR",
+        "000041"
+      ],
+      [
+        "0000942",
+        "2026-10-24",
+        "2026-10-25",
+        "-42.08",
+        "MYR",
+        "000042"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "posting_date",
+      "amount",
+      "currency",
+      "reference"
+    ]
+  },
+  "h05.png": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Posting Date",
+      "Amount",
+      "Currency",
+      "Reference"
+    ],
+    "rows": [
+      [
+        "0000951",
+        "2026-10-23",
+        "2026-10-24",
+        "271.19",
+        "MYR",
+        "000051"
+      ],
+      [
+        "0000952",
+        "2026-10-24",
+        "2026-10-25",
+        "-42.08",
+        "MYR",
+        "000052"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "posting_date",
+      "amount",
+      "currency",
+      "reference"
+    ]
+  },
+  "h06.jpg": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Posting Date",
+      "Amount",
+      "Currency",
+      "Reference"
+    ],
+    "rows": [
+      [
+        "0000961",
+        "2026-10-23",
+        "2026-10-24",
+        "271.19",
+        "MYR",
+        "000061"
+      ],
+      [
+        "0000962",
+        "2026-10-24",
+        "2026-10-25",
+        "-42.08",
+        "MYR",
+        "000062"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "posting_date",
+      "amount",
+      "currency",
+      "reference"
+    ]
+  },
+  "h07.csv": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Money In",
+      "Money Out",
+      "Currency"
+    ],
+    "rows": [
+      [
+        "0001001",
+        "2026-10-23",
+        "50.00",
+        "0",
+        "MYR"
+      ],
+      [
+        "0001002",
+        "2026-10-24",
+        "0",
+        "12.50",
+        "MYR"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "bank_in",
+      "bank_out",
+      "currency"
+    ]
+  },
+  "h08.xlsx": {
+    "headers": [
+      "Transaction ID",
+      "Transaction Date",
+      "Amount",
+      "Currency",
+      "Other"
+    ],
+    "rows": [
+      [
+        "0001101",
+        "2026-10-23",
+        "75.00",
+        "MYR",
+        "Fee MYR 2.00"
+      ]
+    ],
+    "roles": [
+      "transaction_id",
+      "transaction_date",
+      "amount",
+      "currency",
+      "unknown"
+    ]
+  }
+}

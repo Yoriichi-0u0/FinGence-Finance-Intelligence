@@ -1,0 +1,4 @@
+BANK STATEMENT
+Transaction ID,Transaction Date,Amount,Direction,Currency,Reference
+00001,2026-10-19,12.50,DEBIT,MYR,B1
+00002,2026-10-20,10,CREDIT,MYR,B2

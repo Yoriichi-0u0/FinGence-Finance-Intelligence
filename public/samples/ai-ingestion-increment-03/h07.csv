@@ -1,0 +1,4 @@
+BANK STATEMENT
+Transaction ID,Transaction Date,Money In,Money Out,Currency
+0001001,2026-10-23,50.00,0,MYR
+0001002,2026-10-24,0,12.50,MYR

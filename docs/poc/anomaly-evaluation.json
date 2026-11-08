@@ -1,0 +1,23 @@
+{
+  "label": "Synthetic PoC pack 2026-03, 6,000 rows, held-out labels",
+  "datasetVersion": "FinGence-PoC-March2026-v1",
+  "featureFileSha256": "c0bf6efd9ee00ef9bd135107463e151bd51b4293dc86bdaf768d68e83c0f44dd",
+  "labelFileSha256": "13874c1413e41d0ba092c002aae2c961b95e3c42e2606b0bf14d1ec366ec5c80",
+  "detectorVersion": "poc-anomaly-rules-v1",
+  "rows": 6000,
+  "labeledAnomalies": 90,
+  "truePositives": 78,
+  "falsePositives": 112,
+  "falseNegatives": 12,
+  "trueNegatives": 5798,
+  "precision": "41.1%",
+  "recall": "86.7%",
+  "recallByLabeledType": {
+    "Amount Outlier": "14/18",
+    "Description/Category Conflict": "18/18",
+    "Duplicate-like Reference": "18/18",
+    "Unexpected Direction": "10/18",
+    "Unverified Counterparty": "18/18"
+  },
+  "note": "Dataset-specific offline measurement of transparent rules on constructed synthetic data. Not a live model metric and not evidence of performance on real statements."
+}

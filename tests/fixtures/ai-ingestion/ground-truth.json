@@ -1,0 +1,73 @@
+{
+  "headers": [
+    "Txn No",
+    "Txn Date",
+    "Posting Date",
+    "Amount",
+    "CCY",
+    "Details"
+  ],
+  "rows": [
+    [
+      "000001",
+      "2026-09-01",
+      "2026-09-03",
+      "1234.50",
+      "MYR",
+      "Payment A"
+    ],
+    [
+      "000002",
+      "2026-09-02",
+      "2026-09-04",
+      "-20.05",
+      "MYR",
+      "Payment B"
+    ],
+    [
+      "000003",
+      "2026-09-05",
+      "2026-09-06",
+      "0.00",
+      "USD",
+      "Payment C"
+    ],
+    [
+      "000004",
+      "2026-09-07",
+      "2026-09-08",
+      "250.25",
+      "MYR",
+      "Payment D"
+    ]
+  ],
+  "imageRows": [
+    [
+      "000001",
+      "2026-09-01",
+      "2026-09-03",
+      "1234.50",
+      "MYR",
+      "Payment A"
+    ],
+    [
+      "000002",
+      "2026-09-02",
+      "2026-09-04",
+      "-20.05",
+      "MYR",
+      "Payment B"
+    ]
+  ],
+  "normalAmounts": [
+    "1234.5",
+    "-20.05",
+    "0",
+    "250.25"
+  ],
+  "negative": [
+    "ambiguous.csv",
+    "unreadable.png"
+  ],
+  "warning": "Labels are evaluation-only; never supplied to the model or runtime verifier."
+}

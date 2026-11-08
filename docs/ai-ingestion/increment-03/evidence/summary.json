@@ -1,0 +1,39 @@
+{
+  "heldout": {
+    "documents": 8,
+    "exactSourceFields": 87,
+    "expectedSourceFields": 87,
+    "genuineInferenceRuns": 0,
+    "modelAccuracy": null,
+    "wallDurationSumMs": 36523,
+    "failures": []
+  },
+  "regression": {
+    "documents": 26,
+    "exactSourceFields": 242,
+    "expectedSourceFields": 276,
+    "genuineInferenceRuns": 0,
+    "modelAccuracy": null,
+    "wallDurationSumMs": 82384,
+    "failures": [
+      {
+        "file": "corrupt.pdf",
+        "code": "PROCESSING_FAILED"
+      }
+    ]
+  },
+  "heldoutRecordedVerifierControls": {
+    "mode": "RECORDED_TEST",
+    "accepted": 12,
+    "rejected": 0,
+    "unresolved": 3,
+    "note": "Deterministic test proposals, not LLM evaluation."
+  },
+  "actualProviderUsage": {
+    "requests": 0,
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "estimatedUsd": 0,
+    "modelUsed": null
+  }
+}
