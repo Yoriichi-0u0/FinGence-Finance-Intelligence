@@ -105,8 +105,6 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
                 result = await browserDemoRunner.run(inputs, undefined, { interpreter: replayInterpreter(outcome.job.interpretations, null), job: { id: outcome.job.id, runner: 'BACKEND_JOB_RUNNER' }, extract: replayExtractor(outcome.job.extractions) });
                 if (current !== run.current) return null;
                 if (result.processingId !== outcome.job.processingId) { setError(`This browser's re-check of server job ${outcome.job.id} did not reach the same result, so it is not shown. Your technical team can see the job in Management.`); setStatus('failed'); return null; }
-                // The server's progress summaries carry only failed checks; once the re-check agrees, show its full stages.
-                setLiveStages(result.stages);
             } else {
             const status = ai ?? (probe.current ? await probe.current : null);
             result = await browserDemoRunner.run(inputs, async stage => {
