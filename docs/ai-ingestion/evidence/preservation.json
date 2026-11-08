@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-20",
+  "base": "da10e2f21add1fec5449ac32ea1affdd8024563b",
+  "experimentBranch": "feature/v2-multimodal-ingestion",
+  "protectedPathsWithEmptyDiff": [
+    "lib/ingestion",
+    "app/data/page.tsx",
+    "components/ingestion",
+    "public/samples/ingestion",
+    "tests/ingestion",
+    "tests/analytics.test.ts",
+    "tests/analytics-adapter.test.ts"
+  ],
+  "legacyFixtureSha256": {
+    "bank_statement.xlsx": "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf",
+    "ledger.csv": "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9",
+    "expected.json": "384500d57ebd379e743834fbcf8b6991163a5f5bdef82aeb10eee94dcff1dd84",
+    "edge_cases.csv": "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd"
+  },
+  "originalPersonalCommit": "c32216e191706d1e4c6f80c57165f160bb70bc77",
+  "originalTeamCommit": "161b489d2758160f46d6f8252dc866b595102735",
+  "originalWorktreesClean": true,
+  "protectedStash": "1aa97d83500cab7055d1d8dda0b3fe727ae11556",
+  "externalBackupChecks": [
+    {
+      "sample": "bank_statement.xlsx",
+      "backupHashMatchesManifest": true
+    },
+    {
+      "sample": "edge_cases.csv",
+      "backupHashMatchesManifest": true
+    },
+    {
+      "sample": "ledger.csv",
+      "backupHashMatchesManifest": true
+    }
+  ],
+  "commits": 0,
+  "pushes": 0,
+  "deployments": 0,
+  "credentialFileCreated": false
+}

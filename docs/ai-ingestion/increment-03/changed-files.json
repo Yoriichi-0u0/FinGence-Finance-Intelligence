@@ -1,0 +1,610 @@
+{
+  "increment": "03",
+  "baselineHead": "da10e2f21add1fec5449ac32ea1affdd8024563b",
+  "beforeSnapshotSHA256": "43379d0094c36b7657b17733504108d013899bd16905336036abbb98d3899e52",
+  "note": "Compared to external pre-Increment03 snapshot, not HEAD. Earlier uncommitted V2 work retained. Manifest excludes its own hash; existing ignored pnpm-workspace.yaml is packaged unchanged as configuration.",
+  "files": [
+    {
+      "path": "app/ai-ingestion/live/page.tsx",
+      "bytes": 347,
+      "sha256": "f14d8ecef7d90ffa70c0cb84e14939349455ac4672ecd2bf830f90d9825d8e04",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "app/api/ai-ingestion/live/route.ts",
+      "bytes": 2924,
+      "sha256": "4ebeffeff6842efacb6744d589336d4aa856c8703c31634f83cc08e2327383d2",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "components/ai-ingestion-03/live-document.tsx",
+      "bytes": 8207,
+      "sha256": "4755253588ad82f6eae087d3471b20f555a9808f4e8bbbc9b0fa2164d33d27d0",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "components/app-shell.tsx",
+      "bytes": 7079,
+      "sha256": "f41871238facf235825039da8a2a868bebdf73c4f8189b99d8f9a2d1d9c8d288",
+      "status": "MODIFIED",
+      "beforeSHA256": "1a1c6c8553444aef537e8f506b8baacbb402242e47bf789dac02182a8df99448"
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/README.md",
+      "bytes": 3857,
+      "sha256": "47b93ef988a8818dddc9541a303b75e02f5b8a3435d0a9460441b49cd650d9c5",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/architecture.md",
+      "bytes": 6241,
+      "sha256": "8d28ddd7faf2b7709ca485cfe66b3967188c0d24ad161adc16f5d55dc9e0c59a",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evaluation.md",
+      "bytes": 5199,
+      "sha256": "9e8d86b0bdfe3cf1ec1d6e141924048d9b99c087646bc38317bfc8d384ad9b53",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/audit.json",
+      "bytes": 21350,
+      "sha256": "d06d7a02b341234779fc8506b7c7e001379dd5eb014b84064ee07c84312f3bd5",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/browser.json",
+      "bytes": 498,
+      "sha256": "b4a586d981dedf177a6795e74b32f30ed21ebe4729f6fc2855a58ca779c3afeb",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/clean-extraction.json",
+      "bytes": 1113,
+      "sha256": "c38801927b1fd4bc7c4606d3da8ff1c50aa029dcfb5e7ae6a1236afc9ed1dcd7",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/desktop-blocked.png",
+      "bytes": 145146,
+      "sha256": "1dd546ecc6976dba79864e799c00878b5f3c29d91f59232d92a69ba103dd0dbf",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/heldout-no-inference.json",
+      "bytes": 7255,
+      "sha256": "b93db736756441dad9115f7c78ec6a3455f8d7f0a18510dfae7e92f672652b0c",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/mobile-blocked.png",
+      "bytes": 103196,
+      "sha256": "d19c7b91244381474a4882374e2248176072222395d123a33dfcbdb3d5d14874",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/preservation.json",
+      "bytes": 1783,
+      "sha256": "e6a63f4a99edf94f8601955318846923718cc7b13a8edba2dc2759cd5a86434f",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/production-guards.json",
+      "bytes": 185,
+      "sha256": "4a53176556b94b53cb6ed3e5a8fd2617539c7f795c65ea3ef2ae40e5bd86d338",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/regression-no-inference.json",
+      "bytes": 21704,
+      "sha256": "24baba80b67be41ba5eedaf58f2f3310a1efc8c64d46c6683d1804d930db62ba",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/scanned-pdf-320.png",
+      "bytes": 102263,
+      "sha256": "a2c87199c29815b0ede5f7bfa05e12dc00b8d241f5ca5ff36c7071090e2fcbb4",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/summary.json",
+      "bytes": 855,
+      "sha256": "8c3efed2faa23fb69d44aafef1b3b0d84cd5dc570a4c50f9b4ea5a7f8db13f54",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/01.json",
+      "bytes": 8006,
+      "sha256": "527bddf7277ce7c06d47ae0346634af1d5af4368ee7ee7280b50ecc5ae218052",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/02.json",
+      "bytes": 9530,
+      "sha256": "f0f97949c4c71027cd415202497fc0ad484a068cfe93bb4bd7d75c3006155846",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/03.json",
+      "bytes": 9148,
+      "sha256": "0ea5b03a2044f51902eb5a65cf05f698c7764b82a3fc336221a62ead28dd50b3",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/04.json",
+      "bytes": 9681,
+      "sha256": "df15442e0bab5ed716f9230e2d0f4dccea1d6550c39e1334dda44d9a9d5ee7de",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/05.json",
+      "bytes": 9392,
+      "sha256": "e9e4ade54613710892759b51300431225e35ad9ab841ef5d365f5c0cc6c67570",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/06.json",
+      "bytes": 9400,
+      "sha256": "a0ab79eb3c07366696eac4617576648abd5680dcf7b55e52f7106c7a2b1f016b",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/07.json",
+      "bytes": 6894,
+      "sha256": "3604131fb45947758036c04a992de5c2a1de9ac5173c9b1c4aa0f7e8100e5fda",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/heldout/08.json",
+      "bytes": 6562,
+      "sha256": "cd1b8e6e1e6499391a2a111f933d117ffa26c7a628ce2a39c6cef9aa3f5489ba",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/01.json",
+      "bytes": 3834,
+      "sha256": "d21e2ca873f6952ca67739305e23d56b1c956b2a2af0d0311b0e1477f89a0411",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/02.json",
+      "bytes": 4585,
+      "sha256": "0bd644a30483009f951ad95acef6fe09cf8ea02671f5aba39e927caae34f0e9c",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/03.json",
+      "bytes": 7913,
+      "sha256": "9a5a8e0625e26bdee589c00dd65cc7c8906fc64e0b973b1c6a1b9706d939e69d",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/04.json",
+      "bytes": 9809,
+      "sha256": "c3d252f5bdcee65f3befa3239576285821e840472b505a5bd123aa8e06930c26",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/05.json",
+      "bytes": 5828,
+      "sha256": "6da1e052de7f411c4a91f3dffbf788395d566164749666a2997b5c5d01caa4cd",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/06.json",
+      "bytes": 6505,
+      "sha256": "c972d5573dbbedc384729dcd6ab50fcff03b224f15d10851b72f5692aa9b71ab",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/07.json",
+      "bytes": 11384,
+      "sha256": "c8fca60747e5d276ba19fd0536ade28dc35eaa7cd65a88cd635538de10c2a932",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/08.json",
+      "bytes": 13766,
+      "sha256": "35125ffffc6a53ef4e4eb19eb073363ed9104cff8b6a42645d9d9f8fb6558568",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/09.json",
+      "bytes": 999,
+      "sha256": "66f010c812c54d1c9cb1a15e93d9b72c4876a7e0c49a73d5511f04edc539ed90",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/10.json",
+      "bytes": 6379,
+      "sha256": "4af268f58d14ade6e345660cbe01b034084cf4f7c2837d3cf15d8dbfb53f7434",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/11.json",
+      "bytes": 6886,
+      "sha256": "0884a59e1f7c22f343c5931b246fed723d7cdc3095c2fdf190e14fbcf37ed037",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/12.json",
+      "bytes": 8960,
+      "sha256": "f960104387bb15b0fcc266574935deca4cf6bd78163485dc35eedfc8d9af9954",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/13.json",
+      "bytes": 11221,
+      "sha256": "286ec97162fc884012af563f67458e0635e733a655989badbef2eb507eb2b017",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/14.json",
+      "bytes": 1399,
+      "sha256": "87120af828ddf4071a401e46fb17003f4c1c2478d51c6175a3fad9bac0e18cf6",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/15.json",
+      "bytes": 1399,
+      "sha256": "3a4dead6b778e72a79e325a6489616a17fbb90f16212ccd4881f3eb8d31f07fc",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/16.json",
+      "bytes": 9004,
+      "sha256": "aec6014034358cafb68e255f25c073d3a2de1a0819611dc8bdced72cc0685195",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/17.json",
+      "bytes": 11265,
+      "sha256": "1bf0f363fa184be34e281e876d8a762392662c0f7129a5f843e85d5bd4da26f8",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/18.json",
+      "bytes": 16614,
+      "sha256": "924ec9430e2b43f7aa6344543c1b46dea0cefb52bcbf51bbac3961a206fa2f7d",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/19.json",
+      "bytes": 6860,
+      "sha256": "42ef8e3e869a11271c5f39acccf6e0d3a89eb469206f028d06a3bfaf6dbeb141",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/20.json",
+      "bytes": 7719,
+      "sha256": "fdbe7e77e55f224a8ab8060192204bb816443e9876367d35ae9907adc962a869",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/21.json",
+      "bytes": 5009,
+      "sha256": "b4a372283da82cd82d77e1a01700ad57b794399277ad965010330ee3b799d941",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/22.json",
+      "bytes": 4972,
+      "sha256": "b29083eba300a55004cb85226d633df3e3653bfa8ecc555d49e271df117915a5",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/23.json",
+      "bytes": 17441,
+      "sha256": "fc2d808261c21ea272f19864cca588eb935b62f0deba33e62b8ef7a88409549e",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/24.json",
+      "bytes": 4567,
+      "sha256": "420c4a7a35b65029d09b8608345892f83a3a198f13b065965ab8b3ee1138e567",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/25.json",
+      "bytes": 5314,
+      "sha256": "b9aa254a6312254077fa8f21bb0ec01c2aabc89693dc5e73a7f3fe099318b24a",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/traces/regression/26.json",
+      "bytes": 8439,
+      "sha256": "0d5eb37ae78f1ca17a4cba91297a632f1fa0d5eed8f1de0626e9d903f052505d",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/evidence/xlsx-upload.png",
+      "bytes": 145499,
+      "sha256": "0ff5f17d5710f4ac7d0b82cd90175cab4d7843e19dd7a81932d7f5d9d2c1c068",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/verification.md",
+      "bytes": 6457,
+      "sha256": "5b4af4f1c4fc6d2b161687cd13d4b8bbfa683589df933c40e4e8f81a9650a0e8",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "docs/ai-ingestion/increment-03/windows.md",
+      "bytes": 2126,
+      "sha256": "0cb9cea9d62eee73029e0de538c98ba8b259124da5c4370bff0db998eb29dd8e",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/contracts.ts",
+      "bytes": 4753,
+      "sha256": "33a3143fe7698c0c310fd1e99afd8f17e9da5dde524f46beab14ba647e85bc37",
+      "status": "MODIFIED",
+      "beforeSHA256": "d680f1092526a62ff8ec86fee9320a33ac4021b46ba60e7729903005a434a119"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/reuse.ts",
+      "bytes": 3530,
+      "sha256": "63f64a6efc4339d160af96902aeb94a50a09ae6b7ec1f74cc6d4905f5a316957",
+      "status": "MODIFIED",
+      "beforeSHA256": "8c2ca4f5ad24b017583ba987145c4757910b2c3a77febfd9da538186eaba4565"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-02/verify.ts",
+      "bytes": 12484,
+      "sha256": "5b8db8dbcbe5f7e646f65810d8fe980f246d88ca2af99a777cc740f63b39da1c",
+      "status": "MODIFIED",
+      "beforeSHA256": "a875e70e1da20588284658188c9ffe65c7717e2812f79f4f5a82df4087016d68"
+    },
+    {
+      "path": "lib/ai-ingestion/increment-03/metrics.ts",
+      "bytes": 2752,
+      "sha256": "025f1185e5ebba21b565215f6627af8657ad5ecafb858451d8a7f2808f93f0cc",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "lib/ai-ingestion/increment-03/plan.ts",
+      "bytes": 6233,
+      "sha256": "b6fe742294af04741280f82f219bef90cd8a04780837fec0ed3ca1ee06cd1c9a",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "lib/server/ai-ingestion/increment-03/providers.ts",
+      "bytes": 8021,
+      "sha256": "adaf0d9582136346c3a6abcaaba5c09dea93335b67bc6643306e8dca3937b87f",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "lib/server/ai-ingestion/increment-03/quota.ts",
+      "bytes": 4736,
+      "sha256": "7ac80871f67f574f5c73860f2addd47ce4e9330f15815349728c2e655dc160ad",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "lib/server/ai-ingestion/increment-03/service.ts",
+      "bytes": 7483,
+      "sha256": "d8270955ffe40548fc0b1d6bcb7ec64ac00cdd45f0df472a3155aef56b2d30aa",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h01.csv",
+      "bytes": 199,
+      "sha256": "4f53f0289a615687de1c9ac8738c0670c9b2f0cc66f5aea7b7fdf41238b69001",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h02.xlsx",
+      "bytes": 5005,
+      "sha256": "4c12ad6134c3351166671869b6cf30999cfbe76ec398c0f576440d1d7a53d968",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h03.pdf",
+      "bytes": 1829,
+      "sha256": "b55ec0e2a27cc1a95f56385d25911d24a1f304c473fbb00d81442b4fb8ae41a9",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h04.pdf",
+      "bytes": 41748,
+      "sha256": "2295de42fe47fada85e2b2309dc5365d61e23cbaf5b85d9836310a2d720dd23d",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h05.png",
+      "bytes": 38042,
+      "sha256": "fdd2cead4b5de1904187c8fbcef3b37b820fc2a648fbc8a596271fad53af4c56",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h06.jpg",
+      "bytes": 99784,
+      "sha256": "4c1f8b4d0bc7c4816fed87cf91a46973e8ac5fb7118e4fd4b7054abd1772d70c",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h07.csv",
+      "bytes": 141,
+      "sha256": "a43bae874e3c6a9891ee78cd083b41b1113e9d250dbbc142e84e22c06d074072",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/h08.xlsx",
+      "bytes": 4961,
+      "sha256": "7281d785c3b1a93ed4dcf7f71e8e6412fc70f41e9d92fd4f56799c38e2bd0243",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "public/samples/ai-ingestion-increment-03/manifest.json",
+      "bytes": 1131,
+      "sha256": "e8e765bc49e00f5096f5eff0d0c3c629caab7b021587fe2ce83273389694fbe4",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "scripts/ai-demo-03.mjs",
+      "bytes": 878,
+      "sha256": "d26906f4fefc108871a48c874452dea7771f265c6ad4b8e33d13b14a36f20ba8",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "scripts/ai-fixtures-03.py",
+      "bytes": 3181,
+      "sha256": "02e00057923423e1c9a0472b22c0752489067d454e4ff37dbac332b4020eb93c",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "scripts/ai-increment-03.mjs",
+      "bytes": 7539,
+      "sha256": "53d6c6bf17f71bfe1d3312f1b0d2f36ad493b4bfd467ccb61a38bbec45f72742",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "scripts/ai-runtime-03.mjs",
+      "bytes": 921,
+      "sha256": "310d7bd40511bdb1091a5b4cb82a24058de11f1d0cc41a41f73281a33f0143b6",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/core.test.ts",
+      "bytes": 2422,
+      "sha256": "a277c8f7fe8e3e69dc8c9f05f8d7a3a7f61829fee1c3316f5915c96cc3a2560a",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/heldout.test.ts",
+      "bytes": 4304,
+      "sha256": "89fbc5040bcfe57522c35230f4f79ee31ddc92b16728f8550bc1aee953e1bce7",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/helpers.ts",
+      "bytes": 1220,
+      "sha256": "7cc137a5c493dd38be3954f6f6e5acafd17f2d35c93aa61cea410ce92938b4ba",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/metrics.test.ts",
+      "bytes": 2539,
+      "sha256": "2dc6e5de876819b54c8820ed0641c869ecb167a987ca14982c5edbc0632cef2d",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/provider.test.ts",
+      "bytes": 6908,
+      "sha256": "9ac6a277a4d2124360fb63ec2ffd44be6df1b0dccff3e6844548aaedab6283ae",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/quota.test.ts",
+      "bytes": 2202,
+      "sha256": "f259be16ee320b74f1889a042a781a727c31366a235381201095f757e43393a2",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/route.test.ts",
+      "bytes": 1612,
+      "sha256": "788f700dafa066490fb40b72bc41130f1885b48efe18cd84adb5c8935dbb6164",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/ai-ingestion-03/service.test.ts",
+      "bytes": 4967,
+      "sha256": "db6bdad5758b38248ca68b78e88c9404c8fa06c68c7d4ff9ae673aa11912d4c1",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/fixtures/ai-ingestion-03/field-truth.json",
+      "bytes": 4611,
+      "sha256": "8a8420a329783b7afe696600fb27171584cc694b67a34178b87b9fc6daf826a1",
+      "status": "NEW",
+      "beforeSHA256": null
+    },
+    {
+      "path": "tests/fixtures/ai-ingestion-03/ground-truth.json",
+      "bytes": 3047,
+      "sha256": "f8ac1148cb117d33606ae89aeaaedac18ecd26ae96bbccbf500432bfb66bf0b8",
+      "status": "NEW",
+      "beforeSHA256": null
+    }
+  ]
+}

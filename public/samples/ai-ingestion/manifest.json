@@ -1,0 +1,45 @@
+{
+  "notice": "SYNTHETIC ONLY; NOT CLIENT DATA",
+  "files": {
+    "ambiguous.csv": {
+      "sha256": "f40bd1342cca38764698b94b2c239d6bf7c0d8b2b2bf7414fab794f45cc1e97a",
+      "bytes": 122
+    },
+    "injection.csv": {
+      "sha256": "d12d861a1b9c09e0fae817dff850a22b62798a20f5754686512900a3c5b9abe8",
+      "bytes": 152
+    },
+    "statement-digital.pdf": {
+      "sha256": "6e91058d4d28d604e79c733483550a1e9cdd82d8014fcf4fadbdff449241c913",
+      "bytes": 2593
+    },
+    "statement-mixed.pdf": {
+      "sha256": "1f41415857d276c4c91efc00b0be5d522a8f1ac96d0274a52a2cbadfa3f57558",
+      "bytes": 45329
+    },
+    "statement-scan.pdf": {
+      "sha256": "34cefe6f99d4d72dfc748ddfc2618236b0877046aa45d8cad5087a0f26e6ca4d",
+      "bytes": 87927
+    },
+    "statement.csv": {
+      "sha256": "6cc346acb364e593fb20f38273bfa0e49080bf4c21521d3c3edb27202ab66ac0",
+      "bytes": 252
+    },
+    "statement.jpg": {
+      "sha256": "02f7197008f510039258b40da795d752b1acf03de7c7a184af4d975a1a4195d1",
+      "bytes": 72828
+    },
+    "statement.png": {
+      "sha256": "98a0c80379de6964f1b8f37e81fee98b5f10445c884c8e5e6119fb3387731f1c",
+      "bytes": 39775
+    },
+    "statement.xlsx": {
+      "sha256": "57b58ae15aab844f877fa0043778eae83250ef5ecfef452a4b16b2137800dbd6",
+      "bytes": 5063
+    },
+    "unreadable.png": {
+      "sha256": "a75e9883b88d9180cf198ff28cc298424477e5be1d425695123cfbeb788afe7d",
+      "bytes": 5419
+    }
+  }
+}

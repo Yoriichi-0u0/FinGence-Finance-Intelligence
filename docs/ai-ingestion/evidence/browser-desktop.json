@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-20",
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "note": "Actual browser uploads, processing and JSON downloads. Secure credentials absent. Extraction real; no live LLM or accepted records.",
+  "cases": [
+    {
+      "file": "statement-digital.pdf",
+      "format": "PDF",
+      "sourceId": "6e91058d4d28d604e79c733483550a1e9cdd82d8014fcf4fadbdff449241c913",
+      "items": 36,
+      "coverage": "TABLE_ROWS",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    },
+    {
+      "file": "statement-mixed.pdf",
+      "format": "PDF",
+      "sourceId": "1f41415857d276c4c91efc00b0be5d522a8f1ac96d0274a52a2cbadfa3f57558",
+      "items": 36,
+      "coverage": "TABLE_ROWS",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    },
+    {
+      "file": "statement-scan.pdf",
+      "format": "PDF",
+      "sourceId": "34cefe6f99d4d72dfc748ddfc2618236b0877046aa45d8cad5087a0f26e6ca4d",
+      "items": 36,
+      "coverage": "TABLE_ROWS",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    },
+    {
+      "file": "statement.csv",
+      "format": "CSV",
+      "sourceId": "6cc346acb364e593fb20f38273bfa0e49080bf4c21521d3c3edb27202ab66ac0",
+      "items": 30,
+      "coverage": "TABLE_ROWS",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    },
+    {
+      "file": "statement.jpg",
+      "format": "IMAGE",
+      "sourceId": "02f7197008f510039258b40da795d752b1acf03de7c7a184af4d975a1a4195d1",
+      "items": 18,
+      "coverage": "TABLE_ROWS",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    },
+    {
+      "file": "statement.png",
+      "format": "IMAGE",
+      "sourceId": "98a0c80379de6964f1b8f37e81fee98b5f10445c884c8e5e6119fb3387731f1c",
+      "items": 18,
+      "coverage": "TABLE_ROWS",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    },
+    {
+      "file": "statement.xlsx",
+      "format": "XLSX",
+      "sourceId": "57b58ae15aab844f877fa0043778eae83250ef5ecfef452a4b16b2137800dbd6",
+      "items": 30,
+      "coverage": "TABLE_ROWS",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    },
+    {
+      "file": "unreadable.png",
+      "format": "IMAGE",
+      "sourceId": "a75e9883b88d9180cf198ff28cc298424477e5be1d425695123cfbeb788afe7d",
+      "items": 0,
+      "coverage": "REGIONS_ONLY",
+      "inference": "NOT_EXECUTED",
+      "accepted": 0
+    }
+  ]
+}

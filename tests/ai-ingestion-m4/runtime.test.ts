@@ -1,0 +1,6 @@
+import{beforeEach,afterEach,expect,it,vi}from'vitest';vi.mock('server-only',()=>({}));const mock=vi.hoisted(()=>({enabled:true,base:vi.fn(),install:vi.fn(),pipeline:vi.fn()}));
+vi.mock('../../lib/server/financial-m3/runtime',()=>({m3LocalEnabled:()=>mock.enabled,m3Runtime:mock.base}));vi.mock('../../lib/server/ai-ingestion/m4/adapter',()=>({installM4Schema:mock.install,createM4Pipeline:mock.pipeline}));
+import{m4Runtime,m4LocalEnabled}from'../../lib/server/ai-ingestion/m4/runtime';
+beforeEach(()=>{vi.resetAllMocks();mock.enabled=true;vi.stubEnv('FINGENCE_M4_LOCAL','1');});afterEach(()=>vi.unstubAllEnvs());
+it('cannot select a genuine transport through HTTP flags or key presence',async()=>{vi.stubEnv('GROQ_API_KEY','test-no-provider');vi.stubEnv('FINGENCE_M4_SINGLE_DISPATCH_AUTHORIZED','1');mock.base.mockResolvedValue({database:{}});await m4Runtime();expect(mock.pipeline).toHaveBeenCalledWith(expect.anything(),{origin:'RECORDED_TEST'});});
+it('retains the underlying hosted/development capability gate before database initialization',async()=>{mock.enabled=false;expect(m4LocalEnabled()).toBe(false);await expect(m4Runtime()).rejects.toThrow('LOCAL_ONLY');expect(mock.base).not.toHaveBeenCalled();});

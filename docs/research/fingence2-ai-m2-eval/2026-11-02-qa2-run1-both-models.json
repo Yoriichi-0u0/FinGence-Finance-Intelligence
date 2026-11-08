@@ -1,0 +1,712 @@
+{
+  "date": "2026-11-02T12:59:55.981Z",
+  "complete": false,
+  "rows": [
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S01",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "Who did we pay the most this month?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "We paid MYR 18,548.18 to Staff Payroll in the month.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "counterparties",
+          "direction": "OUT",
+          "limit": 1
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-b6e80062-e9de-4553-bab3-0e497019cf17",
+          "latencyMs": 954,
+          "mode": "LIVE",
+          "inputTokens": 1613,
+          "outputTokens": 112,
+          "estimatedUsd": 0.00030914999999999995
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-6103f9b4-856a-4b3c-b174-cc36950243c1",
+          "latencyMs": 1031,
+          "mode": "LIVE",
+          "inputTokens": 976,
+          "outputTokens": 124,
+          "estimatedUsd": 0.0002208
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 1985,
+      "estimatedUsd": 0.00052995
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S01",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "Who did we pay the most this month?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "Staff Payroll",
+        "MYR 18,548.18"
+      ],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "counterparties",
+          "direction": "OUT",
+          "limit": 1
+        }
+      ],
+      "error": "PROVIDER_HTTP_400_JSON_VALIDATE_FAILED",
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-20b",
+          "requestId": "chatcmpl-6de51d9e-a7b3-4d1c-9e11-694fb43925e9",
+          "latencyMs": 689,
+          "mode": "LIVE",
+          "inputTokens": 1613,
+          "outputTokens": 89,
+          "estimatedUsd": 0.00014767499999999997
+        }
+      ],
+      "calls": 1,
+      "latencyMs": 689,
+      "estimatedUsd": 0.00014767499999999997
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S02",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "How much did we receive from GrabFood Marketplace Payout in March?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "The money received from GrabFood Marketplace Payout in the period was MYR 11,498.10.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "transactions",
+          "direction": "IN",
+          "counterparty": "GrabFood Marketplace Payout",
+          "sort": "LATEST",
+          "limit": 1
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-1c084f6c-6ea4-461b-953c-fcdf03e5bfe5",
+          "latencyMs": 1033,
+          "mode": "LIVE",
+          "inputTokens": 1618,
+          "outputTokens": 150,
+          "estimatedUsd": 0.0003327
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-b862a00d-aea6-4551-8a23-2dba4942898d",
+          "latencyMs": 718,
+          "mode": "LIVE",
+          "inputTokens": 1100,
+          "outputTokens": 108,
+          "estimatedUsd": 0.0002298
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 1751,
+      "estimatedUsd": 0.0005625000000000001
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S02",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "How much did we receive from GrabFood Marketplace Payout in March?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "MYR 11,498.10"
+      ],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "transactions",
+          "direction": "IN",
+          "counterparty": "GrabFood Marketplace Payout",
+          "sort": "LARGEST",
+          "limit": 1
+        }
+      ],
+      "error": "PROVIDER_HTTP_400_JSON_VALIDATE_FAILED",
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-20b",
+          "requestId": "chatcmpl-ec4687d6-f7e1-45c7-8386-4f523ebc41b5",
+          "latencyMs": 760,
+          "mode": "LIVE",
+          "inputTokens": 1618,
+          "outputTokens": 177,
+          "estimatedUsd": 0.00017444999999999998
+        }
+      ],
+      "calls": 1,
+      "latencyMs": 760,
+      "estimatedUsd": 0.00017444999999999998
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S03",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "What was our largest single payment and who was it to?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "The largest single payment was MYR 9,405.37 and it was made to Staff Payroll.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "transactions",
+          "direction": "OUT",
+          "counterparty": null,
+          "sort": "LARGEST",
+          "limit": 1
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-5d6f8023-5791-41b3-a699-a4e4d7942d83",
+          "latencyMs": 1078,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 140,
+          "estimatedUsd": 0.00032639999999999996
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-fa10e5dc-b801-4099-a2f3-d02201d77e86",
+          "latencyMs": 917,
+          "mode": "LIVE",
+          "inputTokens": 1074,
+          "outputTokens": 137,
+          "estimatedUsd": 0.0002433
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 1995,
+      "estimatedUsd": 0.0005697
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S03",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "What was our largest single payment and who was it to?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "MYR 9,405.37",
+        "Staff Payroll"
+      ],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "transactions",
+          "direction": "OUT",
+          "counterparty": null,
+          "sort": "LARGEST",
+          "limit": 1
+        }
+      ],
+      "error": "PROVIDER_HTTP_400_JSON_VALIDATE_FAILED",
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-20b",
+          "requestId": "chatcmpl-cac5a6fd-13df-4377-95a0-637d5ec7f42e",
+          "latencyMs": 842,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 78,
+          "estimatedUsd": 0.0001446
+        }
+      ],
+      "calls": 1,
+      "latencyMs": 842,
+      "estimatedUsd": 0.0001446
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S04",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "What is the difference between the bank statement and the ledger?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "The bank statement is lower than the ledger by −MYR 2,692.92.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "reconciliation",
+          "status": "ALL_EXCEPTIONS"
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-417a3a47-817e-4f1c-aa18-dee57d2ba859",
+          "latencyMs": 810,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 122,
+          "estimatedUsd": 0.0003156
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-0249ec6f-4fef-4c0f-a319-d7afc23634d1",
+          "latencyMs": 1004,
+          "mode": "LIVE",
+          "inputTokens": 1874,
+          "outputTokens": 152,
+          "estimatedUsd": 0.00037229999999999994
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 1814,
+      "estimatedUsd": 0.0006879
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S04",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "What is the difference between the bank statement and the ledger?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "−MYR 2,692.92"
+      ],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "reconciliation",
+          "status": "ALL_EXCEPTIONS"
+        }
+      ],
+      "error": "PROVIDER_HTTP_400_JSON_VALIDATE_FAILED",
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-20b",
+          "requestId": "chatcmpl-7a7888fc-bd25-49a5-9ece-79a3ada4acfc",
+          "latencyMs": 1249,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 118,
+          "estimatedUsd": 0.00015659999999999998
+        }
+      ],
+      "calls": 1,
+      "latencyMs": 1249,
+      "estimatedUsd": 0.00015659999999999998
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S05",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "How many transactions were matched in the reconciliation?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "The reconciliation shows 50 transactions were matched.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "reconciliation",
+          "status": "MATCH_EXACT"
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-124bde45-653e-4d57-8ba6-a3e06489320f",
+          "latencyMs": 1143,
+          "mode": "LIVE",
+          "inputTokens": 1613,
+          "outputTokens": 202,
+          "estimatedUsd": 0.00036314999999999996
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-0181a89a-94d9-4319-a3f5-7ec8f63cc26f",
+          "latencyMs": 805,
+          "mode": "LIVE",
+          "inputTokens": 1840,
+          "outputTokens": 118,
+          "estimatedUsd": 0.0003468
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 1948,
+      "estimatedUsd": 0.00070995
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S05",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "How many transactions were matched in the reconciliation?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "50"
+      ],
+      "refusal": null,
+      "queries": [],
+      "error": "PROVIDER_HTTP_400_TOOL_USE_FAILED",
+      "failedChecks": [],
+      "receipts": [],
+      "calls": 0,
+      "latencyMs": 0,
+      "estimatedUsd": 0
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S06",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "Which items are on the bank statement but not in the ledger, and what reason was recorded?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "Bank record BANK-DEMO-0029 dated 15 March 2026 for amount MYR 7.35 was not found in the ledger; the recorded reason is No safely unique permitted match; unmatched or unsupported candidates remain uncleared.. Bank record BANK-DEMO-0056 dated 30 March 2026 for amount MYR 1,319.77 was not found in the ledger; the recorded reason is No safely unique permitted match; unmatched or unsupported candidates remain uncleared.. Bank record BANK-DEMO-0057 dated 31 March 2026 for amount MYR 18.50 was not found in the ledger; the recorded reason is No safely unique permitted match; unmatched or unsupported candidates remain uncleared..",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "reconciliation",
+          "status": "ALL_EXCEPTIONS"
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-06482322-fd09-4da4-9fa2-6aab93427ac1",
+          "latencyMs": 993,
+          "mode": "LIVE",
+          "inputTokens": 1623,
+          "outputTokens": 103,
+          "estimatedUsd": 0.00030525
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-01416a98-f5a7-4ced-aa9d-e6d908b0675f",
+          "latencyMs": 1706,
+          "mode": "LIVE",
+          "inputTokens": 1881,
+          "outputTokens": 285,
+          "estimatedUsd": 0.00045315
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 2699,
+      "estimatedUsd": 0.0007584
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S06",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "Which items are on the bank statement but not in the ledger, and what reason was recorded?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "3",
+        "BANK-DEMO-0029"
+      ],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "reconciliation",
+          "status": "ALL_EXCEPTIONS"
+        }
+      ],
+      "error": "PROVIDER_HTTP_400_JSON_VALIDATE_FAILED",
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-20b",
+          "requestId": "chatcmpl-5bd2112c-db43-4e2d-a2c5-74f1c2dc15c4",
+          "latencyMs": 721,
+          "mode": "LIVE",
+          "inputTokens": 1623,
+          "outputTokens": 86,
+          "estimatedUsd": 0.000147525
+        }
+      ],
+      "calls": 1,
+      "latencyMs": 721,
+      "estimatedUsd": 0.000147525
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S07",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "How much more money came in than went out this month?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "The cash summary shows that money in was MYR 68,633.32 and money out was MYR 40,401.31, resulting in a net cash movement of MYR 28,232.01.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "cash_summary",
+          "period": "2026-03"
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-35a196ee-25d6-47e0-9284-9a835b48a975",
+          "latencyMs": 885,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 95,
+          "estimatedUsd": 0.00029939999999999996
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-bbd69d3f-1d49-4960-9c5f-87e3788762f0",
+          "latencyMs": 1085,
+          "mode": "LIVE",
+          "inputTokens": 1010,
+          "outputTokens": 222,
+          "estimatedUsd": 0.0002847
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 1970,
+      "estimatedUsd": 0.0005840999999999999
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S07",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "How much more money came in than went out this month?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "MYR 28,232.01"
+      ],
+      "refusal": null,
+      "queries": [],
+      "error": "PROVIDER_HTTP_400_TOOL_USE_FAILED",
+      "failedChecks": [],
+      "receipts": [],
+      "calls": 0,
+      "latencyMs": 0,
+      "estimatedUsd": 0
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S08",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "What share of money out went to Borneo Fresh Supplies?",
+      "status": "ANSWERED",
+      "outcome": "GROUNDED_CORRECT",
+      "meets": true,
+      "rendered": "The share of money out that went to Borneo Fresh Supplies is 31.9%.",
+      "missingKeys": [],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "cash_summary",
+          "period": "2026-03"
+        },
+        {
+          "tool": "transactions",
+          "direction": "OUT",
+          "counterparty": "Borneo Fresh Supplies",
+          "sort": "LATEST",
+          "limit": 1
+        }
+      ],
+      "error": null,
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-ecbea9d1-ef4e-409f-855d-f6f618b2d26c",
+          "latencyMs": 1206,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 223,
+          "estimatedUsd": 0.00037619999999999993
+        },
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-120b",
+          "requestId": "chatcmpl-b4d07e31-9e5f-4b1e-a3e4-af75c42a0038",
+          "latencyMs": 1266,
+          "mode": "LIVE",
+          "inputTokens": 1184,
+          "outputTokens": 189,
+          "estimatedUsd": 0.000291
+        }
+      ],
+      "calls": 2,
+      "latencyMs": 2472,
+      "estimatedUsd": 0.0006672
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "promptRevision": "grounded-qa-2",
+      "id": "S08",
+      "category": "SUPPORTED",
+      "expected": "ANSWER",
+      "question": "What share of money out went to Borneo Fresh Supplies?",
+      "status": "UNAVAILABLE",
+      "outcome": "UNAVAILABLE",
+      "meets": false,
+      "rendered": "",
+      "missingKeys": [
+        "31.9%"
+      ],
+      "refusal": null,
+      "queries": [
+        {
+          "tool": "transactions",
+          "direction": "OUT",
+          "counterparty": "Borneo Fresh Supplies",
+          "sort": "LARGEST",
+          "limit": 8
+        },
+        {
+          "tool": "transactions",
+          "direction": "OUT",
+          "counterparty": null,
+          "sort": "LARGEST",
+          "limit": 8
+        }
+      ],
+      "error": "PROVIDER_HTTP_400_JSON_VALIDATE_FAILED",
+      "failedChecks": [],
+      "receipts": [
+        {
+          "provider": "GROQ",
+          "model": "openai/gpt-oss-20b",
+          "requestId": "chatcmpl-25c4f6fa-e4da-4b73-97c9-a076b9e5daf9",
+          "latencyMs": 776,
+          "mode": "LIVE",
+          "inputTokens": 1616,
+          "outputTokens": 196,
+          "estimatedUsd": 0.00018
+        }
+      ],
+      "calls": 1,
+      "latencyMs": 776,
+      "estimatedUsd": 0.00018
+    }
+  ]
+}

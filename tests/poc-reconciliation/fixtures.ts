@@ -1,0 +1,5 @@
+import Papa from 'papaparse';
+// One row transcribed from each supplied synthetic input; mutations test refusal behavior.
+export const bank = { BankTransactionID: 'BANK-BUS-001-V2-00458', BusinessID: 'BUS-001', BusinessName: 'Kopi Kita Cafe Sdn. Bhd.', AccountNumber: '****4821', Currency: 'MYR', ValueDate: '2026-03-01', StatementMonth: '2026-03', BankReference: 'S5GWFDM1KYMJ', BankDescription: '[credit] Pos Sales Settlement', BankDirection: 'Credit', BankAmountMYR: '6380.53', SignedCashMovementMYR: '6380.53', Counterparty: 'POS Sales Settlement', SourceTransactionID: 'BUS-001-V2-00458' };
+export const ledger = { LedgerEntryID: 'GL-BUS-001-V2-00458', BusinessID: 'BUS-001', PostingDate: '2026-03-01', CashAccount: '1000-BANK', Currency: 'MYR', LedgerReference: 'S5GWFDM1KYMJ', LedgerMemo: 'Pos Sales Settlement', Counterparty: 'POS Sales Settlement', CashAccountDebitMYR: '6380.53', CashAccountCreditMYR: '0.00', SignedCashMovementMYR: '6380.53', CategoryLabel: 'Sales Revenue' };
+export const csv = (rows: Record<string, string>[]) => Buffer.from(Papa.unparse(rows));

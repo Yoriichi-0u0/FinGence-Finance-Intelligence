@@ -1,0 +1,540 @@
+# FinGence — current technical entrypoint
+
+## Optional ML forecast challenger (MLForecast + XGBoost) — 7 November 2026
+
+`/forecasting` can show an experimental XGBoost forecast beside the unchanged deterministic baseline. Contract, setup and the demo-data result: [docs/architecture/ml-forecast-v1.md](../architecture/ml-forecast-v1.md).
+
+- **Off by default:** needs `FINGENCE_ML_FORECAST=1` and the local Python runtime in `requirements-ml.txt`; never enabled on Vercel. Without it the route is 404 and the page is as before.
+- **Never the primary forecast:** the baseline stays primary; both are scored in exact cents on the same months, and the challenger inherits all baseline refusals. Needs 12 consecutive months.
+- **Boundary:** only monthly totals in integer cents reach the worker (`scripts/ml_forecast.py`); its result is schema-validated twice and rejected unless its months line up with the baseline's.
+
+## Document evidence view — 6 November 2026
+
+On the Data page, each processed document can be shown side by side with what FinGence read from it. See [docs/architecture/document-evidence-view-v1.md](../architecture/document-evidence-view-v1.md).
+- **Left:** the PDF pages, photo or table, with every read cell coloured by its field.
+- **Right:** the verified records, each linked to its source line.
+- The lines the AI model was shown are marked, and so are the cells where the OCR passes disagreed.
+- Built from `ProcessedDocument.reading` and `ExtractedSource.geometry`. Processing results and IDs are unchanged.
+
+## Server processing jobs, stored results and the Management console — 5 November 2026
+
+Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/architecture/server-processing-v1.md](../architecture/server-processing-v1.md).
+
+- **Jobs:** `POST /api/processing/jobs` answers 202 with a job ID and runs the unchanged pipeline after the response (`lib/server/processing/jobs.ts`). The AI layout reader is called in-process from the shared budget (`lib/server/ai/interpret.ts`), and PDFs and scans are read on the server.
+- **Stored results:** a finished job stores, in one transaction, its ingestion run (verified records), its reconciliation and anomaly results and every flagged item (`lib/processing/job-result.ts`, schema `fingence_processing`, `supabase/sql/processing-jobs-v1.sql`). Uploaded documents are never stored.
+- **Re-check:** the browser re-runs the pipeline on the same documents with the job's accepted readings and must reach the job's processing ID, or nothing is shown.
+- **Management console:** `/management` lists jobs and flagged items and pauses or resumes processing; a pause refuses new jobs with 423 and the reason Finance users see.
+- **Hosted PDFs and scans:** the job route's function includes the files pdf.js and tesseract.js load at run time (`outputFileTracingIncludes`); `pnpm check:job-trace` proves the traced files alone read a PDF and a scan.
+- **Off by default:** without `FINGENCE_PROCESSING_JOBS=1` the app is the browser-only demo exactly as before. Locally, `node scripts/dev-store.mjs` runs the same migrations in PGlite. Not applied to Production: the migration and the Vercel switches are owner decisions, and the console has no sign-in until #74.
+
+## Several months and any currency end to end; anomalies resolved autonomously — 5 November 2026
+
+`/data` now processes several months and any one stated currency through every stage (checkpoint 9, #78). The contract is [docs/architecture/multi-period-processing-v1.md](../architecture/multi-period-processing-v1.md).
+
+- **Scope:** `scope.period` is a month or a `YYYY-MM/YYYY-MM` range, and `scope.months` lists the statement months.
+- **Reconciliation:** every month both documents cover is reconciled (`outputs.periods`), with a combined whole-run snapshot (`outputs.reconciliation`). Months only one side covers are reported (`outputs.notReconciled`).
+- **Anomalies:** every anomaly candidate is checked against the books (`lib/anomalies/resolve.ts`). A record the ledger also shows is confirmed; only one the books cannot confirm is flagged to the technical team.
+- **Samples:**
+  - The March MYR sample keeps its figures and now completes with nothing flagged.
+  - A new quarter sample (DEMO-002, January–March 2026, SGD; `scripts/generate-quarter-documents.mjs`) shows timing differences clearing across months and one flagged payment.
+
+## Reconciliation layer v1 — 4 November 2026
+
+The reconciliation layer is `lib/reconciliation/reconcile.ts` (`reconcile`): verified bank and cash-ledger records in, a fully resolved reconciliation out. Its contract is [docs/architecture/reconciliation-layer-v1.md](../architecture/reconciliation-layer-v1.md).
+
+It is **autonomous** and has no review queue. Each month goes through the unchanged matcher. The layer then links one transaction recorded on different days or in different months, and gives every exception one resolution:
+
+- matched late or by amount;
+- a timing difference, cleared or still open;
+- a balanced correcting entry, prepared and never posted;
+- unexplained, which is the only outcome flagged, and is flagged to the technical team.
+
+The layer accepts several months and any one currency; since 5 November the `/data` pipeline uses that scope too (see the entry above). On the March sample its snapshot and statement are unchanged. All 9 exceptions are resolved, 6 correcting entries are prepared, and 0 items are unexplained. The Reconciliation page shows "What FinGence did" in plain language.
+
+## Ingestion layer v1 — 5 November 2026
+
+The ingestion layer is `lib/document-ingestion/ingest.ts` (`ingestDocuments`): documents in, verified records out. Its contract is
+[docs/architecture/ingestion-layer-v1.md](../architecture/ingestion-layer-v1.md).
+
+- **Formats:** CSV, XLSX, text PDF, scanned PDF and images. Real-statement layouts are handled, and the ingestion scope accepts several months and any stated currency.
+- **Durable store:** Supabase FinGence-Production, schema `fingence_ingestion` (`supabase/sql/ingestion-layer-v1.sql`), through `POST /api/ingestion/runs`. It needs `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY`.
+- **Evaluation (6 Nov 2026, run 5):** [docs/evaluation/automated-ingestion-evaluation.md](../evaluation/automated-ingestion-evaluation.md). Targets were fixed before the run. 0 false acceptances in 96 scored documents; all 2,570 accepted records exact; 11/11 invalid documents refused. The held-out layouts reached 12/24 digital accepted, under the 80% target; the causes and remedies are listed there.
+- **Benchmark:** see [docs/integration/ingestion-benchmark.md](../integration/ingestion-benchmark.md). Full rerun 5 Nov 2026 (run 4): 67 documents, 0 false acceptances. All 24 generated digital documents and all 10 FinGence samples were accepted exactly. Quarantines that remain are OCR digit misreads and AgamiAI statements whose own balances break. For OCR only, a currency code with one wrong-case letter ("UsD") is read as its ISO code and disclosed.
+
+## AI M3: PDF statements and scans — 4 November 2026
+
+`/data` ingests CSV, XLSX, PDF (text or scanned) and PNG/JPEG:
+
+- `lib/interpretation/extract.ts` reads text PDFs through pdf.js, and scans and images by OCR in the browser (tesseract.js, two passes);
+- `positioned.ts` places the words into a table by geometry alone;
+- an extracted document always goes through the AI proposal and the gates, plus the date-order and arithmetic-anchor gates;
+- `verifyWithDisputes` may resolve a figure the two OCR passes disagree on. It searches one-cell and two-cell corrections every time, and accepts only when every passing choice gives the same dates and signed amounts.
+- The arithmetic anchor for an extracted document (tightened 5 Nov 2026 after Codex review):
+  - each stated total is bound to the side it names, by the column it sits under or by its label read for the document's role (a bank's debit is money out, a ledger's debit is money in);
+  - a running balance confirms the first amount only together with a stated opening balance.
+
+Groq calls alternate between `GROQ_API_KEY` and `GROQ_API_KEY2` (#70); the second key adds capacity only when it is from a different Groq organization, since limits are per organization. See the M1 runbook section "PDF statements and scans".
+
+## Proposed bank reconciliation statement — 4 November 2026
+
+`lib/poc-reconciliation/statement.ts` (`buildStatement`, exposed as `ProcessingContext.outputs.statement`) classifies every open
+exception by a stated deterministic rule:
+
+- deposit in transit;
+- unpresented cheque;
+- bank charge, receipt or payment not in the ledger;
+- ledger amount error (with a transposition hint);
+- duplicate ledger posting;
+- reference-only;
+- otherwise UNEXPLAINED.
+
+Each item goes on the bank or ledger side, and three identities are proven: the exceptions' effects equal the difference,
+each record is listed once, and adjusted bank − adjusted ledger = unexplained. Matcher outcomes are unchanged and nothing is
+cleared or posted. On the Phase 1 sample both adjusted movements are MYR 29,644.41, with MYR 0.00 unexplained. The statement is
+shown on Reconciliation and in Reports.
+
+## AI management commentary on Reports — 4 November 2026
+
+With the gateway on, Reports offers an AI-written commentary, built in `lib/grounded-qa/commentary.ts`:
+
+- FinGence runs fixed queries over the verified records;
+- one M2 answer-stage call words up to five sentences;
+- the M2 `verifyAnswer` gates fill every figure or withhold the text.
+
+The deterministic summary is unchanged. See the [M2 runbook](../integration/fingence2-ai-m2-grounded-qa.md).
+
+## FinGence 2.0 AI M3 step 1: Excel workbooks — 4 November 2026
+
+`/data` accepts `.xlsx` files. Each worksheet holding a table becomes one document, converted to text deterministically by
+`lib/interpretation/workbook.ts`:
+
+- verbatim text;
+- stored number digits, at Excel's 15-significant-digit precision;
+- ISO dates;
+- blocks padded as in a CSV export.
+
+It then goes through the unchanged exact-signature, M1 interpreter and gate path. `ProcessedDocument.source` records the
+workbook's SHA-256, worksheet number and conversion notes. Sample: `public/demo/unfamiliar/rimba-demo-kitchen-march-2026.xlsx`.
+Details are in the [M1 runbook, "Excel workbooks"](../integration/fingence2-ai-m1-layout-interpretation.md).
+
+## FinGence 2.0 AI M2 grounded financial Q&A — 2 November 2026 (in progress)
+
+[M2 architecture](../architecture/fingence2-ai-m2-grounded-qa.md) and [runbook](../integration/fingence2-ai-m2-grounded-qa.md),
+branch `claude/fingence2-ai-m2-grounded-qa` stacked on M1 `ef18819`. `/ask` gains an "AI-assisted (verified)"
+mode only when the M1 gateway is available. The model plans catalogue-bound deterministic queries
+(`lib/grounded-qa/tools.ts`) and writes answers whose figures are placeholders filled from verified facts;
+`lib/grounded-qa/gates.ts` withholds anything else, and the rule-based answerer stays the default and fallback.
+`/api/ai/ask` shares M1's switch, budget and request bounds (`lib/server/ai/{groq,request,grounded-qa}.ts`).
+
+## FinGence 2.0 AI M1 layout interpretation — 2 November 2026
+
+[AI roadmap and model selection](../architecture/fingence2-ai-roadmap.md) and the
+[M1 runbook](../integration/fingence2-ai-m1-layout-interpretation.md). Groq `openai/gpt-oss-120b`
+proposes the layout of unfamiliar bank statements and cash-account ledgers (strict JSON schema;
+it never supplies amounts). `lib/interpretation/gates.ts` accepts a proposal only when every row of the
+original bytes re-derives it; the canonical Phase 1 pipeline then runs unchanged. The role, a signed
+column's convention and a ledger's cash account must be stated by the document's content, never taken on
+the model's word or from the file name. The model emits the v2 union contract (`modelProposalSchema`);
+`parseProposal` flattens it (legacy flat proposals still accepted for replays). The gateway `/api/ai/interpret` is 404 unless `FINGENCE_AI_GATEWAY=1` and
+`GROQ_API_KEY` are set, and on Vercel also a durable budget store (`FINGENCE_AI_BUDGET_REST_URL`/`_TOKEN`,
+`lib/server/ai/budget.ts`: per-client, global and daily-USD limits, fail-closed); without it the app is
+exactly Phase 1. Production enablement is an owner decision.
+
+## FinGence 2.0 Phase 1 connected synthetic demo — 1 November 2026
+
+[Phase 1 runbook](../integration/fingence2-phase1-demo.md): hosted and plain `pnpm dev` open with
+no sign-in. `/data` processes a bank statement + cash-account ledger (+ optional bank history) in
+the browser in one action; Overview, Transactions, Reconciliation, Analytics, Anomalies,
+Forecasting, Reports and `/ask` read the same verified processing context. Shared pure engine
+`lib/poc-reconciliation/engine.ts` (server wrappers unchanged in behaviour). Local authenticated
+stacks are unchanged; the C1 page is at `/data/c1`. Phase 2/3 contracts:
+[processing architecture](../architecture/fingence2-processing-architecture.md). Still 69 probes.
+
+## Issue #49 combined Finance demonstration — 31 October 2026
+
+[Combined review and Q&A walkthrough](../integration/poc-review-qa-integration.md) retains both
+reviewed histories, connects source-pair-bound human review metadata read-only to Finance Q&A,
+and preserves original matcher outcomes/figures and management PDF. Explained never means
+matched or cleared. Rule-based, no live AI; local synthetic only; **69 Production probes**.
+
+
+## Issue #45 local exception annotations — 31 October 2026
+
+[Finance reconciliation review](../integration/poc-reconciliation-review.md) adds persistent
+Open/Investigating/Explained/Escalated annotations with explanations, history and optimistic
+conflicts. Original matcher statuses, counts, source evidence and financial JSON stay immutable.
+This is optional human exception review, not routine ingestion mapping or financial approval.
+Local Finance only; separate annotation aggregates are available for future composition.
+
+## Issue #46 Finance questions — 31 October 2026
+
+[Finance questions runbook](../integration/poc-finance-questions.md): under `pnpm poc:dev`,
+`/finance-questions` answers eight fixed intents (totals, cash movement, bank−ledger difference,
+matches, records to review, anomaly candidates, monthly history, cash baseline) from the
+selected Finance-authorized upload, with source SHA, scope and evidence links. Rule-based, not
+live AI; profit/ratio/advice/fraud/cause questions are refused. Typed narration contract only
+(`lib/poc-finance-qa/narration.ts`); no provider call. Local synthetic only; the branch originally had 67 probes; the combined candidate has 69.
+
+## Issue #38 integrated Saturday PoC — 31 October 2026
+
+[Two-journey integration walkthrough](../integration/poc-saturday-integration.md) combines
+source-backed Transactions/Analytics and the measured cash forecast above the PR #35 fallback.
+Shared source/business selection links the actual uploaded data across views. March-only
+forecasting remains unavailable; full-file reconciliation cannot inherit the March bank SHA.
+All six original forecasting commits are retained. Local synthetic only; 63 Production probes.
+
+## Issue #36 source-backed PoC views — 31 October 2026
+
+[Uploaded-source Transactions and Analytics](../integration/poc-source-insights.md) adds
+read-only Finance-scoped source exploration, exact monthly cash movement, observed trends
+and source-bound anomaly/reconciliation context. It reuses existing uploaded bytes and
+M3/M5 access controls. No new accounting classification, forecast, live inference or hosted
+financial access is enabled. The older M3/Production page branches remain intact.
+
+## Issue #37 cash forecast — 31 October 2026
+
+[Cash forecast runbook](../integration/poc-cash-forecast.md): under `pnpm poc:dev`, `/forecasting`
+replaces the mock with a deterministic six-month-mean baseline over the Finance-uploaded source,
+with rolling-origin WAPE/MAE backtests (pooled receipts 18.01%, payments 9.81%, net 52.85% —
+worse than last month's 46.90%). Bank receipts/payments only; not AI, revenue or a cash flow
+statement. GET-only, Finance-only, audited; the illustrative page remains when the PoC is off.
+
+## Issue #34 combined local PoC — 31 October 2026
+
+[Combined financial intelligence runbook](../integration/poc-combined-financial-intelligence.md)
+is the current entrypoint for reconciliation → anomalies → combined PDF/JSON on one local
+server/database/Finance session. The optional report reader is now wired with exact bank SHA
+and tenant/business/period/currency matching. Older branch-specific "not wired" statements
+below are historical. March-only input yields 14 anomaly candidates; 9 applies to the March
+selection from the full 6,000-row input. Production remains isolated.
+
+## Issue #30 local PoC addition — 31 October 2026
+
+The additive bank/GL source contract, authenticated local API and demonstration instructions
+are in [poc-reconciliation.md](../integration/poc-reconciliation.md). The authoritative shared
+type is `FinancePoCReconciliationV1` in `lib/poc-reconciliation/contracts.ts`. This deterministic
+synthetic source-pair path does not replace C1/V2 records or enable hosted financial APIs.
+All older dated status statements below retain their historical meaning.
+
+Updated 27 October 2026. Start here before editing or consuming this repository.
+This guide describes the source introduced by [PR #4](https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/4),
+including Increments 01–03B. Check that PR and the actual checkout for merge/CI state;
+check the Vercel deployment's source SHA before claiming a hosted release. Dated status
+statements elsewhere are historical; they do not override this guide or the actual code.
+
+## PoC anomaly review and management report (31 October 2026, issue #31)
+
+[Anomaly review and report](../integration/poc-anomaly-review-report.md): on the local M5 stack,
+`/anomalies` replaces the mock with transparent rules over a Finance-uploaded synthetic source CSV,
+explicit audited review decisions, and a downloadable PDF/JSON management report. Reconciliation is
+quoted only from a `FinancePoCReconciliationV1` snapshot (Codex, #30); until wired it reads unavailable.
+
+## M5 development checkpoint (31 October 2026)
+
+[Local tenant administration](../integration/v2-m5-tenant-administration.md) adds `/admin`
+and `/enroll` (`pnpm m5:dev`): OS-owner organization bootstrap with a one-time Admin code,
+Admin-issued single-use enrollment into inactive memberships, role/activation changes,
+session revocation, account suspension separate from membership, and an organization audit.
+Suspension is enforced by the shared session resolver; legacy M3 management delegates to M5.
+Local only; no hosted identity, Production users or audit migration.
+
+## M4 development checkpoint (30 October 2026)
+
+[The M4 provider boundary and evaluation](../integration/v2-m4-model-boundary.md) connect
+recorded controls and a separately authorized one-shot Groq CLI to the same M2 verification,
+V2 persistence and M3 consumers. The browser remains RECORDED_TEST; no M4 live inference
+has run. Durable dispatch uncertainty, shared quotas and source/tenant-bound authorization
+remain fail closed. This is a stacked development checkpoint, not a hosted activation.
+
+## M3 development checkpoint (30 October 2026)
+
+[The connected M3 consumers](../integration/v2-m3-financial-consumers.md) now present
+one tenant-owned verified V2 selection in the actual local Transactions, Analytics
+and Reports pages, with exact source calculations, chart/date grouping, downloadable
+JSON and deterministic sourced answers. Local scoped management implements the three
+roles; hosted identity, economic publication and live inference remain disabled.
+This is a stacked feature checkpoint, not a main/Production release.
+
+## M2 development checkpoint (30 October 2026)
+
+The local-only V2 tenant financial pipeline is documented in
+[the M2 runbook](../integration/v2-m2-tenant-financial-pipeline.md). Its `/ai-ingestion`
+workspace connects actual extraction and independent verification to owned V2 persistence,
+exact source calculations, JSON export and deterministic questions. Interpretation is
+explicitly SIMULATED; live inference and financial publication remain disabled. This
+section describes the feature branch, not a merged or hosted release.
+
+## What is available
+
+- **Stable deterministic path:** CSV/XLSX → reviewed mapping/conventions → validation →
+  normalized VALID/WARNING records → C1 projection → actual analytics on the Data page.
+  Reprocessing uses C2 fresh execution context and replaces that dataset's previous result.
+- **Experimental local V2:** CSV/XLSX/PDF/PNG/JPEG → evidence → proposed financial rules →
+  deterministic materialization → independent verification. Source availability on `main`
+  does **not** enable hosted AI. The experimental pages and their APIs deny production.
+- **Backend/security:** grouped persistence, scoped read composition and audit storage are
+  server modules verified locally. See [P2 local integration](../integration/p2-backend-security.md).
+  Production identity/membership, tenant ownership, hosted persistence and client accounting
+  approval remain incomplete. Do not expose financial endpoints without those boundaries.
+- **V2-I1 local integration:** [experimental automated processing and persistence](../integration/v2-i1-local.md)
+  joins V2 verification to a disposable local database. It does not make results eligible
+  for production financial publication or provide real application authentication.
+- One genuine Groq request has been executed. It produced six correct mappings but null
+  conventions and incorrect context references: zero accepted, two unresolved rows.
+  03B refined instructions offline; improved live accuracy remains unmeasured.
+
+## Product naming
+
+The product name is **FinGence** (Finance + Intelligence), including browser metadata,
+navigation, logos and report mastheads. The package identifier is `fingence-finance-intelligence`.
+Current URL: [fingence-financeintelligence.vercel.app](https://fingence-financeintelligence.vercel.app/).
+The old [finsight-financeintelligence.vercel.app](https://finsight-financeintelligence.vercel.app/)
+remains a production alias; it is a legacy hostname, not the current product name.
+The academic project title remains **Finance Intelligence: AI-Driven Financial Analysis and
+Automated Reporting**. Historical FinSight release text/identifiers are retained as evidence.
+Compatibility names such as `FINSIGHT_*` environment/test variables and the existing database
+`application_name` are technical identifiers, not a second product name; do not rename them
+incidentally and break callers or operational tracing.
+
+## Stable C1/C2: use the public ingestion module
+
+Import from [`lib/ingestion/index.ts`](../../lib/ingestion/index.ts). It exports:
+
+| Exact exports | Responsibility |
+| --- | --- |
+| `inspectFile`, `createDataset`, `isDuplicateFile`, `sanitizeFilename`, `READER_LIMITS` | Existing bounded CSV/XLSX readers and file/dataset identity |
+| `profileDataset` | Source profiling; no accounting approval |
+| `suggestMapping`, `overrideMapping`, `approveMapping`, `mappingErrors` | Deterministic suggestions and explicit review |
+| `ingestDataset(dataset, mapping, options, context)` | Caller-supplied context; authoritative validation/normalization |
+| `ingestDatasetRun(dataset, mapping, options, providers?)` | C2: one fresh ID/time pair for each attempted execution |
+| `consolidate(results)` | Existing retained-result replacement/order; not reconciliation |
+| `createAcceptedDataPayload(results)` | Pure C1 projection; no execution, ID/time generation or persistence |
+| `canonicalCSV`, `rejectedCSV`, `evidenceJSON` | Existing serializers; full evidence JSON is not the C1 API payload |
+
+All models/defaults are exported from [`models.ts`](../../lib/ingestion/models.ts).
+Primary types: `Dataset`, `ColumnMapping`, `IngestionOptions`, `IngestionContext`,
+`IngestionResult`, `CanonicalTransaction`, `Provenance`, `ValidationIssue`, `QualitySummary`.
+C2's `IngestionRunProviders` has optional `idFactory` and `now` functions. Failed attempts
+may consume context but store no result. Inspection, projection and exports generate none.
+
+C1's exact types are in [`accepted-data.ts`](../../lib/ingestion/accepted-data.ts):
+`AcceptedDataPayload`, `AcceptedDataset`, `AcceptedDatasetSummary`, `AcceptedTransaction`,
+`AcceptedWarning`. Supported schema/ruleset are deliberately pinned to **0.1 / 0.1**.
+The complete field contract is [here](../ingestion/accepted-data-contract.md); do not redefine it.
+The smallest actual C1 JSON, from `createAcceptedDataPayload([])`, is:
+
+```json
+{"schema_version":"0.1","ruleset_version":"0.1","datasets":[]}
+```
+
+For nonempty data each dataset has `dataset_id`, `source_system`, `source_file`,
+`source_sheet`, `file_sha256`, `ingestion_batch_id`, `ingested_at`, `normalized`, `summary`.
+Rows retain exact canonical financial/date fields, row identity, statuses, warning scalars
+and approved transformations. `derived_ledger_net`, raw/staging/candidate records, mapping
+options and rejected evidence are deliberately absent. See the executable
+[C1 example](../../examples/ingestion/accepted-data.ts) and
+[team analytics example](../../examples/integration/team-reuse.ts).
+
+TypeScript types are not external JSON validation or authorization. C1 consumes trusted
+engine-produced `IngestionResult[]`; backend APIs must enforce their own trust boundary.
+
+## Experimental V2: reuse these exact entrypoints
+
+| Path / exports | Version / purpose |
+| --- | --- |
+| [`contracts.ts`](../../lib/ai-ingestion/contracts.ts), `extractDocument` in [`extract.ts`](../../lib/ai-ingestion/extract.ts) | Increment01 `v2-evidence-0.1`, `v2-blueprint-0.1`, `v2-result-0.1`; preserved earlier path |
+| [`increment-02/contracts.ts`](../../lib/ai-ingestion/increment-02/contracts.ts) | `SemanticEvidence` (`v2-evidence-0.2`), `semanticBlueprintSchema` (`v2-blueprint-0.2`), `SemanticVerification` (`v2-verification-0.2`) |
+| [`extractSemanticEvidence(input, filename)`](../../lib/ai-ingestion/increment-02/extract.ts) | Current shared four-format extraction; original cells and source page/sheet/row/region coordinates |
+| [`terminologyRegistry`, `POLICY_VERSION`](../../lib/ai-ingestion/increment-02/registry.ts) | Policy `experimental-financial-terminology-0.2`; synthetic, not client-approved accounting policy |
+| [`planSchema`, `requestPlanSchema`, `prepareRequest`, `materializePlan`](../../lib/ai-ingestion/increment-03/plan.ts) | `v2-plan-0.3`, prompt `rule-guidance-0.3b`; source-derived header/context IDs; exact source-value binding |
+| [`verifySemanticBlueprint(bundle, input, origin?)`](../../lib/ai-ingestion/increment-02/verify.ts) | Independent evidence/policy/coverage/financial authority; model confidence grants no acceptance |
+| [`createSemanticTemplate`, `rebindSemanticTemplate`](../../lib/ai-ingestion/increment-02/reuse.ts) | Only verified nonempty blueprints; fresh evidence is rechecked; reuse is not inference |
+| [`processLiveDocument03`, `Run03`](../../lib/server/ai-ingestion/increment-03/service.ts) | Server-only `v2-run-0.3` orchestration; registered synthetic bytes only |
+| [`GroqProvider03`, `OllamaProvider03`, `Receipt03`](../../lib/server/ai-ingestion/increment-03/providers.ts) | Explicit provider origin, bounded dispatch/usage, no automatic retry/fallback |
+
+`POLICY_VERSION` is defined in `increment-02/contracts.ts` and consumed by the registry.
+Zod schemas validate the declared proposal structure. `requestPlanSchema(evidence)` produces
+the narrower per-source ID constraints; `prepareRequest` generates its JSON Schema.
+Those checks are separate from financial verification. Do not create competing schema copies.
+
+Complete synthetic input/output examples are retained in the [original 03 evaluation traces](../ai-ingestion/increment-03/evidence/traces/heldout/01.json).
+The [actual failed proposal](../../tests/fixtures/ai-ingestion-03/first-live-failed-proposal.json)
+is schema-valid `v2-plan-0.3` with `conventions: null`; materialization must still stop.
+An **excerpt**, not a complete run object, for unavailable inference is:
+
+```json
+{"version":"v2-run-0.3","mode":"NOT_EXECUTED","promptRevision":"rule-guidance-0.3b","proposal":null,"blueprint":null,"verification":null,"receipt":null}
+```
+
+`LIVE_GROQ`, `LIVE_OLLAMA`, `RECORDED_TEST` and blueprint reuse remain distinct. The earlier
+`LIVE_OPENAI` seam is preserved, not evidence of an executed OpenAI experiment. The seen
+h01 case cannot be counted as independent generalization evidence. Evaluation labels and
+recorded proposals stay outside runtime inference inputs; never send the full workbook/oracle.
+
+## Record meaning and financial invariants
+
+| Path | Accepted | Rejected | Unresolved |
+| --- | --- | --- | --- |
+| Stable ingestion/C1 | VALID + WARNING; warnings survive projection | Kept in `records`/evidence; never C1 `normalized` | No new C1 status; resolve choices before approved execution |
+| Experimental semantic V2 | `verification.accepted`: machine-verified experimental records, VALID/WARNING | `verification.rejected`: known validation failures with evidence/issues | `verification.unresolved`: unsupported/ambiguous interpretation, coverage, assumptions or evidence; not silently accepted or rejected |
+
+V2 document decisions (`VERIFIED`, `PARTIAL`, `NEEDS_REVIEW`, `REJECTED`) are not C1 row
+statuses. A rejected proposal can leave all observed rows unresolved rather than rejected.
+`FinancialValues` deliberately omits full canonical provenance and ledger net; it is not a
+`CanonicalTransaction`. Never cast it to one.
+
+Money and identifiers remain exact **strings**, including leading zeros. Transaction,
+posting and canonical dates retain separate meanings. Preserve monetary basis, literal
+source sign/direction, currency origin and approved transformations. Bank movements are
+not general-ledger sides, revenue/expense or universal cash flow. Do not calculate complete
+ledger totals without reviewed interpretation metadata; show unavailable/partial status.
+
+`source_row_id` is lineage, `ingestion_batch_id` is execution identity, backend IDs are
+persistence identity, and economic/reconciliation identity is downstream. None substitutes
+for another. PDF/image coordinates must remain actual page/box evidence, never invented rows.
+
+## Local runtime and provider boundary
+
+Node **24.x**, pnpm **11.19.0**; pinned Next.js **16.4.1**. CSV/XLSX reuse the existing
+TypeScript readers. PDF (digital/scanned) and PNG/JPEG use the local Python **3.12**
+Docling/RapidOCR worker and existing model cache; dependencies are pinned in
+[`requirements-ai.in`](../../requirements-ai.in) / [`requirements-ai-lock.txt`](../../requirements-ai-lock.txt).
+Bounded experimental limits are documented in [03 architecture](../ai-ingestion/increment-03/architecture.md).
+Windows/WSL instructions are [here](../ai-ingestion/increment-03/windows.md); execution there is not claimed.
+
+`/ai-ingestion`, `/ai-ingestion/live`, `/ai-ingestion/developer` and corresponding
+`/api/ai-ingestion`, `/api/ai-ingestion/live`, `/api/ai-ingestion/developer-replay` are
+local-development experiments. Production/Vercel must deny them even if enable flags exist.
+Local guards require development mode, local flags, loopback/same-origin access and no VERCEL
+environment. These are PoC isolation controls, not complete authentication/RBAC.
+
+Do not introduce keys, environment files, quota ledgers or private runs into Git/client
+bundles/deployment traces. Existing ignore/trace exclusions cover those files and test/docs
+labels. Local CLI defaults disable dispatch and do not load credentials. A usable key is
+not dispatch authorization. Groq is fixed to `openai/gpt-oss-20b`, strict output, zero SDK
+retries, with durable conservative quota accounting; no paid fallback is authorized.
+Both temporary keys were revoked. Follow the [unexecuted second-request protocol](../ai-ingestion/increment-03/second-experiment-03b.md)
+only after fresh secure-setup and dispatch authorization. Do not create credentials or pull models.
+
+## Ownership and reusable integration recipes
+
+**Chia:** deterministic ingestion/C1/C2 and experimental evidence/rules/materialization/verifier.
+Review changes to these boundaries through their source/tests; do not recreate the pipeline.
+
+**Celester:** backend/API, permanent IDs, persistence lifecycle, grouped atomic attempts and
+supersession. Current server recipe (actual service, not a public API):
+
+```ts
+import { createGroupedPersistenceService } from "./lib/server/persistence/grouped";
+// database is a server-owned TransactionDatabase; attempt_id is allocated before the transaction.
+const receipt = await createGroupedPersistenceService(database)
+  .persistGroupedAttempt({ attempt_id, results }); // full trusted IngestionResult[], NOT C1 or V2
+```
+
+Keep all datasets atomic, per-source batch/filename provenance, COMPLETED_EMPTY children and
+unknown-COMMIT investigation. Never retry an uncertain attempt automatically. Existing
+[grouped tests](../../tests/integration/grouped-consultation.test.ts) and
+[schema migrations](../../supabase/sql/c3b1-grouped-persistence-upgrade.sql) are the authority.
+Hosted schema migration is separately authorized; this merge performs none. Future external
+C1 input requires a reviewed backend DTO/validator/mapper, not reconstructing raw evidence.
+
+**Frederick:** use `analyzeAcceptedDataPayload(payload, warningPolicy, reviewedConventions?)`
+from [`accepted-data-adapter.ts`](../../lib/analytics/accepted-data-adapter.ts), or preserve
+`analyzeIngestionResults(results, warningPolicy)` for trusted full results. The executable
+[team example](../../examples/integration/team-reuse.ts) uses the actual C1 producer.
+WARNING include/exclude is explicit. Ledger interpretation requires dataset-specific
+DEBIT_MINUS_CREDIT approval metadata; unavailable values remain null, not fabricated canonical fields.
+
+**Jason:** verified authentication/membership, authorization, backend trust boundary and
+protected audit service. Reuse the existing server-only policy/audit helpers:
+
+```ts
+import { authorize } from "./lib/server/security/authorization";
+const decision = authorize(principal, "financial_record.read", resource);
+// principal/resource must be server-resolved, not browser-supplied claims.
+// Enforce denial, then construct an allowlisted event via createSecurityAuditEvent
+// and send it to Jason's protected sink. Calling the helper alone does not persist an audit.
+```
+
+See [authorization tests](../../tests/security/authorization.test.ts) and
+[`audit.ts`](../../lib/server/security/audit.ts). Log actions/relevant IDs, not full financial
+contents, raw errors or tokens. Do not expose an unauthenticated persistence/inference endpoint.
+The [P2 composition](../integration/p2-backend-security.md) requires caller-supplied trusted
+identity, membership, ownership, audit database and cursor-key dependencies. Its synthetic
+test resolvers do not implement production authentication or authorization.
+
+**Izzat:** consume agreed backend/API reporting DTOs, or the typed in-memory analytics view
+from [the team example](../../examples/integration/team-reuse.ts) when explicitly building a
+local demonstration. Keep warning indicators and source drill-down. Other illustrative
+pages are not automatically populated from uploads; never turn their mock values into
+claims about processed client data. AI reporting output/eligibility remains a separate contract.
+
+Teammate feature branches can contain newer unpublished-to-main interfaces. Inspect their
+actual commits before integration; this guide does not merge or certify them. Resolve
+compatibility in narrow owner-coordinated changes, preserving contribution attribution.
+
+## Missing V2-to-C1 bridge — not implemented
+
+No exported adapter turns `SemanticVerification.accepted` into C1 or backend transactions.
+No example performs such a cast. A separate versioned integration milestone must establish:
+
+1. Supported evidence/policy/schema compatibility and an actual trusted verification result;
+   no RECORDED_TEST data may masquerade as live or client-approved output.
+2. Complete, truthful dataset/file/worksheet/row/page/region lineage. C1 cannot carry all PDF/image
+   geometry today; do not invent `source_row_number`, worksheet or original cells to satisfy types.
+3. Fresh execution identity, batch/time/source metadata and identity/reprocessing policy without
+   substituting source hashes for backend or economic IDs.
+4. A reviewed conversion from nullable experimental financial values to required canonical
+   invariants, preserving exact money/IDs/dates, monetary/currency basis, warnings and transformations.
+5. Explicit accepted/rejected/unresolved separation, policy/approval evidence, coverage accounting,
+   and no silent defaults, reinterpretation or clearing of unknown financial fields.
+6. Independent backend validation/security, retention and atomicity; real producer-to-consumer
+   tests, negative/fabrication cases, byte/value fidelity and no input mutation.
+
+Any canonical/provenance/financial-policy change is **REQUIRES TECHNICAL REVIEW**. Do not
+silently bump schema/ruleset 0.1 or cast V2 records into `IngestionResult` to bypass this gap.
+
+## Verification and known limits
+
+```sh
+pnpm install --frozen-lockfile
+pnpm test
+pnpm lint
+pnpm typecheck
+pnpm check:server-boundary
+pnpm build
+pnpm audit --json
+node --conditions=react-server scripts/ai-increment-03.mjs doctor
+node --conditions=react-server scripts/ai-increment-03.mjs evaluate
+node --conditions=react-server scripts/ai-increment-03.mjs evaluate --regression
+```
+
+Set the existing `FINGENCE_AI_PYTHON` and optional `FINSIGHT_WORKBOOK_PATH` for configured
+OCR/6,000-row local verification; keep the academic workbook outside Git. Fixture locations:
+`public/samples/ingestion` (26 source rows, 23 accepted); `public/samples/ai-ingestion*`
+(four-format synthetic sources); `tests/fixtures/ai-ingestion*` (evaluation-only labels);
+`tests/integration/fixtures.ts` (real producer setup). Never rewrite fixture bytes to pass tests.
+
+03B measured 547 passing / 8 skipped with local OCR/workbook configured. Native PostgreSQL
+was unavailable; no hosted tests are implied. New handoff examples have their own tests.
+Extraction was 87/87 fields on eight original holdout documents, 242/276 on 26 regression
+documents. These are not LLM-interpretation accuracy. Six larger regression requests exceed
+the conservative quota and remain blocked. Intermittent bounded extraction failures and
+the standalone XLSX WORKBOOK_CONTENT/u8 issue remain documented; do not equate a passing
+configured Vitest workbook test with a standalone-runtime fix.
+
+The last 03B audit was nonzero: 0 critical, 4 high, 7 moderate, 1 low. Recheck current audit;
+do not suppress findings. See [03B evidence](../ai-ingestion/increment-03/verification-03b.md),
+[stable contracts](../ingestion/architecture.md), and dated release reports for actual execution evidence.
+
+## Paste into a coding assistant
+
+> Read AGENTS.md and docs/handoff/CURRENT.md before editing. Inspect the actual exported
+> interfaces, ownership and tests in this checkout. Reuse the existing ingestion/C1/C2,
+> analytics and V2 evidence/materializer/verifier modules instead of rebuilding them.
+> Preserve exact money/identifier/date/provenance semantics and owner boundaries. Never cast
+> experimental AI records directly into C1 accepted data, IngestionResult or backend transactions.
+> Keep independent verification authoritative; no expected-answer injection or recorded/live
+> substitution. No provider credentials, live dispatch, paid fallback, hosted migration or
+> production-setting changes without specific authorization. Make narrow, testable commits;
+> report actual tests, skips and missing contracts. Dated status documents are historical.

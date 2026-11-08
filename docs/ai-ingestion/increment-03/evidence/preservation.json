@@ -1,0 +1,71 @@
+{
+  "snapshotSHA256": "43379d0094c36b7657b17733504108d013899bd16905336036abbb98d3899e52",
+  "preexistingFiles": 281,
+  "changedPreexisting": [
+    "components/app-shell.tsx",
+    "lib/ai-ingestion/increment-02/contracts.ts",
+    "lib/ai-ingestion/increment-02/reuse.ts",
+    "lib/ai-ingestion/increment-02/verify.ts"
+  ],
+  "unchangedOtherPreexistingFiles": 277,
+  "backups": [
+    {
+      "name": "bank_statement.xlsx",
+      "matchesSnapshot": true
+    },
+    {
+      "name": "ledger.csv",
+      "matchesSnapshot": true
+    },
+    {
+      "name": "edge_cases.csv",
+      "matchesSnapshot": true
+    },
+    {
+      "name": "rejected-issues.csv",
+      "matchesSnapshot": true
+    },
+    {
+      "name": "canonical-transactions.csv",
+      "matchesSnapshot": true
+    },
+    {
+      "name": "bank_statement.xlsx",
+      "matchesSnapshot": true
+    },
+    {
+      "name": "ledger.csv",
+      "matchesSnapshot": true
+    },
+    {
+      "name": "edge_cases.csv",
+      "matchesSnapshot": true
+    }
+  ],
+  "worktrees": [
+    {
+      "checkout": "original-personal",
+      "head": "c32216e191706d1e4c6f80c57165f160bb70bc77",
+      "status": "",
+      "branch": "feature/c3-i0-ingestion-readiness"
+    },
+    {
+      "checkout": "linked-team",
+      "head": "161b489d2758160f46d6f8252dc866b595102735",
+      "status": "",
+      "branch": "feature/data-ingestion-chia"
+    },
+    {
+      "checkout": "released-personal",
+      "head": "da10e2f21add1fec5449ac32ea1affdd8024563b",
+      "status": "",
+      "branch": "main"
+    }
+  ],
+  "tagsUnchanged": true,
+  "protectedStashPresent": true,
+  "headUnchanged": true,
+  "credentialFileCreated": false,
+  "existingWorkspacePolicySHA256": "57864d9fdaf79edba655b7b38c0d0f6716903cf6049144304e83422483376db2",
+  "workspacePolicyChanged": false
+}

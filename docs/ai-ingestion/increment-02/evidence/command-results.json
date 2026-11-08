@@ -1,0 +1,84 @@
+{
+  "initialFullSequence": [
+    {
+      "command": "pnpm install --frozen-lockfile",
+      "exitCode": 0,
+      "seconds": 0.81,
+      "log": ".ai-local/02-check-0.log"
+    },
+    {
+      "command": "pnpm test",
+      "exitCode": 0,
+      "seconds": 64.38,
+      "log": ".ai-local/02-check-1.log"
+    },
+    {
+      "command": "pnpm lint",
+      "exitCode": 0,
+      "seconds": 4.51,
+      "log": ".ai-local/02-check-2.log"
+    },
+    {
+      "command": "pnpm typecheck",
+      "exitCode": 0,
+      "seconds": 3.66,
+      "log": ".ai-local/02-check-3.log"
+    },
+    {
+      "command": "pnpm check:server-boundary",
+      "exitCode": 0,
+      "seconds": 0.85,
+      "log": ".ai-local/02-check-4.log"
+    },
+    {
+      "command": "pnpm build",
+      "exitCode": 0,
+      "seconds": 7.14,
+      "log": ".ai-local/02-check-5.log"
+    },
+    {
+      "command": "pnpm audit --json",
+      "exitCode": 1,
+      "seconds": 1.32,
+      "log": ".ai-local/02-check-6.log"
+    },
+    {
+      "command": ".venv-ai/bin/python -m pip check",
+      "exitCode": 0,
+      "seconds": 0.27,
+      "log": ".ai-local/02-check-7.log"
+    },
+    {
+      "command": "git diff --check",
+      "exitCode": 0,
+      "seconds": 0.02,
+      "log": ".ai-local/02-check-8.log"
+    }
+  ],
+  "finalFullSuite": {
+    "passed": 492,
+    "skipped": 9,
+    "total": 501,
+    "passedFiles": 39,
+    "skippedFiles": 2,
+    "exitCode": 0
+  },
+  "notes": "Final test/lint/typecheck rerun includes two added positive image controls. Logs are local-only; no live inference.",
+  "finalReruns": [
+    {
+      "command": "pnpm test",
+      "exitCode": 0,
+      "seconds": 56.97
+    },
+    {
+      "command": "pnpm lint",
+      "exitCode": 0,
+      "seconds": 4.47
+    },
+    {
+      "command": "pnpm typecheck",
+      "exitCode": 0,
+      "seconds": 3.45
+    }
+  ]
+}

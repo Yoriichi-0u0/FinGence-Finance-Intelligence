@@ -1,0 +1,2447 @@
+{
+  "date": "2026-11-02T05:53:12.845Z",
+  "rows": [
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "bank-debit-credit-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-ebe83e08-2683-4c1f-8ecf-a6051a6e586c",
+        "latencyMs": 2089,
+        "mode": "LIVE",
+        "inputTokens": 3226,
+        "outputTokens": 524,
+        "estimatedUsd": 0.0007982999999999999
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a bank statement with separate Debit and Credit columns, matching a SPLIT_IN_OUT representation. Header line and column positions are derived from the profile data.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "bank-dr-cr-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": false,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "mapping: missing moneyIn, moneyOut; conflicting amount, direction"
+      ],
+      "summary": "The proposed mapping is incomplete or inconsistent.",
+      "mapping": {
+        "correct": 20,
+        "total": 21,
+        "wrong": [
+          "representation: \"SPLIT_IN_OUT\" ≠ \"AMOUNT_AND_DIRECTION\""
+        ]
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-f4d04a06-6bb4-4c56-bd7c-ebcba4942884",
+        "latencyMs": 2040,
+        "mode": "LIVE",
+        "inputTokens": 3222,
+        "outputTokens": 544,
+        "estimatedUsd": 0.0008096999999999999
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null,
+          "debit": null,
+          "credit": null,
+          "moneyIn": null,
+          "moneyOut": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a typical bank statement layout with date, transaction ID, reference, particulars, payee/payer, amount and a DR/CR column indicating cash flow direction.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "signed-amount-reversed-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-3617c3e4-1684-428a-b604-18363fd17a37",
+        "latencyMs": 2076,
+        "mode": "LIVE",
+        "inputTokens": 3185,
+        "outputTokens": 596,
+        "estimatedUsd": 0.0008353499999999999
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a bank statement with a single header line (line 6) and columns matching typical bank statements. Amount column holds signed values with commas as thousand separators, indicating COMMA_THOUSANDS_DOT_DECIMAL format. Dates are in DD/MM/YYYY format.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-signed-opaque-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-3ab60b03-9fb2-4090-97ec-0c8ab5c340ca",
+        "latencyMs": 1930,
+        "mode": "LIVE",
+        "inputTokens": 2970,
+        "outputTokens": 554,
+        "estimatedUsd": 0.0007779
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 4,
+        "columns": {
+          "recordId": 0,
+          "date": 1,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": "PLAIN",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file contains a header row with columns Entry, Date, Reference, Description, Counterparty, Amount (MYR). All rows are ledger entries with a signed amount column; no separate debit/credit or balance columns are present. The header line is line 4 and dates are in ISO format. The business ID, name, and currency appear in the first few non‑table lines.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-multiple-accounts.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: 3 accounts: 1000 Bank, 4000 Sales, 5000 Purchases"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-c3d59d3c-790d-4537-88f0-e8093d4a770a",
+        "latencyMs": 2201,
+        "mode": "LIVE",
+        "inputTokens": 3141,
+        "outputTokens": 641,
+        "estimatedUsd": 0.00085575
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "account": 5,
+          "debit": 6,
+          "credit": 7,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "balance": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a general ledger detail with separate debit and credit columns, matching a ledger role. Header line and column positions are clear from the profile data.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-sales-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: \"Account 4000 Sales - Food\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-ee318e9a-eb38-4071-8886-2bc73afd0cca",
+        "latencyMs": 2363,
+        "mode": "LIVE",
+        "inputTokens": 3055,
+        "outputTokens": 679,
+        "estimatedUsd": 0.0008656499999999999
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a ledger detail table with columns for date, voucher, reference, narration, party, debit and credit amounts, matching a GENERAL_LEDGER role. Header line is 6 and formats are identified from sample data.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-bank-loan-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: \"Account 2100 Bank loan - Term financing\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-c2090d03-72f9-44ba-800f-e3142be7e9e0",
+        "latencyMs": 2109,
+        "mode": "LIVE",
+        "inputTokens": 3059,
+        "outputTokens": 623,
+        "estimatedUsd": 0.00083265
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": null,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a ledger detail with columns for date, voucher, reference, narration, party, debit and credit amounts, matching a general ledger layout.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-no-account-evidence.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: The document does not name the account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-9d586cb3-ec1a-4b6b-9ecb-c02231709c45",
+        "latencyMs": 2215,
+        "mode": "LIVE",
+        "inputTokens": 3042,
+        "outputTokens": 610,
+        "estimatedUsd": 0.0008223
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "debit": 5,
+          "credit": 6,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a header line with columns typical of a cash‑account general ledger (date, voucher, reference, narration, party, debit and credit). No balance or account columns are present, and amounts use commas for thousands and a dot for decimals. The header line is line 5, and the surrounding non‑table lines provide business ID, name, currency and period.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "bank-debit-credit-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": false,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "mapping: conflicting debit, credit; one column used twice"
+      ],
+      "summary": "The proposed mapping is incomplete or inconsistent.",
+      "mapping": {
+        "correct": 19,
+        "total": 21,
+        "wrong": [
+          "columns.debit: 5 ≠ null",
+          "columns.credit: 6 ≠ null"
+        ]
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-1b88f97c-8713-4610-99fc-b61ccc8ce351",
+        "latencyMs": 1350,
+        "mode": "LIVE",
+        "inputTokens": 3226,
+        "outputTokens": 377,
+        "estimatedUsd": 0.00035504999999999993
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank statement with separate Debit and Credit columns and no running balance. The date format is DD/MM/YYYY and numbers use commas as thousand separators.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "bank-dr-cr-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": false,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "mapping: missing moneyIn, moneyOut; conflicting amount, direction"
+      ],
+      "summary": "The proposed mapping is incomplete or inconsistent.",
+      "mapping": {
+        "correct": 20,
+        "total": 21,
+        "wrong": [
+          "representation: \"SPLIT_IN_OUT\" ≠ \"AMOUNT_AND_DIRECTION\""
+        ]
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-eb3b8baa-90a4-4941-9383-2d3d60147b4f",
+        "latencyMs": 1504,
+        "mode": "LIVE",
+        "inputTokens": 3222,
+        "outputTokens": 460,
+        "estimatedUsd": 0.00037965
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": 6,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank statement with a header line at index 6. It contains a date, transaction ID, reference number, particulars, payee/payer, amount and a DR/CR indicator. The DR/CR column indicates inflow (CR) or outflow (DR), so the representation is SPLIT_IN_OUT. The date format is DD/MM/YYYY and the amount uses commas as thousand separators and a dot as decimal separator.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "signed-amount-reversed-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-fc547637-3cdc-4916-bb3b-a6efb8020375",
+        "latencyMs": 1351,
+        "mode": "LIVE",
+        "inputTokens": 3185,
+        "outputTokens": 383,
+        "estimatedUsd": 0.00035377499999999997
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a single‑column bank statement with a header line at index 6. It contains a date, transaction ID, reference, description, counterparty and signed amount columns. The amounts are signed and negative for debits, so SIGNED_AMOUNT is appropriate. The date format is DD/MM/YYYY and the number format uses commas as thousand separators and a dot for decimals.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-signed-opaque-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-2713df8b-cc61-49e9-b0f1-52578ff4f74c",
+        "latencyMs": 1043,
+        "mode": "LIVE",
+        "inputTokens": 2970,
+        "outputTokens": 394,
+        "estimatedUsd": 0.00034094999999999997
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 4,
+        "columns": {
+          "recordId": 0,
+          "date": 1,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": "PLAIN",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file contains a list of ledger entries with signed amounts and no balance column, matching a general ledger detail. The header line is at index 4. The date format is ISO 2026-03-02. The number format uses plain decimals. No direction or split columns are present.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-multiple-accounts.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: 3 accounts: 1000 Bank, 4000 Sales, 5000 Purchases"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-8a68729d-e23d-4317-bdb4-b9a6048c5f13",
+        "latencyMs": 1247,
+        "mode": "LIVE",
+        "inputTokens": 3141,
+        "outputTokens": 316,
+        "estimatedUsd": 0.000330375
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 6,
+          "credit": 7,
+          "balance": null,
+          "account": 5,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a detailed general ledger with debit and credit columns per transaction. The header line is at index 5. Dates are in DD-Mon-YYYY format and amounts use commas as thousand separators and dots as decimal points.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-sales-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: \"Account 4000 Sales - Food\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-b0f09b22-5176-4d9e-b3b3-fed97aa1d395",
+        "latencyMs": 1528,
+        "mode": "LIVE",
+        "inputTokens": 3055,
+        "outputTokens": 483,
+        "estimatedUsd": 0.000374025
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a general ledger detail with debit and credit columns; dates are in DD-Mon-YYYY format and amounts use comma thousands separator.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-bank-loan-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: \"Account 2100 Bank loan - Term financing\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-9228093f-36b4-42d4-8009-e80f6b515a8e",
+        "latencyMs": 1326,
+        "mode": "LIVE",
+        "inputTokens": 3059,
+        "outputTokens": 425,
+        "estimatedUsd": 0.00035692499999999996
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a general ledger detail for a bank loan account, with debit and credit columns. The header line is at index 6. Dates are in DD-Mon-YYYY format and amounts use comma as thousand separator and dot as decimal. The business ID, name, currency and statement period are taken from the non‑table lines.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 1,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-no-account-evidence.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: The document does not name the account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-445cfdf3-0302-4925-adac-b5e8abb0c034",
+        "latencyMs": 1321,
+        "mode": "LIVE",
+        "inputTokens": 3042,
+        "outputTokens": 401,
+        "estimatedUsd": 0.00034845
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a general ledger detail with debit and credit columns; no balance column is present. The header line is line 5. Dates are in DD-Mon-YYYY format and amounts use comma as thousand separator and dot as decimal separator.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "bank-debit-credit-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": false,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "mapping: missing moneyIn, moneyOut; conflicting debit, credit"
+      ],
+      "summary": "The proposed mapping is incomplete or inconsistent.",
+      "mapping": {
+        "correct": 17,
+        "total": 21,
+        "wrong": [
+          "columns.moneyIn: null ≠ 6",
+          "columns.moneyOut: null ≠ 5",
+          "columns.debit: 5 ≠ null",
+          "columns.credit: 6 ≠ null"
+        ]
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-98686ddb-e19b-4baa-94b0-d3c80dbe9c24",
+        "latencyMs": 1951,
+        "mode": "LIVE",
+        "inputTokens": 3226,
+        "outputTokens": 587,
+        "estimatedUsd": 0.0008360999999999999
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "debit": 5,
+          "credit": 6,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a bank statement with a header row listing Date, Txn ID, Ref No, Particulars, Payee / Payer, Debit, Credit. Debit and Credit columns represent cash out and cash in respectively, so SPLIT_IN_OUT representation is appropriate. Dates are in DD/MM/YYYY format and amounts use commas for thousands and a dot for decimals.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "bank-dr-cr-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": false,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "mapping: missing moneyIn, moneyOut; conflicting amount, direction"
+      ],
+      "summary": "The proposed mapping is incomplete or inconsistent.",
+      "mapping": {
+        "correct": 20,
+        "total": 21,
+        "wrong": [
+          "representation: \"SPLIT_IN_OUT\" ≠ \"AMOUNT_AND_DIRECTION\""
+        ]
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-ad45afc9-4341-4bca-9990-6d9a420db942",
+        "latencyMs": 2161,
+        "mode": "LIVE",
+        "inputTokens": 3222,
+        "outputTokens": 570,
+        "estimatedUsd": 0.0008253
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null,
+          "debit": null,
+          "credit": null,
+          "moneyIn": null,
+          "moneyOut": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a typical bank statement with a header row and columns for date, transaction ID, reference, particulars, payee/payer, amount and a DR/CR flag. No balance column is present, so SPLIT_IN_OUT representation is used.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "signed-amount-reversed-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-dafa95a8-eb57-4320-b262-b6a29a5f206e",
+        "latencyMs": 2039,
+        "mode": "LIVE",
+        "inputTokens": 3185,
+        "outputTokens": 558,
+        "estimatedUsd": 0.00081255
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a bank statement with a header line at index 6 and columns for date, transaction ID, reference, particulars, payee/payer and a signed amount column (negative values indicate cash out). No balance or separate direction columns are present, so SIGNED_AMOUNT representation is appropriate.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-signed-opaque-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [
+        "Business name is not explicitly provided; only a generic label \"Business\" appears.",
+        "No explicit account column; the account is described in a preceding non‑table line but not repeated per row."
+      ],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-9d603684-e283-49b8-90fb-6c80c92cfa75",
+        "latencyMs": 1871,
+        "mode": "LIVE",
+        "inputTokens": 2970,
+        "outputTokens": 560,
+        "estimatedUsd": 0.0007815
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 4,
+        "columns": {
+          "recordId": 0,
+          "date": 1,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": "PLAIN",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file contains a header line with columns Entry, Date, Reference, Description, Counterparty, Amount (MYR). All rows follow this structure, typical of a cash‑account general ledger. Amounts include signed values, so SIGNED_AMOUNT representation is appropriate. No balance, account, or separate debit/credit columns are present.",
+        "unresolved": [
+          "Business name is not explicitly provided; only a generic label \"Business\" appears.",
+          "No explicit account column; the account is described in a preceding non‑table line but not repeated per row."
+        ]
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-multiple-accounts.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: 3 accounts: 1000 Bank, 4000 Sales, 5000 Purchases"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-217ba601-8cd5-4c48-9e44-93b5e7b082a1",
+        "latencyMs": 2127,
+        "mode": "LIVE",
+        "inputTokens": 3141,
+        "outputTokens": 686,
+        "estimatedUsd": 0.00088275
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": null,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "account": 5,
+          "debit": 6,
+          "credit": 7,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "balance": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a general ledger detail with separate debit and credit columns per transaction, matching a GENERAL_LEDGER role. Header line and column positions are derived from the profile data.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-sales-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: \"Account 4000 Sales - Food\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-45394bc5-e78f-43e7-b019-8e707bf2e8c7",
+        "latencyMs": 2321,
+        "mode": "LIVE",
+        "inputTokens": 3055,
+        "outputTokens": 677,
+        "estimatedUsd": 0.00086445
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": null,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a general ledger detail with a header row listing journal date, voucher, reference, narration, party, debit and credit columns. Debit and credit columns hold amounts in RM with comma thousands separator, indicating a DEBIT_CREDIT representation. Header line is line 6. Scope values are taken from the preceding non‑table lines.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-bank-loan-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [
+        "No column provides a unique record identifier (recordId).",
+        "No running balance column is present.",
+        "Account code/name is not supplied per row."
+      ],
+      "failedGates": [
+        "account: \"Account 2100 Bank loan - Term financing\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-4ba9afae-bf11-4288-9be5-74690eaaf49f",
+        "latencyMs": 2519,
+        "mode": "LIVE",
+        "inputTokens": 3059,
+        "outputTokens": 738,
+        "estimatedUsd": 0.0009016499999999999
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": null,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a general‑ledger style table with debit and credit columns, matching a ledger role. Dates are in 'DD-Mon-YYYY' format and amounts use commas for thousands and a dot for decimals.",
+        "unresolved": [
+          "No column provides a unique record identifier (recordId).",
+          "No running balance column is present.",
+          "Account code/name is not supplied per row."
+        ]
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-120b",
+      "document": "ledger-no-account-evidence.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: The document does not name the account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-120b",
+        "requestId": "chatcmpl-5ce154fc-d113-49cc-ac34-f791f9b1dc44",
+        "latencyMs": 2218,
+        "mode": "LIVE",
+        "inputTokens": 3042,
+        "outputTokens": 591,
+        "estimatedUsd": 0.0008108999999999999
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file contains a general ledger detail with columns for date, voucher number, reference, narration, party, debit and credit amounts. No single amount column or balance column is present, so DEBIT_CREDIT representation is appropriate. Header line is line 5. Date strings are in 'DD-Mon-YYYY' format and numbers use commas for thousands and a dot for decimals.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "bank-debit-credit-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": false,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "mapping: conflicting debit, credit; one column used twice"
+      ],
+      "summary": "The proposed mapping is incomplete or inconsistent.",
+      "mapping": {
+        "correct": 19,
+        "total": 21,
+        "wrong": [
+          "columns.debit: 5 ≠ null",
+          "columns.credit: 6 ≠ null"
+        ]
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-af4d03a1-ff6c-4e8b-8af2-263e1664d6b2",
+        "latencyMs": 1388,
+        "mode": "LIVE",
+        "inputTokens": 3226,
+        "outputTokens": 448,
+        "estimatedUsd": 0.00037635
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": 6,
+          "moneyOut": 5,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SPLIT_IN_OUT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file contains a header line with Date, Txn ID, Ref No, Particulars, Payee / Payer, Debit and Credit columns, typical of a bank statement. The Debit and Credit columns are used for cash out and in respectively, so SPLIT_IN_OUT representation is appropriate. The dates are in DD/MM/YYYY format and amounts use commas as thousand separators with a dot decimal separator.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "bank-dr-cr-no-balance.csv",
+      "expected": "ACCEPT",
+      "reasoning": "low",
+      "outcome": "ACCEPTED_EXACT",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [],
+      "summary": "Bank statement: 57 transactions, DEMO-001 · 2026-03 · MYR, net 28232.01; 17 independent checks passed.",
+      "mapping": {
+        "correct": 21,
+        "total": 21,
+        "wrong": []
+      },
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-1bd1a9b9-838e-47ef-bfc4-7a5cfebae817",
+        "latencyMs": 1587,
+        "mode": "LIVE",
+        "inputTokens": 3222,
+        "outputTokens": 551,
+        "estimatedUsd": 0.00040694999999999994
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": 6,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "AMOUNT_AND_DIRECTION",
+        "directionTokens": {
+          "inflow": [
+            "CR"
+          ],
+          "outflow": [
+            "DR"
+          ]
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a bank account statement with a header line at index 6. It contains a date, transaction ID, reference number, description, counterparty, amount and a DR/CR direction column. The representation is AMOUNT_AND_DIRECTION with CR as inflow and DR as outflow. Dates are in DD/MM/YYYY format and amounts use comma thousands separator with dot decimal. Business details are taken from the non‑table lines.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "signed-amount-reversed-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-d3df6c84-998c-4079-97da-7dc0f0fe4b56",
+        "latencyMs": 1621,
+        "mode": "LIVE",
+        "inputTokens": 3185,
+        "outputTokens": 396,
+        "estimatedUsd": 0.000357675
+      },
+      "proposal": {
+        "role": "BANK_STATEMENT",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD/MM/YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 2,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 1,
+            "literal": "Rimba Demo Kitchen (Synthetic)"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "MYR"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "01/03/2026 to 31/03/2026"
+          }
+        },
+        "rationale": "The file is a single‑column bank statement with a header line at index 6. It contains a date, transaction ID, reference, particulars, counterparty and signed amount. The amounts are signed, so SIGNED_AMOUNT is appropriate. The date format is DD/MM/YYYY and the amounts use commas as thousand separators and a dot for decimals.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-signed-opaque-no-balance.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "direction: The heading does not state which sign is cash in, and there is no running balance"
+      ],
+      "summary": "Cash direction could not be confirmed independently.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-7eae09f8-a3cf-47f6-b108-0b6b78396b12",
+        "latencyMs": 1423,
+        "mode": "LIVE",
+        "inputTokens": 2970,
+        "outputTokens": 447,
+        "estimatedUsd": 0.00035685000000000003
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 4,
+        "columns": {
+          "recordId": 0,
+          "date": 1,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": 5,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": null,
+          "credit": null,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "SIGNED_AMOUNT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "YYYY-MM-DD",
+        "numberFormat": "PLAIN",
+        "scope": {
+          "businessId": {
+            "line": 0,
+            "literal": "DEMO-001"
+          },
+          "businessName": null,
+          "currency": {
+            "line": 1,
+            "literal": "MYR"
+          },
+          "statementPeriod": null
+        },
+        "rationale": "The file contains a single table of signed amounts with no balance column, matching a general ledger detail. The header line is at index 4. The columns are identified by the profile header. The date format is ISO. The number format is plain decimal. No direction or split columns are present.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-multiple-accounts.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: 3 accounts: 1000 Bank, 4000 Sales, 5000 Purchases"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-e17480f0-4777-4142-9171-1c56517f5d6b",
+        "latencyMs": 1138,
+        "mode": "LIVE",
+        "inputTokens": 3141,
+        "outputTokens": 295,
+        "estimatedUsd": 0.000324075
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 6,
+          "credit": 7,
+          "balance": null,
+          "account": 5,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a detailed general ledger with debit and credit columns; dates are in DD-Mon-YYYY format and amounts use comma thousands separator.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-sales-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: \"Account 4000 Sales - Food\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-dfc7a0e5-d7dc-406f-a5e0-0cd49f4668ea",
+        "latencyMs": 1340,
+        "mode": "LIVE",
+        "inputTokens": 3055,
+        "outputTokens": 516,
+        "estimatedUsd": 0.00038392499999999997
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a detailed ledger of a single cash account, with debit and credit columns. The header line is at index 6. Dates are in DD-Mon-YYYY format and amounts use commas as thousand separators. The ledger uses debit/credit representation. No running balance or account code per row.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-bank-loan-account.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: \"Account 2100 Bank loan - Term financing\" is not a cash or bank account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-27579b47-6d5e-490f-a4fb-56ece1603f10",
+        "latencyMs": 1458,
+        "mode": "LIVE",
+        "inputTokens": 3059,
+        "outputTokens": 425,
+        "estimatedUsd": 0.00035692499999999996
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 6,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 4,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 3,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a general ledger detail for a bank loan account, with debit and credit columns. The header line is at index 6. Dates are in DD-Mon-YYYY format and amounts use comma as thousand separator and dot as decimal. The business ID, name, currency and period are taken from the non‑table lines.",
+        "unresolved": []
+      }
+    },
+    {
+      "run": 2,
+      "model": "openai/gpt-oss-20b",
+      "document": "ledger-no-account-evidence.csv",
+      "expected": "QUARANTINE",
+      "reasoning": "low",
+      "outcome": "QUARANTINED",
+      "meetsExpectation": true,
+      "modelAbstained": false,
+      "unresolved": [],
+      "failedGates": [
+        "account: The document does not name the account"
+      ],
+      "summary": "The ledger is not evidenced as a single cash-account ledger.",
+      "mapping": null,
+      "receipt": {
+        "provider": "GROQ",
+        "model": "openai/gpt-oss-20b",
+        "requestId": "chatcmpl-0823ef82-4759-44ad-afa7-329d42b6192f",
+        "latencyMs": 1402,
+        "mode": "LIVE",
+        "inputTokens": 3042,
+        "outputTokens": 405,
+        "estimatedUsd": 0.00034964999999999996
+      },
+      "proposal": {
+        "role": "GENERAL_LEDGER",
+        "headerLine": 5,
+        "columns": {
+          "recordId": 1,
+          "date": 0,
+          "reference": 2,
+          "description": 3,
+          "counterparty": 4,
+          "amount": null,
+          "direction": null,
+          "moneyIn": null,
+          "moneyOut": null,
+          "debit": 5,
+          "credit": 6,
+          "balance": null,
+          "account": null,
+          "currency": null,
+          "businessId": null,
+          "businessName": null
+        },
+        "representation": "DEBIT_CREDIT",
+        "directionTokens": {
+          "inflow": [],
+          "outflow": []
+        },
+        "dateFormat": "DD-Mon-YYYY",
+        "numberFormat": "COMMA_THOUSANDS_DOT_DECIMAL",
+        "scope": {
+          "businessId": {
+            "line": 1,
+            "literal": "DEMO-001"
+          },
+          "businessName": {
+            "line": 0,
+            "literal": "Rimba Demo Kitchen (Synthetic) - General Ledger Detail"
+          },
+          "currency": {
+            "line": 3,
+            "literal": "RM"
+          },
+          "statementPeriod": {
+            "line": 2,
+            "literal": "March 2026"
+          }
+        },
+        "rationale": "The file is a general ledger detail with debit and credit columns; no balance column is present. The header line is line 5. Dates are in DD-Mon-YYYY format and amounts use comma as thousand separator and dot as decimal separator.",
+        "unresolved": []
+      }
+    }
+  ]
+}

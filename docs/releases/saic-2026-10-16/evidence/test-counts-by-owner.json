@@ -1,0 +1,19 @@
+{
+  "analytics": {
+    "passed": 25
+  },
+  "ingestion": {
+    "passed": 168,
+    "skipped": 1
+  },
+  "cross-module": {
+    "passed": 6
+  },
+  "persistence": {
+    "passed": 201,
+    "skipped": 8
+  },
+  "security": {
+    "passed": 12
+  }
+}

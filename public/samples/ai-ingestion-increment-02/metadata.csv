@@ -1,0 +1,4 @@
+TRANSACTION TABLE
+Txn No,Txn Date,Amount,CCY,Payment Narrative,Department,Internal Note
+000009,2026-10-19,25.05,MYR,Travel,Operations,Reviewed by clerk
+000010,2026-10-20,-3.25,MYR,Correction,Finance,Pending filing

@@ -1,0 +1,1143 @@
+{
+  "date": "2026-10-20",
+  "mode": "RECORDED_TEST",
+  "liveInference": "NOT_EXECUTED",
+  "llmProposalAccuracy": "NOT_MEASURED",
+  "liveRequests": 0,
+  "inputTokens": 0,
+  "outputTokens": 0,
+  "estimatedUsd": 0,
+  "note": "26 controlled source documents; several are representations of the same source cases. These are hand-authored test interpretations, not model-generated rules. Field accuracy uses one-to-one row matching and exact source strings, including empty cells. False rejection includes unresolved but eligible truth records. Unsupported cases are not incorrect rejections. Rejected/unresolved count agreement is not per-record identity proof; source-bound unit tests separately check identities.",
+  "totals": {
+    "files": 26,
+    "accepted": 27,
+    "rejected": 2,
+    "unresolved": 14,
+    "expectedAccepted": 27,
+    "correctAccepted": 27,
+    "falseAcceptance": 0,
+    "falseRejection": 0,
+    "exactExtractionFields": 242,
+    "expectedExtractionFields": 276,
+    "correctProposalFields": 120,
+    "expectedProposalFields": 138
+  },
+  "rows": [
+    {
+      "file": "bank-narrative.csv",
+      "family": "bank-narrative",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 8,
+      "extraction": {
+        "exactFields": 21,
+        "expectedFields": 21,
+        "exactRows": 3,
+        "expectedRows": 3,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 3,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 3,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 3,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 3,
+        "accounted": 3
+      },
+      "fieldCoverage": {
+        "populated": 20,
+        "accounted": 20
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "bank-narrative.xlsx",
+      "family": "bank-narrative",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "XLSX",
+      "runtimeMs": 8,
+      "extraction": {
+        "exactFields": 21,
+        "expectedFields": 21,
+        "exactRows": 3,
+        "expectedRows": 3,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 3,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 3,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 3,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 3,
+        "accounted": 3
+      },
+      "fieldCoverage": {
+        "populated": 20,
+        "accounted": 20
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "ledger-dmy.csv",
+      "family": "ledger-dmy",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 4,
+      "extraction": {
+        "exactFields": 14,
+        "expectedFields": 14,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 2,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 2,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 2,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 14,
+        "accounted": 14
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "ledger-dmy.xlsx",
+      "family": "ledger-dmy",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "XLSX",
+      "runtimeMs": 4,
+      "extraction": {
+        "exactFields": 14,
+        "expectedFields": 14,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 2,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 2,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 2,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 14,
+        "accounted": 14
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "bank-direction.csv",
+      "family": "bank-direction",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 4,
+      "extraction": {
+        "exactFields": 12,
+        "expectedFields": 12,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 6,
+        "expectedFields": 6
+      },
+      "accepted": 2,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 2,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 2,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 12,
+        "accounted": 12
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "bank-direction.xlsx",
+      "family": "bank-direction",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "XLSX",
+      "runtimeMs": 2,
+      "extraction": {
+        "exactFields": 12,
+        "expectedFields": 12,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 6,
+        "expectedFields": 6
+      },
+      "accepted": 2,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 2,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 2,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 12,
+        "accounted": 12
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "metadata.csv",
+      "family": "metadata",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 1,
+      "extraction": {
+        "exactFields": 14,
+        "expectedFields": 14,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 2,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 2,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 2,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 14,
+        "accounted": 14
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "metadata.xlsx",
+      "family": "metadata",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "XLSX",
+      "runtimeMs": 2,
+      "extraction": {
+        "exactFields": 14,
+        "expectedFields": 14,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 2,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 2,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 2,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 14,
+        "accounted": 14
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "bank-movements.csv",
+      "family": "bank-movements",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 1,
+      "extraction": {
+        "exactFields": 8,
+        "expectedFields": 8,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 2,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 2,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 2,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 8,
+        "accounted": 8
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "bank-movements.pdf",
+      "family": "bank-movements",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "PDF",
+      "runtimeMs": 10205,
+      "extraction": {
+        "exactFields": 8,
+        "expectedFields": 8,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 2,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 2,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 2,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 8,
+        "accounted": 8
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "invoice.xlsx",
+      "family": "invoice",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "XLSX",
+      "runtimeMs": 4,
+      "extraction": {
+        "exactFields": 8,
+        "expectedFields": 8,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 2,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 2,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 2,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 8,
+        "accounted": 8
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "invoice.pdf",
+      "family": "invoice",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "PDF",
+      "runtimeMs": 7021,
+      "extraction": {
+        "exactFields": 8,
+        "expectedFields": 8,
+        "exactRows": 2,
+        "expectedRows": 2,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 2,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 2,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 2,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 2,
+        "accounted": 2
+      },
+      "fieldCoverage": {
+        "populated": 8,
+        "accounted": 8
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "receipt.pdf",
+      "family": "receipt",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "PDF",
+      "runtimeMs": 7036,
+      "extraction": {
+        "exactFields": 4,
+        "expectedFields": 4,
+        "exactRows": 1,
+        "expectedRows": 1,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 1,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 1,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 1,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 1,
+        "accounted": 1
+      },
+      "fieldCoverage": {
+        "populated": 4,
+        "accounted": 4
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "receipt-photo.png",
+      "family": "receipt",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "IMAGE",
+      "runtimeMs": 12369,
+      "extraction": {
+        "exactFields": 0,
+        "expectedFields": 4,
+        "exactRows": 0,
+        "expectedRows": 1,
+        "coverage": "REGIONS_ONLY"
+      },
+      "proposal": {
+        "correctFields": 0,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 1,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": true,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": false,
+        "observed": 0,
+        "accounted": 0
+      },
+      "fieldCoverage": {
+        "populated": 0,
+        "accounted": 0
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "ambiguous.csv",
+      "family": "ambiguous",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 2,
+      "extraction": {
+        "exactFields": 3,
+        "expectedFields": 3,
+        "exactRows": 1,
+        "expectedRows": 1,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 3,
+        "expectedFields": 3
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 1,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 1,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 1,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 1,
+        "accounted": 1
+      },
+      "fieldCoverage": {
+        "populated": 3,
+        "accounted": 3
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "ambiguous.xlsx",
+      "family": "ambiguous",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "XLSX",
+      "runtimeMs": 2,
+      "extraction": {
+        "exactFields": 3,
+        "expectedFields": 3,
+        "exactRows": 1,
+        "expectedRows": 1,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 3,
+        "expectedFields": 3
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 1,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 1,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 1,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 1,
+        "accounted": 1
+      },
+      "fieldCoverage": {
+        "populated": 3,
+        "accounted": 3
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "unknown-fee.csv",
+      "family": "unknown-fee",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 1,
+      "extraction": {
+        "exactFields": 4,
+        "expectedFields": 4,
+        "exactRows": 1,
+        "expectedRows": 1,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 1,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 1,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 1,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 1,
+        "accounted": 1
+      },
+      "fieldCoverage": {
+        "populated": 4,
+        "accounted": 4
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "unknown-fee.png",
+      "family": "unknown-fee",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "IMAGE",
+      "runtimeMs": 9529,
+      "extraction": {
+        "exactFields": 4,
+        "expectedFields": 4,
+        "exactRows": 1,
+        "expectedRows": 1,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 1,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": 1,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 1,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 1,
+        "accounted": 1
+      },
+      "fieldCoverage": {
+        "populated": 4,
+        "accounted": 4
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "precision.csv",
+      "family": "precision",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 2,
+      "extraction": {
+        "exactFields": 7,
+        "expectedFields": 7,
+        "exactRows": 1,
+        "expectedRows": 1,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 1,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 1,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 1,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 1,
+        "accounted": 1
+      },
+      "fieldCoverage": {
+        "populated": 7,
+        "accounted": 7
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "precision.pdf",
+      "family": "precision",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "PDF",
+      "runtimeMs": 9139,
+      "extraction": {
+        "exactFields": 7,
+        "expectedFields": 7,
+        "exactRows": 1,
+        "expectedRows": 1,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 1,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 1,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 1,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 1,
+        "accounted": 1
+      },
+      "fieldCoverage": {
+        "populated": 7,
+        "accounted": 7
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "scan-bank.pdf",
+      "family": "bank-narrative",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "PDF",
+      "runtimeMs": 11095,
+      "extraction": {
+        "exactFields": 20,
+        "expectedFields": 21,
+        "exactRows": 2,
+        "expectedRows": 3,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 3,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 3,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 3,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 3,
+        "accounted": 3
+      },
+      "fieldCoverage": {
+        "populated": 20,
+        "accounted": 20
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "mixed-bank.pdf",
+      "family": "bank-narrative",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "PDF",
+      "runtimeMs": 9728,
+      "extraction": {
+        "exactFields": 20,
+        "expectedFields": 21,
+        "exactRows": 2,
+        "expectedRows": 3,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 7,
+        "expectedFields": 7
+      },
+      "accepted": 3,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 3,
+      "expectedRejected": 0,
+      "expectedUnresolved": 0,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": 0,
+      "documentUnresolved": false,
+      "correctAccepted": 3,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 3,
+        "accounted": 3
+      },
+      "fieldCoverage": {
+        "populated": 20,
+        "accounted": 20
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "low-quality.png",
+      "family": "low-quality",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "IMAGE",
+      "runtimeMs": 6238,
+      "extraction": {
+        "exactFields": 0,
+        "expectedFields": 14,
+        "exactRows": 0,
+        "expectedRows": 2,
+        "coverage": "REGIONS_ONLY"
+      },
+      "proposal": {
+        "correctFields": 0,
+        "expectedFields": 7
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": null,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": null,
+      "documentUnresolved": true,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": false,
+        "observed": 0,
+        "accounted": 0
+      },
+      "fieldCoverage": {
+        "populated": 0,
+        "accounted": 0
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "low-quality.jpg",
+      "family": "low-quality",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "IMAGE",
+      "runtimeMs": 6517,
+      "extraction": {
+        "exactFields": 0,
+        "expectedFields": 14,
+        "exactRows": 0,
+        "expectedRows": 2,
+        "coverage": "REGIONS_ONLY"
+      },
+      "proposal": {
+        "correctFields": 0,
+        "expectedFields": 7
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": null,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": null,
+      "documentUnresolved": true,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": false,
+        "observed": 0,
+        "accounted": 0
+      },
+      "fieldCoverage": {
+        "populated": 0,
+        "accounted": 0
+      },
+      "failure": null,
+      "expectedFailure": false
+    },
+    {
+      "file": "corrupt.pdf",
+      "family": "corrupt",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "UNREADABLE",
+      "runtimeMs": 2685,
+      "extraction": {
+        "exactFields": 0,
+        "expectedFields": 0,
+        "exactRows": 0,
+        "expectedRows": 0,
+        "coverage": "EXTRACTION_FAILED"
+      },
+      "proposal": {
+        "correctFields": 0,
+        "expectedFields": 0
+      },
+      "accepted": 0,
+      "rejected": 0,
+      "unresolved": 0,
+      "expectedAccepted": 0,
+      "expectedRejected": 0,
+      "expectedUnresolved": null,
+      "correctlyRejected": 0,
+      "correctlyUnresolved": null,
+      "documentUnresolved": false,
+      "correctAccepted": 0,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": null,
+      "fieldCoverage": null,
+      "failure": "Extraction or replay prerequisites failed; no financial records accepted.",
+      "expectedFailure": true
+    },
+    {
+      "file": "validation-errors.csv",
+      "family": "validation-errors",
+      "mode": "RECORDED_TEST",
+      "liveInference": "NOT_EXECUTED",
+      "format": "CSV",
+      "runtimeMs": 2,
+      "extraction": {
+        "exactFields": 16,
+        "expectedFields": 16,
+        "exactRows": 4,
+        "expectedRows": 4,
+        "coverage": "TABLE_ROWS"
+      },
+      "proposal": {
+        "correctFields": 4,
+        "expectedFields": 4
+      },
+      "accepted": 1,
+      "rejected": 2,
+      "unresolved": 1,
+      "expectedAccepted": 1,
+      "expectedRejected": 2,
+      "expectedUnresolved": 1,
+      "correctlyRejected": 2,
+      "correctlyUnresolved": 1,
+      "documentUnresolved": false,
+      "correctAccepted": 1,
+      "falseAcceptance": 0,
+      "falseRejection": 0,
+      "rowCoverage": {
+        "established": true,
+        "observed": 4,
+        "accounted": 4
+      },
+      "fieldCoverage": {
+        "populated": 15,
+        "accounted": 15
+      },
+      "failure": null,
+      "expectedFailure": false
+    }
+  ],
+  "reuse": [
+    {
+      "template": "bank-narrative.csv",
+      "target": "precision.csv",
+      "decision": "REUSED",
+      "accepted": 1,
+      "error": null
+    },
+    {
+      "template": "ledger-dmy.csv",
+      "target": "ledger-dmy.xlsx",
+      "decision": "REUSED",
+      "accepted": 2,
+      "error": null
+    },
+    {
+      "template": "bank-narrative.csv",
+      "target": "unknown-fee.csv",
+      "decision": "REINTERPRETATION_REQUIRED",
+      "accepted": 0,
+      "error": null
+    },
+    {
+      "template": "bank-narrative.csv",
+      "target": "bank-movements.csv",
+      "decision": "REINTERPRETATION_REQUIRED",
+      "accepted": 0,
+      "error": null
+    }
+  ],
+  "unexpectedFailures": []
+}
