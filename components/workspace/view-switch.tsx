@@ -11,10 +11,10 @@ export function ViewSwitch() {
     const { session, viewRole, setViewAs } = useWorkspace();
     if (!session || !viewRole || !atLeast(session.role, 'ADMIN')) return null;
     return <label className="flex items-center gap-2 rounded-xl bg-white/[0.04] px-3 py-2 text-xs text-[var(--rail-muted)] ring-1 ring-inset ring-white/[0.06]">
-        <Eye aria-hidden="true" size={15} className="shrink-0 text-[#a5b4fc]" />
+        <Eye aria-hidden="true" size={15} className="shrink-0 text-[#93bdff]" />
         <span className="shrink-0">View as</span>
         <select aria-label="Switch view" value={viewRole} onChange={e => setViewAs(e.target.value === session.role ? null : e.target.value as WorkspaceRole)}
-            className="min-h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-[#121a33] px-2 text-[13px] font-semibold text-white">
+            className="min-h-9 min-w-0 flex-1 rounded-lg border border-white/10 bg-[var(--rail)] px-2 text-[13px] font-semibold text-white">
             {viewable(session.role).map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
         </select>
     </label>;

@@ -8,7 +8,7 @@ import { useDemoProcessing } from './context';
 import { DocumentEvidenceEntry } from './document-evidence';
 import { InterpretationPanel } from './interpretation-panel';
 import { SaveRun } from './save-run';
-import { useWorkspace } from '@/components/workspace/context';
+import { useTechnicalDetail, useWorkspace } from '@/components/workspace/context';
 import { Callout, DecisionBadge, PendingBadge, Stat, Table, button, chip, money, periodLabel, primaryButton } from './shared';
 
 const SAMPLE = ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
@@ -38,7 +38,7 @@ export default function DemoDataWorkspace() {
     const [notice, setNotice] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     // Paused by an Admin (signed in) or, without sign-in, by server processing's own pause switch: either stops new processing.
-    const workspace = useWorkspace(), paused = workspace.session?.processing.paused ? workspace.session.processing : serverState?.paused ? serverState : null;
+    const workspace = useWorkspace(), technical = useTechnicalDetail(), paused = workspace.session?.processing.paused ? workspace.session.processing : serverState?.paused ? serverState : null;
     const busy = status === 'processing' || loading;
 
     async function loadSample(paths = SAMPLE) {
@@ -70,10 +70,12 @@ export default function DemoDataWorkspace() {
 
     return <>
         <PageHeader eyebrow="Step 1 · your documents" title="Data" description="Provide a bank statement and a general ledger once. FinGence identifies, verifies, reconciles and analyses them in one run." />
-        <section role="note" aria-label="Public prototype data notice" className="mb-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
+        <section role="note" aria-label={workspace.session ? 'Test version data notice' : 'Public prototype data notice'} className="mb-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
             <div className="flex gap-3 border-b border-[var(--warn-line)] bg-[var(--warn-soft)] px-4 py-3 text-sm">
                 <ShieldAlert aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--warn)]" />
-                <p><strong>Public prototype: do not submit confidential or real financial documents.</strong> The built-in sample documents are fictional.</p>
+                {workspace.session
+                    ? <p><strong>Test version for {workspace.session.organization.name}: use the sample documents or test files, not confidential records.</strong> The built-in samples are fictional.</p>
+                    : <p><strong>Public prototype: do not submit confidential or real financial documents.</strong> The built-in sample documents are fictional.</p>}
             </div>
             <ul className="grid gap-px bg-[var(--border)] sm:grid-cols-3" aria-label="How your documents are handled">
                 <li className="flex gap-3 bg-[var(--surface)] px-4 py-3"><Server aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--brand)]" /><span className="text-[13px] leading-snug"><strong className="block text-sm">{serverJobs ? 'Processed on the FinGence server' : 'Processed in this browser'}</strong><span className="text-[var(--muted)]">{serverJobs ? 'Files are not stored there; this browser re-checks the result.' : 'Your own files are not uploaded to a server.'}</span></span></li>
@@ -97,7 +99,7 @@ export default function DemoDataWorkspace() {
             <Panel title="Choose documents" eyebrow="1 · Input">
                 <div className="space-y-4 p-4 sm:p-5">
                     <div className="grid gap-2.5 sm:grid-cols-2">
-                        <button type="button" className={tile} disabled={busy} onClick={() => void loadSample()}><span className={tileIcon}><FileSpreadsheet aria-hidden="true" size={18} /></span><span className="min-w-0"><span className="block font-semibold">Synthetic sample documents</span><span className="block text-xs font-normal text-[var(--muted)]">One month · March 2026 · MYR</span></span></button>
+                        <button type="button" className={tile} disabled={busy} onClick={() => void loadSample()}><span className={tileIcon}><FileSpreadsheet aria-hidden="true" size={18} /></span><span className="min-w-0"><span className="block font-semibold">Sample documents</span><span className="block text-xs font-normal text-[var(--muted)]">One month · March 2026 · MYR</span></span></button>
                         <button type="button" className={tile} disabled={busy} onClick={() => void loadSample(QUARTER)}><span className={tileIcon}><CalendarRange aria-hidden="true" size={18} /></span><span className="min-w-0"><span className="block font-semibold">Quarter sample</span><span className="block text-xs font-normal text-[var(--muted)]">3 months · January to March 2026 · SGD</span></span></button>
                     </div>
                     <label className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] px-4 py-4 text-center text-sm transition-colors hover:border-[var(--brand)] hover:bg-[var(--brand-soft)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
@@ -125,8 +127,8 @@ export default function DemoDataWorkspace() {
                     </div>
                 </div>
             </Panel>
-            <Panel title="Processing stages" eyebrow={`2 · ${serverJobs ? 'Server processing job' : 'Browser demo runner'}`} action={stageDone ? <span className="text-xs font-medium text-[var(--muted)]">{stageDone} of {stages.length} stages · {passed} of {checks.length} checks passed</span> : undefined}>
-                {context ? <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-2 text-xs text-[var(--muted)] sm:px-5"><Fingerprint aria-hidden="true" size={14} className="text-[var(--brand)]" /><span>Processing ID <code className="break-all text-[var(--ink)]">{context.processingId}</code> · same documents always give the same ID{context.job ? <> · server job <code className="break-all text-[var(--ink)]">{context.job.id}</code>, results stored, re-checked in this browser</> : null}</span></p> : null}
+            <Panel title="Processing stages" eyebrow={`2 · ${serverJobs ? 'On the FinGence server' : 'In this browser'}`} action={stageDone ? <span className="text-xs font-medium text-[var(--muted)]">{stageDone} of {stages.length} stages · {passed} of {checks.length} checks passed</span> : undefined}>
+                {context && technical ? <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-2 text-xs text-[var(--muted)] sm:px-5"><Fingerprint aria-hidden="true" size={14} className="text-[var(--brand)]" /><span>Processing ID <code className="break-all text-[var(--ink)]">{context.processingId}</code> · same documents always give the same ID{context.job ? <> · server job <code className="break-all text-[var(--ink)]">{context.job.id}</code>, results stored, re-checked in this browser</> : null}</span></p> : null}
                 <ol className="px-4 py-3 sm:px-5" aria-live="polite">
                     {stages.map(({ id, title, stage }, i) => {
                         const tone = stage ? stage.decision === 'AUTO_ACCEPTED' ? 'bg-[var(--good)] text-white' : stage.decision === 'QUARANTINED' ? 'bg-[var(--warn)] text-white' : 'bg-[var(--border-strong)] text-[var(--ink)]' : status === 'processing' && i === stageDone ? 'bg-[var(--brand-soft)] text-[var(--brand)] ring-2 ring-[var(--brand)]' : 'bg-[var(--surface-sunken)] text-[var(--muted)]';
@@ -167,12 +169,12 @@ export default function DemoDataWorkspace() {
                 {context.job ? null : <SaveRun context={context} />}
             </Panel> : <Panel title="Outputs" eyebrow="3 · Results"><p className="p-5 text-sm">No financial outputs were produced because the documents were quarantined. See the stage checks above for the exact reason.</p></Panel>}
             <Panel title="Documents identified" eyebrow={processedAt ? `4 · Processed ${new Date(processedAt).toLocaleString()}${persisted ? '' : ' · not kept after reload'}` : '4 · Documents'}>
-                <Table caption="Identified documents" columns={['Document', 'Role', 'Decision', 'Records', 'Scope', 'SHA-256']} rows={context.documents.map(d => [
-                    <span key="n" className="grid gap-1"><span className="break-all">{d.name}</span>{d.source?.kind === 'WORKSHEET' ? <span className="text-xs font-normal text-[var(--muted)]">Worksheet {d.source.sheetNumber} of {d.source.workbook} · workbook SHA-256 <code>{d.source.workbookSha256.slice(0, 12)}…</code></span>
-                        : d.source ? <span className="text-xs font-normal text-[var(--muted)]">{d.source.kind === 'OCR' ? `Read by OCR ${context.job ? 'on the server' : 'in this browser'} · ${d.source.confidence}% mean confidence` : 'PDF text layer'} · {d.source.pages} page{d.source.pages === 1 ? '' : 's'} · file SHA-256 <code>{d.source.fileSha256.slice(0, 12)}…</code></span> : null}</span>, d.role ? ROLE[d.role] : 'Not identified',
+                <Table caption="Identified documents" columns={['Document', 'Role', 'Decision', 'Records', 'Scope', ...(technical ? ['SHA-256'] : [])]} rows={context.documents.map(d => [
+                    <span key="n" className="grid gap-1"><span className="break-all">{d.name}</span>{d.source?.kind === 'WORKSHEET' ? <span className="text-xs font-normal text-[var(--muted)]">Worksheet {d.source.sheetNumber} of {d.source.workbook}{technical ? <> · workbook SHA-256 <code>{d.source.workbookSha256.slice(0, 12)}…</code></> : null}</span>
+                        : d.source ? <span className="text-xs font-normal text-[var(--muted)]">{d.source.kind === 'OCR' ? `Read by OCR ${context.job ? 'on the server' : 'in this browser'} · ${d.source.confidence}% mean confidence` : 'PDF text layer'} · {d.source.pages} page{d.source.pages === 1 ? '' : 's'}{technical ? <> · file SHA-256 <code>{d.source.fileSha256.slice(0, 12)}…</code></> : null}</span> : null}</span>, d.role ? ROLE[d.role] : 'Not identified',
                     <span key="d" className="grid justify-items-start gap-1"><DecisionBadge decision={d.decision} label={d.decision === 'AUTO_ACCEPTED' && context.status === 'QUARANTINED' ? 'Identified · run quarantined' : undefined} /><span className="text-xs text-[var(--muted)]">{d.reason}</span></span>,
                     d.rows ?? '—', d.businessId ? `${d.businessId} · ${d.periods.length > 1 ? `${d.periods[0]} to ${d.periods.at(-1)}` : d.periods[0] ?? ''} · ${d.currency}` : '—',
-                    <code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>,
+                    ...(technical ? [<code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>] : []),
                 ])} />
             </Panel>
             <DocumentEvidenceEntry context={context} inputs={inputs} />
