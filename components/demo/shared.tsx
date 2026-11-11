@@ -58,12 +58,20 @@ export function SourceStrip({ context }: { context: ProcessingContext }) {
     </div>;
 }
 
-export function Unavailable({ title, detail }: { title: string; detail: string }) {
-    return <div className="rounded-2xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] p-6 text-sm">
-        <p className="font-semibold">{title}</p>
-        <p className="mt-1 text-[var(--muted)]">{detail}</p>
+/** The one empty state for results: what is missing, why, and (when there is one) the single thing to do about it. */
+export function Unavailable({ title, detail, action }: { title: string; detail: string; action?: { href: string; label: string } }) {
+    return <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] p-5 text-sm sm:flex-row sm:p-6">
+        <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--surface)] text-[var(--muted)] ring-1 ring-inset ring-[var(--border)]"><CircleSlash size={17} /></span>
+        <div className="min-w-0">
+            <p className="font-semibold">{title}</p>
+            <p className="mt-1 max-w-2xl leading-relaxed text-[var(--muted-strong)]">{detail}</p>
+            {action ? <Link href={action.href} className="mt-3 inline-flex min-h-10 items-center gap-1.5 font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">{action.label}</Link> : null}
+        </div>
     </div>;
 }
+
+/** Every results page names the same thing above its title: the period and currency the figures are in. */
+export const resultsEyebrow = (scope: { period: string; currency: string }) => `${periodLabel(scope.period)} · ${scope.currency}`;
 
 /** A plain-language callout. Tone sets the colour; the words carry the meaning. */
 export function Callout({ tone = 'brand', title, children, role, className = '' }: { tone?: 'brand' | 'good' | 'warn' | 'bad'; title?: React.ReactNode; children?: React.ReactNode; role?: 'note' | 'status' | 'alert'; className?: string }) {
@@ -80,20 +88,22 @@ export function Callout({ tone = 'brand', title, children, role, className = '' 
  * A table on wider screens; on a phone each row becomes a card with the column names beside the values, so nothing
  * needs sideways scrolling or wraps into narrow columns. The first column is the card's heading.
  */
-export function Table({ columns, rows, caption, stack = true }: { columns: string[]; rows: React.ReactNode[][]; caption: string; stack?: boolean }) {
+export function Table({ columns, rows, caption, stack = true, numeric = [] }: { columns: string[]; rows: React.ReactNode[][]; caption: string; stack?: boolean; numeric?: number[] }) {
+    // Amount columns are right-aligned with figures of equal width, so the digits line up down the column.
+    const align = (j: number) => numeric.includes(j) ? 'text-right tabular-nums whitespace-nowrap' : '';
     return <>
         <div className={`thin-scrollbar overflow-x-auto ${stack ? 'hidden md:block' : ''}`}>
             <table className="w-full min-w-[640px] text-left text-sm">
                 <caption className="sr-only">{caption}</caption>
-                <thead><tr className="border-b border-[var(--border)] bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.06em] text-[var(--muted)]">{columns.map(c => <th key={c} scope="col" className="px-4 py-2.5 font-semibold">{c}</th>)}</tr></thead>
-                <tbody>{rows.map((r, i) => <tr key={i} className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--surface-subtle)]">{r.map((cell, j) => <td key={j} className="px-4 py-3 align-top">{cell}</td>)}</tr>)}</tbody>
+                <thead><tr className="border-b border-[var(--border)] bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.06em] text-[var(--muted)]">{columns.map((c, j) => <th key={c} scope="col" className={`px-4 py-2.5 font-semibold ${align(j)}`}>{c}</th>)}</tr></thead>
+                <tbody>{rows.map((r, i) => <tr key={i} className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--surface-subtle)]">{r.map((cell, j) => <td key={j} className={`px-4 py-3 align-top ${align(j)}`}>{cell}</td>)}</tr>)}</tbody>
             </table>
         </div>
         {stack ? <ul aria-label={caption} className="divide-y divide-[var(--border)] md:hidden">
             {rows.map((r, i) => <li key={i} className="px-4 py-3.5 text-sm">
                 <div className="mb-2 min-w-0 font-semibold">{r[0]}</div>
                 <dl className="grid grid-cols-[minmax(6.5rem,auto)_minmax(0,1fr)] gap-x-3 gap-y-1.5">
-                    {r.slice(1).map((cell, j) => <div key={j} className="contents"><dt className="text-xs text-[var(--muted)]">{columns[j + 1]}</dt><dd className="min-w-0 break-words">{cell}</dd></div>)}
+                    {r.slice(1).map((cell, j) => <div key={j} className="contents"><dt className="text-xs text-[var(--muted)]">{columns[j + 1]}</dt><dd className={`min-w-0 break-words ${numeric.includes(j + 1) ? 'tabular-nums' : ''}`}>{cell}</dd></div>)}
                 </dl>
             </li>)}
         </ul> : null}

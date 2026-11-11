@@ -41,6 +41,37 @@ describe('Overview dashboard', () => {
     });
 });
 
+describe('results pages share one pattern', () => {
+    it('every page names the period and currency above a short title, and uses the Overview figure names', async () => {
+        const c = await processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv'), doc('demo-bank-history-2025-04-to-2026-03.csv')]);
+        if (!isReady(c)) throw Error('sample did not process');
+        for (const view of ['transactions', 'reconciliation', 'analytics', 'anomalies', 'forecasting', 'reports', 'ask'] as const) {
+            const page = text(createElement(DemoModule, { view, context: c }));
+            expect(page, view).toMatch(/^ ?March 2026 · MYR /);
+            expect(page, view).not.toMatch(/Results · /);
+        }
+        for (const view of ['transactions', 'analytics'] as const) {
+            const page = text(createElement(DemoModule, { view, context: c }));
+            expect(page).toContain('Cash in');
+            expect(page).not.toMatch(/Bank cash in \(credits\)|Net signed movement/);
+        }
+        expect(text(createElement(DemoModule, { view: 'forecasting', context: c }))).toContain('Expected net');
+    });
+    it('amount columns line up: right-aligned figures of equal width', async () => {
+        const c = await processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv')]);
+        if (!isReady(c)) throw Error('sample did not process');
+        const html = renderToStaticMarkup(createElement(Provider, { enabled: true }, createElement(DemoModule, { view: 'transactions', context: c })));
+        expect(html).toMatch(/<th scope="col" class="px-4 py-2.5 font-semibold text-right tabular-nums whitespace-nowrap">Signed amount<\/th>/);
+    });
+    it('an empty result says what is missing and offers the one thing to do', async () => {
+        const c = await processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv')]);
+        if (!isReady(c)) throw Error('sample did not process');
+        const page = text(createElement(DemoModule, { view: 'analytics', context: c }));
+        expect(page).toContain('No monthly trend yet');
+        expect(page).toContain('Open Data');
+    });
+});
+
 describe('Data as three steps', () => {
     it('starts on Choose, keeps the safety line visible and the handling detail one click away', () => {
         const page = text(createElement(DemoDataWorkspace));

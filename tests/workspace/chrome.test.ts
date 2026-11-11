@@ -38,6 +38,14 @@ describe('page chrome by role', async () => {
             expect(text).toContain(fingerprint);
         }
     });
+    it('the report lists its sources by name, with fingerprints for Admins only', async () => {
+        const { DemoModule, isReady } = await import('../../components/demo/modules');
+        if (!isReady(context)) throw Error('sample did not process');
+        const report = (role: Role) => as(role, createElement(DemoModule, { view: 'reports', context }));
+        expect(report('FINANCE')).toContain('demo-bank-statement-2026-03.csv');
+        expect(report('FINANCE')).not.toContain('SHA-256');
+        expect(report('ADMIN')).toContain(`SHA-256 ${context.documents[0].sha256}`);
+    });
     it('an Admin viewing as a Finance user sees what a Finance user sees', () => {
         expect(as('ADMIN', createElement(SourceStrip, { context }), 'FINANCE')).not.toContain(context.processingId);
     });
