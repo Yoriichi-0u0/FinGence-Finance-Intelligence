@@ -27,7 +27,8 @@ describe('Overview dashboard', () => {
         expect(page).toContain('Cash position through March 2026');
         const unexplained = c.outputs.resolution!.attention.length, flagged = c.outputs.anomalyResolution!.flagged;
         expect(page).toContain(unexplained + flagged ? 'Flagged by FinGence' : 'Nothing flagged');
-        if (flagged) expect(page).toContain(`${flagged} unusual payment`);
+        if (flagged) expect(page).toContain(`${flagged} unusual bank record`);
+        expect(page).not.toMatch(/payments? the books do not show/);
         // The checks are one line, with the stage list behind it.
         const checks = c.stages.flatMap(s => s.checks);
         expect(page).toContain(`How FinGence checked these figures ${checks.filter(k => k.passed).length} of ${checks.length} checks passed`);

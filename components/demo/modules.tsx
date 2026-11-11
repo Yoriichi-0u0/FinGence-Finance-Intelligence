@@ -66,7 +66,7 @@ function Overview({ c }: { c: Ready }) {
     const unusedDocuments = c.quarantine.filter(q => q.kind === 'DOCUMENT' || q.kind === 'HISTORY').length;
     const attention: Attention[] = [
         ...(unexplained ? [{ tone: 'warn' as const, title: `${unexplained} reconciliation item${unexplained === 1 ? '' : 's'} not explained`, detail: o.resolution ? `${money(s.currency, o.resolution.totals.unexplained.replace(/^-/, ''))} in total. Flagged for your technical team.` : 'Flagged for your technical team.', href: '/reconciliation' }] : []),
-        ...(flaggedAnomalies ? [{ tone: 'warn' as const, title: `${flaggedAnomalies} unusual payment${flaggedAnomalies === 1 ? '' : 's'} the books do not show`, detail: 'Flagged for your technical team, not treated as fact.', href: '/anomalies' }] : []),
+        ...(flaggedAnomalies ? [{ tone: 'warn' as const, title: `${flaggedAnomalies} unusual bank record${flaggedAnomalies === 1 ? '' : 's'} flagged`, detail: 'Your books could not settle them. Flagged for your technical team, not treated as fact.', href: '/anomalies' }] : []),
         ...(unusedDocuments ? [{ tone: 'warn' as const, title: `${unusedDocuments} document${unusedDocuments === 1 ? '' : 's'} could not be used`, detail: 'See the reason on Data.', href: '/data' }] : []),
         ...(entries ? [{ tone: 'brand' as const, title: `${entries} correcting entr${entries === 1 ? 'y' : 'ies'} prepared for your books`, detail: 'Prepared from stated rules, not posted. Download them on Reconciliation.', href: '/reconciliation' }] : []),
     ];
