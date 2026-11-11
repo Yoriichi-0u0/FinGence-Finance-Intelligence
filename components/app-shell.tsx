@@ -7,14 +7,14 @@ import { useState } from "react";
 import { DemoProcessingProvider } from "@/components/demo/context";
 import { DemoBanner } from "@/components/demo/banner";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { atLeast, ROLE_LABEL, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
-import { OutsideView, ViewingAs, ViewSwitch } from "@/components/workspace/view-switch";
+import { atLeast, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
+import { OutsideView, ViewingAs } from "@/components/workspace/view-switch";
+import { AccountMenu } from "@/components/workspace/account-menu";
+import { AuthLayout } from "@/components/workspace/access";
 import {
   Activity,
   AlertTriangle,
-  Building2,
   LogIn,
-  LogOut,
   Users,
   ChartNoAxesCombined,
   Ellipsis,
@@ -137,20 +137,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
       </nav>
 
       <div className="relative space-y-3 border-t border-[var(--rail-line)] px-4 pb-5 pt-4">
-        {session.enabled && session.session ? (
-          <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06]">
-            <Building2 aria-hidden="true" size={18} className="shrink-0 text-[#93bdff]" />
-            <span className="min-w-0 flex-1">
-              <span className="block truncate text-[13px] font-semibold">{session.session.organization.name}</span>
-              <span className="block truncate text-xs text-[var(--rail-muted)]">{session.session.email}</span>
-              <span className="mt-0.5 block text-xs text-[var(--rail-muted)]/80">{ROLE_LABEL[session.session.role]}</span>
-            </span>
-            <button type="button" onClick={() => void session.signOut()} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white" aria-label="Sign out" title="Sign out">
-              <LogOut aria-hidden="true" size={18} />
-            </button>
-          </div>
-        ) : null}
-        <ViewSwitch />
+        <AccountMenu />
         {session.enabled && session.session ? null : session.enabled && !session.loading ? (
           <Link href="/sign-in" onClick={onNavigate} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.07]">
             <LogIn aria-hidden="true" size={18} className="shrink-0 text-[#93bdff]" />
@@ -169,7 +156,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
             </span>
           </div>
         )}
-        <ThemeSwitch />
+        {session.enabled && session.session ? null : <ThemeSwitch />}
       </div>
     </div>
   );
@@ -225,6 +212,9 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
   const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem].find((item) => isActive(pathname, item.href));
 
+  // Signing in and joining stand on their own page, without the navigation a visitor cannot use yet.
+  if (workspaceEnabled && (pathname === "/sign-in" || pathname === "/join")) return <WorkspaceProvider enabled><AuthLayout>{children}</AuthLayout></WorkspaceProvider>;
+
   return (
     <WorkspaceProvider enabled={workspaceEnabled}>
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
@@ -252,7 +242,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
 
         <main className="mx-auto min-h-dvh w-full max-w-[1480px] px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
           {["/sign-in", "/join", "/team", "/operations"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
-            <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
+            <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link>
           </aside>}
           <ViewingAs />
           <ShellPage pathname={pathname}>{children}</ShellPage>

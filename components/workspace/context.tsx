@@ -33,7 +33,8 @@ type Value = {
     refresh: () => Promise<WorkspaceSession | null>;
     signOut: () => Promise<void>;
 };
-const WorkspaceContext = createContext<Value>({ enabled: false, loading: false, session: null, viewRole: null, setViewAs: () => undefined, ended: false, refresh: async () => null, signOut: async () => undefined });
+/** Exported for tests, which render pages as a given signed-in role. */
+export const WorkspaceContext = createContext<Value>({ enabled: false, loading: false, session: null, viewRole: null, setViewAs: () => undefined, ended: false, refresh: async () => null, signOut: async () => undefined });
 
 export function WorkspaceProvider({ enabled, children }: { enabled: boolean; children: React.ReactNode }) {
     const [loading, setLoading] = useState(enabled);
@@ -90,6 +91,14 @@ export function WorkspaceProvider({ enabled, children }: { enabled: boolean; chi
     return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 export const useWorkspace = () => useContext(WorkspaceContext);
+/**
+ * Processing IDs, fingerprints and job numbers are for Admins and Superadmins (and for deployments without sign-in,
+ * which are technical by nature). A Finance user, or someone viewing as one, sees the plain-language result only.
+ */
+export function useTechnicalDetail() {
+    const { enabled, viewRole } = useWorkspace();
+    return !enabled || atLeast(viewRole ?? undefined, 'ADMIN');
+}
 
 /** Plain-language messages for Finance users; the codes themselves are shown to Admins in Operations. */
 export function plainMessage(code: string | undefined | null): string {
@@ -104,6 +113,6 @@ export function plainMessage(code: string | undefined | null): string {
         case 'ROLE_NOT_ALLOWED': case 'FORBIDDEN': return 'Your role cannot make this change.';
         case 'SESSION_ENDED': case 'SIGN_IN_REQUIRED': return 'You have been signed out. Please sign in again.';
         case 'WORKSPACE_UNAVAILABLE': return 'FinGence cannot reach its database right now. Please try again in a moment.';
-        default: return 'Something went wrong. Please try again; if it keeps happening, tell your technical team.';
+        default: return 'Something went wrong. Please try again; if it keeps happening, tell your Admin.';
     }
 }

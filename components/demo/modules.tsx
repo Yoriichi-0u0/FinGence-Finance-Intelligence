@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useTechnicalDetail } from '@/components/workspace/context';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, ArrowRight, ChevronRight, ChartNoAxesCombined, Download, FileBarChart, Flag, House, MessageSquareText, Printer, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
 import { LineChart } from '@/components/charts';
@@ -217,6 +218,7 @@ function Forecasting({ c }: { c: Ready }) {
 }
 
 function Reports({ c }: { c: Ready }) {
+    const technical = useTechnicalDetail();
     const s = c.scope, rep = c.outputs.report, r = c.outputs.reconciliation, periods = c.outputs.periods.length ? c.outputs.periods : c.outputs.statement ? [{ period: s.period, statement: c.outputs.statement }] : [];
     const [accepted, setAccepted] = useState<{ processingId: string; run: GroundedRun } | null>(null);
     function download() {
@@ -241,7 +243,7 @@ function Reports({ c }: { c: Ready }) {
                 <section><h3 className="font-semibold">Forecast</h3><p>{rep.forecast.status === 'AVAILABLE' ? `${rep.forecast.period} baseline: cash in ${money(s.currency, rep.forecast.credits)}, cash out ${outflow(s.currency, rep.forecast.debits)}, derived net ${money(s.currency, rep.forecast.net)} (six-month mean, backtested).` : `Unavailable: ${rep.forecast.detail}`}</p></section>
                 <section><h3 className="font-semibold">Verification</h3><p>{c.stages.filter(x => x.decision === 'AUTO_ACCEPTED').length} of {c.stages.length} stages auto-accepted after automated checks; {c.quarantine.length} items quarantined.</p></section>
                 <section><h3 className="font-semibold">Limitations</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-xs">{rep.limitations.map(l => <li key={l}>{l}</li>)}</ul></section>
-                <p className="text-xs text-[var(--muted)]">Processing {c.processingId} · {c.version}</p>
+                {technical ? <p className="text-xs text-[var(--muted)]">Processing {c.processingId} · {c.version}</p> : null}
             </div>
         </Panel>
     </>;

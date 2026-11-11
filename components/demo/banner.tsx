@@ -1,29 +1,45 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, Fingerprint, ShieldAlert } from 'lucide-react';
+import { ArrowRight, Building2, Cpu, FileText, Fingerprint, ShieldAlert, Sparkles, TriangleAlert } from 'lucide-react';
 import { useDemoProcessing } from './context';
 import { periodLabel, usesOwnDocuments } from './shared';
-import { useWorkspace } from '@/components/workspace/context';
+import { useTechnicalDetail, useWorkspace } from '@/components/workspace/context';
 
-/** Always-visible demo identity: what mode this is and which processing the page reflects. */
+const chip = 'inline-flex min-h-7 max-w-full items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset';
+const TONE = {
+    plain: 'bg-[var(--surface)] text-[var(--muted-strong)] ring-[var(--border)]',
+    brand: 'bg-[var(--brand-soft)] text-[var(--brand-ink)] ring-[var(--brand-line)]',
+    warn: 'bg-[var(--warn-soft)] text-[var(--warn-ink)] ring-[var(--warn-line)]',
+} as const;
+function Chip({ tone = 'plain', icon, title, children }: { tone?: keyof typeof TONE; icon: React.ReactNode; title?: string; children: React.ReactNode }) {
+    return <span className={`${chip} ${TONE[tone]}`} title={title}>{icon}<span className="min-w-0 truncate">{children}</span></span>;
+}
+
+/**
+ * One line of status chips above every page: whose workspace this is, which documents the page reflects, and how
+ * they were processed. Processing IDs and model names are shown to Admins and Superadmins only.
+ */
 export function DemoBanner() {
     const { status, context } = useDemoProcessing(), pathname = usePathname(), s = context?.scope;
+    const { session } = useWorkspace(), technical = useTechnicalDetail();
     // Only a model whose proposal was ACCEPTED shaped this processing; quarantined proposals did not.
     const aiModels = [...new Set(context?.documents.flatMap(d => d.interpretation?.decision === 'AUTO_ACCEPTED' && d.interpretation.receipt ? [d.interpretation.receipt.model] : []) ?? [])];
-    const { session } = useWorkspace(), lead = session ? `Signed in · runs recorded for ${session.organization.name}` : 'No sign-in';
     const aiRejected = !aiModels.length && !!context?.documents.some(d => d.interpretation?.receipt);
     if (pathname === '/management') return null;
-    const where = context?.job ? 'processed on the FinGence server, re-checked in your browser' : null;
-    return <aside aria-label="Public demo notice" className="mb-6 flex flex-col gap-2 rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-3.5 py-2.5 text-[13px] leading-relaxed text-[var(--ink)] shadow-[var(--shadow-panel)] md:flex-row md:items-center md:gap-3 print:hidden">
-        <span className="flex min-w-0 flex-col items-start gap-1.5 md:flex-1 md:flex-row md:items-center md:gap-2.5">
-            <strong className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[var(--warn-soft)] px-2.5 py-0.5 text-xs font-semibold text-[var(--warn-ink)] ring-1 ring-inset ring-[var(--warn-line)]"><ShieldAlert aria-hidden="true" size={13} />{session ? `FinGence 2.0 · ${session.organization.name}` : 'FinGence 2.0 · public demo'}</strong>
-            <span className="min-w-0 text-[var(--muted-strong)]">{aiModels.length
-                ? <>{lead} · AI layout interpretation ({aiModels.join(', ')} on Groq) verified by deterministic checks · {where ?? 'calculations in your browser'} · do not use confidential or real financial documents</>
-                : aiRejected ? <>{lead} · an AI layout proposal was quarantined; nothing from the model was accepted · do not use confidential or real financial documents</>
-                : <>{lead} · rule-based processing {where ? 'on the FinGence server, re-checked in your browser' : 'in your browser'}, not live AI · do not use confidential or real financial documents</>}</span>
-        </span>
-        {status === 'ready' && context ? s ? <span className="flex min-w-0 items-center gap-1.5 border-t border-[var(--border)] pt-2 text-xs text-[var(--muted)] md:ml-auto md:max-w-[46%] md:border-l md:border-t-0 md:pl-3 md:pt-0"><Fingerprint aria-hidden="true" size={14} className="shrink-0 text-[var(--brand)]" /><span className="min-w-0">Showing processing <code className="text-[var(--ink)]">{context.processingId}</code> · {s.businessId} · {periodLabel(s.period)} · {usesOwnDocuments(context) ? context.job ? 'your documents, processed on the server' : 'your documents, processed locally' : 'fictional sample documents'}</span></span> : <span className="text-xs font-semibold text-[var(--warn-ink)] md:ml-auto">Last documents quarantined</span>
-            : pathname !== '/data' && status !== 'loading' ? <Link href="/data" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand-ink)] underline underline-offset-2 md:ml-auto">No documents processed · open Data<ArrowRight aria-hidden="true" size={13} /></Link> : null}
+    const where = context?.job ? 'Processed on the FinGence server and re-checked in your browser' : 'Processed in your browser';
+    const method = aiModels.length
+        ? <Chip tone="brand" icon={<Sparkles aria-hidden="true" size={13} />} title={where}>{technical ? `AI layout (${aiModels.join(', ')} on Groq), checked by rules` : 'AI read the layout, rules checked every figure'}</Chip>
+        : aiRejected ? <Chip tone="warn" icon={<TriangleAlert aria-hidden="true" size={13} />} title={where}>AI proposal quarantined, rules only</Chip>
+        : <Chip icon={<Cpu aria-hidden="true" size={13} />} title={where}>{session ? session.ai.enabled ? 'Rule-based processing' : 'AI is off · rules only' : `rule-based processing ${context?.job ? 'on the FinGence server' : 'in your browser'}, not live AI`}</Chip>;
+    return <aside aria-label="Processing status" className="mb-5 flex flex-wrap items-center gap-1.5 print:hidden">
+        {session ? <Chip tone="brand" icon={<Building2 aria-hidden="true" size={13} />}>{session.organization.name}</Chip>
+            : <Chip tone="warn" icon={<ShieldAlert aria-hidden="true" size={13} />}>Public demo · do not use confidential or real financial documents</Chip>}
+        {status === 'ready' && context ? s ? <>
+            <Chip icon={<FileText aria-hidden="true" size={13} />}>{s.businessName} · {periodLabel(s.period)} · {s.currency} · {usesOwnDocuments(context) ? 'your documents' : 'sample documents'}</Chip>
+            {method}
+            {technical ? <Chip icon={<Fingerprint aria-hidden="true" size={13} className="text-[var(--brand)]" />} title={context.processingId}>Processing <code className="text-[var(--ink)]">{context.processingId.slice(0, 12)}…</code></Chip> : null}
+        </> : <Chip tone="warn" icon={<TriangleAlert aria-hidden="true" size={13} />}>Last documents quarantined</Chip>
+            : <>{method}{pathname !== '/data' && status !== 'loading' ? <Link href="/data" className={`${chip} ${TONE.brand} font-semibold hover:bg-[var(--surface)]`}>Nothing processed yet · open Data<ArrowRight aria-hidden="true" size={13} /></Link> : null}</>}
     </aside>;
 }
