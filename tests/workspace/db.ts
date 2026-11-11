@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
 
-/** The Supabase schema in an in-memory Postgres: the roles Supabase provides, then the ingestion, server-processing and workspace migrations (v1, the SAIC-only v2, the Technical log v3). */
+/** The Supabase schema in an in-memory Postgres: the roles Supabase provides, then the ingestion, server-processing and workspace migrations (v1, the SAIC-only v2, the Technical log v3, member preferences v4). */
 export async function workspaceDatabase() {
     const db = new PGlite();
     await db.exec('create role anon; create role authenticated; create role service_role;');
@@ -10,6 +10,7 @@ export async function workspaceDatabase() {
     await db.exec(readFileSync('supabase/sql/workspace-v1.sql', 'utf8'));
     await db.exec(readFileSync('supabase/sql/workspace-v2-saic.sql', 'utf8'));
     await db.exec(readFileSync('supabase/sql/workspace-v3-log.sql', 'utf8'));
+    await db.exec(readFileSync('supabase/sql/workspace-v4-preferences.sql', 'utf8'));
     return db;
 }
 

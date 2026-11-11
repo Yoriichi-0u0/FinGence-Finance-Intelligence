@@ -1,6 +1,7 @@
 import 'server-only';
 import { z } from 'zod';
 import { runPayloadSchema } from '../../document-ingestion/run-payload';
+import { layoutSchema } from '../../dashboard/layout';
 import { boundedJson, noStoreJson as json, sameOrigin } from '../ai/request';
 import { hashPassword, passwordAcceptable, verifyPassword } from './password';
 import { attemptAllowed, caller, clearedCookie, requireRole, SESSION_HOURS, sessionCookie } from './session';
@@ -172,4 +173,27 @@ export async function recordRun(request: Request, deps: Deps) {
     const result = await rpc<{ runId: string }>('fingence_workspace_record_run', { p_token_hash: who.tokenHash, p_payload: { ...parsed.data, clientHash: null } }, deps.store, deps.transport);
     if (result.ok) return json(result.value, 201);
     return result.error === 'PROCESSING_PAUSED' ? json({ code: 'PROCESSING_PAUSED' }, 423) : fail(result.error);
+}
+
+/** Any signed-in member: their own Overview layout ("Customise dashboard"), or null for the default. */
+export async function preferences(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const result = await rpc('fingence_workspace_preferences', { p_token_hash: who.tokenHash }, deps.store, deps.transport);
+    return result.ok ? json(result.value) : fail(result.error);
+}
+const preferencesBody = z.object({ dashboard: layoutSchema.nullable() }).strict();
+/** Any signed-in member: save their own layout, or reset it to the default with { dashboard: null }. Only known cards, each once. */
+export async function preferencesChange(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    const read = await boundedJson(request, 4_000);
+    if ('refusal' in read) return read.refusal;
+    const body = preferencesBody.safeParse(read.body);
+    if (!body.success) return json({ code: 'INVALID_LAYOUT' }, 400);
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const result = await rpc('fingence_workspace_save_preferences', { p_token_hash: who.tokenHash, p_dashboard: body.data.dashboard }, deps.store, deps.transport);
+    if (result.ok) return json(result.value);
+    return result.error === 'INVALID_LAYOUT' ? json({ code: 'INVALID_LAYOUT' }, 400) : fail(result.error);
 }

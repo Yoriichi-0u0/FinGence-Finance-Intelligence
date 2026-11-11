@@ -1,5 +1,14 @@
 # FinGence — current technical entrypoint
 
+## Customise dashboard — 11 November 2026
+
+Each signed-in person can show, hide and reorder the Overview cards. The layout is saved per member and follows them to any device. See the "Member preferences" section of [docs/architecture/workspace-roles.md](../architecture/workspace-roles.md).
+
+- **Cards:** the five original cards, in the original order by default. Three optional cards start hidden: largest counterparties, reconciliation summary, and last processing runs (Admin and above only, from the Technical log).
+- **Editor:** "Customise dashboard" on Overview has a show/hide switch and Up/Down buttons for each card, all usable from the keyboard. The dashboard previews changes live; Done saves, Cancel discards, and Reset to default restores the default.
+- **Data:** `supabase/sql/workspace-v4-preferences.sql`, one strict layout shape checked by the route, the function and the table (`lib/dashboard/layout.ts`). **Not applied to Production**; that is the owner's decision. Without it, `GET`/`PUT /api/workspace/preferences` fail and the Overview shows the default layout. With the workspace off, the layout is kept in the browser.
+- **Locally:** `scripts/dev-store.mjs` applies v4 on every start.
+
 ## Technical log and the AI-call door — 11 November 2026
 
 - **The door.** Every AI model call goes through `withAiCall` in `lib/ai-calls/`. It records metadata only: feature, model, key name, tokens, cost, time, outcome and who. The strict contract (`lib/ai-calls/contract.ts`) rejects anything else.
