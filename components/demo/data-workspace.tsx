@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ArrowRight, CalendarRange, ChartNoAxesCombined, Check, ChevronRight, FileBarChart, FileSpreadsheet, FileText, Fingerprint, HardDrive, House, LoaderCircle, MessageSquareText, Play, ReceiptText, RefreshCw, RotateCcw, Server, ShieldAlert, Sparkles, TrendingUp, Upload } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
 import { STAGE_TITLES, type DocumentInput, type StageId } from '@/lib/demo/pipeline';
@@ -66,25 +66,36 @@ export default function DemoDataWorkspace() {
     const scope = context?.scope, out = context?.outputs;
 
     const stageDone = stages.filter(x => x.stage).length;
+    const quarantinedRun = ended && (status === 'failed' || context?.status === 'QUARANTINED');
+    // The stage list shows while processing; once a run has passed it folds into one line. A quarantined run keeps it open to show why.
+    const [showStages, setShowStages] = useState(false), listOpen = status === 'processing' || quarantinedRun || showStages;
+    const current: Step = status === 'ready' && context ? 3 : selected.length || status === 'processing' ? 2 : 1;
+    // When a run finishes here, bring its results into view (they sit below the fold, especially on a phone).
+    const previous = useRef(status);
+    useEffect(() => {
+        if (previous.current === 'processing' && status === 'ready') document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        previous.current = status;
+    }, [status]);
     const checks = liveStages.flatMap(x => x.checks), passed = checks.filter(c => c.passed).length;
 
     return <>
-        <PageHeader eyebrow="Step 1 · your documents" title="Data" description="Provide a bank statement and a general ledger once. FinGence identifies, verifies, reconciles and analyses them in one run." />
-        <section role="note" aria-label={workspace.session ? 'Test version data notice' : 'Public prototype data notice'} className="mb-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
-            <div className="flex gap-3 border-b border-[var(--warn-line)] bg-[var(--warn-soft)] px-4 py-3 text-sm">
+        <PageHeader eyebrow="Data" title="Process documents" description="Choose a bank statement and a general ledger, process them once, and every page shows the checked results." />
+        <Steps current={current} progress={status === 'processing' ? { done: stageDone, total: stages.length } : null} />
+        <section role="note" aria-label={workspace.session ? 'Test version data notice' : 'Public prototype data notice'} className="mb-6 overflow-hidden rounded-2xl border border-[var(--warn-line)] bg-[var(--warn-soft)] text-sm">
+            <div className="flex gap-3 px-4 py-3">
                 <ShieldAlert aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--warn)]" />
                 {workspace.session
                     ? <p><strong>Test version for {workspace.session.organization.name}: use the sample documents or test files, not confidential records.</strong> The built-in samples are fictional.</p>
                     : <p><strong>Public prototype: do not submit confidential or real financial documents.</strong> The built-in sample documents are fictional.</p>}
             </div>
-            <ul className="grid gap-px bg-[var(--border)] sm:grid-cols-3" aria-label="How your documents are handled">
-                <li className="flex gap-3 bg-[var(--surface)] px-4 py-3"><Server aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--brand)]" /><span className="text-[13px] leading-snug"><strong className="block text-sm">{serverJobs ? 'Processed on the FinGence server' : 'Processed in this browser'}</strong><span className="text-[var(--muted)]">{serverJobs ? 'Files are not stored there; this browser re-checks the result.' : 'Your own files are not uploaded to a server.'}</span></span></li>
-                <li className="flex gap-3 bg-[var(--surface)] px-4 py-3"><Sparkles aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--brand)]" /><span className="text-[13px] leading-snug"><strong className="block text-sm">{ai?.available ? 'AI suggests layouts only' : 'Fixed rules, not live AI'}</strong><span className="text-[var(--muted)]">{ai?.available ? 'It sees headings and a few sample lines and never supplies an amount.' : 'Every figure is computed deterministically.'}</span></span></li>
-                <li className="flex gap-3 bg-[var(--surface)] px-4 py-3"><HardDrive aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--brand)]" /><span className="text-[13px] leading-snug"><strong className="block text-sm">Kept in this tab only</strong><span className="text-[var(--muted)]">Until you press Clear results or close the tab.</span></span></li>
-            </ul>
-            <details className="group border-t border-[var(--border)] text-sm">
-                <summary className="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2 font-semibold text-[var(--brand-ink)]"><ChevronRight aria-hidden="true" size={16} className="disclosure-chevron transition-transform" />Exactly how your documents are handled</summary>
-                <div className="space-y-2 px-4 pb-4 text-[13px] leading-relaxed text-[var(--muted-strong)]">
+            <details className="group border-t border-[var(--warn-line)] bg-[var(--surface)]">
+                <summary className="flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2 font-semibold text-[var(--brand-ink)]"><ChevronRight aria-hidden="true" size={16} className="disclosure-chevron transition-transform" />How your documents are handled</summary>
+                <ul className="grid gap-px border-y border-[var(--border)] bg-[var(--border)] sm:grid-cols-3" aria-label="How your documents are handled">
+                    <li className="flex gap-3 bg-[var(--surface)] px-4 py-3"><Server aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--brand)]" /><span className="text-[13px] leading-snug"><strong className="block text-sm">{serverJobs ? 'Processed on the FinGence server' : 'Processed in this browser'}</strong><span className="text-[var(--muted)]">{serverJobs ? 'Files are not stored there; this browser re-checks the result.' : 'Your own files are not uploaded to a server.'}</span></span></li>
+                    <li className="flex gap-3 bg-[var(--surface)] px-4 py-3"><Sparkles aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--brand)]" /><span className="text-[13px] leading-snug"><strong className="block text-sm">{ai?.available ? 'AI suggests layouts only' : 'Fixed rules, not live AI'}</strong><span className="text-[var(--muted)]">{ai?.available ? 'It sees headings and a few sample lines and never supplies an amount.' : 'Every figure is computed deterministically.'}</span></span></li>
+                    <li className="flex gap-3 bg-[var(--surface)] px-4 py-3"><HardDrive aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--brand)]" /><span className="text-[13px] leading-snug"><strong className="block text-sm">Kept in this tab only</strong><span className="text-[var(--muted)]">Until you press Clear results or close the tab.</span></span></li>
+                </ul>
+                <div className="space-y-2 px-4 py-3 text-[13px] leading-relaxed text-[var(--muted-strong)]">
                     {serverJobs
                         ? <p><strong>Processing runs on the FinGence server.</strong> Your files are sent to the server for one processing job and are not stored there; the server stores their fingerprints, decisions, verified records, reconciliation and anomaly results. This browser then re-checks the result from the same files. Their contents are kept temporarily in this tab&apos;s sessionStorage so results survive a reload, until you press Clear results or close the tab.</p>
                         : <p>If you choose your own files, they are read and processed locally in this browser and are not uploaded to a server; scans and images are read by OCR here too (the OCR engine and its English language data are downloaded from the jsDelivr CDN). Their contents are kept temporarily in this tab&apos;s sessionStorage so results survive a reload, until you press Clear results or close the tab.</p>}
@@ -95,8 +106,8 @@ export default function DemoDataWorkspace() {
             </details>
         </section>
         {paused ? <Callout role="alert" tone="bad" className="mb-6" title="Processing is paused by your administrator.">You can still look at earlier results; new documents cannot be processed until they resume it.{paused.reason ? ` Their note: ${paused.reason}` : ''}</Callout> : null}
-        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-            <Panel title="Choose documents" eyebrow="1 · Input">
+        <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+            <Panel className="scroll-mt-20" id="choose" title="Choose documents" eyebrow="Step 1">
                 <div className="space-y-4 p-4 sm:p-5">
                     <div className="grid gap-2.5 sm:grid-cols-2">
                         <button type="button" className={tile} disabled={busy} onClick={() => void loadSample()}><span className={tileIcon}><FileSpreadsheet aria-hidden="true" size={18} /></span><span className="min-w-0"><span className="block font-semibold">Sample documents</span><span className="block text-xs font-normal text-[var(--muted)]">One month · March 2026 · MYR</span></span></button>
@@ -127,9 +138,13 @@ export default function DemoDataWorkspace() {
                     </div>
                 </div>
             </Panel>
-            <Panel title="Processing stages" eyebrow={`2 · ${serverJobs ? 'On the FinGence server' : 'In this browser'}`} action={stageDone ? <span className="text-xs font-medium text-[var(--muted)]">{stageDone} of {stages.length} stages · {passed} of {checks.length} checks passed</span> : undefined}>
+            <Panel className="scroll-mt-20" id="process" title="Process and check" eyebrow={`Step 2 · ${serverJobs ? 'on the FinGence server' : 'in this browser'}`}>
+                <div className="border-b border-[var(--border)] px-4 py-3 sm:px-5">
+                    <div className="flex items-center justify-between gap-3 text-xs"><span className="font-semibold text-[var(--ink)]">{status === 'processing' ? `Stage ${Math.min(stageDone + 1, stages.length)} of ${stages.length}: ${stages[stageDone]?.title ?? 'finishing'}` : stageDone ? `${stageDone} of ${stages.length} stages · ${passed} of ${checks.length} checks passed` : 'Not started'}</span>{stageDone && status !== 'processing' ? <button type="button" className="min-h-9 shrink-0 font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2" aria-expanded={listOpen} onClick={() => setShowStages(v => !v)}>{listOpen ? 'Hide stages' : 'Show stages'}</button> : null}</div>
+                    <div role="progressbar" aria-label="Processing progress" aria-valuemin={0} aria-valuemax={stages.length} aria-valuenow={stageDone} className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-sunken)]"><span className={`block h-full rounded-full transition-[width] duration-500 ${quarantinedRun ? 'bg-[var(--warn)]' : status === 'ready' ? 'bg-[var(--good)]' : 'bg-[var(--brand)]'}`} style={{ width: `${(stageDone / stages.length) * 100}%` }} /></div>
+                </div>
                 {context && technical ? <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-2 text-xs text-[var(--muted)] sm:px-5"><Fingerprint aria-hidden="true" size={14} className="text-[var(--brand)]" /><span>Processing ID <code className="break-all text-[var(--ink)]">{context.processingId}</code> · same documents always give the same ID{context.job ? <> · server job <code className="break-all text-[var(--ink)]">{context.job.id}</code>, results stored, re-checked in this browser</> : null}</span></p> : null}
-                <ol className="px-4 py-3 sm:px-5" aria-live="polite">
+                {listOpen ? <ol className="px-4 py-3 sm:px-5" aria-live="polite">
                     {stages.map(({ id, title, stage }, i) => {
                         const tone = stage ? stage.decision === 'AUTO_ACCEPTED' ? 'bg-[var(--good)] text-white' : stage.decision === 'QUARANTINED' ? 'bg-[var(--warn)] text-white' : 'bg-[var(--border-strong)] text-[var(--ink)]' : status === 'processing' && i === stageDone ? 'bg-[var(--brand-soft)] text-[var(--brand)] ring-2 ring-[var(--brand)]' : 'bg-[var(--surface-sunken)] text-[var(--muted)]';
                         return <li key={id} className="relative flex gap-3 pb-3 last:pb-0">
@@ -150,13 +165,13 @@ export default function DemoDataWorkspace() {
                             </div>
                         </li>;
                     })}
-                </ol>
+                </ol> : stageDone ? null : <p className="px-4 py-4 text-sm leading-relaxed text-[var(--muted-strong)] sm:px-5">Choose documents, then press <strong className="text-[var(--ink)]">Process Financial Documents</strong>. FinGence identifies them, checks every record in {stages.length} stages and reconciles the bank against the ledger. It takes a few seconds.</p>}
                 {aiWait && status === 'processing' ? <Callout role="status" tone="warn" className="m-4"><span className="inline-flex items-center gap-2"><LoaderCircle aria-hidden="true" className="shrink-0 animate-spin" size={16} />Waiting about {aiWait} s for the AI provider&apos;s per-minute limit before interpreting the next document.</span></Callout> : null}
                 {error ? <Callout role="alert" tone="bad" className="m-4">{error}</Callout> : null}
             </Panel>
         </div>
         {context ? <div className="mt-6 space-y-5">
-            {scope && out?.reconciliation && out.totals ? <Panel title="Verified outputs" eyebrow={`3 · Results · ${scope.businessName} · ${periodLabel(scope.period)} · ${scope.currency}`}>
+            {scope && out?.reconciliation && out.totals ? <Panel className="scroll-mt-20" id="results" title="Verified outputs" eyebrow={`Step 3 · Results · ${scope.businessName} · ${periodLabel(scope.period)} · ${scope.currency}`}>
                 <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
                     <Stat tone="brand" label="Net signed bank movement" value={money(scope.currency, out.totals.net)} detail={`${out.totals.rows} bank records`} />
                     <Stat tone="brand" label="Bank − ledger difference" value={money(scope.currency, out.reconciliation.cashMovement.signedDifference)} detail={`Ledger ${money(scope.currency, out.reconciliation.cashMovement.ledger)}`} />
@@ -167,8 +182,8 @@ export default function DemoDataWorkspace() {
                     {([['/', 'Overview', House], ['/transactions', 'Transactions', ReceiptText], ['/reconciliation', 'Reconciliation', RefreshCw], ['/analytics', 'Analytics', ChartNoAxesCombined], ['/anomalies', 'Anomalies', AlertTriangle], ['/forecasting', 'Forecasting', TrendingUp], ['/reports', 'Reports', FileBarChart], ['/ask', 'Finance Q&A', MessageSquareText]] as const).map(([href, label, Icon]) => <Link key={href} href={href} className="group flex min-h-12 items-center gap-2.5 rounded-xl border border-[var(--border)] px-3 text-sm font-semibold transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)]"><Icon aria-hidden="true" size={17} className="shrink-0 text-[var(--brand)]" /><span className="min-w-0 flex-1 truncate">{label}</span><ArrowRight aria-hidden="true" size={15} className="hidden shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-0.5 sm:block" /></Link>)}
                 </nav>
                 {context.job ? null : <SaveRun context={context} />}
-            </Panel> : <Panel title="Outputs" eyebrow="3 · Results"><p className="p-5 text-sm">No financial outputs were produced because the documents were quarantined. See the stage checks above for the exact reason.</p></Panel>}
-            <Panel title="Documents identified" eyebrow={processedAt ? `4 · Processed ${new Date(processedAt).toLocaleString()}${persisted ? '' : ' · not kept after reload'}` : '4 · Documents'}>
+            </Panel> : <Panel className="scroll-mt-20" id="results" title="Outputs" eyebrow="Step 3 · Results"><p className="p-5 text-sm">No financial outputs were produced because the documents were quarantined. See the stage checks above for the exact reason.</p></Panel>}
+            <Panel title="Documents identified" eyebrow={processedAt ? `Details · processed ${new Date(processedAt).toLocaleString()}${persisted ? '' : ' · not kept after reload'}` : 'Details'}>
                 <Table caption="Identified documents" columns={['Document', 'Role', 'Decision', 'Records', 'Scope', ...(technical ? ['SHA-256'] : [])]} rows={context.documents.map(d => [
                     <span key="n" className="grid gap-1"><span className="break-all">{d.name}</span>{d.source?.kind === 'WORKSHEET' ? <span className="text-xs font-normal text-[var(--muted)]">Worksheet {d.source.sheetNumber} of {d.source.workbook}{technical ? <> · workbook SHA-256 <code>{d.source.workbookSha256.slice(0, 12)}…</code></> : null}</span>
                         : d.source ? <span className="text-xs font-normal text-[var(--muted)]">{d.source.kind === 'OCR' ? `Read by OCR ${context.job ? 'on the server' : 'in this browser'} · ${d.source.confidence}% mean confidence` : 'PDF text layer'} · {d.source.pages} page{d.source.pages === 1 ? '' : 's'}{technical ? <> · file SHA-256 <code>{d.source.fileSha256.slice(0, 12)}…</code></> : null}</span> : null}</span>, d.role ? ROLE[d.role] : 'Not identified',
@@ -185,3 +200,18 @@ export default function DemoDataWorkspace() {
 
 const tile = 'flex min-h-16 w-full items-center gap-3 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] px-3.5 py-3 text-left text-sm text-[var(--ink)] transition-colors hover:border-[var(--brand)] hover:bg-[var(--brand-soft)] disabled:cursor-not-allowed disabled:opacity-50';
 const tileIcon = 'grid size-9 shrink-0 place-items-center rounded-xl bg-[var(--brand-soft)] text-[var(--brand)]';
+
+type Step = 1 | 2 | 3;
+const STEPS: { n: Step; label: string; href: string }[] = [{ n: 1, label: 'Choose', href: '#choose' }, { n: 2, label: 'Process', href: '#process' }, { n: 3, label: 'See results', href: '#results' }];
+/** Where the person is in the three steps; while processing, the second step shows how far it has got. */
+function Steps({ current, progress }: { current: Step; progress: { done: number; total: number } | null }) {
+    return <nav aria-label="Steps" className="mb-5">
+        <ol className="grid grid-cols-3 gap-2">{STEPS.map(({ n, label, href }) => {
+            const done = n < current, here = n === current;
+            return <li key={n}><a href={href} aria-current={here ? 'step' : undefined} className={`flex min-h-12 items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm ring-1 ring-inset transition-colors sm:px-3 ${here ? 'bg-[var(--brand-soft)] ring-[var(--brand-line)]' : 'bg-[var(--surface)] ring-[var(--border)] hover:bg-[var(--surface-subtle)]'}`}>
+                <span aria-hidden="true" className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold ${done ? 'bg-[var(--good)] text-white' : here ? 'bg-[var(--brand-solid)] text-white' : 'bg-[var(--surface-sunken)] text-[var(--muted)]'}`}>{done ? <Check size={14} strokeWidth={3} /> : n}</span>
+                <span className="min-w-0"><span className={`block truncate font-semibold ${here ? 'text-[var(--brand-ink)]' : done ? 'text-[var(--ink)]' : 'text-[var(--muted)]'}`}>{label}</span>{here && progress ? <span className="block text-[11px] text-[var(--muted)] tabular-nums">{progress.done} of {progress.total}</span> : <span className="sr-only">{done ? ' (done)' : here ? ' (current)' : ''}</span>}</span>
+            </a></li>;
+        })}</ol>
+    </nav>;
+}
