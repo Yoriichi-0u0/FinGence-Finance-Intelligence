@@ -5,6 +5,7 @@ import { admit, clientAddress } from '@/lib/server/ai/budget';
 import { askModel, qaModel, worstCaseQaUsd } from '@/lib/server/ai/grounded-qa';
 import { aiGatewayEnabled } from '@/lib/server/ai/groq-interpreter';
 import { boundedJson, noStoreJson as json } from '@/lib/server/ai/request';
+import { processingRefusal } from '@/lib/server/workspace/session';
 
 export const dynamic = 'force-dynamic';
 const MAX_BODY_BYTES = 32_000;
@@ -25,6 +26,8 @@ export async function POST(request: Request) {
     if (!aiGatewayEnabled()) return notFound();
     const read = await boundedJson(request, MAX_BODY_BYTES);
     if ('refusal' in read) return read.refusal;
+    const gate = await processingRefusal(request.headers, { ai: true });
+    if (gate) return json({ code: gate.code, ...(gate.reason ? { reason: gate.reason } : {}) }, gate.status);
     const parsed = askRequestSchema.safeParse(read.body);
     if (!parsed.success) return json({ code: 'INVALID_REQUEST' }, 400);
     // The same deterministic refusals as the browser; counterparties come from the catalogue (plan) or the facts (answer).

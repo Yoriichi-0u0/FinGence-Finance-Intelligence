@@ -9,7 +9,7 @@ import { ingestionStore } from '../ingestion-store';
  *   which runs the same migrations in PGlite, so the whole flow works locally with no hosted change and no sign-in.
  */
 export type ProcessingStore = { url: string; key: string | null; local: boolean };
-/** No sign-in yet: every job belongs to one organization until the workspace (#74) assigns real ones. */
+/** Without sign-in every job belongs to this one organization; with the workspace on, jobs belong to the signed-in member's organization. */
 export const PROCESSING_ORGANIZATION = 'fingence-default';
 const LOCAL = /^http:\/\/(127\.0\.0\.1|localhost):\d{2,5}$/;
 
@@ -46,5 +46,6 @@ export async function rpc<T>(fn: string, args: Record<string, unknown>, store: P
  */
 export function managementEnabled(env: Readonly<Record<string, string | undefined>> = process.env) {
     const store = processingStore(env);
-    return !!store && (store.local || env.FINGENCE_MANAGEMENT_CONSOLE === '1');
+    // Retired once sign-in is on: Admins use Operations, and the workspace's pause is the only pause switch.
+    return !!store && (store.local || env.FINGENCE_MANAGEMENT_CONSOLE === '1') && env.FINGENCE_WORKSPACE !== '1';
 }

@@ -30,6 +30,16 @@ Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/ar
   - The March MYR sample keeps its figures and now completes with nothing flagged.
   - A new quarter sample (DEMO-002, January–March 2026, SGD; `scripts/generate-quarter-documents.mjs`) shows timing differences clearing across months and one flagged payment.
 
+## Workspace: SAIC users only, three stacked roles — 11 November 2026
+
+The hosted workspace is in [docs/architecture/workspace-roles.md](../architecture/workspace-roles.md): Supabase schema `fingence_workspace` (`supabase/sql/workspace-v1.sql`, then `workspace-v2-saic.sql`), `lib/server/workspace/*` and `proxy.ts`.
+
+- **Roles:** Finance user < Admin < Superadmin, each including the one below; each manages only people below their own role. Management (Technical) is retired.
+- **SAIC only:** one organization, sign-in required for every page and API, no public demo.
+- **Admin:** `/team` (Finance users) and `/operations` (runs, checks, model receipts, sessions, pause). **Superadmin:** also Admins, the audit trail and the AI switch.
+- **Switch:** on with `FINGENCE_WORKSPACE=1`; v2 is not yet applied to Production.
+- **Replaces:** the env-gated `/management` console (off when the workspace is on). The local-only M5 `/admin` and `/enroll` are unchanged.
+
 ## Reconciliation layer v1 — 4 November 2026
 
 The reconciliation layer is `lib/reconciliation/reconcile.ts` (`reconcile`): verified bank and cash-ledger records in, a fully resolved reconciliation out. Its contract is [docs/architecture/reconciliation-layer-v1.md](../architecture/reconciliation-layer-v1.md).

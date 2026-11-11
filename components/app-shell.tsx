@@ -7,8 +7,14 @@ import { useState } from "react";
 import { DemoProcessingProvider } from "@/components/demo/context";
 import { DemoBanner } from "@/components/demo/banner";
 import { ThemeSwitch } from "@/components/theme-switch";
+import { atLeast, ROLE_LABEL, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
 import {
+  Activity,
   AlertTriangle,
+  Building2,
+  LogIn,
+  LogOut,
+  Users,
   ChartNoAxesCombined,
   Ellipsis,
   Database,
@@ -46,6 +52,9 @@ const financeQuestions = { href: "/finance-questions", label: "Finance questions
 const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareText };
 // Management (Technical): server processing jobs, flagged items and the pause switch; absent unless the server enables it.
 const management = { href: "/management", label: "Management", icon: Gauge };
+// Hosted workspace (SAIC only): every role uses the finance pages; Admins and Superadmins also get Team and Operations.
+const operationsItem: NavItem = { href: "/operations", label: "Operations", icon: Activity };
+const teamItem: NavItem = { href: "/team", label: "Team", icon: Users };
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
@@ -105,6 +114,7 @@ type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boo
 
 function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const session = useWorkspace(), admin = atLeast(session.session?.role, "ADMIN");
   const ask = [...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : [])];
   const technical = [...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])];
 
@@ -121,17 +131,40 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
         <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} />
         <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} />
         <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} />
+        {admin ? <NavGroup label="Administration" items={[teamItem, operationsItem]} pathname={pathname} onNavigate={onNavigate} /> : null}
       </nav>
 
       <div className="relative space-y-3 border-t border-[var(--rail-line)] px-4 pb-5 pt-4">
-        <div className="flex items-start gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06]">
-          <span aria-hidden="true" className="mt-1 size-2 shrink-0 rounded-full bg-[#34d399] shadow-[0_0_0_3px_rgb(52_211_153/0.18)]" />
-          <span className="min-w-0">
-            <span className="block text-[13px] font-semibold">{localFinancialConsumers ? "Synthetic organization" : syntheticDemo ? "Synthetic demo" : "SAIC"}</span>
-            <span className="block text-xs text-[var(--rail-muted)]">{localFinancialConsumers ? "Local experimental workspace" : syntheticDemo ? serverJobs ? "No sign-in · server processing" : "No sign-in · browser only" : "Finance Workspace"}</span>
-            <span className="mt-0.5 block text-xs text-[var(--rail-muted)]/80">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Use fictional data only" : "August 2026"}</span>
-          </span>
-        </div>
+        {session.enabled && session.session ? (
+          <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06]">
+            <Building2 aria-hidden="true" size={18} className="shrink-0 text-[#a5b4fc]" />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-semibold">{session.session.organization.name}</span>
+              <span className="block truncate text-xs text-[var(--rail-muted)]">{session.session.email}</span>
+              <span className="mt-0.5 block text-xs text-[var(--rail-muted)]/80">{ROLE_LABEL[session.session.role]}</span>
+            </span>
+            <button type="button" onClick={() => void session.signOut()} className="grid size-10 shrink-0 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white" aria-label="Sign out" title="Sign out">
+              <LogOut aria-hidden="true" size={18} />
+            </button>
+          </div>
+        ) : session.enabled && !session.loading ? (
+          <Link href="/sign-in" onClick={onNavigate} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.07]">
+            <LogIn aria-hidden="true" size={18} className="shrink-0 text-[#a5b4fc]" />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold">Sign in</span>
+              <span className="block truncate text-xs text-[var(--rail-muted)]">SAIC users only</span>
+            </span>
+          </Link>
+        ) : (
+          <div className="flex items-start gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06]">
+            <span aria-hidden="true" className="mt-1 size-2 shrink-0 rounded-full bg-[#34d399] shadow-[0_0_0_3px_rgb(52_211_153/0.18)]" />
+            <span className="min-w-0">
+              <span className="block text-[13px] font-semibold">{localFinancialConsumers ? "Synthetic organization" : syntheticDemo ? "Synthetic demo" : "SAIC"}</span>
+              <span className="block text-xs text-[var(--rail-muted)]">{localFinancialConsumers ? "Local experimental workspace" : syntheticDemo ? serverJobs ? "No sign-in · server processing" : "No sign-in · browser only" : "Finance Workspace"}</span>
+              <span className="mt-0.5 block text-xs text-[var(--rail-muted)]/80">{localFinancialConsumers ? "Hosted access disabled" : syntheticDemo ? "Use fictional data only" : "August 2026"}</span>
+            </span>
+          </div>
+        )}
         <ThemeSwitch />
       </div>
     </div>
@@ -174,13 +207,14 @@ function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDem
   );
 }
 
-export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false, workspace: workspaceEnabled = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean; workspace?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
-  const current = [...navigation, financeQuestions, demoQuestions, administration, management].find((item) => isActive(pathname, item.href));
+  const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem].find((item) => isActive(pathname, item.href));
 
   return (
+    <WorkspaceProvider enabled={workspaceEnabled}>
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
     <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[248px_minmax(0,1fr)] print:block">
       <aside className="sticky top-0 hidden h-dvh lg:block print:hidden">
@@ -205,7 +239,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1480px] px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
-          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
+          {["/sign-in", "/join", "/team", "/operations"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
           {children}
@@ -237,5 +271,6 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
       ) : null}
     </div>
     </DemoProcessingProvider>
+    </WorkspaceProvider>
   );
 }

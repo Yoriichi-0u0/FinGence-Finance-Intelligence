@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Local FinGence store for development: the same Supabase migrations (ingestion layer + server processing) in PGlite,
+ * Local FinGence store for development: the same Supabase migrations (ingestion layer, server processing, sign-in and roles) in PGlite,
  * persisted under .local/dev/processing-store (git-ignored), behind a PostgREST-shaped RPC endpoint on 127.0.0.1 only.
  *
  *   node scripts/dev-store.mjs            # listens on 127.0.0.1:54329
@@ -22,6 +22,9 @@ if (fresh) {
     await db.exec('create role anon; create role authenticated; create role service_role;');
     await db.exec(readFileSync('supabase/sql/ingestion-layer-v1.sql', 'utf8'));
     await db.exec(readFileSync('supabase/sql/processing-jobs-v1.sql', 'utf8'));
+    // Sign-in and roles (SAIC only), for FINGENCE_WORKSPACE=1 with FINGENCE_WORKSPACE_LOCAL_URL pointing here.
+    await db.exec(readFileSync('supabase/sql/workspace-v1.sql', 'utf8'));
+    await db.exec(readFileSync('supabase/sql/workspace-v2-saic.sql', 'utf8'));
 }
 // One statement at a time, like a single database connection.
 let queue = Promise.resolve();
@@ -46,7 +49,7 @@ function fromBrowser(req) {
 
 createServer((req, res) => {
     if (fromBrowser(req)) { res.writeHead(403).end(); return; }
-    const fn = req.method === 'POST' ? req.url?.match(/^\/rest\/v1\/rpc\/(fingence_(?:processing|ingestion)_[a-z_]+)$/)?.[1] : null;
+    const fn = req.method === 'POST' ? req.url?.match(/^\/rest\/v1\/rpc\/(fingence_(?:processing|ingestion|workspace)_[a-z_]+)$/)?.[1] : null;
     if (!fn) { res.writeHead(404).end(); return; }
     const chunks = [];
     let size = 0;
