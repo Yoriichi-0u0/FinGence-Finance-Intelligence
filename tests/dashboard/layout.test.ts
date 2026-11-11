@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CARD_IDS, DEFAULT_LAYOUT, isDefault, layoutSchema, move, normalise, offered, setVisible } from '../../lib/dashboard/layout';
+import { CARD_IDS, cardSpans, DEFAULT_LAYOUT, isDefault, layoutSchema, move, normalise, offered, setVisible } from '../../lib/dashboard/layout';
 
 /** The Overview layout's one shape and the editor's moves, shared by the browser, the server and (as SQL) the database. */
 describe('dashboard layout', () => {
@@ -31,5 +31,15 @@ describe('dashboard layout', () => {
         expect(isDefault(DEFAULT_LAYOUT)).toBe(true);
         expect(isDefault(setVisible(DEFAULT_LAYOUT, 'checks', false))).toBe(false);
         expect(isDefault(move(move(DEFAULT_LAYOUT, 'flagged', 1, true), 'flagged', -1, true))).toBe(true);
+    });
+    it('the wide-screen grid keeps the chosen order: no card is pulled above an earlier one', () => {
+        // Today's default: the chart spans two rows, with "Flagged" and the forecast stacked beside it.
+        expect(cardSpans(['figures', 'cash-chart', 'flagged', 'forecast', 'checks'])).toEqual(['xl:col-span-3', 'xl:col-span-2 xl:row-span-2', 'xl:self-start', 'xl:self-start', 'xl:col-span-3']);
+        // The checks moved above the forecast: only "Flagged" sits beside the chart (one row), so the forecast cannot backfill
+        // a cell above the checks.
+        expect(cardSpans(['figures', 'cash-chart', 'flagged', 'checks', 'forecast'])).toEqual(['xl:col-span-3', 'xl:col-span-2', 'xl:self-start', 'xl:col-span-3', 'xl:self-start']);
+        // A two-column card with no narrow card after it takes the full width, leaving no empty cell.
+        expect(cardSpans(['cash-chart', 'checks', 'counterparties'])).toEqual(['xl:col-span-3', 'xl:col-span-3', 'xl:col-span-3']);
+        expect(cardSpans(['counterparties', 'reconciliation-summary', 'last-runs'])).toEqual(['xl:col-span-2', 'xl:self-start', 'xl:col-span-3']);
     });
 });

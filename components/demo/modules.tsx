@@ -22,7 +22,7 @@ import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/stat
 import { AiCommentary } from './commentary';
 import { useDemoProcessing } from './context';
 import { CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout } from './dashboard';
-import { offered, type CardId, type Layout } from '@/lib/dashboard/layout';
+import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { Callout, DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
@@ -57,12 +57,6 @@ function monthlyTotals(c: Ready) {
 }
 
 type Attention = { tone: 'warn' | 'brand'; title: string; detail: string; href: string };
-
-/** Where each Overview card sits on a wide screen (three columns); on a phone and tablet every card is full width. */
-const CARD_SPAN: Record<CardId, string> = {
-    figures: 'xl:col-span-3', 'cash-chart': 'xl:col-span-2 xl:row-span-2', flagged: 'xl:self-start', forecast: 'xl:self-start',
-    checks: 'xl:col-span-3', counterparties: 'xl:col-span-2', 'reconciliation-summary': '', 'last-runs': 'xl:col-span-2',
-};
 
 function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
     const { scope: s, outputs: o } = c, r = o.reconciliation, f = o.forecast.forecast, ar = o.anomalyResolution;
@@ -131,7 +125,7 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         'reconciliation-summary': <ReconciliationSummaryCard currency={s.currency} counts={r.counts} records={r.results.length} resolution={o.resolution} />,
         'last-runs': <LastRunsCard />,
     };
-    const visible = offered(shown, dashboard.admin).filter(x => x.visible);
+    const visible = offered(shown, dashboard.admin).filter(x => x.visible), spans = cardSpans(visible.map(x => x.id));
     return <>
         <PageHeader eyebrow={`Overview · ${periodLabel(s.period)}`} title={s.businessName} description={`Cash movement and reconciliation for ${periodLabel(s.period)}, in ${s.currency}.`}
             actions={editing ? null : <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:justify-end">
@@ -141,7 +135,7 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         <SourceStrip context={c} />
         {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => setDraft(d => d && update(d))} onDone={() => void done()} onCancel={close} /> : null}
         {!dashboard.ready ? <div aria-busy="true" aria-label="Loading your dashboard" className="min-h-[40vh]" />
-            : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-flow-dense xl:grid-cols-3">{visible.map(x => <div key={x.id} data-card={x.id} className={`grid min-w-0 ${CARD_SPAN[x.id]}`}>{cards[x.id]}</div>)}</div>
+            : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} data-card={x.id} className={`grid min-w-0 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
             : <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-8 text-center text-sm text-[var(--muted-strong)]">Every card is hidden. Use Customise dashboard to show them again.</p>}
         <p className="mt-4 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>
     </>;
