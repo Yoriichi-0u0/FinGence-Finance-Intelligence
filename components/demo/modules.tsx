@@ -39,7 +39,7 @@ function Ring({ value, total, label }: { value: number; total: number; label: st
     return <svg viewBox="0 0 100 100" className="size-28 shrink-0 -rotate-90 sm:size-32" role="img" aria-label={label}>
         <circle cx="50" cy="50" r={r} fill="none" stroke="var(--surface-sunken)" strokeWidth="9" />
         <circle cx="50" cy="50" r={r} fill="none" stroke="url(#ring-gradient)" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${(pct / 100) * c} ${c}`} />
-        <defs><linearGradient id="ring-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#2563eb" /><stop offset="0.55" stopColor="#6d4aff" /><stop offset="1" stopColor="#22d3ee" /></linearGradient></defs>
+        <defs><linearGradient id="ring-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#1e40af" /><stop offset="0.55" stopColor="#2563eb" /><stop offset="1" stopColor="#38bdf8" /></linearGradient></defs>
     </svg>;
 }
 

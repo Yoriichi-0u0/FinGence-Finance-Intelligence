@@ -35,7 +35,7 @@ describe('the sign-in proxy', () => {
     });
     it('does not run on static assets', () => {
         const pattern = new RegExp(`^${config.matcher[0].replace('/((?!', '/(?!').replace(').*)', ').*')}$`);
-        for (const path of ['/_next/static/chunks/app.js', '/_next/image', '/favicon.ico', '/icon.png']) expect(pattern.test(path)).toBe(false);
-        expect(pattern.test('/data')).toBe(true);
+        for (const path of ['/_next/static/chunks/app.js', '/_next/image', '/favicon.ico', '/icon.png', '/branding/FinGence_Logo_96.png']) expect(pattern.test(path)).toBe(false);
+        for (const path of ['/data', '/samples/demo-bank-statement-2026-03.csv', '/demo/x.pdf']) expect(pattern.test(path)).toBe(true);
     });
 });

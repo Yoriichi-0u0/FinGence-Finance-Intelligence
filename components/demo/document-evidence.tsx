@@ -95,7 +95,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
             </p>
             <div className="flex flex-wrap items-center gap-1.5 text-xs" aria-label="Legend">
                 {shown.map(f => <span key={f} className={`rounded-md px-1.5 py-0.5 font-medium ${FIELD[f].color}`}>{FIELD[f].label}</span>)}
-                {r.aiLines.length ? <span className="rounded-md border border-dashed border-indigo-400 px-1.5 py-0.5 text-indigo-900">AI was shown this line</span> : null}
+                {r.aiLines.length ? <span className="rounded-md border border-dashed border-[var(--brand)] px-1.5 py-0.5 text-[var(--brand-ink)]">AI was shown this line</span> : null}
                 {disputes.size ? <span className="rounded-md px-1.5 py-0.5 outline outline-2 -outline-offset-2 outline-red-500">Two OCR passes disagreed</span> : null}
             </div>
             <div role="group" aria-label="Show" className="grid grid-cols-2 gap-1 rounded-xl bg-[var(--surface-sunken)] p-1 lg:hidden">
@@ -211,7 +211,7 @@ function Pages({ input, coords, geometry, read, ai, active, setActive, cellField
                 const all = g.cells.filter(Boolean) as [number, number, number, number][];
                 if (!all.length) return null;
                 const [x0, y0, x1, y1] = [Math.min(...all.map(b => b[0])), Math.min(...all.map(b => b[1])), Math.max(...all.map(b => b[2])), Math.max(...all.map(b => b[3]))];
-                return <div key={`ai-${line}`} aria-hidden="true" className="pointer-events-none absolute rounded-sm border border-dashed border-indigo-500"
+                return <div key={`ai-${line}`} aria-hidden="true" className="pointer-events-none absolute rounded-sm border border-dashed border-[var(--brand)]"
                     style={{ left: pct(x0 - 5, p.width), top: pct(y0 - 4, p.height), width: pct(x1 - x0 + 10, p.width), height: pct(y1 - y0 + 8, p.height) }} />;
             })}
             {geometry.map((g, line) => {
