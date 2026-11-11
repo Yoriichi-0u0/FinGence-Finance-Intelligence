@@ -53,8 +53,8 @@
   --shadow-raise: 0 2px 4px rgb(14 19 48 / 0.06), 0 16px 40px -16px rgb(14 19 48 / 0.22);
   --chart-grid: #e4e9f2;
   --chart-in: #1d4ed8;
-  --chart-out: #7c3aed;
-  --chart-net: #d97706;
+  --chart-out: #eb6834;
+  --chart-net: #1baf7a;
 
   /* Earlier names, kept as aliases so every page follows the theme. */
   --teal: var(--brand);
@@ -109,9 +109,9 @@
     --shadow-panel: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
     --shadow-raise: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 44px -18px rgb(0 0 0 / 0.8);
     --chart-grid: #1f2c4a;
-    --chart-in: #6ea8fe;
-    --chart-out: #a78bfa;
-    --chart-net: #f2aa4c;
+    --chart-in: #3987e5;
+    --chart-out: #d95926;
+    --chart-net: #199e70;
   }
 }
 :root[data-theme="dark"] {
@@ -150,9 +150,9 @@
   --shadow-panel: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
   --shadow-raise: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 18px 44px -18px rgb(0 0 0 / 0.8);
   --chart-grid: #1f2c4a;
-  --chart-in: #6ea8fe;
-  --chart-out: #a78bfa;
-  --chart-net: #f2aa4c;
+  --chart-in: #3987e5;
+  --chart-out: #d95926;
+  --chart-net: #199e70;
 }
 
 /*

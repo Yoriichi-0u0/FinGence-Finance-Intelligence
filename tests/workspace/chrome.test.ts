@@ -28,11 +28,8 @@ describe('page chrome by role', async () => {
     const context: ProcessingContext = await processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv')]);
     const fingerprint = context.documents[0].sha256.slice(0, 12);
 
-    it('a Finance user sees the business and period, not the processing ID or fingerprints', () => {
-        const text = as('FINANCE', createElement(SourceStrip, { context }));
-        expect(text).toContain(`${context.scope!.businessName} (${context.scope!.businessId})`);
-        expect(text).not.toContain(context.processingId);
-        expect(text).not.toContain(fingerprint);
+    it('a Finance user gets no source strip: the status chips already name the business and period', () => {
+        expect(as('FINANCE', createElement(SourceStrip, { context })).trim()).toBe('');
     });
     it('Admins, Superadmins and deployments without sign-in see them', () => {
         for (const role of ['ADMIN', 'SUPERADMIN', null] as const) {

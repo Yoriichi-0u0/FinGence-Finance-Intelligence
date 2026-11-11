@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useTechnicalDetail } from '@/components/workspace/context';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, ArrowRight, ChevronRight, ChartNoAxesCombined, Download, FileBarChart, Flag, House, MessageSquareText, Printer, ReceiptText, RefreshCw, Search, Send, ShieldCheck, Sparkles, TrendingUp } from 'lucide-react';
+import { ArrowRight, ChevronRight, Download, Flag, Printer, ReceiptText, Search, Send, ShieldCheck, Sparkles } from 'lucide-react';
 import { LineChart } from '@/components/charts';
 import { PageHeader, Panel } from '@/components/ui';
 import { RULES, type RuleId } from '@/lib/poc-anomalies/detector';
@@ -35,72 +35,84 @@ function Pager({ page, total, onPage }: { page: number; total: number; onPage: (
     return <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-xs sm:px-4"><button type="button" className={`${button} min-h-10 px-3`} disabled={page === 0} onClick={() => onPage(page - 1)}>Previous</button><span className="text-center text-[var(--muted-strong)]">Page {page + 1} of {pages} · {total} rows</span><button type="button" className={`${button} min-h-10 px-3`} disabled={page + 1 >= pages} onClick={() => onPage(page + 1)}>Next</button></div>;
 }
 
-function Ring({ value, total, label }: { value: number; total: number; label: string }) {
-    const pct = total ? (value / total) * 100 : 0, r = 42, c = 2 * Math.PI * r;
-    return <svg viewBox="0 0 100 100" className="size-28 shrink-0 -rotate-90 sm:size-32" role="img" aria-label={label}>
-        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--surface-sunken)" strokeWidth="9" />
-        <circle cx="50" cy="50" r={r} fill="none" stroke="url(#ring-gradient)" strokeWidth="9" strokeLinecap="round" strokeDasharray={`${(pct / 100) * c} ${c}`} />
-        <defs><linearGradient id="ring-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#1e40af" /><stop offset="0.55" stopColor="#2563eb" /><stop offset="1" stopColor="#38bdf8" /></linearGradient></defs>
-    </svg>;
-}
-
-const LINK_ICON: Record<string, typeof House> = { '/transactions': ReceiptText, '/reconciliation': RefreshCw, '/analytics': ChartNoAxesCombined, '/anomalies': AlertTriangle, '/forecasting': TrendingUp, '/reports': FileBarChart, '/ask': MessageSquareText };
-
 /** A signed amount: money in is tinted green and money out stays neutral, so direction reads at a glance; the sign is kept. */
 function Amount({ currency, value }: { currency: string; value: string }) {
     return <span className={`whitespace-nowrap font-medium tabular-nums ${value.startsWith('-') ? 'text-[var(--muted-strong)]' : 'text-[var(--good-ink)]'}`}>{money(currency, value)}</span>;
 }
 
+/** Cumulative net bank movement by day: where the cash position stood through the period. */
+function dailyCumulative(rows: Ready['outputs']['bankRows']) {
+    const map = new Map<string, bigint>(); for (const r of rows) map.set(r.date, (map.get(r.date) ?? 0n) + toCents(r.signedAmount));
+    const points: { d: string; v: number }[] = []; let total = 0n;
+    for (const [d, v] of [...map.entries()].sort()) { total += v; points.push({ d, v: Number(total) / 100 }); }
+    return points;
+}
+/** Monthly cash in and out: the accepted history, or else the statement's own months when it covers more than one. */
+function monthlyTotals(c: Ready) {
+    const o = c.outputs, s = c.scope;
+    const rows = o.history.accepted ? o.history.rows : s.months.length > 1 ? o.bankRows : [], months = o.history.accepted ? o.history.months : s.months.length > 1 ? s.months : [];
+    return months.map(p => ({ p, ...cashTotals(rows.filter(r => r.period === p)) }));
+}
+
+type Attention = { tone: 'warn' | 'brand'; title: string; detail: string; href: string };
+
 function Overview({ c }: { c: Ready }) {
-    const { scope: s, outputs: o } = c, r = o.reconciliation, f = o.forecast.forecast;
-    const checks = c.stages.flatMap(x => x.checks), exceptions = c.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length;
-    const ar = o.anomalyResolution, flaggedAnomalies = ar?.flagged ?? o.anomalies.length, months = s.months.length;
-    const matchedCount = r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT, passedChecks = checks.filter(k => k.passed).length;
+    const { scope: s, outputs: o } = c, r = o.reconciliation, f = o.forecast.forecast, ar = o.anomalyResolution;
+    const checks = c.stages.flatMap(x => x.checks), passedChecks = checks.filter(k => k.passed).length;
+    const matchedCount = r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT, rate = r.results.length ? Math.round((matchedCount / r.results.length) * 100) : 0;
+    const days = useMemo(() => dailyCumulative(o.bankRows), [o.bankRows]), months = monthlyTotals(c);
+    const unexplained = o.resolution?.attention.length ?? c.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length;
+    const flaggedAnomalies = ar?.flagged ?? o.anomalies.length, entries = o.resolution?.totals.entries ?? 0;
+    const unusedDocuments = c.quarantine.filter(q => q.kind === 'DOCUMENT' || q.kind === 'HISTORY').length;
+    const attention: Attention[] = [
+        ...(unexplained ? [{ tone: 'warn' as const, title: `${unexplained} reconciliation item${unexplained === 1 ? '' : 's'} not explained`, detail: o.resolution ? `${money(s.currency, o.resolution.totals.unexplained.replace(/^-/, ''))} in total. Flagged for your technical team.` : 'Flagged for your technical team.', href: '/reconciliation' }] : []),
+        ...(flaggedAnomalies ? [{ tone: 'warn' as const, title: `${flaggedAnomalies} unusual bank record${flaggedAnomalies === 1 ? '' : 's'} flagged`, detail: 'Your books could not settle them. Flagged for your technical team, not treated as fact.', href: '/anomalies' }] : []),
+        ...(unusedDocuments ? [{ tone: 'warn' as const, title: `${unusedDocuments} document${unusedDocuments === 1 ? '' : 's'} could not be used`, detail: 'See the reason on Data.', href: '/data' }] : []),
+        ...(entries ? [{ tone: 'brand' as const, title: `${entries} correcting entr${entries === 1 ? 'y' : 'ies'} prepared for your books`, detail: 'Prepared from stated rules, not posted. Download them on Reconciliation.', href: '/reconciliation' }] : []),
+    ];
+    const warnings = attention.filter(a => a.tone === 'warn').length;
     return <>
-        <PageHeader eyebrow={`${s.businessId} · ${periodLabel(s.period)}`} title="Overview" description={`Verified results for ${s.businessName}, ${periodLabel(s.period)}, from one processing of your documents.`} />
+        <PageHeader eyebrow={`Overview · ${periodLabel(s.period)}`} title={s.businessName} description={`Cash movement and reconciliation for ${periodLabel(s.period)}, in ${s.currency}.`} />
         <SourceStrip context={c} />
-        <section aria-label="Verification at a glance" className="panel-shadow relative mb-5 overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)]">
-            <div aria-hidden="true" className="ledger-grid pointer-events-none absolute inset-0 [mask-image:linear-gradient(110deg,black,transparent_70%)]" />
-            <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-center sm:p-7">
-                <div className="flex items-center gap-5">
-                    <div className="relative grid place-items-center">
-                        <Ring value={matchedCount} total={r.results.length} label={`${matchedCount} of ${r.results.length} reconciled automatically`} />
-                        <span className="absolute text-center"><span className="block text-2xl font-semibold tracking-[-0.03em] tabular-nums">{r.results.length ? Math.round((matchedCount / r.results.length) * 100) : 0}%</span><span className="block text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">matched</span></span>
-                    </div>
-                    <div className="min-w-0 sm:hidden"><p className="text-lg font-semibold leading-snug">{passedChecks} of {checks.length} checks passed</p><p className="text-sm text-[var(--muted)]">{c.quarantine.length} flagged for the technical team</p></div>
-                </div>
-                <div className="min-w-0 flex-1">
-                    <p className="hidden text-[22px] font-semibold leading-snug tracking-[-0.02em] sm:block">{passedChecks} of {checks.length} automated checks passed across {c.stages.length} stages.</p>
-                    <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[var(--muted-strong)]">{matchedCount} of {r.results.length} records reconciled automatically{o.resolution ? `, ${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved by stated rules` : ''}. No routine manual approval was needed.</p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--good-soft)] px-2.5 py-1 text-[var(--good-ink)] ring-1 ring-inset ring-[var(--good-line)]"><ShieldCheck aria-hidden="true" size={13} />{c.stages.filter(x => x.decision === 'AUTO_ACCEPTED').length} of {c.stages.length} stages verified</span>
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-inset ${c.quarantine.length ? 'bg-[var(--warn-soft)] text-[var(--warn-ink)] ring-[var(--warn-line)]' : 'bg-[var(--good-soft)] text-[var(--good-ink)] ring-[var(--good-line)]'}`}><Flag aria-hidden="true" size={13} />{c.quarantine.length} flagged for the technical team</span>
-                    </div>
-                </div>
-            </div>
-        </section>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat tone="brand" label="Net signed bank movement" value={money(s.currency, o.totals.net)} detail={`In ${money(s.currency, o.totals.credits)} · out ${outflow(s.currency, o.totals.debits)}`} />
-            <Stat tone="brand" label="Bank − ledger difference" value={money(s.currency, r.cashMovement.signedDifference)} detail={`Ledger cash account ${money(s.currency, r.cashMovement.ledger)}${o.periods.length > 1 ? ` · ${o.periods.length} months reconciled` : ''}`} />
-            <Stat tone="good" label="Reconciled automatically" value={`${matchedCount} of ${r.results.length}`} detail={o.resolution ? `${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved · ${exceptions} flagged` : `${exceptions} exceptions flagged`} />
-            <Stat tone="plain" label="Next-month cash baseline" value={f.status === 'AVAILABLE' ? money(s.currency, f.net) : 'Unavailable'} detail={f.status === 'AVAILABLE' ? `${f.period} net · six-month mean, not AI` : f.detail} />
+            <Stat tone="brand" label="Cash in" value={money(s.currency, o.totals.credits)} detail={`${o.totals.creditRows} bank receipts`} />
+            <Stat tone="plain" label="Cash out" value={outflow(s.currency, o.totals.debits)} detail={`${o.totals.debitRows} bank payments`} />
+            <Stat tone="brand" label="Net movement" value={money(s.currency, o.totals.net)} detail="Cash in minus cash out" />
+            <Stat tone="good" label="Reconciled automatically" value={`${rate}%`} detail={`${matchedCount} of ${r.results.length} records matched${o.resolution ? ` · ${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved` : ''}`} />
         </div>
-        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
-            <Panel title="Automated verification" eyebrow="Trust model">
-                <div className="space-y-3 p-4 text-sm sm:p-5">
-                    <p><strong>{passedChecks} of {checks.length}</strong> automated checks passed across {c.stages.length} stages. No routine manual approval was needed.</p>
-                    <p className="text-[var(--muted-strong)]"><strong className="text-[var(--ink)]">{c.quarantine.length}</strong> item{c.quarantine.length === 1 ? ' is' : 's are'} flagged for the technical team: {exceptions} unexplained reconciliation item{exceptions === 1 ? '' : 's'}, {flaggedAnomalies} unusual record{flaggedAnomalies === 1 ? '' : 's'} the books do not confirm{c.quarantine.some(q => q.kind === 'DOCUMENT' || q.kind === 'HISTORY') ? ' and quarantined documents' : ''}. Flagged items are never treated as established facts.</p>
-                    <ol className="grid gap-1.5 pt-1">{c.stages.map((x, i) => <li key={x.id} className="flex min-w-0 items-center gap-3 rounded-xl bg-[var(--surface-subtle)] px-3 py-2 ring-1 ring-inset ring-[var(--border)]"><span className="w-4 text-xs font-semibold text-[var(--muted)] tabular-nums">{i + 1}</span><span className="min-w-0 flex-1 text-[13px] font-medium">{x.title}</span><DecisionBadge decision={x.decision} label={x.decision === 'AUTO_ACCEPTED' ? 'Verified' : undefined} /></li>)}</ol>
-                </div>
-            </Panel>
-            <Panel title="Connected results" eyebrow="Same processing context">
-                <ul className="grid gap-2 p-4 sm:grid-cols-2 sm:p-5">
-                    {[['/transactions', 'Transactions', `${o.totals.rows} bank records · ${o.ledger?.rows.length ?? 0} ledger entries`], ['/reconciliation', 'Reconciliation', `${reconciliationStatuses.filter(k => r.counts[k]).length} outcome categories`], ['/analytics', 'Analytics', o.history.accepted ? `${o.history.months.length} months of bank history` : months > 1 ? `${months} statement months` : 'Statement month only'], ['/anomalies', 'Anomalies', ar ? `${ar.corroborated} confirmed by the books · ${ar.flagged} flagged` : `${o.anomalies.length} rule-based candidates`], ['/forecasting', 'Forecasting', f.status === 'AVAILABLE' ? `${f.period} baseline` : 'Unavailable for this input'], ['/reports', 'Reports', 'Management summary and JSON evidence'], ['/ask', 'Finance Q&A', 'Rule-based answers from these figures']].map(([href, label, detail]) => { const Icon = LINK_ICON[href];
-                        return <li key={href}><Link href={href} className="group flex min-h-16 items-center gap-3 rounded-xl border border-[var(--border)] px-3.5 py-3 transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)]"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-[var(--brand-soft)] text-[var(--brand)]"><Icon aria-hidden="true" size={17} /></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{label}</span><span className="block text-xs text-[var(--muted)]">{detail}</span></span><ArrowRight aria-hidden="true" size={15} className="shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-0.5" /></Link></li>; })}
-                </ul>
-            </Panel>
+        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            {months.length > 1
+                ? <Panel title="Cash in and out by month" eyebrow={o.history.accepted ? 'Verified bank history' : 'Statement months'} action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
+                    <div className="p-3 sm:p-4"><LineChart ariaLabel="Monthly bank cash in and cash out" labels={months.map(m => m.p.slice(2))} series={[{ label: 'Cash in', color: 'var(--chart-in)', values: months.map(m => Number(m.credits)) }, { label: 'Cash out', color: 'var(--chart-out)', values: months.map(m => -Number(m.debits)) }]} /></div>
+                </Panel>
+                : <Panel title={`Cash position through ${periodLabel(s.period)}`} eyebrow="Running net movement, by day" action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
+                    <div className="p-3 sm:p-4"><LineChart ariaLabel={`Running net bank movement by day in ${periodLabel(s.period)}`} labels={days.map(x => s.months.length > 1 ? x.d.slice(5) : x.d.slice(8))} series={[{ label: 'Running net movement', color: 'var(--chart-in)', values: days.map(x => x.v), fill: true }]} /></div>
+                </Panel>}
+            <div className="grid content-start gap-5">
+                <Panel title={warnings ? 'Flagged by FinGence' : 'Nothing flagged'} eyebrow={warnings ? `${warnings} to know about` : 'All clear'}>
+                    {attention.length ? <ul className="divide-y divide-[var(--border)]">{attention.map(a => <li key={a.title}><Link href={a.href} className="group flex min-h-16 items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--surface-subtle)] sm:px-5">
+                        <span className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ${a.tone === 'warn' ? 'bg-[var(--warn-soft)] text-[var(--warn)]' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>{a.tone === 'warn' ? <Flag aria-hidden="true" size={16} /> : <ReceiptText aria-hidden="true" size={16} />}</span>
+                        <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{a.title}</span><span className="block text-xs leading-relaxed text-[var(--muted)]">{a.detail}</span></span>
+                        <ChevronRight aria-hidden="true" size={16} className="mt-1 shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-0.5" />
+                    </Link></li>)}</ul> : null}
+                    {warnings ? null : <p className="flex items-start gap-2.5 px-4 py-3.5 text-sm text-[var(--muted-strong)] sm:px-5"><ShieldCheck aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--good)]" />FinGence explained every difference with a stated rule. Nothing was sent to your technical team.</p>}
+                </Panel>
+                <Stat tone="plain" label="Next month, expected net" value={f.status === 'AVAILABLE' ? money(s.currency, f.net) : 'Not available yet'} detail={f.status === 'AVAILABLE' ? `${periodLabel(f.period)} · average of the last six months` : f.detail} />
+            </div>
         </div>
-        <p className="mt-5 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>
+        <details className="group mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
+            <summary className="flex min-h-12 cursor-pointer items-center gap-2.5 px-4 py-3 text-sm sm:px-5">
+                <ChevronRight aria-hidden="true" size={16} className="disclosure-chevron shrink-0 text-[var(--muted)] transition-transform" />
+                <ShieldCheck aria-hidden="true" size={17} className="shrink-0 text-[var(--good)]" />
+                <span className="font-semibold">How FinGence checked these figures</span>
+                <span className="ml-auto text-xs text-[var(--muted)] tabular-nums">{passedChecks} of {checks.length} checks passed</span>
+            </summary>
+            <div className="space-y-3 border-t border-[var(--border)] p-4 text-sm sm:p-5">
+                <p className="text-[var(--muted-strong)]">{c.stages.filter(x => x.decision === 'AUTO_ACCEPTED').length} of {c.stages.length} stages passed their automated checks. No manual approval was needed; anything FinGence could not explain is flagged, never treated as fact.</p>
+                <ol className="grid gap-1.5 sm:grid-cols-2">{c.stages.map((x, i) => <li key={x.id} className="flex min-w-0 items-center gap-3 rounded-xl bg-[var(--surface-subtle)] px-3 py-2 ring-1 ring-inset ring-[var(--border)]"><span className="w-4 text-xs font-semibold text-[var(--muted)] tabular-nums">{i + 1}</span><span className="min-w-0 flex-1 text-[13px] font-medium">{x.title}</span><DecisionBadge decision={x.decision} label={x.decision === 'AUTO_ACCEPTED' ? 'Verified' : undefined} /></li>)}</ol>
+            </div>
+        </details>
+        <p className="mt-4 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>
     </>;
 }
 
@@ -162,10 +174,8 @@ function Reconciliation({ c }: { c: Ready }) {
 }
 
 function Analytics({ c }: { c: Ready }) {
-    const s = c.scope, o = c.outputs, days = useMemo(() => { const map = new Map<string, bigint>(); for (const r of o.bankRows) map.set(r.date, (map.get(r.date) ?? 0n) + toCents(r.signedAmount)); const points: { d: string; v: number }[] = []; let total = 0n; for (const [d, v] of [...map.entries()].sort()) { total += v; points.push({ d, v: Number(total) / 100 }); } return points; }, [o.bankRows]);
-    // Monthly trend: the accepted history, or else the statement's own months when it covers more than one.
-    const trendRows = o.history.accepted ? o.history.rows : s.months.length > 1 ? o.bankRows : [], trendMonths = o.history.accepted ? o.history.months : s.months.length > 1 ? s.months : [];
-    const months = trendMonths.map(p => ({ p, ...cashTotals(trendRows.filter(r => r.period === p)) })), multi = s.months.length > 1;
+    const s = c.scope, o = c.outputs, days = useMemo(() => dailyCumulative(o.bankRows), [o.bankRows]);
+    const months = monthlyTotals(c), multi = s.months.length > 1;
     const parties = useMemo(() => { const map = new Map<string, { in: bigint; out: bigint; n: number }>(); for (const r of o.bankRows) { const e = map.get(r.counterparty) ?? { in: 0n, out: 0n, n: 0 }; const v = toCents(r.signedAmount); if (v >= 0n) e.in += v; else e.out += v; e.n++; map.set(r.counterparty, e); } return [...map.entries()].sort((a, b) => Number((b[1].in - b[1].out) - (a[1].in - a[1].out))).slice(0, 8); }, [o.bankRows]);
     return <>
         <PageHeader eyebrow="Results · cash movement" title="Analytics" description="Exact cash movement metrics and trends calculated from the verified bank records." />

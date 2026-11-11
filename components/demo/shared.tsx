@@ -45,13 +45,15 @@ export function Stat({ label, value, detail, tone = 'plain', icon }: { label: st
     </div>;
 }
 
-/** Where every figure on a page comes from: the business and period, and (for Admins) the processing ID and source fingerprints. */
+/** For Admins: where every figure on a page comes from (processing ID, business, period and source fingerprints). */
 export function SourceStrip({ context }: { context: ProcessingContext }) {
     const s = context.scope, technical = useTechnicalDetail();
+    // For a Finance user the status chips above already name the business, period and currency.
+    if (!technical) return null;
     return <div className="mb-6 flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3.5 py-2.5 text-xs">
-        {technical ? <span className="inline-flex min-w-0 items-center gap-1.5 font-semibold text-[var(--brand-ink)]"><Fingerprint aria-hidden="true" size={15} className="shrink-0" />Processing <code className="truncate font-medium">{context.processingId}</code></span> : null}
+        <span className="inline-flex min-w-0 items-center gap-1.5 font-semibold text-[var(--brand-ink)]"><Fingerprint aria-hidden="true" size={15} className="shrink-0" />Processing <code className="truncate font-medium">{context.processingId}</code></span>
         {s ? <span className="text-[var(--muted-strong)]">{s.businessName} ({s.businessId}) · {periodLabel(s.period)} · {s.currency}</span> : null}
-        {technical ? <span className="flex min-w-0 flex-wrap gap-1.5">{context.documents.filter(d => d.decision === 'AUTO_ACCEPTED').map(d => <span key={d.sha256} className="inline-flex min-w-0 items-center gap-1 rounded-full bg-[var(--surface)] px-2 py-0.5 text-[var(--muted)] ring-1 ring-inset ring-[var(--border)]" title={d.sha256}>{d.role === 'BANK_STATEMENT' ? 'Bank' : d.role === 'GENERAL_LEDGER' ? 'Ledger' : 'History'} <code>{d.sha256.slice(0, 12)}…</code></span>)}</span> : null}
+        <span className="flex min-w-0 flex-wrap gap-1.5">{context.documents.filter(d => d.decision === 'AUTO_ACCEPTED').map(d => <span key={d.sha256} className="inline-flex min-w-0 items-center gap-1 rounded-full bg-[var(--surface)] px-2 py-0.5 text-[var(--muted)] ring-1 ring-inset ring-[var(--border)]" title={d.sha256}>{d.role === 'BANK_STATEMENT' ? 'Bank' : d.role === 'GENERAL_LEDGER' ? 'Ledger' : 'History'} <code>{d.sha256.slice(0, 12)}…</code></span>)}</span>
         <Link href="/data" className="font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2 sm:ml-auto">Processing details</Link>
     </div>;
 }
