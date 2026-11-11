@@ -26,6 +26,7 @@ import {
   MessageSquareText,
   ReceiptText,
   RefreshCw,
+  ScrollText,
   ShieldCheck,
   TrendingUp,
   X,
@@ -56,6 +57,7 @@ const management = { href: "/management", label: "Management", icon: Gauge };
 // Hosted workspace (SAIC only): every role uses the finance pages; Admins and Superadmins also get Team and Operations.
 const operationsItem: NavItem = { href: "/operations", label: "Operations", icon: Activity };
 const teamItem: NavItem = { href: "/team", label: "Team", icon: Users };
+const logItem: NavItem = { href: "/log", label: "Technical log", icon: ScrollText };
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
@@ -133,7 +135,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
         <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} />
         <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} />
         <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} />
-        {admin ? <NavGroup label="Administration" items={[teamItem, operationsItem]} pathname={pathname} onNavigate={onNavigate} /> : null}
+        {admin ? <NavGroup label="Administration" items={[teamItem, logItem, operationsItem]} pathname={pathname} onNavigate={onNavigate} /> : null}
       </nav>
 
       <div className="relative space-y-3 border-t border-[var(--rail-line)] px-4 pb-5 pt-4">
@@ -201,7 +203,7 @@ function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDem
 /** While previewing a Finance user, the Admin pages show what that person would get instead. */
 function ShellPage({ pathname, children }: { pathname: string; children: React.ReactNode }) {
   const { session, viewRole } = useWorkspace();
-  const page = pathname === "/team" ? "Team" : pathname === "/operations" ? "Operations" : null;
+  const page = pathname === "/team" ? "Team" : pathname === "/operations" ? "Operations" : pathname === "/log" ? "The Technical log" : null;
   if (page && session && viewRole && !atLeast(viewRole, "ADMIN")) return <OutsideView page={page} />;
   return <>{children}</>;
 }
@@ -210,7 +212,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
-  const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem].find((item) => isActive(pathname, item.href));
+  const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem, logItem].find((item) => isActive(pathname, item.href));
 
   // Signing in and joining stand on their own page, without the navigation a visitor cannot use yet.
   if (workspaceEnabled && (pathname === "/sign-in" || pathname === "/join")) return <WorkspaceProvider enabled><AuthLayout>{children}</AuthLayout></WorkspaceProvider>;
@@ -241,7 +243,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1480px] px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
-          {["/sign-in", "/join", "/team", "/operations"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
+          {["/sign-in", "/join", "/team", "/operations", "/log"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link>
           </aside>}
           <ViewingAs />

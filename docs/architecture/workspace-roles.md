@@ -55,6 +55,15 @@ FinGence-Production Supabase project (v1 applied on 4 November with 0 organizati
 - Pages: `/sign-in`, `/join`; `/team` and `/operations` for Admins and Superadmins (checked on the server). Each is a 404
   when the workspace is off.
 
+## Technical log (v3)
+
+`supabase/sql/workspace-v3-log.sql` adds three things:
+- who submitted each server job;
+- the organization and member on a finished job's ingestion run;
+- `fingence_workspace.ai_calls`, AI-call metadata from `lib/ai-calls`, kept 90 days.
+
+`fingence_workspace_log(token, since)` returns runs (with each document's method, model and checks, and a server job's stages), failed jobs and AI calls. Only Admins and Superadmins of the organization can read it, and never more than 90 days back. The page is `/log`; a Finance user, or someone viewing as one, does not see it.
+
 ## Owner bootstrap
 
 ```bash

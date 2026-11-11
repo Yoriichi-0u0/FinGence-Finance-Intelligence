@@ -4,7 +4,8 @@ import { boundedForm, noStoreJson as json } from '@/lib/server/ai/request';
 import { clientHash } from '@/lib/server/ingestion-store';
 import { createJob, decodeJobForm, maxJobBodyBytes, processingState, runJob } from '@/lib/server/processing/jobs';
 import { processingStore, StoreError } from '@/lib/server/processing/store';
-import { processingGate, signedInMember } from '@/lib/server/workspace/session';
+import { aiCaller, processingGate, signedInMember } from '@/lib/server/workspace/session';
+import { runAsCaller } from '@/lib/ai-calls';
 
 export const dynamic = 'force-dynamic';
 /** A job runs after the response, for at most this long; one that never finishes is failed by the store after 10 minutes. */
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     // job belongs to that organization, and while a Superadmin has turned the AI off it runs on the rules alone.
     const gate = await processingGate(request.headers);
     if ('refusal' in gate) return json({ code: gate.refusal.code, ...(gate.refusal.reason ? { reason: gate.refusal.reason } : {}) }, gate.refusal.status);
-    const scope = gate.principal ? { organization: gate.principal.organization.id, ...(gate.principal.ai.enabled ? {} : { interpreter: null }) } : {};
+    const scope = gate.principal ? { organization: gate.principal.organization.id, member: gate.principal.memberId, ...(gate.principal.ai.enabled ? {} : { interpreter: null }) } : {};
     const documents = await decodeJobForm(read.form);
     if ('code' in documents) return json({ code: documents.code, ...(documents.issue !== undefined ? { issue: documents.issue } : {}) }, documents.status);
     const client = clientAddress(request.headers);
@@ -50,6 +51,6 @@ export async function POST(request: Request) {
     try { created = await createJob(documents, clientHash(client, budget.secret), scope); }
     catch (error) { return json({ code: storeCode(error) }, 502); }
     if ('error' in created) return json({ code: created.error, reason: created.reason, since: created.since }, 423);
-    after(() => runJob(created.jobId, documents, client, scope));
+    after(() => runAsCaller(aiCaller(gate.principal, created.jobId), () => runJob(created.jobId, documents, client, scope)));
     return json({ jobId: created.jobId }, 202);
 }

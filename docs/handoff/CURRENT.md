@@ -1,5 +1,21 @@
 # FinGence — current technical entrypoint
 
+## Technical log and the AI-call door — 11 November 2026
+
+- **The door.** Every AI model call goes through `withAiCall` in `lib/ai-calls/`. It records metadata only: feature, model, key name, tokens, cost, time, outcome and who. The strict contract (`lib/ai-calls/contract.ts`) rejects anything else.
+  - Wired in: `structuredCompletion` (layout reading, Finance Q&A, report commentary) and both ingestion experiments.
+  - `tests/ai-calls/guard.test.ts` fails the build for a direct provider call.
+  - The teammate guide is `docs/ai-integration/ai-calls.md`, with a paste-in prompt for their AI assistants. `AGENTS.md` points to it.
+- **Who.** Routes set the caller with `runAsCaller(aiCaller(principal), …)`; server jobs record their member.
+- **Data:** `supabase/sql/workspace-v3-log.sql`.
+  - `jobs.member_id`.
+  - Finished jobs stamp their ingestion run with the organization and member; before this, hosted runs never reached Operations.
+  - `fingence_workspace.ai_calls`, kept 90 days.
+  - `fingence_workspace_log`, Admin and above.
+  - It must be applied on Production **before** this code deploys: a job submitted by a signed-in member calls the four-argument `fingence_processing_create_job`.
+- **Page:** `/log`, "Technical log", in the Administration navigation. It has 7-day tiles, AI calls per day, a plain-language timeline with run and call detail, filters for feature, person, AI only and problems, and a CSV export. Operations keeps the controls; its Runs list moved here.
+- **Locally:** without a database, calls go to `.local/ai-calls/YYYY-MM-DD.jsonl`. `scripts/dev-store.mjs` applies v3 on every start.
+
 ## Document evidence view — 6 November 2026
 
 On the Data page, each processed document can be shown side by side with what FinGence read from it. See [docs/architecture/document-evidence-view-v1.md](../architecture/document-evidence-view-v1.md).
