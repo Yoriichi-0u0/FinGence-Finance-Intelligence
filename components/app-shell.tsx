@@ -98,7 +98,7 @@ function NavGroup({ label, items, pathname, onNavigate }: { label: string; items
                   aria-hidden="true"
                   size={18}
                   strokeWidth={active ? 2.2 : 1.8}
-                  className={active ? "text-[#a5b4fc]" : "text-[var(--rail-muted)] group-hover:text-white"}
+                  className={active ? "text-[#93bdff]" : "text-[var(--rail-muted)] group-hover:text-white"}
                 />
                 {item.label}
               </Link>
@@ -120,7 +120,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
 
   return (
     <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--rail)] text-white">
-      <div aria-hidden="true" className="pointer-events-none absolute -left-24 -top-24 size-64 rounded-full bg-[#4f46e5]/25 blur-3xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute -left-24 -top-24 size-64 rounded-full bg-[#2563eb]/25 blur-3xl" />
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-28 -right-20 size-64 rounded-full bg-[#22d3ee]/10 blur-3xl" />
       <div className="relative px-5 pb-6 pt-6">
         <Brand />
@@ -137,7 +137,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
       <div className="relative space-y-3 border-t border-[var(--rail-line)] px-4 pb-5 pt-4">
         {session.enabled && session.session ? (
           <div className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06]">
-            <Building2 aria-hidden="true" size={18} className="shrink-0 text-[#a5b4fc]" />
+            <Building2 aria-hidden="true" size={18} className="shrink-0 text-[#93bdff]" />
             <span className="min-w-0 flex-1">
               <span className="block truncate text-[13px] font-semibold">{session.session.organization.name}</span>
               <span className="block truncate text-xs text-[var(--rail-muted)]">{session.session.email}</span>
@@ -149,7 +149,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
           </div>
         ) : session.enabled && !session.loading ? (
           <Link href="/sign-in" onClick={onNavigate} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.07]">
-            <LogIn aria-hidden="true" size={18} className="shrink-0 text-[#a5b4fc]" />
+            <LogIn aria-hidden="true" size={18} className="shrink-0 text-[#93bdff]" />
             <span className="min-w-0">
               <span className="block text-[13px] font-semibold">Sign in</span>
               <span className="block truncate text-xs text-[var(--rail-muted)]">SAIC users only</span>
