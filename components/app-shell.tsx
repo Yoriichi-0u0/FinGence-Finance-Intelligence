@@ -8,6 +8,7 @@ import { DemoProcessingProvider } from "@/components/demo/context";
 import { DemoBanner } from "@/components/demo/banner";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { atLeast, ROLE_LABEL, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
+import { OutsideView, ViewingAs, ViewSwitch } from "@/components/workspace/view-switch";
 import {
   Activity,
   AlertTriangle,
@@ -114,7 +115,8 @@ type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boo
 
 function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const session = useWorkspace(), admin = atLeast(session.session?.role, "ADMIN");
+  // Navigation follows the role being viewed ("Switch view" may preview a lower one).
+  const session = useWorkspace(), admin = atLeast(session.viewRole ?? undefined, "ADMIN");
   const ask = [...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : [])];
   const technical = [...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])];
 
@@ -147,7 +149,9 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
               <LogOut aria-hidden="true" size={18} />
             </button>
           </div>
-        ) : session.enabled && !session.loading ? (
+        ) : null}
+        <ViewSwitch />
+        {session.enabled && session.session ? null : session.enabled && !session.loading ? (
           <Link href="/sign-in" onClick={onNavigate} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.07]">
             <LogIn aria-hidden="true" size={18} className="shrink-0 text-[#a5b4fc]" />
             <span className="min-w-0">
@@ -207,6 +211,14 @@ function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDem
   );
 }
 
+/** While previewing a Finance user, the Admin pages show what that person would get instead. */
+function ShellPage({ pathname, children }: { pathname: string; children: React.ReactNode }) {
+  const { session, viewRole } = useWorkspace();
+  const page = pathname === "/team" ? "Team" : pathname === "/operations" ? "Operations" : null;
+  if (page && session && viewRole && !atLeast(viewRole, "ADMIN")) return <OutsideView page={page} />;
+  return <>{children}</>;
+}
+
 export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false, workspace: workspaceEnabled = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean; workspace?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
@@ -242,7 +254,8 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
           {["/sign-in", "/join", "/team", "/operations"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
-          {children}
+          <ViewingAs />
+          <ShellPage pathname={pathname}>{children}</ShellPage>
         </main>
       </div>
 

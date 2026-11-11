@@ -11,6 +11,9 @@ export const atLeast = (role: WorkspaceRole | undefined, minimum: WorkspaceRole)
 /** The roles a person may give: only those below their own. */
 export const grantable = (role: WorkspaceRole): WorkspaceRole[] => (['FINANCE', 'ADMIN'] as WorkspaceRole[]).filter(r => RANK[r] < RANK[role]);
 export const canManage = (actor: WorkspaceRole, target: WorkspaceRole) => RANK[target] < RANK[actor];
+/** The roles a person may preview the app as: their own and every role below it. */
+export const viewable = (role: WorkspaceRole): WorkspaceRole[] => (['SUPERADMIN', 'ADMIN', 'FINANCE'] as WorkspaceRole[]).filter(r => RANK[r] <= RANK[role]);
+const VIEW_KEY = 'fingence-view-as';
 
 type Value = {
     /** The hosted workspace is on (sign-in exists); false on deployments without it. */
@@ -18,17 +21,32 @@ type Value = {
     /** True until the first session check answers. */
     loading: boolean;
     session: WorkspaceSession | null;
+    /**
+     * The role the app is shown as: the signed-in role, or a lower one an Admin or Superadmin chose with "Switch view"
+     * to see what that role sees. It only ever hides things; every request is still checked against the real role.
+     */
+    viewRole: WorkspaceRole | null;
+    /** Preview the app as a lower role (null returns to the real role). Kept for this tab only. */
+    setViewAs: (role: WorkspaceRole | null) => void;
     /** The last check found a session that had been ended (by an Admin, expiry or an access change). */
     ended: boolean;
     refresh: () => Promise<WorkspaceSession | null>;
     signOut: () => Promise<void>;
 };
-const WorkspaceContext = createContext<Value>({ enabled: false, loading: false, session: null, ended: false, refresh: async () => null, signOut: async () => undefined });
+const WorkspaceContext = createContext<Value>({ enabled: false, loading: false, session: null, viewRole: null, setViewAs: () => undefined, ended: false, refresh: async () => null, signOut: async () => undefined });
 
 export function WorkspaceProvider({ enabled, children }: { enabled: boolean; children: React.ReactNode }) {
     const [loading, setLoading] = useState(enabled);
     const [session, setSession] = useState<WorkspaceSession | null>(null);
     const [ended, setEnded] = useState(false);
+    const [viewAs, setViewAsState] = useState<WorkspaceRole | null>(null);
+    useEffect(() => {
+        try { const stored = sessionStorage.getItem(VIEW_KEY); if (stored === 'ADMIN' || stored === 'FINANCE') queueMicrotask(() => setViewAsState(stored)); } catch { /* storage unavailable */ }
+    }, []);
+    const setViewAs = useCallback((role: WorkspaceRole | null) => {
+        setViewAsState(role);
+        try { if (role) sessionStorage.setItem(VIEW_KEY, role); else sessionStorage.removeItem(VIEW_KEY); } catch { /* storage unavailable */ }
+    }, []);
     // Whether the server has answered that there is no session (not merely that it could not be reached).
     const [signedOut, setSignedOut] = useState(false);
     const refresh = useCallback(async () => {
@@ -66,7 +84,9 @@ export function WorkspaceProvider({ enabled, children }: { enabled: boolean; chi
         // eslint-disable-next-line @next/next/no-location-assign-relative-destination
         window.location.href = '/sign-in';
     }, []);
-    const value = useMemo(() => ({ enabled, loading, session, ended, refresh, signOut }), [enabled, loading, session, ended, refresh, signOut]);
+    // A chosen view counts only while it is below the real role (a role change or another account resets it).
+    const viewRole = session ? (viewAs && RANK[viewAs] < RANK[session.role] ? viewAs : session.role) : null;
+    const value = useMemo(() => ({ enabled, loading, session, viewRole, setViewAs, ended, refresh, signOut }), [enabled, loading, session, viewRole, setViewAs, ended, refresh, signOut]);
     return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 export const useWorkspace = () => useContext(WorkspaceContext);

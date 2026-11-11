@@ -26,7 +26,8 @@ async function call(body: unknown) {
 
 /** Admin and Superadmin: who can sign in, with which role. Each manages only people below their own role; an invitation is the only approval needed. */
 export function TeamConsole() {
-    const workspace = useWorkspace(), own = workspace.session?.role ?? 'FINANCE', ROLES = grantable(own);
+    // What this page offers follows the role being viewed ("Switch view"); the server still checks the real role.
+    const workspace = useWorkspace(), own = workspace.viewRole ?? 'FINANCE', ROLES = grantable(own);
     const [team, setTeam] = useState<Team | null>(null), [error, setError] = useState<string | null>(null), [notice, setNotice] = useState<string | null>(null);
     const [draft, setDraft] = useState<Record<string, { role: WorkspaceRole; active: boolean }>>({});
     const [invite, setInvite] = useState<{ email: string; role: WorkspaceRole }>({ email: '', role: 'FINANCE' });

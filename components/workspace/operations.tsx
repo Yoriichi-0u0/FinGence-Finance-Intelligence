@@ -61,7 +61,8 @@ export function OperationsConsole() {
 
     if (error) return <><PageHeader title="Operations" description="Backend processing, sessions and controls." /><Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel></>;
     if (!data) return <><PageHeader title="Operations" description="Backend processing, sessions and controls." /><p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin" size={16} />Loading…</p></>;
-    const superadmin = data.role === 'SUPERADMIN', p = data.processing, ai = data.ai;
+    // The AI switch and audit trail follow the role being viewed ("Switch view"); the server still checks the real role.
+    const viewRole = workspace.viewRole ?? data.role, superadmin = viewRole === 'SUPERADMIN', p = data.processing, ai = data.ai;
     return <>
         <PageHeader title="Operations" description={`What FinGence's backend did for ${data.organization}: every run, every check and model call, who is signed in. Processing runs on its own; step in only when something is wrong.`}
             actions={<button type="button" className={button} onClick={() => void load()}><RefreshCw aria-hidden="true" size={16} />Refresh</button>} />
@@ -118,11 +119,11 @@ export function OperationsConsole() {
 
             <Panel title="Signed in now" eyebrow={`${data.sessions.length} open sessions`}>
                 <Table caption="Open sessions" columns={['Email', 'Role', 'Signed in', 'Last active', 'Expires', '']} rows={data.sessions.map(s => [<span key="e">{s.email}{s.current ? <span className="ml-1 text-xs text-[var(--muted)]">(this session)</span> : null}</span>, ROLE_LABEL[s.role], when(s.openedAt), when(s.lastSeenAt), when(s.expiresAt),
-                    !canManage(data.role, s.role) ? '' : <button key="x" type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} disabled={busy}
+                    !canManage(viewRole, s.role) ? '' : <button key="x" type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} disabled={busy}
                         onClick={() => void act({ action: 'end-sessions', memberId: s.memberId }, `${s.email} has been signed out; their processing stops at once.`)}>End session</button>])} />
             </Panel>
 
-            {data.audit ? <Panel title="Audit trail" eyebrow="Last 200 events · Superadmin only">
+            {superadmin && data.audit ? <Panel title="Audit trail" eyebrow="Last 200 events · Superadmin only">
                 <Table caption="Audit trail" columns={['When', 'Who', 'What', 'Detail']} rows={data.audit.map(a => [when(a.at), a.actor ?? 'owner', ACTION[a.action] ?? a.action,
                     <span key="d" className="text-xs text-[var(--muted)]">{Object.keys(a.detail ?? {}).length ? JSON.stringify(a.detail) : ''}</span>])} />
             </Panel> : null}
