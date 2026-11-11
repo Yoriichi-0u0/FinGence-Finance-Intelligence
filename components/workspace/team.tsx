@@ -33,6 +33,8 @@ export function TeamConsole() {
     const [invite, setInvite] = useState<{ email: string; role: WorkspaceRole }>({ email: '', role: 'FINANCE' });
     const [issued, setIssued] = useState<{ email: string; code: string; expiresAt: string } | null>(null);
     const [busy, setBusy] = useState(false);
+    // Switching view to a lower role drops any role picked in the higher view, so a form never sends a role the view does not offer.
+    useEffect(() => { queueMicrotask(() => { setDraft({}); setInvite(i => ({ ...i, role: 'FINANCE' })); }); }, [own]);
     const load = useCallback(async () => {
         const res = await fetch('/api/workspace/team', { cache: 'no-store' }).catch(() => null);
         const body = await res?.json().catch(() => null) as Team & { code?: string } | null;
@@ -51,6 +53,7 @@ export function TeamConsole() {
     }
     async function sendInvite(event: React.FormEvent) {
         event.preventDefault(); setIssued(null);
+        if (!ROLES.includes(invite.role)) { setNotice(REFUSAL.ROLE_NOT_ALLOWED); return; }
         const result = await act({ action: 'invite', ...invite }, `Invitation created for ${invite.email}.`);
         if (result.ok && typeof result.body?.code === 'string') { setIssued({ email: invite.email, code: result.body.code, expiresAt: String(result.body.expiresAt) }); setInvite({ email: '', role: invite.role }); }
     }
@@ -76,7 +79,7 @@ export function TeamConsole() {
                         m.openSessions ? `${m.openSessions} session${m.openSessions > 1 ? 's' : ''}` : '—',
                         when(m.joinedAt),
                         <span key="x" className="flex flex-wrap gap-2">
-                            <button type="button" className={`${primaryButton} min-h-9 px-3 py-1 text-xs`} disabled={busy || !changed} onClick={() => void act({ action: 'update-member', memberId: m.id, role: d.role, active: d.active, version: m.version }, `${m.email} updated; any open sessions were ended.`)}>Save</button>
+                            <button type="button" className={`${primaryButton} min-h-9 px-3 py-1 text-xs`} disabled={busy || !changed} onClick={() => d.role !== m.role && !ROLES.includes(d.role) ? setNotice(REFUSAL.ROLE_NOT_ALLOWED) : void act({ action: 'update-member', memberId: m.id, role: d.role, active: d.active, version: m.version }, `${m.email} updated; any open sessions were ended.`)}>Save</button>
                             <button type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} disabled={busy || !m.openSessions} onClick={() => void act({ action: 'end-sessions', memberId: m.id }, `${m.email} has been signed out.`)}>Sign out</button>
                         </span>,
                     ];
