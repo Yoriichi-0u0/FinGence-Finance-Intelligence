@@ -56,7 +56,9 @@ export type JobView = {
     interpretations: Record<string, InterpretationResult>; extractions: Record<string, StoredExtraction>; ingestionRunId: string | null; error: string | null;
     results?: { reconciliation: unknown; anomalies: unknown; report: unknown; documents: unknown } | null; flagged?: (FlaggedItem & { ordinal: number })[];
 };
-type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string; timeoutMs?: number; extractor?: Extractor; maxFlagged?: number };
+type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string;
+    /** The signed-in member who submitted the job (workspace on); shown as "by" on the Technical log. */
+    member?: string; timeoutMs?: number; extractor?: Extractor; maxFlagged?: number };
 /** A job stops itself before the 300 s a hosted function may run, so it is failed with a reason instead of cut off. */
 export const JOB_TIMEOUT_MS = 280_000;
 class JobTimeout extends Error {}
@@ -67,7 +69,7 @@ export const processingState = (deps: Deps = {}) => call<ProcessingState>('finge
 /** Creates the job, or refuses when the organization's processing is paused (checked by the store in the same statement). */
 export async function createJob(documents: DocumentInput[], clientHash: string | null, deps: Deps = {}): Promise<{ jobId: string } | { error: 'PROCESSING_PAUSED'; reason: string | null; since: string | null }> {
     const inputs = await Promise.all(documents.map(async d => ({ name: d.name, sha256: await sha256Hex(d.bytes), bytes: d.bytes.byteLength, provenance: d.provenance })));
-    const out = await call<{ jobId?: string; error?: string; reason?: string | null; since?: string | null }>('fingence_processing_create_job', { org: deps.organization ?? PROCESSING_ORGANIZATION, inputs, client: clientHash }, deps);
+    const out = await call<{ jobId?: string; error?: string; reason?: string | null; since?: string | null }>('fingence_processing_create_job', { org: deps.organization ?? PROCESSING_ORGANIZATION, inputs, client: clientHash, ...(deps.member ? { member: deps.member } : {}) }, deps);
     if (out?.jobId) return { jobId: out.jobId };
     if (out?.error === 'PROCESSING_PAUSED') return { error: 'PROCESSING_PAUSED', reason: out.reason ?? null, since: out.since ?? null };
     throw new StoreError('CREATE_FAILED');

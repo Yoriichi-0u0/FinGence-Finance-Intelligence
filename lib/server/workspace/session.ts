@@ -59,6 +59,9 @@ export async function processingGate(headers: Headers, options: { ai?: boolean }
     if (options.ai && !p.ai.enabled) return { refusal: { code: 'AI_OFF', status: 423 } };
     return gate;
 }
+/** The signed-in member as the AI-call door's caller (lib/ai-calls), or null without the workspace. */
+export const aiCaller = (principal: Principal | null, jobId: string | null = null) =>
+    principal ? { organizationId: principal.organization.id, memberId: principal.memberId, jobId } : null;
 export async function processingRefusal(headers: Headers, options: { ai?: boolean } = {}, store: Store | null = workspaceStore(), transport: typeof fetch = fetch) {
     const gate = await processingGate(headers, options, store, transport);
     return 'refusal' in gate ? gate.refusal : null;

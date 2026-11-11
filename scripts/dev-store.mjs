@@ -26,6 +26,8 @@ if (fresh) {
     await db.exec(readFileSync('supabase/sql/workspace-v1.sql', 'utf8'));
     await db.exec(readFileSync('supabase/sql/workspace-v2-saic.sql', 'utf8'));
 }
+// The Technical log (v3) is written to be re-runnable, so an existing local store picks it up too.
+await db.exec(readFileSync('supabase/sql/workspace-v3-log.sql', 'utf8'));
 // One statement at a time, like a single database connection.
 let queue = Promise.resolve();
 const serial = work => (queue = queue.then(work, work));

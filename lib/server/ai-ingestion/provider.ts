@@ -4,6 +4,7 @@ import { z } from "zod";
 import { blueprintSchema, type EvidenceBundle, type InferenceReceipt } from "../../ai-ingestion/contracts";
 import { BudgetLedger } from "../../ai-ingestion/budget";
 import { resolve } from "node:path";
+import { withAiCall } from "../../ai-calls/index";
 
 export interface VisualSource { bytes: Uint8Array; format: EvidenceBundle["format"] }
 export interface RuleProvider { propose(bundle: EvidenceBundle, visual?: VisualSource): Promise<{ blueprint: unknown; receipt: InferenceReceipt }> }
@@ -31,7 +32,7 @@ export class OpenAIRuleProvider implements RuleProvider {
     if (!Number.isSafeInteger(count.input_tokens) || count.input_tokens < 1 || count.input_tokens > 32000) throw new Error("Input exceeds the experimental token ceiling or cannot be counted safely.");
     const ledger = new BudgetLedger(resolve(".ai-local")); const reservation = ledger.reserve();
     // A thrown request retains the entire reservation. Never automatically retry an uncertain bill.
-    const response = await client.responses.create(request);
+    const response = await withAiCall({ feature: "ingestion-proposal", provider: "OPENAI", model: MODEL }, () => client.responses.create(request));
     const usage = response.usage;
     if (!usage) throw new Error("Inference usage unavailable; reservation retained and no records accepted.");
     ledger.settle(reservation, { inputTokens: usage.input_tokens, outputTokens: usage.output_tokens, requestId: response.id });

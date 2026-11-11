@@ -125,6 +125,18 @@ export async function operations(request: Request, deps: Deps) {
     const result = await rpc('fingence_workspace_operations', { p_token_hash: who.tokenHash }, deps.store, deps.transport);
     return result.ok ? json({ organization: who.principal.organization.name, role: who.principal.role, self: who.principal.memberId, ...result.value as object }) : fail(result.error);
 }
+const LOG_DAYS = [1, 7, 30, 90];
+/** Admin and above: the Technical log (runs with each document's method, model and checks; failed jobs; AI calls) for the last 1, 7, 30 or 90 days. */
+export async function technicalLog(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    const who = await requireRole(request.headers, 'ADMIN', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const days = Number(new URL(request.url).searchParams.get('days') ?? '7');
+    if (!LOG_DAYS.includes(days)) return json({ code: 'INVALID_INPUT' }, 400);
+    const since = new Date(Date.now() - days * 86_400_000).toISOString();
+    const result = await rpc('fingence_workspace_log', { p_token_hash: who.tokenHash, p_since: since }, deps.store, deps.transport);
+    return result.ok ? json({ organization: who.principal.organization.name, role: who.principal.role, days, ...result.value as object }) : fail(result.error);
+}
 const operationsAction = z.discriminatedUnion('action', [
     z.object({ action: z.literal('pause'), reason: z.string().trim().min(1).max(500) }),
     z.object({ action: z.literal('resume') }),

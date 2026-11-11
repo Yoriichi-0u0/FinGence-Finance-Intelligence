@@ -36,3 +36,10 @@ with relevant changes, manifests, commands/results and limitations. Exclude secr
 private recovery data, Git internals, dependencies, large datasets and older ZIPs.
 Do not rerun application tests solely to package unchanged source. Preserve dated
 verification evidence; current operational guidance supersedes old workspace paths.
+
+## AI model calls
+
+Every call to an AI model goes through `withAiCall` from `lib/ai-calls`, so it appears on the Technical log
+(`/log`). Read [docs/ai-integration/ai-calls.md](docs/ai-integration/ai-calls.md) before adding or changing one.
+Record metadata only, never prompts, answers, document contents, amounts or keys. `tests/ai-calls/guard.test.ts`
+fails the build for a direct provider call.

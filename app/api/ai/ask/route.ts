@@ -5,7 +5,9 @@ import { admit, clientAddress } from '@/lib/server/ai/budget';
 import { askModel, qaModel, worstCaseQaUsd } from '@/lib/server/ai/grounded-qa';
 import { aiGatewayEnabled } from '@/lib/server/ai/groq-interpreter';
 import { boundedJson, noStoreJson as json } from '@/lib/server/ai/request';
-import { processingRefusal } from '@/lib/server/workspace/session';
+import { aiCaller, processingGate } from '@/lib/server/workspace/session';
+import { recordAiRefusal, runAsCaller } from '@/lib/ai-calls';
+import { COMMENTARY_QUESTION } from '@/lib/grounded-qa/commentary';
 
 export const dynamic = 'force-dynamic';
 const MAX_BODY_BYTES = 32_000;
@@ -20,20 +22,28 @@ export async function GET() {
 /**
  * Grounded Q&A gateway: one bounded strict-schema call per stage (plan or answer). The question is pre-checked
  * for advice and allegations BEFORE any budget or provider use, the body is bounded and schema-validated, and
- * the call is admitted against the shared budget. Nothing is stored or logged; the browser's gates decide.
+ * the call is admitted against the shared budget. Only the call's metadata is logged (lib/ai-calls); the browser's gates decide.
  */
 export async function POST(request: Request) {
     if (!aiGatewayEnabled()) return notFound();
     const read = await boundedJson(request, MAX_BODY_BYTES);
     if ('refusal' in read) return read.refusal;
-    const gate = await processingRefusal(request.headers, { ai: true });
-    if (gate) return json({ code: gate.code, ...(gate.reason ? { reason: gate.reason } : {}) }, gate.status);
-    const parsed = askRequestSchema.safeParse(read.body);
+    const gate = await processingGate(request.headers, { ai: true });
+    if ('refusal' in gate) return json({ code: gate.refusal.code, ...(gate.refusal.reason ? { reason: gate.refusal.reason } : {}) }, gate.refusal.status);
+    // Every model call below is attributed to this member on the Technical log (metadata only, never the question).
+    return runAsCaller(aiCaller(gate.principal), () => answer(request, read.body));
+}
+
+async function answer(request: Request, body: unknown) {
+    const parsed = askRequestSchema.safeParse(body);
     if (!parsed.success) return json({ code: 'INVALID_REQUEST' }, 400);
     // The same deterministic refusals as the browser; counterparties come from the catalogue (plan) or the facts (answer).
     const names = parsed.data.stage === 'plan' ? parsed.data.catalogue.counterparties : [...new Set(parsed.data.facts.flatMap(f => Object.values(f.fields)))];
     const refusal = preCheck(parsed.data.question, names);
-    if (refusal) return json({ code: 'REFUSED_BEFORE_MODEL', reason: refusal }, 422);
+    if (refusal) {
+        await recordAiRefusal({ feature: parsed.data.question === COMMENTARY_QUESTION ? 'report-commentary' : 'finance-qa', model: qaModel() }, 'REFUSED_BEFORE_MODEL');
+        return json({ code: 'REFUSED_BEFORE_MODEL', reason: refusal }, 422);
+    }
     const admission = await admit({ client: clientAddress(request.headers), worstCaseUsd: worstCaseQaUsd(parsed.data) });
     if (!admission.admitted) return json({ code: admission.code, ...(admission.retryAfterSeconds ? { retryAfterSeconds: admission.retryAfterSeconds } : {}) }, admission.status);
     try {

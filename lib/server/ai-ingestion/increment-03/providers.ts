@@ -4,6 +4,7 @@ import { z } from "zod";
 import { resolve } from "node:path";
 import { QuotaLedger, type OneShotAuthorization, type QuotaCaps } from "./quota";
 import { hash, type prepareRequest } from "../../../ai-ingestion/increment-03/plan";
+import { withAiCall } from "../../../ai-calls/index";
 export class UncertainDispatchError extends Error {
   constructor(code: string, readonly provider: "LIVE_GROQ" | "LIVE_OLLAMA", readonly reservationId: string) { super(code); }
 }
@@ -33,7 +34,7 @@ export class GroqProvider03 implements Provider03 {
         const client = new OpenAI({ apiKey: process.env.GROQ_API_KEY, baseURL: "https://api.groq.com/openai/v1", maxRetries: 0, timeout: 60000 });
         return client.chat.completions.create(data as unknown as OpenAI.Chat.ChatCompletionCreateParamsNonStreaming, { signal: s });
       });
-      response = await send(body, signal);
+      response = await withAiCall({ feature: "ai03-proposal", model: body.model }, () => send(body, signal));
     } catch { this.ledger.finish(reservation, "UNKNOWN"); throw new UncertainDispatchError("GROQ_REQUEST_FAILED", "LIVE_GROQ", reservation); }
     const parsed = z.object({ id: z.string(), model: z.literal("openai/gpt-oss-20b"), usage: usageSchema }).safeParse(response);
     if (!parsed.success) { this.ledger.finish(reservation, "UNKNOWN"); throw new UncertainDispatchError("GROQ_INCOMPLETE", "LIVE_GROQ", reservation); }
