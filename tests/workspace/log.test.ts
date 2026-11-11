@@ -88,6 +88,17 @@ describe('the Technical log', () => {
         expect((await rpc('fingence_workspace_record_ai_call', { p_call: { ...base, memberId: '00000000-0000-4000-8000-000000000009' } }, store, deps.transport))).toEqual({ ok: false, error: 'MEMBER_MISMATCH' });
         expect((await rpc('fingence_workspace_record_ai_call', { p_call: base }, store, deps.transport)).ok).toBe(true);
     });
+    it('totals and the daily counts cover the whole period, even when the timeline is capped', async () => {
+        const before = (await log(admin))[1].totals.aiCalls;
+        await db.query(`insert into fingence_workspace.ai_calls (organization_id, feature, provider, model, status, latency_ms, occurred_at)
+            select $1::uuid, 'finance-qa', 'GROQ', 'openai/gpt-oss-120b', case when g % 10 = 0 then 'FAILED' else 'OK' end, 100, now() - (g || ' minutes')::interval from generate_series(1, 1005) g`, [organizationId]);
+        const [, out] = await log(admin);
+        expect(out.aiCalls).toHaveLength(out.limits.aiCalls);
+        expect(out.totals.aiCalls).toBe(before + 1005);
+        expect(out.daily.reduce((s: number, d: { ok: number; problem: number }) => s + d.ok + d.problem, 0)).toBe(out.totals.aiCalls);
+        expect(out.totals.aiProblems).toBeGreaterThanOrEqual(100);
+        expect(out.totals).toMatchObject({ runs: 1, serverRuns: 1, documents: 2, documentsByAi: 0 });
+    });
     it('only Admins and Superadmins read it; a Finance user and a visitor are refused, in the server and the database', async () => {
         expect((await log(finance))[0]).toBe(403);
         expect((await h.technicalLog(req('/api/workspace/log'), deps)).status).toBe(401);

@@ -108,6 +108,25 @@ begin
     since := greatest(coalesce(p_since, now() - interval '7 days'), now() - interval '90 days');
     return jsonb_build_object(
         'since', since,
+        -- Totals for the whole period, independent of the timeline's limits (200 runs, 1,000 AI calls).
+        'totals', jsonb_build_object(
+            'runs', (select count(*) from fingence_ingestion.runs r where r.organization_id = a.organization_id and r.created_at >= since),
+            'serverRuns', (select count(*) from fingence_ingestion.runs r join fingence_processing.jobs j on j.ingestion_run_id = r.id where r.organization_id = a.organization_id and r.created_at >= since),
+            'documents', (select count(*) from fingence_ingestion.documents d join fingence_ingestion.runs r on r.id = d.run_id where r.organization_id = a.organization_id and r.created_at >= since),
+            'documentsByAi', (select count(*) from fingence_ingestion.documents d join fingence_ingestion.runs r on r.id = d.run_id where r.organization_id = a.organization_id and r.created_at >= since and d.method = 'AI_LAYOUT_PROPOSAL'),
+            'failedJobs', (select count(*) from fingence_processing.jobs j where j.organization_id = a.organization_id::text and j.status = 'FAILED' and j.created_at >= since),
+            'aiCalls', (select count(*) from fingence_workspace.ai_calls c where c.organization_id = a.organization_id and c.occurred_at >= since),
+            'aiProblems', (select count(*) from fingence_workspace.ai_calls c where c.organization_id = a.organization_id and c.occurred_at >= since
+                and (c.status <> 'OK' or coalesce(c.verdict, '') in ('WITHHELD', 'QUARANTINED'))),
+            'tokens', (select coalesce(sum(coalesce(c.input_tokens, 0) + coalesce(c.output_tokens, 0)), 0) from fingence_workspace.ai_calls c where c.organization_id = a.organization_id and c.occurred_at >= since),
+            'estimatedUsd', (select coalesce(sum(c.estimated_usd), 0) from fingence_workspace.ai_calls c where c.organization_id = a.organization_id and c.occurred_at >= since)),
+        -- AI calls per day (Malaysia time), for the whole period.
+        'daily', coalesce((select jsonb_agg(jsonb_build_object('day', x.day, 'ok', x.ok, 'problem', x.problem) order by x.day) from (
+            select (c.occurred_at at time zone 'Asia/Kuching')::date as day,
+                count(*) filter (where not (c.status <> 'OK' or coalesce(c.verdict, '') in ('WITHHELD', 'QUARANTINED'))) as ok,
+                count(*) filter (where c.status <> 'OK' or coalesce(c.verdict, '') in ('WITHHELD', 'QUARANTINED')) as problem
+            from fingence_workspace.ai_calls c where c.organization_id = a.organization_id and c.occurred_at >= since group by 1) x), '[]'),
+        'limits', jsonb_build_object('runs', 200, 'aiCalls', 1000),
         'runs', coalesce((select jsonb_agg(x order by x->>'at' desc) from (
             select jsonb_build_object('id', r.id, 'at', r.created_at, 'by', m.email, 'source', case when j.id is null then 'BROWSER' else 'SERVER' end, 'jobId', j.id,
                 'durationMs', case when j.finished_at is not null and j.started_at is not null then (extract(epoch from j.finished_at - j.started_at) * 1000)::int end,

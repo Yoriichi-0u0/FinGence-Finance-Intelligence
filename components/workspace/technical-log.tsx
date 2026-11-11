@@ -14,7 +14,9 @@ type LogRun = { id: string; at: string; by: string | null; source: 'SERVER' | 'B
 type FailedJob = { id: string; at: string; by: string | null; error: string | null; documents: number };
 type AiCall = { at: string; by: string | null; feature: string; provider: string; model: string; keyLabel: string | null; requestId: string | null; status: 'OK' | 'REFUSED' | 'RATE_LIMITED' | 'FAILED';
     verdict: string | null; reasonCode: string | null; inputTokens: number | null; outputTokens: number | null; estimatedUsd: number | string | null; latencyMs: number; jobId: string | null; processingId: string | null };
-type Log = { organization: string; days: number; since: string; runs: LogRun[]; failedJobs: FailedJob[]; aiCalls: AiCall[] };
+type Totals = { runs: number; serverRuns: number; documents: number; documentsByAi: number; failedJobs: number; aiCalls: number; aiProblems: number; tokens: number; estimatedUsd: number | string };
+type Day = { day: string; ok: number; problem: number };
+type Log = { organization: string; days: number; since: string; totals: Totals; daily: Day[]; limits: { runs: number; aiCalls: number }; runs: LogRun[]; failedJobs: FailedJob[]; aiCalls: AiCall[] };
 type Check = { id: string; label: string; passed: boolean; detail: string };
 type RunDetail = { documents: { ordinal: number; name: string; checks: Check[]; disclosures: string[]; notes: string[]; reason: string; model_request_id: string | null }[] };
 
@@ -75,24 +77,24 @@ export function TechnicalLog() {
     if (error) return <>{header}<Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel></>;
     if (!data) return <>{header}<p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin" size={16} />Loading…</p></>;
 
-    const docs = data.runs.flatMap(r => r.documents), byAi = docs.filter(d => d.method === 'AI_LAYOUT_PROPOSAL').length;
-    const calls = data.aiCalls, problems = calls.filter(aiProblem).length;
-    const cost = calls.reduce((s, c) => s + Number(c.estimatedUsd ?? 0), 0), usedTokens = calls.reduce((s, c) => s + (c.inputTokens ?? 0) + (c.outputTokens ?? 0), 0);
+    // The tiles and the chart cover the whole period; the timeline below shows the latest events only (see the limits).
+    const t = data.totals, truncated = t.runs > data.runs.length || t.aiCalls > data.aiCalls.length;
     return <>
         {header}
         <div role="group" aria-label="Time range" className="mb-5 flex flex-wrap gap-2">{RANGES.map(([n, label]) => <button key={n} type="button" aria-pressed={days === n} className={chip(days === n)} onClick={() => setDays(n)}>Last {label}</button>)}</div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat tone="brand" icon={<Server aria-hidden="true" size={14} />} label="Runs" value={String(data.runs.length)} detail={`${data.runs.filter(r => r.source === 'SERVER').length} on the server${data.failedJobs.length ? ` · ${plural(data.failedJobs.length, 'job')} stopped` : ''}`} />
-            <Stat tone="brand" icon={<FileText aria-hidden="true" size={14} />} label="Documents read" value={String(docs.length)} detail={`${docs.length - byAi} by fixed rules · ${byAi} by AI`} />
-            <Stat tone={problems ? 'warn' : 'good'} icon={<Bot aria-hidden="true" size={14} />} label="AI calls" value={String(calls.length)} detail={problems ? `${problems} refused, failed or withheld` : 'None refused, failed or withheld'} />
-            <Stat tone="plain" icon={<Cpu aria-hidden="true" size={14} />} label="Estimated AI cost" value={usd(cost)} detail={`${usedTokens.toLocaleString()} tokens`} />
+            <Stat tone="brand" icon={<Server aria-hidden="true" size={14} />} label="Runs" value={t.runs.toLocaleString()} detail={`${t.serverRuns.toLocaleString()} on the server${t.failedJobs ? ` · ${plural(t.failedJobs, 'job')} stopped` : ''}`} />
+            <Stat tone="brand" icon={<FileText aria-hidden="true" size={14} />} label="Documents read" value={t.documents.toLocaleString()} detail={`${(t.documents - t.documentsByAi).toLocaleString()} by fixed rules · ${t.documentsByAi.toLocaleString()} by AI`} />
+            <Stat tone={t.aiProblems ? 'warn' : 'good'} icon={<Bot aria-hidden="true" size={14} />} label="AI calls" value={t.aiCalls.toLocaleString()} detail={t.aiProblems ? `${t.aiProblems.toLocaleString()} refused, failed or withheld` : 'None refused, failed or withheld'} />
+            <Stat tone="plain" icon={<Cpu aria-hidden="true" size={14} />} label="Estimated AI cost" value={usd(t.estimatedUsd)} detail={`${Number(t.tokens).toLocaleString()} tokens`} />
         </div>
-        <Panel className="mt-5" title="AI calls per day" eyebrow={`Last ${RANGES.find(([n]) => n === days)?.[1]}`}><DailyCalls calls={calls} days={days} /></Panel>
+        <Panel className="mt-5" title={days > 30 ? "AI calls per week" : "AI calls per day"} eyebrow={`Last ${RANGES.find(([n]) => n === days)?.[1]}`}><DailyCalls daily={data.daily} days={data.days} since={data.since} /></Panel>
         <div className="mb-3 mt-6 flex flex-wrap items-end gap-2">
             <div role="group" aria-label="Show" className="flex flex-wrap gap-2">{([['all', 'Everything'], ['ai', 'AI only'], ['problems', 'Problems']] as const).map(([k, label]) => <button key={k} type="button" aria-pressed={show === k} className={chip(show === k)} onClick={() => setShow(k)}>{label}</button>)}</div>
             <label className="ml-auto grid gap-1 text-xs font-medium text-[var(--muted-strong)]">Feature<select className={`${field} min-w-44`} value={feature} onChange={e => setFeature(e.target.value)}><option value="">All features</option>{features.map(f => <option key={f} value={f}>{featureLabel(f)}</option>)}</select></label>
             <label className="grid gap-1 text-xs font-medium text-[var(--muted-strong)]">Person<select className={`${field} min-w-44`} value={person} onChange={e => setPerson(e.target.value)}><option value="">Everyone</option>{people.map(p => <option key={p} value={p}>{p}</option>)}</select></label>
         </div>
+        {truncated ? <p role="note" className="mb-3 rounded-xl bg-[var(--warn-soft)] px-3 py-2 text-xs text-[var(--warn-ink)] ring-1 ring-inset ring-[var(--warn-line)]">This period is busy: the list below shows the latest {data.limits.runs} runs and {data.limits.aiCalls.toLocaleString()} AI calls, and the CSV holds the same. The figures and chart above count everything. Choose a shorter period to see every event.</p> : null}
         <Panel title="What happened" eyebrow={plural(visible.length, 'event')}>
             {visible.length ? <ol className="divide-y divide-[var(--border)]">{visible.map(e => <li key={e.kind === 'run' ? e.run.id : e.kind === 'failed' ? e.job.id : `${e.call.at}-${e.call.requestId ?? e.call.feature}`}><EventRow event={e} /></li>)}</ol>
                 : <p className="flex items-center gap-2.5 p-5 text-sm text-[var(--muted-strong)]"><ShieldCheck aria-hidden="true" size={18} className="text-[var(--good)]" />{show === 'problems' ? 'No problems in this period.' : 'Nothing happened in this period.'}</p>}
@@ -101,21 +103,25 @@ export function TechnicalLog() {
     </>;
 }
 
-/** Calls per day, stacked: answered (brand) and refused, failed or withheld (warning), with the numbers in each bar's label. */
-function DailyCalls({ calls, days }: { calls: AiCall[]; days: number }) {
+const MYT = 'Asia/Kuching';
+const dayKey = (d: Date) => d.toLocaleDateString('en-CA', { timeZone: MYT });
+/**
+ * AI calls over the whole selected period, stacked: answered (brand) and refused, failed or withheld (warning).
+ * Up to 30 days, one bar a day; for longer periods, one bar a week, so every call in the range is shown.
+ */
+function DailyCalls({ daily, days, since }: { daily: Day[]; days: number; since: string }) {
     const buckets = useMemo(() => {
-        const n = Math.min(days, 30), today = new Date(); today.setHours(0, 0, 0, 0);
+        const counts = new Map(daily.map(d => [d.day, d])), size = days > 30 ? 7 : 1, n = Math.ceil(days / size), now = new Date(since).getTime() + days * 86_400_000;
         return Array.from({ length: n }, (_, i) => {
-            const start = new Date(today); start.setDate(today.getDate() - (n - 1 - i));
-            const end = new Date(start); end.setDate(start.getDate() + 1);
-            const inDay = calls.filter(c => { const t = new Date(c.at); return t >= start && t < end; });
-            return { label: start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), ok: inDay.filter(c => !aiProblem(c)).length, problem: inDay.filter(aiProblem).length };
+            const end = n - 1 - i, keys = Array.from({ length: size }, (_, k) => dayKey(new Date(now - (end * size + (size - 1 - k)) * 86_400_000)));
+            const label = new Date(`${keys[0]}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+            return { label: size > 1 ? `week of ${label}` : label, ok: keys.reduce((s, k) => s + (counts.get(k)?.ok ?? 0), 0), problem: keys.reduce((s, k) => s + (counts.get(k)?.problem ?? 0), 0) };
         });
-    }, [calls, days]);
+    }, [daily, days, since]);
     const max = Math.max(1, ...buckets.map(b => b.ok + b.problem));
-    if (!calls.length) return <p className="p-4 text-sm text-[var(--muted-strong)] sm:p-5">No AI calls in this period.</p>;
+    if (!daily.length) return <p className="p-4 text-sm text-[var(--muted-strong)] sm:p-5">No AI calls in this period.</p>;
     return <div className="p-4 sm:p-5">
-        <div className="flex h-36 items-end gap-[2px]" role="img" aria-label={`AI calls per day: ${buckets.map(b => `${b.label} ${b.ok} answered, ${b.problem} with a problem`).join('; ')}`}>
+        <div className="flex h-36 items-end gap-[2px]" role="img" aria-label={`AI calls ${days > 30 ? 'per week' : 'per day'}: ${buckets.map(b => `${b.label} ${b.ok} answered, ${b.problem} with a problem`).join('; ')}`}>
             {buckets.map(b => <div key={b.label} className="group flex h-full min-w-0 flex-1 flex-col justify-end" title={`${b.label}: ${b.ok} answered, ${b.problem} refused, failed or withheld`}>
                 {b.problem ? <span className="block rounded-t-[4px] bg-[var(--warn)]" style={{ height: `${(b.problem / max) * 100}%` }} /> : null}
                 {b.ok ? <span className={`block bg-[var(--chart-in)] ${b.problem ? 'mt-[2px]' : 'rounded-t-[4px]'}`} style={{ height: `${(b.ok / max) * 100}%` }} /> : null}
