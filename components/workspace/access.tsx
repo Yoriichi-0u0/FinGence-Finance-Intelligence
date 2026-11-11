@@ -7,8 +7,9 @@ import { PageHeader, Panel } from '@/components/ui';
 import { button, primaryButton } from '@/components/demo/shared';
 import { plainMessage, ROLE_LABEL, useWorkspace, type WorkspaceRole } from './context';
 
-const field = 'mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-white px-3 text-sm';
-const home = (role: WorkspaceRole) => role === 'FINANCE' ? '/data' : role === 'MANAGEMENT' ? '/operations' : '/team';
+const field = 'mt-1 block min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] px-3 text-sm';
+// Every role processes documents, so everyone starts on Data.
+const HOME = '/data';
 
 async function post(path: string, body: unknown) {
     try {
@@ -25,18 +26,18 @@ export function SignIn() {
         event.preventDefault(); setBusy(true); setError(null);
         const result = await post('/api/workspace/sign-in', { email, password });
         setPassword('');
-        if (result.ok && result.body?.role) { await workspace.refresh(); router.push(home(result.body.role)); return; }
+        if (result.ok && result.body?.role) { await workspace.refresh(); router.push(HOME); return; }
         setError(plainMessage(result.body?.code)); setBusy(false);
     }
     if (workspace.session) return <>
         <PageHeader title="Sign in" description="You are already signed in." />
         <Panel><div className="p-4 text-sm sm:p-5">
             <p>Signed in as <strong>{workspace.session.email}</strong> ({ROLE_LABEL[workspace.session.role]}) at {workspace.session.organization.name}.</p>
-            <div className="mt-4 flex flex-wrap gap-2"><Link href={home(workspace.session.role)} className={primaryButton}>Continue</Link><button type="button" className={button} onClick={() => void workspace.signOut()}>Sign out</button></div>
+            <div className="mt-4 flex flex-wrap gap-2"><Link href={HOME} className={primaryButton}>Continue</Link><button type="button" className={button} onClick={() => void workspace.signOut()}>Sign out</button></div>
         </div></Panel>
     </>;
     return <>
-        <PageHeader title="Sign in" description="Sign in to your organization's FinGence workspace." />
+        <PageHeader title="Sign in" description="FinGence is for SAIC users. Sign in with the account your administrator set up for you." />
         <div className="grid max-w-3xl gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
             <Panel title="Your account">
                 <form className="space-y-4 p-4 sm:p-5" onSubmit={e => void submit(e)}>
@@ -51,7 +52,6 @@ export function SignIn() {
                 <div className="space-y-3 p-4 text-sm sm:p-5">
                     <p>Your administrator gives you a one-time invitation code. Use it once to choose your password.</p>
                     <Link href="/join" className={button}><KeyRound aria-hidden="true" size={16} />I have an invitation code</Link>
-                    <p className="text-[var(--muted)]">Just looking? The <Link href="/data" className="font-semibold underline">public demo</Link> works without an account, with fictional documents only.</p>
                 </div>
             </Panel>
         </div>
@@ -69,7 +69,7 @@ export function Join() {
         setBusy(true);
         const result = await post('/api/workspace/join', { code: code.trim(), password });
         setPassword(''); setAgain('');
-        if (result.ok && result.body?.role) { await workspace.refresh(); router.push(home(result.body.role)); return; }
+        if (result.ok && result.body?.role) { await workspace.refresh(); router.push(HOME); return; }
         if (result.ok) { router.push('/sign-in'); return; }
         setError(plainMessage(result.body?.code)); setBusy(false);
     }

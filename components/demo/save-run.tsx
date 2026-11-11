@@ -21,8 +21,8 @@ async function send(context: ProcessingContext): Promise<{ ok: true; runId: stri
 
 /**
  * Keeps a record of the completed run (fingerprints, decisions, receipts, checks and verified records; never the files).
- * - Signed in as Finance: recorded automatically for the organization, no click, so Management sees every run.
- * - Workspace on but not signed in (public demo): not recorded.
+ * - Signed in (any role, SAIC only): recorded automatically for the organization, no click, so Admins see every run in Operations.
+ * - Workspace on but not signed in: not recorded (the page sends the person to sign in).
  * - No workspace: the earlier optional save button.
  */
 export function SaveRun({ context }: { context: ProcessingContext }) {
@@ -31,7 +31,7 @@ export function SaveRun({ context }: { context: ProcessingContext }) {
     const [state, setState] = useState<State | null>(null);
     const started = useRef<string | null>(null);
     useEffect(() => { let live = true; fetch('/api/ingestion/runs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live && b?.available) setStore({ stores: String(b.stores ?? '') }); }).catch(() => undefined); return () => { live = false; }; }, []);
-    const automatic = workspace.enabled && workspace.session?.role === 'FINANCE';
+    const automatic = workspace.enabled && !!workspace.session;
     async function save() {
         started.current = context.processingId;
         setState({ processingId: context.processingId, status: 'saving', detail: '' });

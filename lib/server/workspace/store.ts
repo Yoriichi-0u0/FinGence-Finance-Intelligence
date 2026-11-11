@@ -3,8 +3,8 @@ import { createHash, randomBytes } from 'node:crypto';
 import { ingestionStore } from '../ingestion-store';
 
 /**
- * The hosted workspace: organizations, members in one of three roles, sessions and processing control, in the Supabase
- * schema `fingence_workspace` (supabase/sql/workspace-v1.sql). Off unless FINGENCE_WORKSPACE=1 and the ingestion store
+ * The hosted workspace: one organization (SAIC), members in one of three stacked roles, sessions and processing control, in the Supabase
+ * schema `fingence_workspace` (supabase/sql/workspace-v1.sql, then workspace-v2-saic.sql). Off unless FINGENCE_WORKSPACE=1 and the ingestion store
  * is configured; every call goes through a SECURITY DEFINER function that only the service role may execute.
  */
 export type Store = { url: string; key: string };
@@ -17,12 +17,17 @@ export function workspaceStore(): Store | null {
 }
 export const workspaceEnabled = () => workspaceStore() !== null;
 
-export type Role = 'FINANCE' | 'MANAGEMENT' | 'ADMIN';
-export const ROLES: readonly Role[] = ['FINANCE', 'MANAGEMENT', 'ADMIN'];
+/** SAIC only, three stacked roles: each includes everything the one below it may do (supabase/sql/workspace-v2-saic.sql). */
+export type Role = 'FINANCE' | 'ADMIN' | 'SUPERADMIN';
+export const ROLES: readonly Role[] = ['FINANCE', 'ADMIN', 'SUPERADMIN'];
+const RANK: Record<Role, number> = { FINANCE: 1, ADMIN: 2, SUPERADMIN: 3 };
+/** Whether a role is at least the given one (Superadmin ⊇ Admin ⊇ Finance user). */
+export const atLeast = (role: Role, minimum: Role) => (RANK[role] ?? 0) >= RANK[minimum];
 export type Principal = {
     sessionId: string; memberId: string; email: string; role: Role;
     organization: { id: string; name: string };
     processing: { paused: boolean; reason: string | null; since: string | null };
+    ai: { enabled: boolean; since: string | null };
 };
 
 /** A random 256-bit secret (session token or one-time code) and the hash the database keeps instead of it. */

@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     if (!aiGatewayEnabled()) return notFound();
     const read = await boundedJson(request, MAX_BODY_BYTES);
     if ('refusal' in read) return read.refusal;
-    const gate = await processingRefusal(request.headers);
+    const gate = await processingRefusal(request.headers, { ai: true });
     if (gate) return json({ code: gate.code, ...(gate.reason ? { reason: gate.reason } : {}) }, gate.status);
     const result = await interpretEvidence(read.body, clientAddress(request.headers));
     return json(result.body, result.status);

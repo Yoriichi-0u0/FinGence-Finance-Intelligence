@@ -7,7 +7,7 @@ import { useState } from "react";
 import { DemoProcessingProvider } from "@/components/demo/context";
 import { DemoBanner } from "@/components/demo/banner";
 import { ThemeSwitch } from "@/components/theme-switch";
-import { ROLE_LABEL, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
+import { atLeast, ROLE_LABEL, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
 import {
   Activity,
   AlertTriangle,
@@ -52,11 +52,9 @@ const financeQuestions = { href: "/finance-questions", label: "Finance questions
 const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareText };
 // Management (Technical): server processing jobs, flagged items and the pause switch; absent unless the server enables it.
 const management = { href: "/management", label: "Management", icon: Gauge };
-// Hosted workspace: Management (Technical) watches the backend; Admin manages the team. Neither processes documents.
+// Hosted workspace (SAIC only): every role uses the finance pages; Admins and Superadmins also get Team and Operations.
 const operationsItem: NavItem = { href: "/operations", label: "Operations", icon: Activity };
 const teamItem: NavItem = { href: "/team", label: "Team", icon: Users };
-/** The pages a signed-in non-Finance role sees instead of the Finance pages; null for Finance or no sign-in. */
-const rolePages = (role: string | undefined): NavItem[] | null => role === "MANAGEMENT" ? [operationsItem] : role === "ADMIN" ? [teamItem, operationsItem] : null;
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
@@ -116,7 +114,7 @@ type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boo
 
 function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const session = useWorkspace(), roleItems = rolePages(session.session?.role);
+  const session = useWorkspace(), admin = atLeast(session.session?.role, "ADMIN");
   const ask = [...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : [])];
   const technical = [...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])];
 
@@ -129,12 +127,11 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
       </div>
 
       <nav aria-label="Primary navigation" className="thin-scrollbar relative min-h-0 flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-        {roleItems ? <NavGroup label={ROLE_LABEL[session.session!.role]} items={roleItems} pathname={pathname} onNavigate={onNavigate} /> : <>
-          <NavGroup label="Workspace" items={workspace} pathname={pathname} onNavigate={onNavigate} />
-          <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} />
-          <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} />
-          <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} />
-        </>}
+        <NavGroup label="Workspace" items={workspace} pathname={pathname} onNavigate={onNavigate} />
+        <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} />
+        <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} />
+        <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} />
+        {admin ? <NavGroup label="Administration" items={[teamItem, operationsItem]} pathname={pathname} onNavigate={onNavigate} /> : null}
       </nav>
 
       <div className="relative space-y-3 border-t border-[var(--rail-line)] px-4 pb-5 pt-4">
@@ -155,7 +152,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
             <LogIn aria-hidden="true" size={18} className="shrink-0 text-[#a5b4fc]" />
             <span className="min-w-0">
               <span className="block text-[13px] font-semibold">Sign in</span>
-              <span className="block truncate text-xs text-[var(--rail-muted)]">{syntheticDemo ? "Or use the public demo, no sign-in" : "Organization workspace"}</span>
+              <span className="block truncate text-xs text-[var(--rail-muted)]">SAIC users only</span>
             </span>
           </Link>
         ) : (
@@ -177,8 +174,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
 /** Phone navigation: the four most used pages in a bottom bar, and everything else behind "More". */
 function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDemo: boolean }) {
   const pathname = usePathname();
-  const roleItems = rolePages(useWorkspace().session?.role);
-  const items: NavItem[] = roleItems ?? [
+  const items: NavItem[] = [
     { href: "/", label: "Overview", icon: House },
     { href: "/data", label: "Data", icon: Database },
     { href: "/reconciliation", label: "Reconcile", icon: RefreshCw },

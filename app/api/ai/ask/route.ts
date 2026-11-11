@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     if (!aiGatewayEnabled()) return notFound();
     const read = await boundedJson(request, MAX_BODY_BYTES);
     if ('refusal' in read) return read.refusal;
-    const gate = await processingRefusal(request.headers);
+    const gate = await processingRefusal(request.headers, { ai: true });
     if (gate) return json({ code: gate.code, ...(gate.reason ? { reason: gate.reason } : {}) }, gate.status);
     const parsed = askRequestSchema.safeParse(read.body);
     if (!parsed.success) return json({ code: 'INVALID_REQUEST' }, 400);

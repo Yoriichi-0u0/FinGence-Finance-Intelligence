@@ -1,6 +1,6 @@
 import 'server-only';
 import { budgetStore, clientAddress } from '../ai/budget';
-import { rpc, secretHash, workspaceStore, type Principal, type Role, type Store } from './store';
+import { atLeast, rpc, secretHash, workspaceStore, type Principal, type Role, type Store } from './store';
 
 export const SESSION_COOKIE = 'fingence_session';
 export const SESSION_HOURS = 12;
@@ -19,8 +19,8 @@ export const clearedCookie = () => `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSi
 
 /**
  * Who is making this request:
- * - ANONYMOUS: no session cookie (the public demo);
- * - ENDED: a cookie whose session is over (signed out elsewhere, ended by Management or Admin, expired, access changed);
+ * - ANONYMOUS: no session cookie;
+ * - ENDED: a cookie whose session is over (signed out elsewhere, ended by an Admin or Superadmin, expired, access changed);
  * - SIGNED_IN: an open session of an active member.
  */
 export type Caller = { kind: 'ANONYMOUS' } | { kind: 'ENDED' } | { kind: 'UNAVAILABLE' } | { kind: 'SIGNED_IN'; principal: Principal; tokenHash: string };
@@ -34,27 +34,43 @@ export async function caller(headers: Headers, store: Store | null = workspaceSt
 }
 
 /**
- * The processing gate for the AI and ingestion routes when the workspace is on. The public demo (no cookie) is unchanged;
- * a signed-in person must be Finance and their organization's processing must not be paused; an ended session is refused,
- * so ending a session stops that person's processing at once.
+ * Who may use processing when the workspace is on (SAIC users only): a signed-in member of any role. There is no public
+ * demo: without a session the request is refused. `principal` is null when the workspace is off (the public deployment).
  */
-export async function processingRefusal(headers: Headers, store: Store | null = workspaceStore(), transport: typeof fetch = fetch): Promise<{ code: string; status: number; reason?: string | null } | null> {
-    if (!store) return null;
+export type MemberGate = { refusal: { code: string; status: number; reason?: string | null } } | { principal: Principal | null };
+export async function signedInMember(headers: Headers, store: Store | null = workspaceStore(), transport: typeof fetch = fetch): Promise<MemberGate> {
+    if (!store) return { principal: null };
     const who = await caller(headers, store, transport);
-    if (who.kind === 'ANONYMOUS') return null;
-    if (who.kind === 'ENDED') return { code: 'SESSION_ENDED', status: 401 };
-    if (who.kind === 'UNAVAILABLE') return { code: 'WORKSPACE_UNAVAILABLE', status: 503 };
-    if (who.principal.role !== 'FINANCE') return { code: 'ROLE_DOES_NOT_PROCESS', status: 403 };
-    if (who.principal.processing.paused) return { code: 'PROCESSING_PAUSED', status: 423, reason: who.principal.processing.reason };
-    return null;
+    if (who.kind === 'ANONYMOUS') return { refusal: { code: 'SIGN_IN_REQUIRED', status: 401 } };
+    if (who.kind === 'ENDED') return { refusal: { code: 'SESSION_ENDED', status: 401 } };
+    if (who.kind === 'UNAVAILABLE') return { refusal: { code: 'WORKSPACE_UNAVAILABLE', status: 503 } };
+    return { principal: who.principal };
+}
+
+/**
+ * The processing gate for the AI, ingestion and job routes: a signed-in member whose organization's processing is not
+ * paused; with `ai`, also refused while a Superadmin has turned the AI off. Ending a session stops that person at once.
+ */
+export async function processingGate(headers: Headers, options: { ai?: boolean } = {}, store: Store | null = workspaceStore(), transport: typeof fetch = fetch): Promise<MemberGate> {
+    const gate = await signedInMember(headers, store, transport);
+    if ('refusal' in gate || !gate.principal) return gate;
+    const p = gate.principal;
+    if (p.processing.paused) return { refusal: { code: 'PROCESSING_PAUSED', status: 423, reason: p.processing.reason } };
+    if (options.ai && !p.ai.enabled) return { refusal: { code: 'AI_OFF', status: 423 } };
+    return gate;
+}
+export async function processingRefusal(headers: Headers, options: { ai?: boolean } = {}, store: Store | null = workspaceStore(), transport: typeof fetch = fetch) {
+    const gate = await processingGate(headers, options, store, transport);
+    return 'refusal' in gate ? gate.refusal : null;
 }
 
 export type Required = { refusal: { code: string; status: number } } | { principal: Principal; tokenHash: string };
-export async function requireRole(headers: Headers, roles: Role[], store: Store | null = workspaceStore(), transport: typeof fetch = fetch): Promise<Required> {
+/** A signed-in member whose role is at least `minimum`. */
+export async function requireRole(headers: Headers, minimum: Role, store: Store | null = workspaceStore(), transport: typeof fetch = fetch): Promise<Required> {
     const who = await caller(headers, store, transport);
     if (who.kind === 'UNAVAILABLE') return { refusal: { code: 'WORKSPACE_UNAVAILABLE', status: 503 } };
     if (who.kind !== 'SIGNED_IN') return { refusal: { code: 'SIGN_IN_REQUIRED', status: 401 } };
-    if (!roles.includes(who.principal.role)) return { refusal: { code: 'FORBIDDEN', status: 403 } };
+    if (!atLeast(who.principal.role, minimum)) return { refusal: { code: 'FORBIDDEN', status: 403 } };
     return { principal: who.principal, tokenHash: who.tokenHash };
 }
 

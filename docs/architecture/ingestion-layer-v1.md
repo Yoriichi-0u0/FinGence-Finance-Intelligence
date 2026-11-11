@@ -80,7 +80,7 @@ The ingestion store is the Supabase project **FinGence-Production**, schema `fin
 - **Route:** `POST /api/ingestion/runs` (same-origin, 1.5 MB bound, schema-validated by `runPayloadSchema`, rate-limited by the shared budget store) and `GET` for availability.
   - The route exists only when `FINGENCE_INGESTION_STORE=1`, `SUPABASE_URL` and `SUPABASE_SECRET_KEY` (or the legacy `SUPABASE_SERVICE_ROLE_KEY`) are set.
   - The Data page shows "Save verified records" when it is on.
-  - With the workspace on (`FINGENCE_WORKSPACE=1`, see [workspace-roles-v1.md](workspace-roles-v1.md)), the route records runs only for a signed-in Finance user, automatically and for that user's organization, and refuses them while Management has paused processing. The public demo is not recorded.
+  - With the workspace on (`FINGENCE_WORKSPACE=1`, see [workspace-roles.md](workspace-roles.md)), the route records runs for any signed-in member, automatically and for SAIC's organization, and refuses them while an Admin has paused processing. Without a session nothing is recorded.
 
 ## Evidence
 

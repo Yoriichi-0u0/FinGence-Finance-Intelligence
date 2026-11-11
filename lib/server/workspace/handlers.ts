@@ -13,7 +13,7 @@ const notFound = () => new Response('Not found', { status: 404 });
 const refuse = (r: { code: string; status: number }) => json({ code: r.code }, r.status);
 const email = z.string().trim().toLowerCase().min(3).max(200).regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 const uuid = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-const view = (p: Principal) => ({ signedIn: true, email: p.email, role: p.role, organization: { name: p.organization.name }, processing: p.processing });
+const view = (p: Principal) => ({ signedIn: true, email: p.email, role: p.role, organization: { name: p.organization.name }, processing: p.processing, ai: { enabled: p.ai.enabled } });
 
 export async function session(request: Request, deps: Deps) {
     if (!deps.store) return notFound();
@@ -75,12 +75,12 @@ export async function signOut(request: Request, deps: Deps) {
     return new Response(JSON.stringify({ signedIn: false }), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Set-Cookie': clearedCookie() } });
 }
 
-const fail = (error: string) => json({ code: error.startsWith('STORE_') ? 'WORKSPACE_UNAVAILABLE' : error }, error.startsWith('STORE_') ? 503 : error === 'FORBIDDEN' ? 403 : error === 'NOT_FOUND' ? 404 : 409);
+const fail = (error: string) => json({ code: error.startsWith('STORE_') ? 'WORKSPACE_UNAVAILABLE' : error }, error.startsWith('STORE_') ? 503 : error === 'FORBIDDEN' || error === 'ROLE_NOT_ALLOWED' ? 403 : error === 'NOT_FOUND' ? 404 : 409);
 
-/** Admin: the team, invitations (a one-time code returned to the Admin once), role and access changes, ending sessions. */
+/** Admin and above: the team, invitations (a one-time code shown once), role and access changes, ending sessions. Each acts only on people below their own level. */
 export async function team(request: Request, deps: Deps) {
     if (!deps.store) return notFound();
-    const who = await requireRole(request.headers, ['ADMIN'], deps.store, deps.transport);
+    const who = await requireRole(request.headers, 'ADMIN', deps.store, deps.transport);
     if ('refusal' in who) return refuse(who.refusal);
     const result = await rpc('fingence_workspace_team', { p_token_hash: who.tokenHash }, deps.store, deps.transport);
     return result.ok ? json({ organization: who.principal.organization.name, self: who.principal.memberId, ...result.value as object }) : fail(result.error);
@@ -97,7 +97,7 @@ export async function teamChange(request: Request, deps: Deps) {
     if ('refusal' in read) return read.refusal;
     const body = teamAction.safeParse(read.body);
     if (!body.success) return json({ code: 'INVALID_INPUT' }, 400);
-    const who = await requireRole(request.headers, ['ADMIN'], deps.store, deps.transport);
+    const who = await requireRole(request.headers, 'ADMIN', deps.store, deps.transport);
     if ('refusal' in who) return refuse(who.refusal);
     const t = { p_token_hash: who.tokenHash }, d = body.data;
     if (d.action === 'invite') {
@@ -111,10 +111,10 @@ export async function teamChange(request: Request, deps: Deps) {
     return result.ok ? json(result.value) : fail(result.error);
 }
 
-/** Management (Admin sees sessions and the audit trail, not runs): backend processing, open sessions, pause and resume. */
+/** Admin and above: backend processing (runs, checks, model calls), open sessions, pause and the AI switch; the audit trail for Superadmin. */
 export async function operations(request: Request, deps: Deps) {
     if (!deps.store) return notFound();
-    const who = await requireRole(request.headers, ['MANAGEMENT', 'ADMIN'], deps.store, deps.transport);
+    const who = await requireRole(request.headers, 'ADMIN', deps.store, deps.transport);
     if ('refusal' in who) return refuse(who.refusal);
     const run = new URL(request.url).searchParams.get('run');
     if (run !== null) {
@@ -129,6 +129,7 @@ const operationsAction = z.discriminatedUnion('action', [
     z.object({ action: z.literal('pause'), reason: z.string().trim().min(1).max(500) }),
     z.object({ action: z.literal('resume') }),
     z.object({ action: z.literal('end-sessions'), memberId: uuid }),
+    z.object({ action: z.literal('ai'), enabled: z.boolean() }),
 ]);
 export async function operationsChange(request: Request, deps: Deps) {
     if (!deps.store) return notFound();
@@ -136,22 +137,25 @@ export async function operationsChange(request: Request, deps: Deps) {
     if ('refusal' in read) return read.refusal;
     const body = operationsAction.safeParse(read.body);
     if (!body.success) return json({ code: 'INVALID_INPUT' }, 400);
-    const who = await requireRole(request.headers, ['MANAGEMENT'], deps.store, deps.transport);
+    const d = body.data;
+    // Turning the AI on or off is for a Superadmin; pausing and signing people out for an Admin and above.
+    const who = await requireRole(request.headers, d.action === 'ai' ? 'SUPERADMIN' : 'ADMIN', deps.store, deps.transport);
     if ('refusal' in who) return refuse(who.refusal);
-    const d = body.data, t = { p_token_hash: who.tokenHash };
-    const result = d.action === 'end-sessions' ? await rpc('fingence_workspace_end_member_sessions', { ...t, p_member: d.memberId }, deps.store, deps.transport)
+    const t = { p_token_hash: who.tokenHash };
+    const result = d.action === 'ai' ? await rpc('fingence_workspace_set_ai', { ...t, p_enabled: d.enabled }, deps.store, deps.transport)
+        : d.action === 'end-sessions' ? await rpc('fingence_workspace_end_member_sessions', { ...t, p_member: d.memberId }, deps.store, deps.transport)
         : await rpc('fingence_workspace_set_processing', { ...t, p_paused: d.action === 'pause', p_reason: d.action === 'pause' ? d.reason : null }, deps.store, deps.transport);
     return result.ok ? json(result.value) : fail(result.error);
 }
 
-/** Finance: a completed run is recorded for the organization automatically. Refused when paused or not signed in as Finance. */
+/** Any signed-in member: a completed run is recorded for the organization automatically. Refused when paused or not signed in. */
 export async function recordRun(request: Request, deps: Deps) {
     if (!deps.store) return notFound();
     const read = await boundedJson(request, 1_500_000);
     if ('refusal' in read) return read.refusal;
     const parsed = runPayloadSchema.safeParse(read.body);
     if (!parsed.success) return json({ code: 'INVALID_RUN', issue: parsed.error.issues[0]?.path.join('.') ?? null }, 400);
-    const who = await requireRole(request.headers, ['FINANCE'], deps.store, deps.transport);
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return refuse(who.refusal);
     const result = await rpc<{ runId: string }>('fingence_workspace_record_run', { p_token_hash: who.tokenHash, p_payload: { ...parsed.data, clientHash: null } }, deps.store, deps.transport);
     if (result.ok) return json(result.value, 201);

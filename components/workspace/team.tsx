@@ -3,20 +3,19 @@ import { useCallback, useEffect, useState } from 'react';
 import { Copy, LoaderCircle, UserPlus } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
 import { button, primaryButton, Table } from '@/components/demo/shared';
-import { ROLE_LABEL, useWorkspace, type WorkspaceRole } from './context';
+import { canManage, grantable, ROLE_LABEL, useWorkspace, type WorkspaceRole } from './context';
 
 type Member = { id: string; email: string; role: WorkspaceRole; active: boolean; version: number; joinedAt: string; openSessions: number };
 type Invitation = { id: string; email: string; role: WorkspaceRole; createdAt: string; expiresAt: string };
 type Team = { organization: string; self: string; members: Member[]; invitations: Invitation[] };
-const ROLES: WorkspaceRole[] = ['FINANCE', 'MANAGEMENT', 'ADMIN'];
 const REFUSAL: Record<string, string> = {
-    LAST_ADMIN: 'The organization needs at least one active Admin, so this change was not made.',
+    ROLE_NOT_ALLOWED: 'You can manage only people below your own role, and give only roles below your own.',
     STALE: 'Someone changed this member a moment ago. The list has been refreshed; try again.',
     ALREADY_MEMBER: 'That email already has an account.',
-    FORBIDDEN: 'Only an Admin can do this.',
+    FORBIDDEN: 'Only an Admin or Superadmin can do this.',
 };
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
-const select = 'min-h-9 rounded-lg border border-[var(--border-strong)] bg-white px-2 text-sm';
+const select = 'min-h-9 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] px-2 text-sm';
 
 async function call(body: unknown) {
     try {
@@ -25,9 +24,9 @@ async function call(body: unknown) {
     } catch { return { ok: false, body: null }; }
 }
 
-/** Admin: who can sign in, with which role. An invitation is the only approval a new member needs. */
+/** Admin and Superadmin: who can sign in, with which role. Each manages only people below their own role; an invitation is the only approval needed. */
 export function TeamConsole() {
-    const workspace = useWorkspace();
+    const workspace = useWorkspace(), own = workspace.session?.role ?? 'FINANCE', ROLES = grantable(own);
     const [team, setTeam] = useState<Team | null>(null), [error, setError] = useState<string | null>(null), [notice, setNotice] = useState<string | null>(null);
     const [draft, setDraft] = useState<Record<string, { role: WorkspaceRole; active: boolean }>>({});
     const [invite, setInvite] = useState<{ email: string; role: WorkspaceRole }>({ email: '', role: 'FINANCE' });
@@ -36,7 +35,7 @@ export function TeamConsole() {
     const load = useCallback(async () => {
         const res = await fetch('/api/workspace/team', { cache: 'no-store' }).catch(() => null);
         const body = await res?.json().catch(() => null) as Team & { code?: string } | null;
-        if (!res?.ok || !body) { setError(body?.code === 'FORBIDDEN' ? 'Team is for Admins.' : body?.code === 'SIGN_IN_REQUIRED' ? 'Please sign in as an Admin.' : 'The team could not be loaded.'); return; }
+        if (!res?.ok || !body) { setError(body?.code === 'FORBIDDEN' ? 'Team is for Admins and Superadmins.' : body?.code === 'SIGN_IN_REQUIRED' ? 'Please sign in.' : 'The team could not be loaded.'); return; }
         setTeam(body); setDraft({}); setError(null);
     }, []);
     useEffect(() => { if (!workspace.loading) queueMicrotask(() => void load()); }, [workspace.loading, load]);
@@ -58,12 +57,17 @@ export function TeamConsole() {
     if (error) return <><PageHeader title="Team" description="Members, roles and invitations." /><Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel></>;
     if (!team) return <><PageHeader title="Team" description="Members, roles and invitations." /><p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin" size={16} />Loading the team…</p></>;
     return <>
-        <PageHeader title="Team" description={`Who can sign in to ${team.organization}, and with which role. Finance processes documents; Management (Technical) watches the processing and can pause it; Admin manages this list.`} />
-        {notice ? <p role="status" className="mb-4 rounded-lg border border-[var(--border)] bg-white p-3 text-sm">{notice}</p> : null}
+        <PageHeader title="Team" description={`Who can sign in to ${team.organization}, and with which role. Finance users process documents and read the results; Admins also manage Finance users and can pause processing; Superadmins also manage Admins and the AI switch.`} />
+        {notice ? <p role="status" className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] p-3 text-sm">{notice}</p> : null}
         <div className="grid gap-5">
             <Panel title="Members">
                 <Table caption="Members" columns={['Email', 'Role', 'Access', 'Signed in', 'Joined', '']} rows={team.members.map(m => {
                     const d = draft[m.id] ?? { role: m.role, active: m.active }, changed = d.role !== m.role || d.active !== m.active;
+                    // People at or above your own role (and yourself) are shown, not managed.
+                    if (!canManage(own, m.role)) return [
+                        <span key="e">{m.email}{m.id === team.self ? <span className="ml-1 text-xs text-[var(--muted)]">(you)</span> : null}</span>,
+                        ROLE_LABEL[m.role], m.active ? 'On' : 'Off', m.openSessions ? `${m.openSessions} session${m.openSessions > 1 ? 's' : ''}` : '—', when(m.joinedAt), '',
+                    ];
                     return [
                         <span key="e">{m.email}{m.id === team.self ? <span className="ml-1 text-xs text-[var(--muted)]">(you)</span> : null}</span>,
                         <select key="r" aria-label={`Role of ${m.email}`} className={select} value={d.role} onChange={e => setDraft({ ...draft, [m.id]: { ...d, role: e.target.value as WorkspaceRole } })}>{ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}</select>,
@@ -86,10 +90,10 @@ export function TeamConsole() {
                 </form>
                 {issued ? <div role="status" className="mx-4 mb-4 rounded-lg border border-teal-200 bg-[var(--teal-soft)] p-4 text-sm sm:mx-5">
                     <p>Send this one-time code to <strong>{issued.email}</strong> privately. They open <strong>{typeof window === 'undefined' ? '' : window.location.origin}/join</strong>, enter it and choose a password. It works once, until {when(issued.expiresAt)}. It is shown only now.</p>
-                    <p className="mt-2 flex flex-wrap items-center gap-2"><code className="break-all rounded bg-white px-2 py-1 font-mono text-xs">{issued.code}</code><button type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} onClick={() => void navigator.clipboard?.writeText(issued.code)}><Copy aria-hidden="true" size={14} />Copy</button></p>
+                    <p className="mt-2 flex flex-wrap items-center gap-2"><code className="break-all rounded bg-[var(--surface)] text-[var(--ink)] px-2 py-1 font-mono text-xs">{issued.code}</code><button type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} onClick={() => void navigator.clipboard?.writeText(issued.code)}><Copy aria-hidden="true" size={14} />Copy</button></p>
                 </div> : null}
                 {team.invitations.length ? <Table caption="Pending invitations" columns={['Email', 'Role', 'Created', 'Expires', '']} rows={team.invitations.map(i => [i.email, ROLE_LABEL[i.role], when(i.createdAt), when(i.expiresAt),
-                    <button key="v" type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} disabled={busy} onClick={() => void act({ action: 'revoke-invitation', invitationId: i.id }, `Invitation for ${i.email} withdrawn.`)}>Withdraw</button>])} /> : null}
+                    !canManage(own, i.role) ? '' : <button key="v" type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} disabled={busy} onClick={() => void act({ action: 'revoke-invitation', invitationId: i.id }, `Invitation for ${i.email} withdrawn.`)}>Withdraw</button>])} /> : null}
             </Panel>
         </div>
     </>;
