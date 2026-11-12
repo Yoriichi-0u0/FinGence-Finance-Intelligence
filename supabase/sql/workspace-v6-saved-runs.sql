@@ -6,7 +6,8 @@
 --                small restore bundle (the AI's accepted layout readings, OCR readings, server job). With the documents,
 --                the bundle reproduces every result exactly; no figure is stored that could drift from its source.
 --   saved_files  each document stored once per organization, by SHA-256, in a private Storage bucket (the file bytes are
---                never in the database). A file is removed when no saved run uses it any more.
+--                never in the database). A file is removed when no saved run uses it any more. Each stored copy has its own
+--                object key: a delete removes only the exact copy it unregistered, never one a concurrent save just stored.
 --
 -- Free-plan guard: at most 900 MB of files and 300 MB of saved-run rows per organization. When files would exceed the cap,
 -- the run is still saved (summary and report) without its documents, and it cannot be reopened.
@@ -17,6 +18,8 @@ create table if not exists fingence_workspace.saved_files (
     sha256 text not null check (sha256 ~ '^[0-9a-f]{64}$'),
     bytes bigint not null check (bytes between 1 and 50000000),
     content_type text not null check (content_type ~ '^[a-z]+/[a-z0-9.+-]{1,80}$'),
+    -- Storage object <organization>/<sha256>/<object_key>; a new key every time the document is stored again.
+    object_key uuid not null,
     created_at timestamptz not null default now(),
     primary key (organization_id, sha256)
 );
@@ -67,7 +70,7 @@ declare usage jsonb; missing jsonb; needed bigint;
 begin
     if not exists (select 1 from fingence_workspace.members m where m.id = p_member and m.organization_id = p_org and m.active) then return jsonb_build_object('error', 'MEMBER_MISMATCH'); end if;
     usage := fingence_workspace.saved_usage(p_org);
-    select coalesce(jsonb_agg(f->>'sha256'), '[]'), coalesce(sum((f->>'bytes')::bigint), 0) into missing, needed
+    select coalesce(jsonb_agg(jsonb_build_object('sha256', f->>'sha256', 'key', gen_random_uuid())), '[]'), coalesce(sum((f->>'bytes')::bigint), 0) into missing, needed
     from jsonb_array_elements(p_files) f
     where not exists (select 1 from fingence_workspace.saved_files s where s.organization_id = p_org and s.sha256 = f->>'sha256');
     return jsonb_build_object('upload', missing, 'filesFit', (usage->>'filesBytes')::bigint + needed <= (usage->>'filesCap')::bigint,
@@ -83,16 +86,23 @@ begin
     usage := fingence_workspace.saved_usage(p_org);
     if (usage->>'rowsBytes')::bigint >= (usage->>'rowsCap')::bigint then return jsonb_build_object('error', 'STORAGE_FULL'); end if;
     if kept then
-        insert into fingence_workspace.saved_files (organization_id, sha256, bytes, content_type)
-        select p_org, d->>'sha256', (d->>'bytes')::bigint, d->>'contentType' from jsonb_array_elements(p_run->'documents') d
+        insert into fingence_workspace.saved_files (organization_id, sha256, bytes, content_type, object_key)
+        select p_org, d->>'sha256', (d->>'bytes')::bigint, d->>'contentType', (d->>'objectKey')::uuid from jsonb_array_elements(p_run->'documents') d
+        where d->>'objectKey' is not null
         on conflict (organization_id, sha256) do nothing;
+        -- A document this save did not upload must still be stored (a concurrent delete may have removed it): if not, re-plan.
+        if exists (select 1 from jsonb_array_elements(p_run->'documents') d
+                   where not exists (select 1 from fingence_workspace.saved_files f where f.organization_id = p_org and f.sha256 = d->>'sha256')) then
+            return jsonb_build_object('error', 'FILES_CHANGED');
+        end if;
     end if;
     insert into fingence_workspace.saved_runs (organization_id, member_id, processed_at, processing_id, pipeline_version, status, business_id, business_name, period, currency,
         documents, confidence, report, bundle, files_kept)
     values (p_org, p_member, (p_run->>'processedAt')::timestamptz, p_run->>'processingId', p_run->>'pipelineVersion', p_run->>'status', p_run->>'businessId', p_run->>'businessName',
         p_run->>'period', p_run->>'currency',
-        (select coalesce(jsonb_agg(d || jsonb_build_object('stored', kept)), '[]') from jsonb_array_elements(p_run->'documents') d),
-        p_run->'confidence', p_run->'report', p_run->'bundle', kept)
+        (select coalesce(jsonb_agg((d - 'objectKey') || jsonb_build_object('stored', kept)), '[]') from jsonb_array_elements(p_run->'documents') d),
+        -- A quarantined run has no report: JSON null becomes SQL NULL (the column takes an object or NULL).
+        p_run->'confidence', nullif(p_run->'report', 'null'::jsonb), p_run->'bundle', kept)
     returning saved_runs.id into new_id;
     return jsonb_build_object('id', new_id, 'filesKept', kept);
 end $$;
@@ -125,7 +135,9 @@ begin
     select * into r from fingence_workspace.saved_runs s where s.id = p_id and s.organization_id = a.organization_id;
     if not found or (r.member_id is distinct from a.member_id and fingence_workspace.rank(a.role) < 2) then return jsonb_build_object('error', 'NOT_FOUND'); end if;
     return jsonb_build_object('id', r.id, 'organizationId', r.organization_id, 'at', r.processed_at, 'processingId', r.processing_id, 'pipelineVersion', r.pipeline_version,
-        'status', r.status, 'businessName', r.business_name, 'period', r.period, 'currency', r.currency, 'documents', r.documents, 'confidence', r.confidence,
+        'status', r.status, 'businessName', r.business_name, 'period', r.period, 'currency', r.currency,
+        'documents', (select jsonb_agg(d || jsonb_build_object('objectKey', (select f.object_key from fingence_workspace.saved_files f where f.organization_id = r.organization_id and f.sha256 = d->>'sha256')) order by n)
+            from jsonb_array_elements(r.documents) with ordinality as x(d, n)), 'confidence', r.confidence,
         'report', r.report, 'bundle', r.bundle, 'filesKept', r.files_kept);
 end $$;
 
@@ -146,8 +158,8 @@ begin
           and f.sha256 in (select d->>'sha256' from jsonb_array_elements(r.documents) d)
           and not exists (select 1 from fingence_workspace.saved_runs o, jsonb_array_elements(o.documents) od
                           where o.organization_id = r.organization_id and o.files_kept and od->>'sha256' = f.sha256)
-        returning f.sha256)
-    select coalesce(jsonb_agg(sha256), '[]') into orphans from gone;
+        returning f.sha256, f.object_key)
+    select coalesce(jsonb_agg(jsonb_build_object('sha256', sha256, 'key', object_key)), '[]') into orphans from gone;
     perform fingence_workspace.log(a.organization_id, a.member_id, 'run.deleted', r.id, jsonb_build_object('processingId', r.processing_id, 'owner', r.member_id));
     return jsonb_build_object('deleted', r.id, 'removeFiles', orphans);
 end $$;

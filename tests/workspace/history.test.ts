@@ -109,14 +109,47 @@ describe('History: saved runs per person', () => {
         expect((await history.deleteSaved(r, '00000000-0000-4000-8000-000000000001', hdeps())).status).toBe(403);
     });
     it('over the files cap, the run is saved without its documents and cannot be reopened from them', async () => {
-        await db.query("insert into fingence_workspace.saved_files (organization_id, sha256, bytes, content_type) values ($1::uuid, $2, 50000000, 'text/csv')", [organization, 'f'.repeat(64)]);
-        for (let i = 0; i < 17; i++) await db.query("insert into fingence_workspace.saved_files (organization_id, sha256, bytes, content_type) values ($1::uuid, $2, 50000000, 'text/csv')", [organization, i.toString(16).padStart(64, 'e')]);
+        await db.query("insert into fingence_workspace.saved_files (organization_id, sha256, bytes, content_type, object_key) values ($1::uuid, $2, 50000000, 'text/csv', gen_random_uuid())", [organization, 'f'.repeat(64)]);
+        for (let i = 0; i < 17; i++) await db.query("insert into fingence_workspace.saved_files (organization_id, sha256, bytes, content_type, object_key) values ($1::uuid, $2, 50000000, 'text/csv', gen_random_uuid())", [organization, i.toString(16).padStart(64, 'e')]);
         const { saved } = await saveMarch('finance@example.invalid');
         expect(saved).toMatchObject({ filesKept: false });
         expect(files.objects.size).toBe(0);
         const runId = (saved as { id: string }).id;
         expect((await history.savedDocument(req('/x', finance), runId, '0', hdeps())).status).toBe(404);
         expect((await list(finance))[1].runs[0]).toMatchObject({ filesKept: false });
+    });
+    it('a quarantined run (no report) is saved too', async () => {
+        const docs = [doc('demo-bank-statement-2026-03.csv')];
+        const c = await processDocuments(docs);
+        expect(c.outputs.report).toBeNull();
+        const payload = await savedRunPayload(c, docs, { interpretations: {} }, '2026-11-12T04:00:00.000Z');
+        const saved = await saveRun(organization, await memberId('finance2@example.invalid'), payload, docs, { store, transport: deps.transport, files: memoryFiles() });
+        expect(saved).toMatchObject({ id: expect.any(String) });
+    });
+    it('a delete never removes a copy a concurrent save stored, and a save whose document vanished stores it again', async () => {
+        await db.query('delete from fingence_workspace.saved_runs'); await db.query('delete from fingence_workspace.saved_files');
+        const shared = memoryFiles(), member = await memberId('finance@example.invalid');
+        const c = await processDocuments(march()), payload = await savedRunPayload(c, march(), { interpretations: {} }, '2026-11-12T05:00:00.000Z');
+        // Run A stores the documents; run B (same documents) only refers to them.
+        const a = await saveRun(organization, member, payload, march(), { store, transport: deps.transport, files: shared }) as { id: string };
+        const firstCopies = [...shared.objects.keys()];
+        // B plans while the documents exist; A is deleted before B registers; B must not end up pointing at removed copies.
+        let deleted = false;
+        const racing = (async (input: RequestInfo | URL, init?: RequestInit) => {
+            if (!deleted && String(input).endsWith('fingence_workspace_save_run')) {
+                deleted = true;
+                const res = await history.deleteSaved(req('/x', finance, { method: 'DELETE' }), a.id, { store, transport: deps.transport, files: shared });
+                expect(res.status).toBe(200);
+            }
+            return deps.transport(input, init);
+        }) as typeof fetch;
+        const b = await saveRun(organization, member, payload, march(), { store, transport: racing, files: shared });
+        expect(b).toMatchObject({ filesKept: true });
+        // The old copies are gone; new copies (new keys) were stored, and B's documents open.
+        expect(firstCopies.every(k => !shared.objects.has(k))).toBe(true);
+        expect(shared.objects.size).toBe(2);
+        const res = await history.savedDocument(req('/x', finance), (b as { id: string }).id, '0', { store, transport: deps.transport, files: shared });
+        expect(res.status).toBe(200);
     });
     it('the documents sent must be the documents described', async () => {
         const c = await processDocuments(march());
@@ -131,7 +164,8 @@ describe('History: saved runs per person', () => {
         }
         for (const t of ['saved_runs', 'saved_files']) expect((await db.query<{ s: boolean }>(`select has_table_privilege('authenticated', 'fingence_workspace.${t}', 'select') s`)).rows[0].s).toBe(false);
     });
-    it('a document path is always <organization>/<sha256>', () => {
-        expect(objectPath(organization, 'a'.repeat(64))).toBe(`${organization}/${'a'.repeat(64)}`);
+    it('a document path is always <organization>/<sha256>/<key>', () => {
+        const key = '00000000-0000-4000-8000-0000000000aa';
+        expect(objectPath(organization, 'a'.repeat(64), key)).toBe(`${organization}/${'a'.repeat(64)}/${key}`);
     });
 });

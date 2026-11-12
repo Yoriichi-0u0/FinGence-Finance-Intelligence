@@ -12,6 +12,10 @@ import { button } from './shared';
 const RECORDED = 'fingence-recorded-runs-v1';
 const recorded = (): string[] => { try { return JSON.parse(sessionStorage.getItem(RECORDED) ?? '[]') as string[]; } catch { return []; } };
 const remember = (id: string) => { try { sessionStorage.setItem(RECORDED, JSON.stringify([...recorded(), id].slice(-50))); } catch { /* best effort */ } };
+// Saved to History, tracked apart from the run record: a History save that failed is retried (here, or on the next visit).
+const IN_HISTORY = 'fingence-history-saved-v1';
+const inHistory = (): string[] => { try { return JSON.parse(sessionStorage.getItem(IN_HISTORY) ?? '[]') as string[]; } catch { return []; } };
+const rememberHistory = (id: string) => { try { sessionStorage.setItem(IN_HISTORY, JSON.stringify([...inHistory(), id].slice(-50))); } catch { /* best effort */ } };
 
 type State = { processingId: string; status: 'saving' | 'saved' | 'failed'; detail: string };
 async function send(context: ProcessingContext): Promise<{ ok: true; runId: string } | { ok: false; code: string }> {
@@ -47,20 +51,29 @@ export function SaveRun({ context }: { context: ProcessingContext }) {
     const started = useRef<string | null>(null);
     useEffect(() => { let live = true; fetch('/api/ingestion/runs', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(b => { if (live && b?.available) setStore({ stores: String(b.stores ?? '') }); }).catch(() => undefined); return () => { live = false; }; }, []);
     const automatic = workspace.enabled && !!workspace.session;
+    // Signed in: the run also goes to the person's History, with its documents (not for a run reopened from History).
+    async function saveHistory() {
+        if (!automatic || savedRun || !inputs.length || inHistory().includes(context.processingId)) { if (inHistory().includes(context.processingId)) setHistory(true); return; }
+        setHistory(null);
+        const ok = await sendToHistory(context, inputs, processedAt ?? new Date().toISOString());
+        if (ok) rememberHistory(context.processingId);
+        setHistory(ok);
+    }
     async function save() {
         started.current = context.processingId;
         setState({ processingId: context.processingId, status: 'saving', detail: '' });
         const result = await send(context);
         if (result.ok) remember(context.processingId);
         // Signed in: the run also goes to the person's History, with its documents (not again for a run reopened from History).
-        if (result.ok && automatic && !savedRun && inputs.length) setHistory(await sendToHistory(context, inputs, processedAt ?? new Date().toISOString()));
+        if (result.ok) await saveHistory();
         setState({ processingId: context.processingId, status: result.ok ? 'saved' : 'failed', detail: result.ok ? result.runId : result.code });
         if (!result.ok && (result.code === 'SESSION_ENDED' || result.code === 'SIGN_IN_REQUIRED' || result.code === 'PROCESSING_PAUSED')) void workspace.refresh();
     }
     useEffect(() => {
         // Each processing is recorded once: a reload replays the same processing ID, which this tab has already recorded.
         if (!automatic || !store || started.current === context.processingId) return;
-        if (recorded().includes(context.processingId)) { started.current = context.processingId; queueMicrotask(() => setState({ processingId: context.processingId, status: 'saved', detail: '' })); return; }
+        // Already recorded (e.g. after a reload): only the History save may still be owed.
+        if (recorded().includes(context.processingId)) { started.current = context.processingId; queueMicrotask(() => { setState({ processingId: context.processingId, status: 'saved', detail: '' }); void saveHistory(); }); return; }
         queueMicrotask(() => void save());
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [automatic, store, context.processingId]);
@@ -70,6 +83,7 @@ export function SaveRun({ context }: { context: ProcessingContext }) {
         {current?.status === 'saved' ? <CheckCircle2 aria-hidden="true" size={16} className="text-[var(--teal)]" /> : current?.status === 'failed' ? <Database aria-hidden="true" size={16} /> : <LoaderCircle aria-hidden="true" className="animate-spin" size={16} />}
         <span>{current?.status === 'saved' ? `Recorded for ${workspace.session!.organization.name}.${history === true ? ' Saved to your History.' : history === false ? ' Not saved to your History.' : ''}` : current?.status === 'failed' ? `Not recorded. ${plainMessage(current.detail)}` : `Recording this run for ${workspace.session!.organization.name}…`}</span>
         {current?.status === 'failed' && current.detail !== 'PROCESSING_PAUSED' ? <button type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} onClick={() => void save()}>Try again</button> : null}
+        {current?.status === 'saved' && history === false ? <button type="button" className={`${button} min-h-9 px-3 py-1 text-xs`} onClick={() => void saveHistory()}>Save to History again</button> : null}
     </div>;
     return <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] p-4 text-sm sm:px-5">
         <button type="button" className={button} disabled={current?.status === 'saving' || current?.status === 'saved'} onClick={() => void save()}>{current?.status === 'saving' ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Database aria-hidden="true" size={16} />}{current?.status === 'saved' ? 'Saved' : 'Save verified records'}</button>

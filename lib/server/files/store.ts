@@ -7,11 +7,12 @@ import { workspaceStore, type Store } from '../workspace/store';
  * Where saved documents live: a PRIVATE Supabase Storage bucket on the hosted workspace (the file bytes are never in the
  * database), or a folder under .local/dev/files when developing against the local store. Only the server reads or writes
  * it, with the service key; a browser gets a document only through a session-checked route (a 60-second signed link).
- * Objects are named <organization>/<sha256>, so each document is stored once per organization.
+ * Objects are named <organization>/<sha256>/<key>: each document is stored once per organization, and every stored copy
+ * has its own key, so removing an old copy can never touch a copy a concurrent save has just stored.
  */
 export const FILES_BUCKET = process.env.FINGENCE_FILES_BUCKET ?? 'fingence-documents';
-export const objectPath = (organization: string, sha256: string) => `${organization}/${sha256}`;
-const SAFE_PATH = /^[0-9a-f-]{36}\/[0-9a-f]{64}$/;
+export const objectPath = (organization: string, sha256: string, key: string) => `${organization}/${sha256}/${key}`;
+const SAFE_PATH = /^[0-9a-f-]{36}\/[0-9a-f]{64}\/[0-9a-f-]{36}$/;
 
 export type FileStore = {
     put: (path: string, bytes: Uint8Array, contentType: string) => Promise<boolean>;

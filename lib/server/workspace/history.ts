@@ -28,7 +28,7 @@ export async function listHistory(request: Request, deps: HistoryDeps) {
     return result.ok ? json({ scope, role: who.principal.role, ...result.value as object }) : fail(result.error);
 }
 
-type Saved = { organizationId: string; documents: { sha256: string; contentType: string; name: string; stored: boolean }[]; filesKept: boolean };
+type Saved = { organizationId: string; documents: { sha256: string; contentType: string; name: string; stored: boolean; objectKey: string | null }[]; filesKept: boolean };
 async function load(request: Request, id: string, deps: HistoryDeps) {
     const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return { ok: false as const, response: json({ code: who.refusal.code }, who.refusal.status) };
@@ -44,7 +44,7 @@ export async function openSaved(request: Request, id: string, deps: HistoryDeps)
     if (!got.ok) return got.response;
     const { organizationId: _org, ...run } = got.run;
     void _org;
-    return json(run);
+    return json({ ...run, documents: run.documents.map(({ objectKey: _key, ...d }) => { void _key; return d; }) });
 }
 
 /** One document of a saved run. */
@@ -53,8 +53,8 @@ export async function savedDocument(request: Request, id: string, index: string,
     const got = await load(request, id, deps);
     if (!got.ok) return got.response;
     const i = Number(index), doc = Number.isInteger(i) ? got.run.documents[i] : undefined;
-    if (!doc || !got.run.filesKept || !doc.stored) return json({ code: 'FILE_NOT_KEPT' }, 404);
-    const files = filesOf(deps), path = objectPath(got.run.organizationId, doc.sha256);
+    if (!doc || !got.run.filesKept || !doc.stored || !doc.objectKey) return json({ code: 'FILE_NOT_KEPT' }, 404);
+    const files = filesOf(deps), path = objectPath(got.run.organizationId, doc.sha256, doc.objectKey);
     if (!files) return json({ code: 'FILES_UNAVAILABLE' }, 503);
     const link = await files.signedUrl(path);
     if (link) return Response.redirect(link, 302);
@@ -69,9 +69,10 @@ export async function deleteSaved(request: Request, id: string, deps: HistoryDep
     const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return json({ code: who.refusal.code }, who.refusal.status);
     if (!UUID.test(id)) return json({ code: 'NOT_FOUND' }, 404);
-    const result = await rpc<{ deleted: string; removeFiles: string[] }>('fingence_workspace_delete_run', { p_token_hash: who.tokenHash, p_id: id }, deps.store, deps.transport);
+    const result = await rpc<{ deleted: string; removeFiles: { sha256: string; key: string }[] }>('fingence_workspace_delete_run', { p_token_hash: who.tokenHash, p_id: id }, deps.store, deps.transport);
     if (!result.ok) return fail(result.error);
-    await filesOf(deps)?.remove(result.value.removeFiles.map(sha => objectPath(who.principal.organization.id, sha)));
+    // Exactly the copies this delete unregistered: a copy stored again since has a new key and is untouched.
+    await filesOf(deps)?.remove(result.value.removeFiles.map(f => objectPath(who.principal.organization.id, f.sha256, f.key)));
     return json({ deleted: result.value.deleted, filesRemoved: result.value.removeFiles.length });
 }
 
