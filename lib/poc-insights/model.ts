@@ -14,7 +14,7 @@ export const insightsQuery = z.strictObject({
 export type InsightsQuery = z.infer<typeof insightsQuery>;
 export type BankTotals = { rows: number; creditRows: number; debitRows: number; credits: string; debits: string; net: string };
 /** Cash direction is the source's bank convention. No accounting classification or FX is inferred. */
-export function cashTotals(rows: SourceRow[]): BankTotals {
+export function cashTotals(rows: Pick<SourceRow, 'direction' | 'signedAmount'>[]): BankTotals {
     let credits = 0n, debits = 0n, creditRows = 0;
     for (const r of rows) {
         if (r.direction === 'Credit') { credits += toCents(r.signedAmount); creditRows++; }
