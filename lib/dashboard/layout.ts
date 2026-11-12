@@ -3,9 +3,10 @@ import { z } from 'zod';
 /**
  * The Overview layout a person chooses with "Customise dashboard": which cards are shown, and in what order.
  * The same strict shape is checked in the browser, the server and the database (supabase/sql/workspace-v4-preferences.sql,
- * fingence_workspace.valid_dashboard). A new card needs a migration that adds its ID there too.
+ * fingence_workspace.valid_dashboard; workspace-v5-dashboard-cards.sql added 'confidence' and 'at-a-glance'). A new card needs a
+ * migration that adds its ID there too.
  */
-export const CARD_IDS = ['figures', 'cash-chart', 'flagged', 'forecast', 'checks', 'counterparties', 'reconciliation-summary', 'last-runs'] as const;
+export const CARD_IDS = ['figures', 'cash-chart', 'flagged', 'forecast', 'checks', 'counterparties', 'reconciliation-summary', 'last-runs', 'confidence', 'at-a-glance'] as const;
 export type CardId = typeof CARD_IDS[number];
 
 export const CARDS: Record<CardId, { label: string; detail: string; adminOnly?: true }> = {
@@ -17,6 +18,8 @@ export const CARDS: Record<CardId, { label: string; detail: string; adminOnly?: 
     counterparties: { label: 'Largest counterparties', detail: 'Who paid you and whom you paid the most' },
     'reconciliation-summary': { label: 'Reconciliation summary', detail: 'How every record was matched or resolved' },
     'last-runs': { label: 'Last processing runs', detail: 'The latest runs from the Technical log, for Admins', adminOnly: true },
+    confidence: { label: 'Processing confidence', detail: 'How much of the money FinGence read, checked and explained' },
+    'at-a-glance': { label: 'Your results at a glance', detail: 'One line per page, and the report to download' },
 };
 
 export type Layout = { v: 1; cards: { id: CardId; visible: boolean }[] };
@@ -27,9 +30,13 @@ export const layoutSchema = z.object({
         .refine(cards => new Set(cards.map(c => c.id)).size === cards.length, 'each card at most once'),
 }).strict();
 
-/** Today's Overview: the five original cards in their original order; the optional cards start hidden. */
-const DEFAULT_VISIBLE: readonly CardId[] = ['figures', 'cash-chart', 'flagged', 'forecast', 'checks'];
-export const DEFAULT_LAYOUT: Layout = { v: 1, cards: CARD_IDS.map(id => ({ id, visible: DEFAULT_VISIBLE.includes(id) })) };
+/**
+ * The default Overview (SAIC, 12 Nov): confidence first, the key figures, every page at a glance, then the chart, what was
+ * flagged and the forecast. "How FinGence checked" is covered by the confidence card, so it starts hidden like the optional cards.
+ */
+const DEFAULT_ORDER: readonly CardId[] = ['confidence', 'figures', 'at-a-glance', 'cash-chart', 'flagged', 'forecast', 'checks', 'counterparties', 'reconciliation-summary', 'last-runs'];
+const DEFAULT_VISIBLE: readonly CardId[] = ['confidence', 'figures', 'at-a-glance', 'cash-chart', 'flagged', 'forecast'];
+export const DEFAULT_LAYOUT: Layout = { v: 1, cards: DEFAULT_ORDER.map(id => ({ id, visible: DEFAULT_VISIBLE.includes(id) })) };
 
 /** A stored layout made whole: anything outside the shape gives the default; a card added since it was saved is appended, hidden. */
 export function normalise(value: unknown): Layout {
@@ -59,7 +66,7 @@ export function move(layout: Layout, id: CardId, delta: -1 | 1, admin: boolean):
 export const setVisible = (layout: Layout, id: CardId, visible: boolean): Layout => ({ v: 1, cards: layout.cards.map(c => c.id === id ? { id, visible } : c) });
 
 /** How wide each card is on a wide screen (three columns); on phones and tablets every card is full width. */
-const WIDTH: Record<CardId, 1 | 2 | 3> = { figures: 3, 'cash-chart': 2, flagged: 1, forecast: 1, checks: 3, counterparties: 2, 'reconciliation-summary': 1, 'last-runs': 2 };
+const WIDTH: Record<CardId, 1 | 2 | 3> = { figures: 3, 'cash-chart': 2, flagged: 1, forecast: 1, checks: 3, counterparties: 2, 'reconciliation-summary': 1, 'last-runs': 2, confidence: 3, 'at-a-glance': 3 };
 
 /**
  * The wide-screen grid classes for the shown cards, in order. Cards are placed in the order chosen (no dense packing, so a

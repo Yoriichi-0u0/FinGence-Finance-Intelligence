@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useTechnicalDetail } from '@/components/workspace/context';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ArrowRight, ChevronRight, Download, Flag, Printer, ReceiptText, Search, Send, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ChartNoAxesCombined, ChevronRight, Download, Flag, MessageSquareText, Printer, ReceiptText, RefreshCw, Search, Send, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp } from 'lucide-react';
 import { LineChart } from '@/components/charts';
 import { PageHeader, Panel } from '@/components/ui';
 import { RULES, type RuleId } from '@/lib/poc-anomalies/detector';
@@ -21,7 +21,9 @@ import { ReconciliationOutcomePanel } from './reconciliation-outcome';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
 import { AiCommentary } from './commentary';
 import { useDemoProcessing } from './context';
-import { CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout } from './dashboard';
+import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
+import { ConfidenceCard, CONFIDENCE_DEFINITION } from './confidence';
+import { processingConfidence } from '@/lib/confidence';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { Callout, DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
 
@@ -73,6 +75,16 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         ...(entries ? [{ tone: 'brand' as const, title: `${entries} correcting entr${entries === 1 ? 'y' : 'ies'} prepared for your books`, detail: 'Prepared from stated rules, not posted. Download them on Reconciliation.', href: '/reconciliation' }] : []),
     ];
     const warnings = attention.filter(a => a.tone === 'warn').length;
+    // One line per results page, for "Your results at a glance".
+    const top = useMemo(() => { const by = new Map<string, { cents: bigint; n: number }>(); for (const row of o.bankRows) { const t = by.get(row.counterparty) ?? { cents: 0n, n: 0 }, v = toCents(row.signedAmount); by.set(row.counterparty, { cents: t.cents + (v < 0n ? -v : v), n: t.n + 1 }); } return [...by.entries()].sort((a, b) => (b[1].cents > a[1].cents ? 1 : b[1].cents < a[1].cents ? -1 : a[0].localeCompare(b[0])))[0] ?? null; }, [o.bankRows]);
+    const tiles: GlanceTile[] = [
+        { href: '/transactions', label: 'Transactions', icon: <ReceiptText aria-hidden="true" size={14} />, value: `${o.totals.rows} bank records`, detail: `${o.ledger?.rows.length ?? 0} ledger entries · ${o.totals.creditRows} in, ${o.totals.debitRows} out` },
+        { href: '/reconciliation', label: 'Reconciliation', icon: <RefreshCw aria-hidden="true" size={14} />, value: `${rate}% matched automatically`, detail: unexplained && o.resolution ? `${money(s.currency, o.resolution.totals.unexplained.replace(/^-/, ''))} not explained (${unexplained} item${unexplained === 1 ? '' : 's'})` : 'Every difference matched or explained' },
+        { href: '/analytics', label: 'Analytics', icon: <ChartNoAxesCombined aria-hidden="true" size={14} />, value: top ? top[0] : 'No counterparties', detail: top ? `Largest counterparty · ${money(s.currency, fromCents(top[1].cents))} across ${top[1].n} record${top[1].n === 1 ? '' : 's'}` : 'No bank records' },
+        { href: '/anomalies', label: 'Anomalies', icon: <AlertTriangle aria-hidden="true" size={14} />, value: flaggedAnomalies ? `${flaggedAnomalies} flagged` : 'None flagged', detail: ar ? `${ar.corroborated} unusual record${ar.corroborated === 1 ? '' : 's'} confirmed by your books` : `${o.anomalies.length} rule-based candidates` },
+        { href: '/forecasting', label: 'Forecasting', icon: <TrendingUp aria-hidden="true" size={14} />, value: f.status === 'AVAILABLE' ? money(s.currency, f.net) : 'Not available yet', detail: f.status === 'AVAILABLE' ? `Expected net, ${periodLabel(f.period)}` : 'Needs seven months of bank history' },
+        { href: '/ask', label: 'Finance Q&A', icon: <MessageSquareText aria-hidden="true" size={14} />, value: 'Ask a question', detail: 'Answers come only from these figures' },
+    ];
     const dashboard = useDashboardLayout(initial);
     const [draft, setDraft] = useState<Layout | null>(null), [saving, setSaving] = useState(false), [error, setError] = useState<string | null>(null), [status, setStatus] = useState('');
     const customise = useRef<HTMLButtonElement>(null), editing = draft !== null, shown = draft ?? dashboard.layout;
@@ -124,6 +136,8 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         counterparties: <CounterpartiesCard currency={s.currency} rows={o.bankRows} />,
         'reconciliation-summary': <ReconciliationSummaryCard currency={s.currency} counts={r.counts} records={r.results.length} resolution={o.resolution} />,
         'last-runs': <LastRunsCard />,
+        confidence: <ConfidenceCard context={c} className="shadow-[var(--shadow-panel)]" />,
+        'at-a-glance': <AtAGlanceCard tiles={tiles} report={{ detail: `Management summary for ${s.businessName}, ${periodLabel(s.period)}: every figure, the reconciliation statement, flagged items and the processing confidence.` }} />,
     };
     const visible = offered(shown, dashboard.admin).filter(x => x.visible), spans = cardSpans(visible.map(x => x.id));
     return <>
@@ -253,14 +267,20 @@ function Forecasting({ c }: { c: Ready }) {
 }
 
 function Reports({ c }: { c: Ready }) {
-    const technical = useTechnicalDetail();
+    const technical = useTechnicalDetail(), confidence = useMemo(() => processingConfidence(c), [c]);
+    // "Download report" on the Overview opens /reports?print=1: the browser's Save as PDF dialog opens on the print-ready report.
+    useEffect(() => {
+        if (new URLSearchParams(window.location.search).get('print') !== '1') return;
+        const timer = setTimeout(() => { window.history.replaceState(null, '', '/reports'); window.print(); }, 500);
+        return () => clearTimeout(timer);
+    }, []);
     const s = c.scope, rep = c.outputs.report, r = c.outputs.reconciliation, periods = c.outputs.periods.length ? c.outputs.periods : c.outputs.statement ? [{ period: s.period, statement: c.outputs.statement }] : [];
     const [accepted, setAccepted] = useState<{ processingId: string; run: GroundedRun } | null>(null);
     function download() {
         // An accepted AI commentary is included as rendered text with its citations and receipt; it is never a source of the figures.
         const commentary = accepted?.processingId === c.processingId ? accepted.run : null;
         const aiCommentary = commentary?.verdict?.sentences ? { model: commentary.receipts[0]?.model ?? null, sentences: renderedText(commentary.verdict.sentences), cites: commentary.verdict.cited.map(id => ({ id, label: commentary.facts.find(f => f.id === id)?.label ?? id })), receipts: commentary.receipts } : null;
-        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, ...(aiCommentary ? { aiCommentary } : {}), ...(c.outputs.statement ? { reconciliationStatement: c.outputs.statement } : {}), ...(c.outputs.periods.length > 1 ? { reconciliationStatements: c.outputs.periods.map(p => ({ period: p.period, statement: p.statement })) } : {}), ...(c.outputs.resolution ? { reconciliation: c.outputs.resolution } : {}), ...(c.outputs.anomalyResolution ? { anomalies: c.outputs.anomalyResolution } : {}), stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
+        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, processingConfidence: { ...confidence, definition: CONFIDENCE_DEFINITION }, ...(aiCommentary ? { aiCommentary } : {}), ...(c.outputs.statement ? { reconciliationStatement: c.outputs.statement } : {}), ...(c.outputs.periods.length > 1 ? { reconciliationStatements: c.outputs.periods.map(p => ({ period: p.period, statement: p.statement })) } : {}), ...(c.outputs.resolution ? { reconciliation: c.outputs.resolution } : {}), ...(c.outputs.anomalyResolution ? { anomalies: c.outputs.anomalyResolution } : {}), stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
         const a = document.createElement('a'); a.href = url; a.download = `fingence-summary-${c.processingId}.json`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     return <>
@@ -269,6 +289,7 @@ function Reports({ c }: { c: Ready }) {
         <AiCommentary key={c.processingId} context={c} onResult={run => setAccepted(run ? { processingId: c.processingId, run } : null)} />
         <Panel title={`Management summary · ${s.businessName} · ${periodLabel(s.period)}`} eyebrow={`${usesOwnDocuments(c) ? c.job ? 'Your documents, processed on the FinGence server' : 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
             <div className="space-y-5 p-4 text-sm leading-relaxed sm:p-6 [&>section]:border-b [&>section]:border-[var(--border)] [&>section]:pb-5 [&>section:last-of-type]:border-0 [&_h3]:mb-1 [&_h3]:text-[13px] [&_h3]:uppercase [&_h3]:tracking-[0.08em] [&_h3]:text-[var(--brand-ink)]">
+                <section><h3 className="font-semibold">Processing confidence</h3><p>{confidence.status === 'MEASURED' ? <><strong className="tabular-nums">{confidence.percent}%</strong> ({confidence.band === 'HIGH' ? 'High' : confidence.band === 'CHECK' ? 'Check advised' : 'Low'}). {[...confidence.read.reasons, ...confidence.explained.reasons].length ? `Fell short: ${[...confidence.read.reasons, ...confidence.explained.reasons].join('; ')}.` : 'Every bank record was read reliably, checked and explained.'}</> : `Incomplete: ${confidence.reason}`}</p><p className="mt-1 text-xs">{CONFIDENCE_DEFINITION}</p></section>
                 <section><h3 className="font-semibold">Sources</h3><ul className="mt-1 space-y-1 text-xs">{rep.sources.map(x => <li key={x.sha256} className="break-all">{x.role.replace('_', ' ').toLowerCase()}: {x.name}{technical ? ` · SHA-256 ${x.sha256}` : ''}</li>)}</ul></section>
                 <section><h3 className="font-semibold">Bank cash movement</h3><p>Cash in {money(s.currency, rep.cash.credits)} ({rep.cash.creditRows} records); cash out {outflow(s.currency, rep.cash.debits)} ({rep.cash.debitRows}); net {money(s.currency, rep.cash.net)}. Not revenue, profit or a cash flow statement.</p></section>
                 <section><h3 className="font-semibold">Reconciliation</h3><p>Bank {money(s.currency, r.cashMovement.bank)} − ledger {money(s.currency, r.cashMovement.ledger)} = {money(s.currency, r.cashMovement.signedDifference)}.</p><p className="mt-1 text-xs">Matcher outcomes: {reconciliationStatuses.map(k => `${STATUS_LABEL[k]} ${r.counts[k]}`).join(' · ')}. {c.outputs.resolution ? c.outputs.resolution.summary : ''}</p>{c.outputs.notReconciled.length ? <p className="mt-1 text-xs">Not reconciled (one document only): {c.outputs.notReconciled.map(n => `${n.period} ${n.side === 'BANK' ? 'bank' : 'books'}`).join(', ')}.</p> : null}</section>
