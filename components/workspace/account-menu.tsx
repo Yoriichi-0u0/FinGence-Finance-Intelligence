@@ -12,7 +12,7 @@ const initials = (email: string) => email.split('@')[0].split(/[._-]+/).filter(B
  * One account button at the foot of the navigation. It opens a small menu with who is signed in, "View as"
  * (Admins and Superadmins), the colour theme and Sign out, so the footer stays one line instead of three cards.
  */
-export function AccountMenu() {
+export function AccountMenu({ compact = false }: { compact?: boolean }) {
     const { session, viewRole, signOut } = useWorkspace();
     const pathname = usePathname(), [open, setOpen] = useState(false), [openedOn, setOpenedOn] = useState(pathname);
     const root = useRef<HTMLDivElement>(null), id = useId();
@@ -28,7 +28,7 @@ export function AccountMenu() {
     if (!session) return null;
     const previewing = viewRole && viewRole !== session.role;
     return <div ref={root} className="relative">
-        {open ? <div id={id} role="region" aria-label="Account" className="rise-in absolute inset-x-0 bottom-full z-20 mb-2 space-y-3 rounded-2xl bg-[var(--rail-raise)] p-3 shadow-2xl ring-1 ring-inset ring-white/10">
+        {open ? <div id={id} role="region" aria-label="Account" className={`rise-in absolute z-40 space-y-3 rounded-2xl bg-[var(--rail-raise)] p-3 shadow-2xl ring-1 ring-inset ring-white/10 ${compact ? "bottom-0 left-full ml-3 w-72" : "inset-x-0 bottom-full mb-2"}`}>
             <div className="px-1">
                 <p className="truncate text-[13px] font-semibold text-white">{session.organization.name}</p>
                 <p className="truncate text-xs text-[var(--rail-muted)]">{session.email}</p>
@@ -44,13 +44,14 @@ export function AccountMenu() {
             </button>
         </div> : null}
         <button type="button" aria-expanded={open} aria-controls={id} onClick={() => setOpen(o => !o)}
-            className="flex min-h-14 w-full items-center gap-3 rounded-xl bg-white/[0.04] p-2.5 text-left ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.07]">
+            title={compact ? `${session.email} · ${previewing ? `viewing as ${ROLE_LABEL[viewRole]}` : ROLE_LABEL[session.role]}` : undefined}
+            className={`flex min-h-14 w-full items-center gap-3 rounded-xl bg-white/[0.04] text-left ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.07] ${compact ? "justify-center p-1.5" : "p-2.5"}`}>
             <span aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-[#2563eb] text-[13px] font-semibold text-white">{initials(session.email)}</span>
-            <span className="min-w-0 flex-1">
+            <span className={compact ? "sr-only" : "min-w-0 flex-1"}>
                 <span className="block truncate text-[13px] font-semibold text-white">{session.email}</span>
                 <span className="block truncate text-xs text-[var(--rail-muted)]">{previewing ? `Viewing as ${ROLE_LABEL[viewRole]}` : `${ROLE_LABEL[session.role]} · ${session.organization.name}`}</span>
             </span>
-            <ChevronsUpDown aria-hidden="true" size={16} className="shrink-0 text-[var(--rail-muted)]" />
+            {compact ? null : <ChevronsUpDown aria-hidden="true" size={16} className="shrink-0 text-[var(--rail-muted)]" />}
             <span className="sr-only">Account menu</span>
         </button>
     </div>;

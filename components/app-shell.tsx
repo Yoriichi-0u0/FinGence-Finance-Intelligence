@@ -10,6 +10,7 @@ import { ThemeSwitch } from "@/components/theme-switch";
 import { atLeast, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
 import { OutsideView, ViewingAs } from "@/components/workspace/view-switch";
 import { AccountMenu } from "@/components/workspace/account-menu";
+import { ResizeHandle, useSidebarLayout } from "@/components/sidebar-layout";
 import { AuthLayout } from "@/components/workspace/access";
 import {
   Activity,
@@ -23,6 +24,8 @@ import {
   Gauge,
   House,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   MessageSquareText,
   ReceiptText,
   RefreshCw,
@@ -59,7 +62,7 @@ const operationsItem: NavItem = { href: "/operations", label: "Operations", icon
 const teamItem: NavItem = { href: "/team", label: "Team", icon: Users };
 const logItem: NavItem = { href: "/log", label: "Technical log", icon: ScrollText };
 
-function Brand({ compact = false }: { compact?: boolean }) {
+function Brand({ compact = false, rail = false }: { compact?: boolean; rail?: boolean }) {
   return (
     <Link
       href="/"
@@ -67,21 +70,21 @@ function Brand({ compact = false }: { compact?: boolean }) {
       aria-label="FinGence overview"
     >
       <Image src="/branding/FinGence_Logo_96.png" width={40} height={40} alt="" unoptimized className={`${compact ? "size-8" : "size-10"} shrink-0 rounded-xl ring-1 ring-white/10`} />
-      <span className="min-w-0">
+      {rail ? null : <span className="min-w-0">
         <span className={`block font-semibold tracking-[-0.03em] ${compact ? "text-[17px]" : "text-[21px] leading-6"}`}>FinGence</span>
         {compact ? null : <span className="block truncate text-[11px] text-[var(--rail-muted)]">Finance + Intelligence</span>}
-      </span>
+      </span>}
     </Link>
   );
 }
 
 const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
-function NavGroup({ label, items, pathname, onNavigate }: { label: string; items: NavItem[]; pathname: string; onNavigate?: () => void }) {
+function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label: string; items: NavItem[]; pathname: string; onNavigate?: () => void; rail?: boolean }) {
   if (!items.length) return null;
   return (
     <div>
-      <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">{label}</p>
+      {rail ? <p className="sr-only">{label}</p> : <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">{label}</p>}
       <ul className="space-y-0.5">
         {items.map((item) => {
           const Icon = item.icon;
@@ -92,7 +95,9 @@ function NavGroup({ label, items, pathname, onNavigate }: { label: string; items
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                className={`group relative flex min-h-10 items-center gap-3 rounded-xl px-3 text-[14px] font-medium transition-colors ${
+                aria-label={rail ? item.label : undefined}
+                title={rail ? item.label : undefined}
+                className={`group relative flex min-h-10 items-center gap-3 rounded-xl text-[14px] font-medium transition-colors ${rail ? "justify-center px-0" : "px-3"} ${
                   active ? "bg-white/[0.09] text-white" : "text-[var(--rail-ink)]/80 hover:bg-white/[0.05] hover:text-white"
                 }`}
               >
@@ -103,7 +108,7 @@ function NavGroup({ label, items, pathname, onNavigate }: { label: string; items
                   strokeWidth={active ? 2.2 : 1.8}
                   className={active ? "text-[#93bdff]" : "text-[var(--rail-muted)] group-hover:text-white"}
                 />
-                {item.label}
+                {rail ? null : item.label}
               </Link>
             </li>
           );
@@ -115,7 +120,7 @@ function NavGroup({ label, items, pathname, onNavigate }: { label: string; items
 
 type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; managementConsole?: boolean; serverJobs?: boolean };
 
-function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void }) {
+function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void; rail?: boolean; onToggle?: () => void }) {
   const pathname = usePathname();
   // Navigation follows the role being viewed ("Switch view" may preview a lower one).
   const session = useWorkspace(), admin = atLeast(session.viewRole ?? undefined, "ADMIN");
@@ -123,24 +128,33 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
   const technical = [...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])];
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--rail)] text-white">
-      <div aria-hidden="true" className="pointer-events-none absolute -left-24 -top-24 size-64 rounded-full bg-[#2563eb]/25 blur-3xl" />
-      <div aria-hidden="true" className="pointer-events-none absolute -bottom-28 -right-20 size-64 rounded-full bg-[#22d3ee]/10 blur-3xl" />
-      <div className="relative px-5 pb-6 pt-6">
-        <Brand />
+    <div className="relative flex h-full min-h-0 flex-col bg-[var(--rail)] text-white">
+      {/* The glow is clipped on its own, so the account menu can open beside a collapsed rail. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-24 -top-24 size-64 rounded-full bg-[#2563eb]/25 blur-3xl" />
+        <div className="absolute -bottom-28 -right-20 size-64 rounded-full bg-[#22d3ee]/10 blur-3xl" />
+      </div>
+      <div className={`relative flex items-center gap-2 pb-6 pt-6 ${rail ? "flex-col px-2" : "justify-between px-5"}`}>
+        <Brand rail={rail} />
+        {onToggle ? (
+          <button type="button" onClick={onToggle} aria-label={rail ? "Expand the sidebar" : "Collapse the sidebar"} title={`${rail ? "Expand" : "Collapse"} the sidebar ( [ )`}
+            className="grid size-9 shrink-0 place-items-center rounded-lg text-[var(--rail-muted)] hover:bg-white/10 hover:text-white">
+            {rail ? <PanelLeftOpen aria-hidden="true" size={18} /> : <PanelLeftClose aria-hidden="true" size={18} />}
+          </button>
+        ) : null}
       </div>
 
-      <nav aria-label="Primary navigation" className="thin-scrollbar relative min-h-0 flex-1 space-y-5 overflow-y-auto px-3 pb-4">
-        <NavGroup label="Workspace" items={workspace} pathname={pathname} onNavigate={onNavigate} />
-        <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} />
-        <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} />
-        <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} />
-        {admin ? <NavGroup label="Administration" items={[teamItem, logItem, operationsItem]} pathname={pathname} onNavigate={onNavigate} /> : null}
+      <nav aria-label="Primary navigation" className={`thin-scrollbar relative min-h-0 flex-1 space-y-5 overflow-y-auto pb-4 ${rail ? "px-2" : "px-3"}`}>
+        <NavGroup label="Workspace" items={workspace} pathname={pathname} onNavigate={onNavigate} rail={rail} />
+        <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} rail={rail} />
+        <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} rail={rail} />
+        <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} rail={rail} />
+        {admin ? <NavGroup label="Administration" items={[teamItem, logItem, operationsItem]} pathname={pathname} onNavigate={onNavigate} rail={rail} /> : null}
       </nav>
 
-      <div className="relative space-y-3 border-t border-[var(--rail-line)] px-4 pb-5 pt-4">
-        <AccountMenu />
-        {session.enabled && session.session ? null : session.enabled && !session.loading ? (
+      <div className={`relative space-y-3 border-t border-[var(--rail-line)] pb-5 pt-4 ${rail ? "px-2" : "px-4"}`}>
+        <AccountMenu compact={rail} />
+        {rail ? null : session.enabled && session.session ? null : session.enabled && !session.loading ? (
           <Link href="/sign-in" onClick={onNavigate} className="flex items-center gap-3 rounded-xl bg-white/[0.04] p-3 ring-1 ring-inset ring-white/[0.06] hover:bg-white/[0.07]">
             <LogIn aria-hidden="true" size={18} className="shrink-0 text-[#93bdff]" />
             <span className="min-w-0">
@@ -158,7 +172,7 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
             </span>
           </div>
         )}
-        {session.enabled && session.session ? null : <ThemeSwitch />}
+        {rail || (session.enabled && session.session) ? null : <ThemeSwitch />}
       </div>
     </div>
   );
@@ -211,6 +225,7 @@ function ShellPage({ pathname, children }: { pathname: string; children: React.R
 export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false, workspace: workspaceEnabled = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean; workspace?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const sidebar = useSidebarLayout();
   const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
   const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem, logItem].find((item) => isActive(pathname, item.href));
 
@@ -220,9 +235,10 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   return (
     <WorkspaceProvider enabled={workspaceEnabled}>
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
-    <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[248px_minmax(0,1fr)] print:block">
-      <aside className="sticky top-0 hidden h-dvh lg:block print:hidden">
-        <Sidebar {...flags} />
+    <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[var(--sidebar)_minmax(0,1fr)] print:block" style={{ "--sidebar": `${sidebar.shown}px` } as React.CSSProperties}>
+      <aside className="sticky top-0 z-30 hidden h-dvh lg:block print:hidden">
+        <Sidebar {...flags} rail={sidebar.collapsed} onToggle={sidebar.toggle} />
+        {sidebar.collapsed ? null : <ResizeHandle width={sidebar.width} onWidth={sidebar.setWidth} />}
       </aside>
 
       <div className="min-w-0">
