@@ -66,12 +66,12 @@ function Brand({ compact = false, rail = false }: { compact?: boolean; rail?: bo
   return (
     <Link
       href="/"
-      className="flex items-center gap-3 rounded-xl text-white focus-visible:outline-white"
+      className="flex min-w-0 items-center gap-3 rounded-xl text-white focus-visible:outline-white"
       aria-label="FinGence overview"
     >
       <Image src="/branding/FinGence_Logo_96.png" width={40} height={40} alt="" unoptimized className={`${compact ? "size-8" : "size-10"} shrink-0 rounded-xl ring-1 ring-white/10`} />
       {rail ? null : <span className="min-w-0">
-        <span className={`block font-semibold tracking-[-0.03em] ${compact ? "text-[17px]" : "text-[21px] leading-6"}`}>FinGence</span>
+        <span className={`block truncate font-semibold tracking-[-0.03em] ${compact ? "text-[17px]" : "text-[21px] leading-6"}`}>FinGence</span>
         {compact ? null : <span className="block truncate text-[11px] text-[var(--rail-muted)]">Finance + Intelligence</span>}
       </span>}
     </Link>
@@ -134,7 +134,7 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
         <div className="absolute -left-24 -top-24 size-64 rounded-full bg-[#2563eb]/25 blur-3xl" />
         <div className="absolute -bottom-28 -right-20 size-64 rounded-full bg-[#22d3ee]/10 blur-3xl" />
       </div>
-      <div className={`relative flex items-center gap-2 pb-6 pt-6 ${rail ? "flex-col px-2" : "justify-between px-5"}`}>
+      <div className={`relative flex min-w-0 items-center gap-2 pb-6 pt-6 ${rail ? "flex-col px-2" : "justify-between pl-5 pr-3"}`}>
         <Brand rail={rail} />
         {onToggle ? (
           <button type="button" onClick={onToggle} aria-label={rail ? "Expand the sidebar" : "Collapse the sidebar"} title={`${rail ? "Expand" : "Collapse"} the sidebar ( [ )`}
