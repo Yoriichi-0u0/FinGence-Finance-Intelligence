@@ -38,6 +38,8 @@ FinGence-Production Supabase project (v1 applied on 4 November with 0 organizati
   checks the role (`fingence_workspace.rank`) and organization itself, so a server bug cannot widen access.
 - **Secrets never stored:** passwords hashed with scrypt on the server; session tokens and invitation codes are 256-bit
   random values, stored only as SHA-256.
+- **Changing a password:** any member can change their own on `/account` (`workspace-v7-password.sql`). The current
+  password is verified on the server and rate-limited; every other session of theirs ends, and the change is audited.
 - **Sessions:** HttpOnly, SameSite=Lax cookie, Secure in production, 12 hours. A role change, turning access off or
   ending a session takes effect on the next request.
 - **Attempts:** sign-in and join are limited to 10 a minute per client and 30 an hour per email.

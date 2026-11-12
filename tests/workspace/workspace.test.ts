@@ -236,6 +236,63 @@ describe('stepping in when something is wrong', () => {
     });
 });
 
+describe('changing your own password', () => {
+    const change = (cookie: string | null, b: unknown) => h.changePassword(req('/api/workspace/password', { body: b, cookie }), deps);
+    let member: string;
+    beforeAll(async () => {
+        const boss = await signIn('super@example.invalid');
+        member = await join(await invite(boss, 'handed-out@example.invalid', 'FINANCE'));
+    });
+    it('needs a session, the same origin, the right current password and a valid new one', async () => {
+        expect((await change(null, { current: 'correct horse battery', next: 'a brand new passphrase' })).status).toBe(401);
+        const cross = await h.changePassword(new Request(`${ORIGIN}/api/workspace/password`, { method: 'POST', headers: { host: 'localhost:3000', origin: 'https://evil.example', 'content-type': 'application/json', cookie: member }, body: JSON.stringify({ current: 'correct horse battery', next: 'a brand new passphrase' }) }), deps);
+        expect(cross.status).toBe(403);
+        expect(await body(await change(member, { current: 'not my password', next: 'a brand new passphrase' }))).toEqual([401, { code: 'WRONG_PASSWORD' }]);
+        expect(await body(await change(member, { current: 'correct horse battery', next: 'too short' }))).toEqual([400, { code: 'PASSWORD_RULE' }]);
+        expect(await body(await change(member, { current: 'correct horse battery', next: 'correct horse battery' }))).toEqual([400, { code: 'PASSWORD_UNCHANGED' }]);
+        // A look-alike that NFKC folds into the same password is the same password.
+        expect(await body(await change(member, { current: 'correct horse battery', next: 'ｃorrect horse battery' }))).toEqual([400, { code: 'PASSWORD_UNCHANGED' }]);
+        expect(await body(await change(member, { current: 'correct horse battery', next: 'a brand new passphrase', role: 'ADMIN' }))).toEqual([400, { code: 'INVALID_INPUT' }]);
+    });
+    it('wrong current passwords are rate-limited like sign-in', async () => {
+        const res = await h.changePassword(req('/api/workspace/password', { body: { current: 'x', next: 'a brand new passphrase' }, cookie: member }), { ...deps, attempts: async () => false });
+        expect(await body(res)).toEqual([429, { code: 'TOO_MANY_ATTEMPTS' }]);
+    });
+    it('the new password replaces the old one, ends every other sign-in, and keeps this one', async () => {
+        const other = cookieOf(await h.signIn(req('/api/workspace/sign-in', { body: { email: 'handed-out@example.invalid', password: 'correct horse battery' } }), deps));
+        const [status, out] = await body(await change(member, { current: 'correct horse battery', next: 'a brand new passphrase' }));
+        expect(status).toBe(200);
+        expect(out).toEqual({ changed: true, otherSessionsEnded: 1 });
+        expect((await caller(new Headers({ cookie: member }), store, deps.transport)).kind).toBe('SIGNED_IN');
+        expect((await caller(new Headers({ cookie: other }), store, deps.transport)).kind).toBe('ENDED');
+        expect((await h.signIn(req('/api/workspace/sign-in', { body: { email: 'handed-out@example.invalid', password: 'correct horse battery' } }), deps)).status).toBe(401);
+        expect((await h.signIn(req('/api/workspace/sign-in', { body: { email: 'handed-out@example.invalid', password: 'a brand new passphrase' } }), deps)).status).toBe(200);
+    });
+    it('only the hash is stored, the change is audited without detail, and a stale current hash is refused', async () => {
+        const id = await memberId('handed-out@example.invalid');
+        const stored = (await db.query<{ password_hash: string }>('select password_hash from fingence_workspace.members where id = $1', [id])).rows[0].password_hash;
+        expect(stored).toMatch(/^scrypt\$/);
+        expect(stored).not.toContain('brand new');
+        const audit = (await db.query<{ detail: unknown }>("select detail from fingence_workspace.audit where action = 'member.password_changed' and target_id = $1", [id])).rows;
+        expect(audit).toEqual([{ detail: {} }]);
+        expect(await dbCall('select public.fingence_workspace_change_password($1, $2, $3) as r', [token(member), 'scrypt$stale$hash-that-is-long-enough-to-pass', 'scrypt$new$hash-that-is-long-enough-to-pass'])).toEqual({ error: 'PASSWORD_CHANGED_ELSEWHERE' });
+    });
+    it('a sign-in that verified the old password before the change cannot open a session after it', async () => {
+        const id = await memberId('handed-out@example.invalid');
+        const before = (await db.query<{ h: string }>('select password_hash h from fingence_workspace.members where id = $1', [id])).rows[0].h;
+        const [status] = await body(await change(member, { current: 'a brand new passphrase', next: 'yet another passphrase' }));
+        expect(status).toBe(200);
+        // The racing sign-in now tries to open its session with the hash it verified a moment ago.
+        expect(await dbCall('select public.fingence_workspace_open_session_checked($1, $2, $3, 12) as r', [id, before, secretHash(newSecret())])).toEqual({ error: 'UNAVAILABLE' });
+        const after = (await db.query<{ h: string }>('select password_hash h from fingence_workspace.members where id = $1', [id])).rows[0].h;
+        expect(await dbCall('select public.fingence_workspace_open_session_checked($1, $2, $3, 12) as r', [id, after, secretHash(newSecret())])).toMatchObject({ sessionId: expect.any(String) });
+    });
+    it('only the service role may call it', async () => {
+        const grants = (await db.query<{ anon: boolean; auth: boolean; service: boolean }>("select has_function_privilege('anon', 'public.fingence_workspace_change_password(text, text, text)', 'execute') anon, has_function_privilege('authenticated', 'public.fingence_workspace_change_password(text, text, text)', 'execute') auth, has_function_privilege('service_role', 'public.fingence_workspace_change_password(text, text, text)', 'execute') service")).rows[0];
+        expect(grants).toEqual({ anon: false, auth: false, service: true });
+    });
+});
+
 describe('configuration', () => {
     it('a loopback stand-in is honoured only in development, never in a production build or on Vercel', () => {
         vi.stubEnv('FINGENCE_WORKSPACE', '1'); vi.stubEnv('FINGENCE_WORKSPACE_LOCAL_URL', 'http://127.0.0.1:54329'); vi.stubEnv('FINGENCE_INGESTION_STORE', ''); vi.stubEnv('VERCEL', '');
