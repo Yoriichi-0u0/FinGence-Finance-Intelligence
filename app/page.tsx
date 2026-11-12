@@ -145,7 +145,7 @@ function IllustrativeOverview() {
               </div>
               <Link
                 href="/reconciliation"
-                className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--teal)] hover:text-[var(--teal-dark)]"
+                className="touch-target inline-flex items-center gap-1 text-xs font-semibold text-[var(--teal)] hover:text-[var(--teal-dark)]"
               >
                 Review <ArrowRight aria-hidden="true" size={14} />
               </Link>
@@ -221,7 +221,7 @@ function IllustrativeOverview() {
         <Panel title="Budget variance" className="xl:col-span-4">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[420px] text-left text-xs">
-              <thead className="bg-[var(--surface-subtle)] text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
+              <thead className="bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-2.5 font-semibold">Category</th>
                   <th className="px-3 py-2.5 text-right font-semibold">Budget</th>
@@ -242,7 +242,7 @@ function IllustrativeOverview() {
                           {unfavorable ? <TrendingDown aria-hidden="true" size={13} /> : <CheckCircle2 aria-hidden="true" size={13} />}
                           {formatPercent(item.variance, true)}
                         </span>
-                        <span className="block text-[10px] font-medium">{unfavorable ? "Unfavorable" : "Favorable"}</span>
+                        <span className="block text-[11px] font-medium">{unfavorable ? "Unfavorable" : "Favorable"}</span>
                       </td>
                     </tr>
                   );
@@ -257,7 +257,7 @@ function IllustrativeOverview() {
         title="Recent anomalies"
         className="mt-4"
         action={
-          <Link href="/anomalies" className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--teal)]">
+          <Link href="/anomalies" className="touch-target inline-flex items-center gap-1 text-xs font-semibold text-[var(--teal)]">
             View all <ArrowRight aria-hidden="true" size={14} />
           </Link>
         }

@@ -342,3 +342,56 @@ details[open] > summary .disclosure-chevron {
     transition-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Apple Human Interface Guidelines pass.
+ * Touch: hit targets of at least 44 pt, and form fields at 16 px so iOS does not zoom on focus.
+ * Landscape phones: content keeps clear of the notch and rounded corners.
+ * System settings: Reduce Transparency and Increase Contrast are honoured.
+ */
+@media (pointer: coarse) {
+  .min-h-9 {
+    min-height: 2.75rem;
+  }
+  button.size-9,
+  a.size-9 {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+  /* A 44 pt hit area for small inline links, without changing how they look. */
+  .touch-target {
+    position: relative;
+  }
+  .touch-target::after {
+    content: "";
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    transform: translate(-50%, -50%);
+  }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .bar-material {
+    background-color: var(--surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root:root:root {
+    --muted: var(--muted-strong);
+    --border: var(--border-strong);
+    --rail-muted: var(--rail-ink);
+  }
+  :focus-visible {
+    outline-color: var(--brand);
+  }
+}

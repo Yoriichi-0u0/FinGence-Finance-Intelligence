@@ -69,7 +69,7 @@ function Brand({ compact = false, rail = false }: { compact?: boolean; rail?: bo
   return (
     <Link
       href="/"
-      className={`flex min-w-0 items-center rounded-xl text-white focus-visible:outline-white ${compact ? "gap-3" : "gap-2 @[13rem]:gap-3"}`}
+      className={`touch-target flex min-w-0 items-center rounded-xl text-white focus-visible:outline-white ${compact ? "gap-3" : "gap-2 @[13rem]:gap-3"}`}
       aria-label="FinGence overview"
     >
       <Image src="/branding/FinGence_Logo_96.png" width={40} height={40} alt="" unoptimized className={`${compact ? "size-8" : "size-8 @[13rem]:size-10"} shrink-0 rounded-xl ring-1 ring-white/10`} />
@@ -87,7 +87,7 @@ function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label:
   if (!items.length) return null;
   return (
     <div>
-      {rail ? <p className="sr-only">{label}</p> : <p className="px-3 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">{label}</p>}
+      {rail ? <p className="sr-only">{label}</p> : <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">{label}</p>}
       <ul className="space-y-0.5">
         {items.map((item) => {
           const Icon = item.icon;
@@ -192,7 +192,7 @@ function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDem
   ];
   const elsewhere = !items.some((item) => isActive(pathname, item.href));
   return (
-    <nav aria-label="Quick navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--surface)]/92 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden print:hidden">
+    <nav aria-label="Quick navigation" className="bar-material fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--surface)]/92 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden print:hidden">
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {items.map((item) => {
           const Icon = item.icon;
@@ -245,12 +245,12 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
       </aside>
 
       <div className="min-w-0">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-white/5 bg-[var(--rail)] px-3 text-white lg:hidden print:hidden">
+        <header className="sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center justify-between gap-3 border-b border-white/5 bg-[var(--rail)] pt-[env(safe-area-inset-top)] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] text-white lg:hidden print:hidden">
           <div className="flex min-w-0 items-center gap-2">
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="grid size-10 place-items-center rounded-xl text-white/90 hover:bg-white/10"
+              className="grid size-11 place-items-center rounded-xl text-white/90 hover:bg-white/10"
               aria-label="Open navigation"
               aria-expanded={mobileOpen}
             >
@@ -261,7 +261,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
           {current ? <span className="truncate rounded-full bg-white/[0.08] px-3 py-1 text-xs font-medium text-white/90">{current.label}</span> : null}
         </header>
 
-        <main className="mx-auto min-h-dvh w-full max-w-[1480px] px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
+        <main className="mx-auto min-h-dvh w-full max-w-[1480px] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-28 pt-5 sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
           {["/sign-in", "/join", "/team", "/operations", "/log"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link>
           </aside>}
@@ -280,11 +280,11 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             onClick={() => setMobileOpen(false)}
             aria-label="Close navigation"
           />
-          <aside className="rise-in relative h-full w-[min(86vw,320px)] shadow-2xl">
+          <aside className="rise-in relative h-full w-[calc(min(86vw,320px)+env(safe-area-inset-left))] bg-[var(--rail)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] shadow-2xl">
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="absolute right-3 top-5 z-10 grid size-10 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white"
+              className="absolute right-3 top-[calc(1.25rem+env(safe-area-inset-top))] z-10 grid size-11 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white"
               aria-label="Close navigation"
             >
               <X aria-hidden="true" size={21} />

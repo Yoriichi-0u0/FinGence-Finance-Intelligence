@@ -44,7 +44,7 @@ function ScoreTable({ title, rows, currency }: { title: string; rows: { metric: 
                 <th scope="row" className="px-3 py-2 text-left text-sm font-semibold">{metricLabels[r.metric]}{r.metric === "net" ? <span className="block text-[11px] font-medium text-[var(--amber)]">Experimental · low confidence</span> : null}</th>
                 {r.methods.map(m => (
                   <td key={m.method} className={td}>
-                    <span className={`font-semibold ${r.lowestWape === m.method ? "text-[var(--teal)]" : ""}`}>{percent(m.wape)}</span>{r.lowestWape === m.method ? <span className="ml-1 text-[10px] font-bold uppercase text-[var(--teal)]">lowest</span> : null}
+                    <span className={`font-semibold ${r.lowestWape === m.method ? "text-[var(--teal)]" : ""}`}>{percent(m.wape)}</span>{r.lowestWape === m.method ? <span className="ml-1 text-[11px] font-bold uppercase text-[var(--teal)]">lowest</span> : null}
                     <span className="block text-xs text-[var(--muted)]">{money(currency, m.mae)} · {m.tests} tests</span>
                   </td>
                 ))}

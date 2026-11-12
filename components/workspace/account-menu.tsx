@@ -38,7 +38,7 @@ export function AccountMenu({ compact = false }: { compact?: boolean }) {
             </div>
             <ViewSwitch />
             <div>
-                <p className="px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">Theme</p>
+                <p className="px-1 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">Theme</p>
                 <ThemeSwitch />
             </div>
             <Link href="/account" className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-[13px] font-semibold text-white/90 hover:bg-white/10 hover:text-white">

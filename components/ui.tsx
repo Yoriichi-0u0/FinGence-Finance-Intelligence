@@ -246,7 +246,7 @@ export function EmptyState({ title, description }: { title: string; description:
 
 export function PassBadge() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--green-soft)] px-2 py-1 text-[10px] font-bold text-[var(--green)] ring-1 ring-inset ring-green-200">
+    <span className="inline-flex items-center gap-1 rounded-md bg-[var(--green-soft)] px-2 py-1 text-[11px] font-bold text-[var(--green)] ring-1 ring-inset ring-green-200">
       <Check aria-hidden="true" size={12} /> PASS
     </span>
   );

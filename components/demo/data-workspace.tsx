@@ -162,7 +162,7 @@ export default function DemoDataWorkspace() {
                                     <summary className="flex cursor-pointer gap-1 text-[13px] leading-snug text-[var(--muted-strong)]"><ChevronRight aria-hidden="true" size={14} className="disclosure-chevron mt-0.5 shrink-0 transition-transform" /><span>{stage.summary}</span></summary>
                                     <div className="mt-2 rounded-xl bg-[var(--surface-subtle)] p-3 ring-1 ring-inset ring-[var(--border)]">
                                         <p className="text-xs text-[var(--muted)]">Method: {stage.method}</p>
-                                        <ul className="mt-2 space-y-1.5 text-xs">{stage.checks.map(c => <li key={c.id} className="flex gap-2"><span aria-hidden="true" className={`mt-px grid size-4 shrink-0 place-items-center rounded-full text-[10px] font-bold ${c.passed ? 'bg-[var(--good-soft)] text-[var(--good)]' : 'bg-[var(--warn-soft)] text-[var(--warn)]'}`}>{c.passed ? '✓' : '!'}</span><span><strong>{c.label}</strong> <span className="sr-only">{c.passed ? 'passed' : 'not passed'}</span>· {c.detail}</span></li>)}</ul>
+                                        <ul className="mt-2 space-y-1.5 text-xs">{stage.checks.map(c => <li key={c.id} className="flex gap-2"><span aria-hidden="true" className={`mt-px grid size-4 shrink-0 place-items-center rounded-full text-[11px] font-bold ${c.passed ? 'bg-[var(--good-soft)] text-[var(--good)]' : 'bg-[var(--warn-soft)] text-[var(--warn)]'}`}>{c.passed ? '✓' : '!'}</span><span><strong>{c.label}</strong> <span className="sr-only">{c.passed ? 'passed' : 'not passed'}</span>· {c.detail}</span></li>)}</ul>
                                     </div>
                                 </details> : null}
                             </div>
