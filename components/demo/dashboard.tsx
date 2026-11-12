@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, RotateCcw } from 'lucide-react';
+import { ArrowDown, ArrowRight, ArrowUp, FileDown, RotateCcw } from 'lucide-react';
 import { Panel } from '@/components/ui';
 import { atLeast, plainMessage, useWorkspace } from '@/components/workspace/context';
 import { CARDS, DEFAULT_LAYOUT, isDefault, move, normalise, offered, setVisible, type CardId, type Layout } from '@/lib/dashboard/layout';
@@ -230,5 +230,30 @@ export function LastRunsCard() {
                 </li>;
             })}</ul>
             : <p className="px-4 py-3.5 text-sm text-[var(--muted-strong)] sm:px-5">No runs in the last 30 days. Runs appear here as soon as someone processes documents.</p>}
+    </Panel>;
+}
+
+export type GlanceTile = { href: string; label: string; icon: React.ReactNode; value: string; detail: string };
+/**
+ * "Your results at a glance": one small tile per results page, each with one figure and a link, and the report to
+ * download in one click (the browser's Save as PDF dialog opens on the print-ready report), or to open for the details.
+ */
+export function AtAGlanceCard({ tiles, report }: { tiles: GlanceTile[]; report: { detail: string } }) {
+    return <Panel title="Your results at a glance" eyebrow="Every page, in one line each">
+        <ul className="grid gap-px bg-[var(--border)] sm:grid-cols-2 xl:grid-cols-4">
+            {tiles.map(t => <li key={t.href} className="bg-[var(--surface)]"><Link href={t.href} className="group flex h-full min-h-24 flex-col gap-1 px-4 py-3.5 transition-colors hover:bg-[var(--surface-subtle)] sm:px-5">
+                <span className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--muted)]"><span className="text-[var(--brand)]">{t.icon}</span>{t.label}<ArrowRight aria-hidden="true" size={13} className="ml-auto transition-transform group-hover:translate-x-0.5" /></span>
+                <span className="text-lg font-semibold leading-snug tracking-[-0.02em] tabular-nums">{t.value}</span>
+                <span className="text-xs leading-relaxed text-[var(--muted)]">{t.detail}</span>
+            </Link></li>)}
+            <li className="flex flex-col gap-2 bg-[var(--brand-soft)] px-4 py-3.5 sm:col-span-2 sm:px-5 xl:col-span-2">
+                <span className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--brand-ink)]"><FileDown aria-hidden="true" size={14} />Report</span>
+                <span className="text-xs leading-relaxed text-[var(--muted-strong)]">{report.detail}</span>
+                <span className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <Link href="/reports?print=1" className={primaryButton}><FileDown aria-hidden="true" size={15} />Download report</Link>
+                    <Link href="/reports" className={link}>Open Reports</Link>
+                </span>
+            </li>
+        </ul>
     </Panel>;
 }
