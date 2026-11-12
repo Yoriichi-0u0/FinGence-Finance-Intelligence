@@ -3,7 +3,9 @@
 -- known to the team. The server verifies the current password (scrypt) and hashes the new one; only hashes arrive here.
 -- The change is compare-and-set on the hash the server verified, so a concurrent change cannot be overwritten unseen.
 -- Every other session of the member ends (the password may have been known to someone else); the current one stays open.
--- Audited as member.password_changed, with no detail. RLS stays forced; executable by the service role only.
+-- Audited as member.password_changed, with no detail. Sign-in and joining then open sessions only while the verified hash is
+-- still current (open_session_checked), so a sign-in racing a change cannot keep the old password's access.
+-- RLS stays forced; executable by the service role only.
 
 alter table fingence_workspace.sessions drop constraint if exists sessions_end_reason_check;
 alter table fingence_workspace.sessions add constraint sessions_end_reason_check
@@ -27,3 +29,20 @@ begin
 end $$;
 revoke execute on function public.fingence_workspace_change_password(text, text, text) from public, anon, authenticated;
 grant execute on function public.fingence_workspace_change_password(text, text, text) to service_role;
+
+-- Opening a session after the server verified a password: refused unless that hash is still the member's current one.
+-- The member row is locked, so this and a password change are serialized: a sign-in that verified the old password either
+-- opens its session before the change (which then ends it) or is refused after it. Sign-in and joining use this one.
+create or replace function public.fingence_workspace_open_session_checked(p_member uuid, p_password_hash text, p_token_hash text, p_hours int) returns jsonb
+language plpgsql security definer set search_path = '' as $$
+declare m fingence_workspace.members; sid uuid; expires timestamptz;
+begin
+    select * into m from fingence_workspace.members where id = p_member for update;
+    if not found or not m.active or m.password_hash is distinct from p_password_hash then return jsonb_build_object('error', 'UNAVAILABLE'); end if;
+    if p_hours not between 1 and 24 then raise exception 'hours must be 1 to 24'; end if;
+    insert into fingence_workspace.sessions (member_id, token_hash, expires_at) values (m.id, p_token_hash, now() + make_interval(hours => p_hours)) returning id, expires_at into sid, expires;
+    perform fingence_workspace.log(m.organization_id, m.id, 'session.opened', sid);
+    return jsonb_build_object('sessionId', sid, 'expiresAt', expires);
+end $$;
+revoke execute on function public.fingence_workspace_open_session_checked(uuid, text, text, int) from public, anon, authenticated;
+grant execute on function public.fingence_workspace_open_session_checked(uuid, text, text, int) to service_role;

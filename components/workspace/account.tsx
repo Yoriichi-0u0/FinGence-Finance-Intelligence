@@ -20,7 +20,7 @@ export function AccountPage() {
         event.preventDefault(); setError(null); setDone(null);
         if (next !== again) { setError('The two new passwords are different.'); return; }
         if ([...next].length < 12 || [...next].length > 128) { setError(plainMessage('PASSWORD_RULE')); return; }
-        if (next === current) { setError(plainMessage('PASSWORD_UNCHANGED')); return; }
+        if (next.normalize('NFKC') === current.normalize('NFKC')) { setError(plainMessage('PASSWORD_UNCHANGED')); return; }
         setBusy(true);
         try {
             const res = await fetch('/api/workspace/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ current, next }) });

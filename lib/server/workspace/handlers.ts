@@ -24,9 +24,10 @@ export async function session(request: Request, deps: Deps) {
     return json(view(who.principal));
 }
 
-async function openSession(memberId: string, deps: Deps) {
+/** Opens a session only while the password hash the server just verified is still the member's current one (v7). */
+async function openSession(memberId: string, passwordHash: string, deps: Deps) {
     const token = newSecret();
-    const opened = await rpc<{ sessionId: string }>('fingence_workspace_open_session', { p_member: memberId, p_token_hash: secretHash(token), p_hours: SESSION_HOURS }, deps.store, deps.transport);
+    const opened = await rpc<{ sessionId: string }>('fingence_workspace_open_session_checked', { p_member: memberId, p_password_hash: passwordHash, p_token_hash: secretHash(token), p_hours: SESSION_HOURS }, deps.store, deps.transport);
     return opened.ok ? token : null;
 }
 const signedIn = (token: string, body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Set-Cookie': sessionCookie(token) } });
@@ -44,7 +45,7 @@ export async function signIn(request: Request, deps: Deps) {
     const valid = await verifyPassword(body.data.password, found.value?.passwordHash ?? null);
     // One answer for an unknown email, a wrong password and turned-off access.
     if (!valid || !found.value?.active) return json({ code: 'INVALID_CREDENTIALS' }, 401);
-    const token = await openSession(found.value.memberId, deps);
+    const token = await openSession(found.value.memberId, found.value.passwordHash, deps);
     if (!token) return json({ code: 'INVALID_CREDENTIALS' }, 401);
     const who = await caller(new Headers({ cookie: `fingence_session=${token}` }), deps.store, deps.transport);
     return signedIn(token, who.kind === 'SIGNED_IN' ? view(who.principal) : { signedIn: true });
@@ -61,8 +62,8 @@ export async function join(request: Request, deps: Deps) {
     if (!await deps.attempts(request.headers, null)) return json({ code: 'TOO_MANY_ATTEMPTS' }, 429);
     const redeemed = await rpc<{ email: string }>('fingence_workspace_redeem', { p_code_hash: secretHash(body.data.code), p_password_hash: await hashPassword(body.data.password) }, deps.store, deps.transport);
     if (!redeemed.ok) return json({ code: redeemed.error.startsWith('STORE_') ? 'WORKSPACE_UNAVAILABLE' : redeemed.error }, redeemed.error.startsWith('STORE_') ? 503 : 400);
-    const found = await rpc<{ memberId: string } | null>('fingence_workspace_credentials', { p_email: redeemed.value.email }, deps.store, deps.transport);
-    const token = found.ok && found.value ? await openSession(found.value.memberId, deps) : null;
+    const found = await rpc<{ memberId: string; passwordHash: string } | null>('fingence_workspace_credentials', { p_email: redeemed.value.email }, deps.store, deps.transport);
+    const token = found.ok && found.value ? await openSession(found.value.memberId, found.value.passwordHash, deps) : null;
     if (!token) return json({ joined: true, signedIn: false });
     const who = await caller(new Headers({ cookie: `fingence_session=${token}` }), deps.store, deps.transport);
     return signedIn(token, who.kind === 'SIGNED_IN' ? view(who.principal) : { signedIn: true });
@@ -89,7 +90,8 @@ export async function changePassword(request: Request, deps: Deps) {
     const body = passwordBody.safeParse(read.body);
     if (!body.success) return json({ code: 'INVALID_INPUT' }, 400);
     if (!passwordAcceptable(body.data.next)) return json({ code: 'PASSWORD_RULE' }, 400);
-    if (body.data.next === body.data.current) return json({ code: 'PASSWORD_UNCHANGED' }, 400);
+    // Passwords are NFKC-normalized before hashing, so compare them the same way.
+    if (body.data.next.normalize('NFKC') === body.data.current.normalize('NFKC')) return json({ code: 'PASSWORD_UNCHANGED' }, 400);
     const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return refuse(who.refusal);
     if (!await deps.attempts(request.headers, who.principal.email)) return json({ code: 'TOO_MANY_ATTEMPTS' }, 429);

@@ -10,8 +10,10 @@
   - The new password follows the joining rule (12 to 128 characters) and must differ from the current one.
   - The change is compare-and-set on the verified hash. Every other session of the member ends (reason `PASSWORD_CHANGED`); this one stays open.
   - The change is audited as `member.password_changed`, with no detail.
-- **Data:** `supabase/sql/workspace-v7-password.sql` (needs v1 and v2): `fingence_workspace_change_password`, executable by the service role only, plus the new session end reason.
-- **Production order:** apply v7, then deploy.
+- **No racing sign-in keeps the old password.** Sign-in and joining open sessions through `fingence_workspace_open_session_checked`. It locks the member row and opens a session only while the verified hash is still current. So a sign-in that checked the old password either opens before the change (which then ends it) or is refused.
+- **Look-alike passwords count as the same.** "Unchanged" compares NFKC-normalized passwords, as hashing does.
+- **Data:** `supabase/sql/workspace-v7-password.sql` (needs v1 and v2): `fingence_workspace_change_password` and `fingence_workspace_open_session_checked`, both executable by the service role only, plus the new session end reason.
+- **Applied to FinGence-Production on 13 Nov 2026,** before the deploy (migrations `fingence_workspace_v7_password` and `fingence_workspace_v7_open_session_checked`). The v1 `open_session` stays for older deployments and is no longer called.
 - **Tests:** "changing your own password" in `tests/workspace/workspace.test.ts`.
 
 ## History: saved runs per person — 12 November 2026

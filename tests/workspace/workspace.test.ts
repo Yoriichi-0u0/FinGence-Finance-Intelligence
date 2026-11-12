@@ -250,6 +250,8 @@ describe('changing your own password', () => {
         expect(await body(await change(member, { current: 'not my password', next: 'a brand new passphrase' }))).toEqual([401, { code: 'WRONG_PASSWORD' }]);
         expect(await body(await change(member, { current: 'correct horse battery', next: 'too short' }))).toEqual([400, { code: 'PASSWORD_RULE' }]);
         expect(await body(await change(member, { current: 'correct horse battery', next: 'correct horse battery' }))).toEqual([400, { code: 'PASSWORD_UNCHANGED' }]);
+        // A look-alike that NFKC folds into the same password is the same password.
+        expect(await body(await change(member, { current: 'correct horse battery', next: 'ｃorrect horse battery' }))).toEqual([400, { code: 'PASSWORD_UNCHANGED' }]);
         expect(await body(await change(member, { current: 'correct horse battery', next: 'a brand new passphrase', role: 'ADMIN' }))).toEqual([400, { code: 'INVALID_INPUT' }]);
     });
     it('wrong current passwords are rate-limited like sign-in', async () => {
@@ -274,6 +276,16 @@ describe('changing your own password', () => {
         const audit = (await db.query<{ detail: unknown }>("select detail from fingence_workspace.audit where action = 'member.password_changed' and target_id = $1", [id])).rows;
         expect(audit).toEqual([{ detail: {} }]);
         expect(await dbCall('select public.fingence_workspace_change_password($1, $2, $3) as r', [token(member), 'scrypt$stale$hash-that-is-long-enough-to-pass', 'scrypt$new$hash-that-is-long-enough-to-pass'])).toEqual({ error: 'PASSWORD_CHANGED_ELSEWHERE' });
+    });
+    it('a sign-in that verified the old password before the change cannot open a session after it', async () => {
+        const id = await memberId('handed-out@example.invalid');
+        const before = (await db.query<{ h: string }>('select password_hash h from fingence_workspace.members where id = $1', [id])).rows[0].h;
+        const [status] = await body(await change(member, { current: 'a brand new passphrase', next: 'yet another passphrase' }));
+        expect(status).toBe(200);
+        // The racing sign-in now tries to open its session with the hash it verified a moment ago.
+        expect(await dbCall('select public.fingence_workspace_open_session_checked($1, $2, $3, 12) as r', [id, before, secretHash(newSecret())])).toEqual({ error: 'UNAVAILABLE' });
+        const after = (await db.query<{ h: string }>('select password_hash h from fingence_workspace.members where id = $1', [id])).rows[0].h;
+        expect(await dbCall('select public.fingence_workspace_open_session_checked($1, $2, $3, 12) as r', [id, after, secretHash(newSecret())])).toMatchObject({ sessionId: expect.any(String) });
     });
     it('only the service role may call it', async () => {
         const grants = (await db.query<{ anon: boolean; auth: boolean; service: boolean }>("select has_function_privilege('anon', 'public.fingence_workspace_change_password(text, text, text)', 'execute') anon, has_function_privilege('authenticated', 'public.fingence_workspace_change_password(text, text, text)', 'execute') auth, has_function_privilege('service_role', 'public.fingence_workspace_change_password(text, text, text)', 'execute') service")).rows[0];
