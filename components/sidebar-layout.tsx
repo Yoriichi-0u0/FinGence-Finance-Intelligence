@@ -17,7 +17,10 @@ export const clampWidth = (w: number) => Math.round(Math.min(SIDEBAR_MAX, Math.m
 type Layout = { width: number; collapsed: boolean };
 const DEFAULT = `${SIDEBAR_DEFAULT}:0`;
 
+// The layout chosen on this page: what the controls show even when storage is blocked or full (then nothing persists).
+let current: string | null = null;
 function read(): string {
+  if (current) return current;
   try {
     const saved = localStorage.getItem(KEY);
     return saved && /^\d{3}:[01]$/.test(saved) ? saved : DEFAULT;
@@ -27,13 +30,16 @@ function read(): string {
 }
 const parse = (s: string): Layout => { const [w, c] = s.split(":"); return { width: clampWidth(Number(w)), collapsed: c === "1" }; };
 function write(layout: Layout) {
-  try { localStorage.setItem(KEY, `${clampWidth(layout.width)}:${layout.collapsed ? 1 : 0}`); } catch { /* storage unavailable: lasts for this page only */ }
+  current = `${clampWidth(layout.width)}:${layout.collapsed ? 1 : 0}`;
+  try { localStorage.setItem(KEY, current); } catch { /* storage unavailable or full: the layout lasts for this page only */ }
   window.dispatchEvent(new Event(EVENT));
 }
 function subscribe(onChange: () => void) {
+  // A change saved in another tab replaces this page's copy.
+  const fromOtherTab = (e: StorageEvent) => { if (e.key === KEY) { current = null; onChange(); } };
   window.addEventListener(EVENT, onChange);
-  window.addEventListener("storage", onChange);
-  return () => { window.removeEventListener(EVENT, onChange); window.removeEventListener("storage", onChange); };
+  window.addEventListener("storage", fromOtherTab);
+  return () => { window.removeEventListener(EVENT, onChange); window.removeEventListener("storage", fromOtherTab); };
 }
 
 export function useSidebarLayout() {
@@ -89,3 +95,6 @@ export function ResizeHandle({ width, onWidth }: { width: number; onWidth: (w: n
     </div>
   );
 }
+
+/** For tests only. */
+export const __read = read, __write = write;
