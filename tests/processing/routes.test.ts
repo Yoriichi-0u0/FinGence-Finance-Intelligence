@@ -44,19 +44,19 @@ describe('server processing routes', () => {
     it('do not exist unless server processing is switched on with a store', async () => {
         vi.stubEnv('FINGENCE_PROCESSING_JOBS', '');
         const r = await routes();
-        expect((await r.jobs.GET()).status).toBe(404);
+        expect((await r.jobs.GET(request('/api/processing/jobs'))).status).toBe(404);
         expect((await r.jobs.POST(await submit(form(documents)))).status).toBe(404);
         expect((await r.management.GET(request('/api/management'))).status).toBe(404);
         // The local store is honoured only in development, never on a hosted deployment.
         vi.stubEnv('FINGENCE_PROCESSING_JOBS', '1'); vi.stubEnv('NODE_ENV', 'production');
-        expect((await (await routes()).jobs.GET()).status).toBe(404);
+        expect((await (await routes()).jobs.GET(request('/api/processing/jobs'))).status).toBe(404);
         vi.stubEnv('NODE_ENV', 'development'); vi.stubEnv('VERCEL', '1');
         expect((await (await routes()).management.GET(request('/api/management'))).status).toBe(404);
     });
 
     it('accept documents as a job, answer 202 at once, and run it after the response', async () => {
         const r = await routes();
-        expect(await (await r.jobs.GET()).json()).toEqual({ available: true, processing: { paused: false, reason: null, changedAt: null }, maxUploadBytes: 40_000_000 });
+        expect(await (await r.jobs.GET(request('/api/processing/jobs'))).json()).toEqual({ available: true, processing: { paused: false, reason: null, changedAt: null }, maxUploadBytes: 40_000_000 });
         const res = await r.jobs.POST(await submit(form(documents)));
         expect(res.status).toBe(202);
         const { jobId } = await res.json() as { jobId: string };
@@ -123,7 +123,7 @@ describe('server processing routes', () => {
         expect((await r.management.POST(request('/api/management', { action: 'pause', reason: '' }))).status).toBe(400);
         expect((await r.management.POST(request('/api/management', { action: 'pause', reason: 'Bank feed check' }, { origin: 'https://evil.example' }))).status).toBe(403);
         expect(await (await r.management.POST(request('/api/management', { action: 'pause', reason: 'Bank feed check' }))).json()).toEqual({ paused: true });
-        expect((await (await r.jobs.GET()).json()).processing).toEqual(expect.objectContaining({ paused: true, reason: 'Bank feed check' }));
+        expect((await (await r.jobs.GET(request('/api/processing/jobs'))).json()).processing).toEqual(expect.objectContaining({ paused: true, reason: 'Bank feed check' }));
         const refused = await r.jobs.POST(await submit(form(documents)));
         expect(refused.status).toBe(423);
         expect(await refused.json()).toEqual(expect.objectContaining({ code: 'PROCESSING_PAUSED', reason: 'Bank feed check' }));

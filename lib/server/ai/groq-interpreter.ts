@@ -99,7 +99,7 @@ export function worstCaseUsd(evidence: LayoutEvidence, model = interpreterModel(
 export async function proposeLayout(evidence: LayoutEvidence, options: { model?: string; reasoningEffort?: 'low' | 'medium' | 'high'; transport?: GroqTransport } = {}): Promise<InterpretationResult> {
     const model = options.model && INTERPRETER_MODELS.includes(options.model) ? options.model : interpreterModel();
     const { content, receipt } = await structuredCompletion({
-        model, system: SYSTEM_PROMPT, user: JSON.stringify(evidence), schemaName: 'layout_proposal', schema: proposalJsonSchema(),
+        feature: 'layout-interpretation', model, system: SYSTEM_PROMPT, user: JSON.stringify(evidence), schemaName: 'layout_proposal', schema: proposalJsonSchema(),
         maxCompletionTokens: MAX_COMPLETION_TOKENS, reasoningEffort: options.reasoningEffort ?? reasoningEffort(), transport: options.transport,
     });
     return { proposal: content, receipt };

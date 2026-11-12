@@ -2,11 +2,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { structuredCompletion, type GroqTransport } from '../../lib/server/ai/groq';
 import { InterpreterUnavailable } from '../../lib/interpretation/contracts';
+import { setAiCallSink, type AiCall } from '../../lib/ai-calls';
 
 const ok = { status: 200, json: { model: 'openai/gpt-oss-120b', choices: [{ message: { content: '{"a":1}' } }], usage: { prompt_tokens: 10, completion_tokens: 5 } } };
 const refused = { status: 429, json: null, retryAfterSeconds: 7 };
-const request = (transport: GroqTransport) => structuredCompletion({ model: 'openai/gpt-oss-120b', system: 's', user: 'u', schemaName: 'x', schema: {}, maxCompletionTokens: 10, reasoningEffort: 'low', transport });
-afterEach(() => vi.unstubAllEnvs());
+const request = (transport: GroqTransport) => structuredCompletion({ feature: 'finance-qa', model: 'openai/gpt-oss-120b', system: 's', user: 'u', schemaName: 'x', schema: {}, maxCompletionTokens: 10, reasoningEffort: 'low', transport });
+afterEach(() => { vi.unstubAllEnvs(); setAiCallSink(null); });
 
 describe('two Groq keys: alternate per request, move to the other key only after an unbilled 429', () => {
     it('consecutive requests use alternate keys', async () => {
@@ -42,5 +43,15 @@ describe('two Groq keys: alternate per request, move to the other key only after
         let calls = 0;
         await request(async () => { calls++; return refused; }).catch(() => null);
         expect(calls).toBe(1);
+    });
+    it('the Technical log records which key paid, never the key', async () => {
+        vi.stubEnv('GROQ_API_KEY', 'gsk_first_secret'); vi.stubEnv('GROQ_API_KEY2', 'gsk_second_secret');
+        const calls: AiCall[] = [];
+        setAiCallSink(async call => { calls.push(call); });
+        await request(async (_b, _s, key) => key === 'gsk_first_secret' ? refused : ok).catch(() => undefined);
+        await request(async (_b, _s, key) => key === 'gsk_first_secret' ? refused : ok).catch(() => undefined);
+        expect(calls.map(c => [c.feature, c.status])).toEqual([['finance-qa', 'OK'], ['finance-qa', 'OK']]);
+        expect(calls.map(c => c.keyLabel)).toEqual(['key-2', 'key-2']);
+        expect(JSON.stringify(calls)).not.toContain('gsk_');
     });
 });

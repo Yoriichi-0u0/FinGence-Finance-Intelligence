@@ -1,5 +1,67 @@
 # FinGence — current technical entrypoint
 
+## Change your own password — 13 November 2026
+
+- **Why.** Until now a password was set only when joining with an invitation code. The accounts the owner created for SAIC and Dr Sim came with passwords the team knows (#105, #111).
+- **Where.** The account menu has "Your account and password", which opens `/account` (`components/workspace/account.tsx`). `POST /api/workspace/password` is `changePassword` in `lib/server/workspace/handlers.ts`.
+- **Rules.**
+  - The request must come from the same origin and from a signed-in member.
+  - The current password is checked with scrypt and rate-limited like sign-in; a wrong one returns `WRONG_PASSWORD`.
+  - The new password follows the joining rule (12 to 128 characters) and must differ from the current one.
+  - The change is compare-and-set on the verified hash. Every other session of the member ends (reason `PASSWORD_CHANGED`); this one stays open.
+  - The change is audited as `member.password_changed`, with no detail.
+- **No racing sign-in keeps the old password.** Sign-in and joining open sessions through `fingence_workspace_open_session_checked`. It locks the member row and opens a session only while the verified hash is still current. So a sign-in that checked the old password either opens before the change (which then ends it) or is refused.
+- **Look-alike passwords count as the same.** "Unchanged" compares NFKC-normalized passwords, as hashing does.
+- **Data:** `supabase/sql/workspace-v7-password.sql` (needs v1 and v2): `fingence_workspace_change_password` and `fingence_workspace_open_session_checked`, both executable by the service role only, plus the new session end reason.
+- **Applied to FinGence-Production on 13 Nov 2026,** before the deploy (migrations `fingence_workspace_v7_password` and `fingence_workspace_v7_open_session_checked`). The v1 `open_session` stays for older deployments and is no longer called.
+- **Tests:** "changing your own password" in `tests/workspace/workspace.test.ts`.
+
+## History: saved runs per person — 12 November 2026
+
+- **What is saved.** Every completed run is saved for the person who ran it, until they (or an Admin) delete it. The owner decided this on 12 Nov. A saved run has three parts:
+  - its documents, in a private Supabase Storage bucket (`FINGENCE_FILES_BUCKET`, default `fingence-documents`), stored once per organization by SHA-256;
+  - a small restore bundle: the AI's accepted readings, OCR readings and the server job;
+  - a summary: business, period, currency, confidence and the report summary.
+- **Reopening** re-runs the same deterministic restore as a reload, from the documents and the bundle, with no model call. A server job is re-checked against its processing ID.
+- **Data:** `supabase/sql/workspace-v6-saved-runs.sql`.
+  - `saved_runs` and `saved_files`.
+  - Functions: `plan_save` and `save_run` (the server passes the organization and member after checking the session); `history`, `saved_run` and `delete_run` (token-checked: own runs, or Admin and above).
+  - Free-plan cap: 900 MB of files and 300 MB of rows per organization. Over it, the run is saved without its documents and cannot be reopened.
+  - Deleting is audited (`run.deleted`) and removes documents no other saved run uses.
+- **Code:**
+  - server jobs save themselves (`lib/server/processing/jobs.ts`, which calls `lib/server/history/save.ts`);
+  - browser runs post to `/api/workspace/history` (`components/demo/save-run.tsx`);
+  - file store: `lib/server/files/store.ts` (Storage, or `.local/dev/files` locally);
+  - routes: `/api/workspace/history[/:id[/document/:i]]`;
+  - page: `/history` (`components/workspace/history.tsx`);
+  - `openSaved` in `components/demo/context.tsx`, and a "Saved run" chip in the banner.
+- **Production order:** create the private bucket, apply v6, then deploy.
+
+## Customise dashboard — 11 November 2026
+
+Each signed-in person can show, hide and reorder the Overview cards. The layout is saved per member and follows them to any device. See the "Member preferences" section of [docs/architecture/workspace-roles.md](../architecture/workspace-roles.md).
+
+- **Cards:** the five original cards, in the original order by default. Three optional cards start hidden: largest counterparties, reconciliation summary, and last processing runs (Admin and above only, from the Technical log).
+- **Editor:** "Customise dashboard" on Overview has a show/hide switch and Up/Down buttons for each card, all usable from the keyboard. The dashboard previews changes live; Done saves, Cancel discards, and Reset to default restores the default.
+- **Data:** `supabase/sql/workspace-v4-preferences.sql`, one strict layout shape checked by the route, the function and the table (`lib/dashboard/layout.ts`). **Applied to FinGence-Production on 12 Nov 2026** (migration `fingence_workspace_v4_preferences`, on the owner's go-ahead), and verified there: RLS is forced, only the service role may execute the functions, and an unknown card is refused. With the workspace off, the layout is kept in the browser.
+- **Locally:** `scripts/dev-store.mjs` applies v4 on every start.
+
+## Technical log and the AI-call door — 11 November 2026
+
+- **The door.** Every AI model call goes through `withAiCall` in `lib/ai-calls/`. It records metadata only: feature, model, key name, tokens, cost, time, outcome and who. The strict contract (`lib/ai-calls/contract.ts`) rejects anything else.
+  - Wired in: `structuredCompletion` (layout reading, Finance Q&A, report commentary) and both ingestion experiments.
+  - `tests/ai-calls/guard.test.ts` fails the build for a direct provider call.
+  - The teammate guide is `docs/ai-integration/ai-calls.md`, with a paste-in prompt for their AI assistants. `AGENTS.md` points to it.
+- **Who.** Routes set the caller with `runAsCaller(aiCaller(principal), …)`; server jobs record their member.
+- **Data:** `supabase/sql/workspace-v3-log.sql`.
+  - `jobs.member_id`.
+  - Finished jobs stamp their ingestion run with the organization and member; before this, hosted runs never reached Operations.
+  - `fingence_workspace.ai_calls`, kept 90 days.
+  - `fingence_workspace_log`, Admin and above.
+  - It must be applied on Production **before** this code deploys: a job submitted by a signed-in member calls the four-argument `fingence_processing_create_job`.
+- **Page:** `/log`, "Technical log", in the Administration navigation. It has 7-day tiles, AI calls per day, a plain-language timeline with run and call detail, filters for feature, person, AI only and problems, and a CSV export. Operations keeps the controls; its Runs list moved here.
+- **Locally:** without a database, calls go to `.local/ai-calls/YYYY-MM-DD.jsonl`. `scripts/dev-store.mjs` applies v3 on every start.
+
 ## Optional ML forecast challenger (MLForecast + XGBoost) — 7 November 2026
 
 `/forecasting` can show an experimental XGBoost forecast beside the unchanged deterministic baseline. Contract, setup and the demo-data result: [docs/architecture/ml-forecast-v1.md](../architecture/ml-forecast-v1.md).
@@ -37,6 +99,16 @@ Checkpoint 10 (#78). Processing can run as server jobs; the contract is [docs/ar
 - **Samples:**
   - The March MYR sample keeps its figures and now completes with nothing flagged.
   - A new quarter sample (DEMO-002, January–March 2026, SGD; `scripts/generate-quarter-documents.mjs`) shows timing differences clearing across months and one flagged payment.
+
+## Workspace: SAIC users only, three stacked roles — 11 November 2026
+
+The hosted workspace is in [docs/architecture/workspace-roles.md](../architecture/workspace-roles.md): Supabase schema `fingence_workspace` (`supabase/sql/workspace-v1.sql`, then `workspace-v2-saic.sql`), `lib/server/workspace/*` and `proxy.ts`.
+
+- **Roles:** Finance user < Admin < Superadmin, each including the one below; each manages only people below their own role. Management (Technical) is retired.
+- **SAIC only:** one organization, sign-in required for every page and API, no public demo.
+- **Admin:** `/team` (Finance users) and `/operations` (runs, checks, model receipts, sessions, pause). **Superadmin:** also Admins, the audit trail and the AI switch.
+- **Switch:** on with `FINGENCE_WORKSPACE=1`; v2 is not yet applied to Production.
+- **Replaces:** the env-gated `/management` console (off when the workspace is on). The local-only M5 `/admin` and `/enroll` are unchanged.
 
 ## Reconciliation layer v1 — 4 November 2026
 

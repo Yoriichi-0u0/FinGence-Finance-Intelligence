@@ -95,7 +95,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
             </p>
             <div className="flex flex-wrap items-center gap-1.5 text-xs" aria-label="Legend">
                 {shown.map(f => <span key={f} className={`rounded-md px-1.5 py-0.5 font-medium ${FIELD[f].color}`}>{FIELD[f].label}</span>)}
-                {r.aiLines.length ? <span className="rounded-md border border-dashed border-indigo-400 px-1.5 py-0.5 text-indigo-900">AI was shown this line</span> : null}
+                {r.aiLines.length ? <span className="rounded-md border border-dashed border-[var(--brand)] px-1.5 py-0.5 text-[var(--brand-ink)]">AI was shown this line</span> : null}
                 {disputes.size ? <span className="rounded-md px-1.5 py-0.5 outline outline-2 -outline-offset-2 outline-red-500">Two OCR passes disagreed</span> : null}
             </div>
             <div role="group" aria-label="Show" className="grid grid-cols-2 gap-1 rounded-xl bg-[var(--surface-sunken)] p-1 lg:hidden">
@@ -159,7 +159,7 @@ function Grid({ rows, read, ai, active, setActive, cellField, disputes }: Shared
             const used = read.has(line);
             return <tr key={line} ref={active === line ? ref : undefined} onMouseEnter={() => used && setActive(line)} onClick={() => used && setActive(line)}
                 className={`border-b border-[var(--border)] align-top ${active === line ? 'bg-[var(--teal-soft)]' : ''} ${used ? '' : 'text-[var(--muted)] opacity-60'} ${ai.has(line) ? 'outline outline-1 -outline-offset-1 outline-dashed outline-indigo-400' : ''}`}>
-                <td className="sticky left-0 w-9 select-none bg-[var(--surface-subtle)] px-1.5 py-1 text-right text-[10px] text-[var(--muted)]">{line + 1}</td>
+                <td className="sticky left-0 w-9 select-none bg-[var(--surface-subtle)] px-1.5 py-1 text-right text-[11px] text-[var(--muted)]">{line + 1}</td>
                 {cells.map((c, k) => { const f = used ? cellField.get(k) : null; return <td key={k} className={`whitespace-nowrap px-1.5 py-1 ${f ? FIELD[f].color : ''} ${disputes.has(`${line}:${k}`) ? 'outline outline-2 -outline-offset-2 outline-red-500' : ''}`}>{c}</td>; })}
             </tr>;
         })}
@@ -211,7 +211,7 @@ function Pages({ input, coords, geometry, read, ai, active, setActive, cellField
                 const all = g.cells.filter(Boolean) as [number, number, number, number][];
                 if (!all.length) return null;
                 const [x0, y0, x1, y1] = [Math.min(...all.map(b => b[0])), Math.min(...all.map(b => b[1])), Math.max(...all.map(b => b[2])), Math.max(...all.map(b => b[3]))];
-                return <div key={`ai-${line}`} aria-hidden="true" className="pointer-events-none absolute rounded-sm border border-dashed border-indigo-500"
+                return <div key={`ai-${line}`} aria-hidden="true" className="pointer-events-none absolute rounded-sm border border-dashed border-[var(--brand)]"
                     style={{ left: pct(x0 - 5, p.width), top: pct(y0 - 4, p.height), width: pct(x1 - x0 + 10, p.width), height: pct(y1 - y0 + 8, p.height) }} />;
             })}
             {geometry.map((g, line) => {
@@ -230,8 +230,8 @@ function Pages({ input, coords, geometry, read, ai, active, setActive, cellField
 }
 
 /** The entry on the Data page: shown once a processing has documents read as tables. */
-export function DocumentEvidenceEntry({ context, inputs }: { context: ProcessingContext; inputs: DocumentInput[] }) {
-    const [open, setOpen] = useState(false);
+export function DocumentEvidenceEntry({ context, inputs, defaultOpen = false }: { context: ProcessingContext; inputs: DocumentInput[]; defaultOpen?: boolean }) {
+    const [open, setOpen] = useState(defaultOpen);
     if (!context.documents.some(d => d.reading)) return null;
     return open ? <DocumentEvidence context={context} inputs={inputs} />
         : <button type="button" onClick={() => setOpen(true)} className="group flex w-full items-center gap-4 rounded-2xl border border-[var(--brand-line)] bg-[var(--brand-soft)] p-4 text-left transition-colors hover:border-[var(--brand)] sm:p-5">

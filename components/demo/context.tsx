@@ -6,6 +6,7 @@ import type { InterpretationResult } from '@/lib/interpretation/contracts';
 import { interpretationsOf } from '@/lib/document-ingestion/ingest';
 import { replayExtractor, type StoredExtraction } from '@/lib/processing/extractions';
 import { submitServerJob, type ServerProcessingState } from './server-jobs';
+import type { RestoreBundle } from '@/lib/history/saved-run';
 
 /**
  * Browser processing context for the demo. Only the input documents (and, for unfamiliar layouts, the
@@ -29,7 +30,15 @@ type Value = {
     serverJobs: boolean;
     /** Whether the technical team paused processing, and why; null while unknown or when server processing is off. */
     serverState: ServerProcessingState | null;
+    /** When the results on screen are a saved run reopened from History: which, and when it was processed. */
+    savedRun: SavedRunLabel | null;
+    /** Reopen a saved run: its documents and restore bundle go through the same deterministic restore as a reload (no model call). */
+    openSaved: (run: { processedAt: string; documents: DocumentInput[]; bundle: RestoreBundle }, label: SavedRunLabel) => Promise<boolean>;
 };
+export type SavedRunLabel = { id: string; at: string; by: string | null };
+const SAVED_KEY = 'fingence-saved-run-v1';
+function readLabel(): SavedRunLabel | null { try { const raw = sessionStorage.getItem(SAVED_KEY); return raw ? JSON.parse(raw) as SavedRunLabel : null; } catch { return null; } }
+function writeLabel(label: SavedRunLabel | null) { try { if (label) sessionStorage.setItem(SAVED_KEY, JSON.stringify(label)); else sessionStorage.removeItem(SAVED_KEY); } catch { /* storage unavailable */ } }
 const DemoContext = createContext<Value | null>(null);
 
 const toBase64 = (bytes: Uint8Array) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
@@ -53,6 +62,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
     const [aiWait, setAiWait] = useState<number | null>(null);
     const [serverState, setServerState] = useState<ServerProcessingState | null>(null);
     const [inputs, setInputs] = useState<DocumentInput[]>([]);
+    const [savedRun, setSavedRun] = useState<SavedRunLabel | null>(null);
     const run = useRef(0), probe = useRef<Promise<GatewayStatus> | null>(null), uploadLimit = useRef<number | null>(null);
     useEffect(() => { if (enabled && aiGateway) { probe.current = gatewayStatus(); void probe.current.then(setAi); } }, [enabled, aiGateway]);
     useEffect(() => {
@@ -67,27 +77,41 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
         return () => { live = false; clearInterval(timer); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', visible); };
     }, [enabled, serverJobs]);
 
+    /** Recompute a stored processing from its documents (the same pure pipeline, the stored AI readings replayed). */
+    const restore = useCallback((stored: Stored, restored: DocumentInput[], current: number) => new Promise<boolean>(done => {
+        browserDemoRunner.run(restored, undefined, { interpreter: replayInterpreter(stored.interpretations ?? {}, null), job: stored.job ? { id: stored.job.id, runner: 'BACKEND_JOB_RUNNER' } : null, extract: stored.extractions ? replayExtractor(stored.extractions) : undefined })
+            .then(result => {
+                if (current !== run.current) return done(false);
+                // A server job's result is shown again only while it still reproduces the job (same pipeline, same readings).
+                if (stored.job && result.processingId !== stored.job.processingId) {
+                    writeStored(null); writeLabel(null); setSavedRun(null); setError(`The saved result of server job ${stored.job.id} no longer matches this version of FinGence, so it is not shown. Please process the documents again.`); setStatus('failed'); return done(false);
+                }
+                setContext(result); setInputs(restored); setLiveStages(result.stages); setProcessedAt(stored.processedAt); setStatus('ready'); done(true);
+            })
+            .catch(() => { if (current !== run.current) return done(false); writeStored(null); writeLabel(null); setSavedRun(null); setStatus('empty'); done(false); });
+    }), []);
     useEffect(() => {
         if (!enabled) return;
         const stored = readStored(), current = ++run.current;
         if (!stored) { queueMicrotask(() => { if (current === run.current) setStatus('empty'); }); return; }
-        const restored = stored.documents.map(d => ({ name: d.name, provenance: d.provenance, bytes: fromBase64(d.base64) }));
-        browserDemoRunner.run(restored, undefined, { interpreter: replayInterpreter(stored.interpretations ?? {}, null), job: stored.job ? { id: stored.job.id, runner: 'BACKEND_JOB_RUNNER' } : null, extract: stored.extractions ? replayExtractor(stored.extractions) : undefined })
-            .then(result => {
-                if (current !== run.current) return;
-                // A server job's result is shown again only while it still reproduces the job (same pipeline, same readings).
-                if (stored.job && result.processingId !== stored.job.processingId) {
-                    writeStored(null); setError(`The saved result of server job ${stored.job.id} no longer matches this version of FinGence, so it is not shown. Please process the documents again.`); setStatus('failed'); return;
-                }
-                setContext(result); setInputs(restored); setLiveStages(result.stages); setProcessedAt(stored.processedAt); setStatus('ready');
-            })
-            .catch(() => { if (current !== run.current) return; writeStored(null); setStatus('empty'); });
-    }, [enabled]);
+        const label = readLabel();
+        if (label) queueMicrotask(() => setSavedRun(label));
+        void restore(stored, stored.documents.map(d => ({ name: d.name, provenance: d.provenance, bytes: fromBase64(d.base64) })), current);
+    }, [enabled, restore]);
+    const openSaved = useCallback(async (saved: { processedAt: string; documents: DocumentInput[]; bundle: RestoreBundle }, label: SavedRunLabel) => {
+        const current = ++run.current;
+        const stored: Stored = { processedAt: saved.processedAt, documents: saved.documents.map(d => ({ name: d.name, provenance: d.provenance, base64: toBase64(d.bytes) })), interpretations: saved.bundle.interpretations,
+            ...(saved.bundle.job ? { job: saved.bundle.job, extractions: saved.bundle.extractions } : {}) };
+        setContext(null); setInputs([]); setLiveStages([]); setError(null); setStatus('loading');
+        // Kept for this tab like any processing (so a reload reopens it); if the browser cannot keep it, it is still shown now.
+        setPersisted(writeStored(stored)); writeLabel(label); setSavedRun(label);
+        return restore(stored, saved.documents, current);
+    }, [restore]);
 
     const process = useCallback(async (inputs: DocumentInput[]) => {
         // Clear first: a failed or abandoned run can never leave the previous documents' results on screen.
         const current = ++run.current;
-        writeStored(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
+        writeStored(null); writeLabel(null); setSavedRun(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
         try {
             // If the server says AI is on but the browser's status check has not answered yet (a fast click after a
             // fresh load), wait for it, so an unfamiliar document is never processed without the interpreter by accident.
@@ -126,8 +150,8 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
             return null;
         }
     }, [ai, serverJobs]);
-    const clear = useCallback(() => { run.current++; writeStored(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
-    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null, aiWait, serverJobs: enabled && serverJobs, serverState: enabled ? serverState : null, inputs: enabled ? inputs : [] }), [enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState, inputs]);
+    const clear = useCallback(() => { run.current++; writeStored(null); writeLabel(null); setSavedRun(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
+    const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null, aiWait, serverJobs: enabled && serverJobs, serverState: enabled ? serverState : null, inputs: enabled ? inputs : [], savedRun: enabled ? savedRun : null, openSaved }), [savedRun, openSaved, enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState, inputs]);
     return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
 

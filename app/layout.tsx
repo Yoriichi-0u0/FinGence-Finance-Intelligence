@@ -7,6 +7,7 @@ import {m5LocalEnabled} from "@/lib/server/tenant-admin-m5/flags";
 import {pocLocalEnabled} from "@/lib/server/poc-reconciliation/runtime";
 import {syntheticDemoEnabled} from "@/lib/server/demo/mode";
 import {aiGatewayEnabled} from "@/lib/server/ai/groq-interpreter";
+import {workspaceEnabled} from "@/lib/server/workspace/store";
 import {budgetStore} from "@/lib/server/ai/budget";
 import {managementEnabled, processingStore} from "@/lib/server/processing/store";
 
@@ -21,10 +22,13 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
+  // The phone top bar is the dark rail in both themes, so the status bar matches it.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f5fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#080b1a" },
+    { media: "(prefers-color-scheme: light)", color: "#081124" },
+    { media: "(prefers-color-scheme: dark)", color: "#050a17" },
   ],
+  // Lets the bars reach the screen edges; safe-area insets keep their contents clear.
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -49,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("fingence-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()` }} />
       </head>
       <body className="min-h-full">
-        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()}>{children}</AppShell>
+        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()} workspace={workspaceEnabled()}>{children}</AppShell>
       </body>
     </html>
   );

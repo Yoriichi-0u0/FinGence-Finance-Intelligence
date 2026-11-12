@@ -267,15 +267,15 @@ export default function AnomalyWorkspace() {
             {!analysis.candidates.length ? <div className="p-5"><EmptyState title="No review candidates" description="No rule produced a candidate for this business and period." /></div> : (<>
               <div className="thin-scrollbar hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[560px] text-left text-xs">
-                  <thead className="bg-[var(--surface-subtle)] text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                  <thead className="bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
                     <tr>{["Severity", "Source row", "Counterparty and rules", "Signed amount", "Review"].map(h => <th key={h} className={`px-3 py-3 font-semibold ${h === "Signed amount" ? "text-right" : ""}`}>{h}</th>)}</tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">
                     {analysis.candidates.map(c => (
                       <tr key={c.rowId} className={selected?.rowId === c.rowId ? "bg-[var(--teal-soft)]/60" : "hover:bg-slate-50"}>
                         <td className="px-3 py-3"><Severity value={c.severity} /></td>
-                        <td className="px-3 py-3"><button type="button" onClick={() => setSelectedRow(c.rowId)} className="text-left font-semibold hover:text-[var(--teal)] hover:underline">{c.rowId}<span className="mt-0.5 block text-[10px] font-normal text-[var(--muted)]">{c.date} · Ref {c.reference}</span></button></td>
-                        <td className="px-3 py-3">{c.counterparty}<span className="mt-0.5 block text-[10px] text-[var(--muted)]">{c.findings.map(f => f.title).join(", ")}</span></td>
+                        <td className="px-3 py-3"><button type="button" onClick={() => setSelectedRow(c.rowId)} className="text-left font-semibold hover:text-[var(--teal)] hover:underline">{c.rowId}<span className="mt-0.5 block text-[11px] font-normal text-[var(--muted)]">{c.date} · Ref {c.reference}</span></button></td>
+                        <td className="px-3 py-3">{c.counterparty}<span className="mt-0.5 block text-[11px] text-[var(--muted)]">{c.findings.map(f => f.title).join(", ")}</span></td>
                         <td className="whitespace-nowrap px-3 py-3 text-right font-semibold tabular-nums">{money(c.currency, c.signedAmount)}</td>
                         <td className="px-3 py-3"><StatusBadge status={reviewLabels[c.review.state]} /></td>
                       </tr>

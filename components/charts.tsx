@@ -116,7 +116,7 @@ export function LineChart({
             <g key={item.label}>
               {item.fill && path ? (
                 <path
-                  d={`${path} L ${x(item.values.length - 1)} ${zeroY} L ${x(item.values.findIndex((v) => v !== null))} ${zeroY} Z`}
+                  d={`${path} L ${x(item.values.findLastIndex((v) => v !== null))} ${zeroY} L ${x(item.values.findIndex((v) => v !== null))} ${zeroY} Z`}
                   fill={`url(#${gradientId}-${index})`}
                 />
               ) : null}

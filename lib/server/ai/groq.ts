@@ -1,16 +1,15 @@
 import 'server-only';
 import { z } from 'zod';
 import { InterpreterUnavailable, type ModelReceipt } from '../../interpretation/contracts';
+import { MODEL_PRICES, withAiCall, type AiFeature } from '../../ai-calls/index';
 
 /**
  * One strict-JSON-schema Groq completion, shared by every FinGence AI call (layout interpretation, grounded
  * Q&A). It never retries: a provider 429 (refused, not billed) surfaces as RATE_LIMITED with Retry-After so the
  * browser may make one new, separately budgeted request. The content is returned parsed but UNTRUSTED.
  */
-/** Published Groq prices (USD per million tokens, 2 Nov 2026) for the receipt's cost estimate. */
-export const GROQ_PRICES: Record<string, [number, number]> = {
-    'openai/gpt-oss-120b': [0.15, 0.6], 'openai/gpt-oss-20b': [0.075, 0.3], 'qwen/qwen3.8-27b': [0.8, 4],
-};
+/** Published Groq prices (USD per million tokens), kept with the AI-call door in lib/ai-calls/prices.ts. */
+export const GROQ_PRICES = MODEL_PRICES;
 export const GROQ_MODELS = Object.keys(GROQ_PRICES);
 export const DEFAULT_GROQ_MODEL = 'openai/gpt-oss-120b';
 
@@ -55,10 +54,16 @@ export function groqKeys(): string[] {
 let rotation = 0;
 
 export type StructuredRequest = {
+    /** Which feature is calling, for the Technical log (lib/ai-calls/features.ts). */
+    feature: AiFeature;
     model: string; system: string; user: string; schemaName: string; schema: Record<string, unknown>;
     maxCompletionTokens: number; reasoningEffort: 'low' | 'medium' | 'high'; transport?: GroqTransport;
 };
-export async function structuredCompletion(req: StructuredRequest): Promise<{ content: unknown; receipt: ModelReceipt }> {
+/** Every call goes through the AI-call door, so it appears on the Technical log with its key, tokens and outcome. */
+export function structuredCompletion(req: StructuredRequest): Promise<{ content: unknown; receipt: ModelReceipt }> {
+    return withAiCall({ feature: req.feature, model: req.model }, note => completion(req, note));
+}
+async function completion(req: StructuredRequest, note: { keyLabel?: string | null }): Promise<{ content: unknown; receipt: ModelReceipt }> {
     const keys = groqKeys();
     if (!keys.length && !req.transport) throw new InterpreterUnavailable('NOT_CONFIGURED');
     const body: Record<string, unknown> = {
@@ -74,7 +79,10 @@ export async function structuredCompletion(req: StructuredRequest): Promise<{ co
     const slots = keys.length ? keys : [''], first = rotation++ % slots.length, signal = AbortSignal.timeout(45_000);
     try {
         for (let attempt = 0; ; attempt++) {
-            reply = await (req.transport ?? defaultTransport)(body, signal, slots[(first + attempt) % slots.length]);
+            const slot = (first + attempt) % slots.length;
+            // Which configured key answered (GROQ_API_KEY is key-1, GROQ_API_KEY2 is key-2); the key itself is never logged.
+            if (keys.length) note.keyLabel = `key-${slot + 1}`;
+            reply = await (req.transport ?? defaultTransport)(body, signal, slots[slot]);
             if (reply.status !== 429 || attempt === slots.length - 1) break;
         }
     } catch { throw new InterpreterUnavailable('PROVIDER_UNREACHABLE'); }

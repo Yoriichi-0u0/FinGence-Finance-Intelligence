@@ -9,6 +9,9 @@ import { jobResult, MAX_FLAGGED, stageSummary, type FlaggedItem, type StageSumma
 import { aiGatewayEnabled } from '../ai/groq-interpreter';
 import { serverInterpreter } from '../ai/interpret';
 import { PROCESSING_ORGANIZATION, rpc, StoreError, type ProcessingStore } from './store';
+import { savedRunPayload } from '../../history/saved-run';
+import { saveRun } from '../history/save';
+import { interpretationsOf } from '../../document-ingestion/ingest';
 
 /**
  * Server processing jobs. A job is created (unless processing is paused), answered at once with its ID, and then run
@@ -56,7 +59,11 @@ export type JobView = {
     interpretations: Record<string, InterpretationResult>; extractions: Record<string, StoredExtraction>; ingestionRunId: string | null; error: string | null;
     results?: { reconciliation: unknown; anomalies: unknown; report: unknown; documents: unknown } | null; flagged?: (FlaggedItem & { ordinal: number })[];
 };
-type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string; timeoutMs?: number; extractor?: Extractor; maxFlagged?: number };
+type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string;
+    /** The signed-in member who submitted the job (workspace on); shown as "by" on the Technical log. */
+    member?: string;
+    /** Where a completed run is saved for its person (tests replace it). */
+    saveRun?: typeof saveRun; timeoutMs?: number; extractor?: Extractor; maxFlagged?: number };
 /** A job stops itself before the 300 s a hosted function may run, so it is failed with a reason instead of cut off. */
 export const JOB_TIMEOUT_MS = 280_000;
 class JobTimeout extends Error {}
@@ -67,7 +74,7 @@ export const processingState = (deps: Deps = {}) => call<ProcessingState>('finge
 /** Creates the job, or refuses when the organization's processing is paused (checked by the store in the same statement). */
 export async function createJob(documents: DocumentInput[], clientHash: string | null, deps: Deps = {}): Promise<{ jobId: string } | { error: 'PROCESSING_PAUSED'; reason: string | null; since: string | null }> {
     const inputs = await Promise.all(documents.map(async d => ({ name: d.name, sha256: await sha256Hex(d.bytes), bytes: d.bytes.byteLength, provenance: d.provenance })));
-    const out = await call<{ jobId?: string; error?: string; reason?: string | null; since?: string | null }>('fingence_processing_create_job', { org: deps.organization ?? PROCESSING_ORGANIZATION, inputs, client: clientHash }, deps);
+    const out = await call<{ jobId?: string; error?: string; reason?: string | null; since?: string | null }>('fingence_processing_create_job', { org: deps.organization ?? PROCESSING_ORGANIZATION, inputs, client: clientHash, ...(deps.member ? { member: deps.member } : {}) }, deps);
     if (out?.jobId) return { jobId: out.jobId };
     if (out?.error === 'PROCESSING_PAUSED') return { error: 'PROCESSING_PAUSED', reason: out.reason ?? null, since: out.since ?? null };
     throw new StoreError('CREATE_FAILED');
@@ -101,7 +108,13 @@ export async function runJob(jobId: string, documents: DocumentInput[], client: 
         const result = jobResult(context);
         if (result.flagged.length > (deps.maxFlagged ?? MAX_FLAGGED)) { await call('fingence_processing_fail_job', { job: jobId, code: 'TOO_MANY_FLAGGED' }, deps); return 'FAILED'; }
         const done = await call<{ jobId?: string; error?: string }>('fingence_processing_finish_job', { job: jobId, run: run.data, result: { ...result, extractions } }, deps);
-        return done?.jobId ? 'COMPLETED' : 'FAILED';
+        if (!done?.jobId) return 'FAILED';
+        // The person's History: the documents and the bundle that reproduces this result. A save that fails never fails the job.
+        if (deps.member && deps.organization) {
+            const payload = await savedRunPayload(context, documents, { interpretations: interpretationsOf(context.documents), extractions, job: { id: jobId, processingId: context.processingId } }, new Date().toISOString());
+            await (deps.saveRun ?? saveRun)(deps.organization, deps.member, payload, documents).catch(() => undefined);
+        }
+        return 'COMPLETED';
     } catch (error) {
         const code = error instanceof StoreError ? error.code : error instanceof JobTimeout ? 'TIMED_OUT' : 'PROCESSING_FAILED';
         await call('fingence_processing_fail_job', { job: jobId, code }, deps).catch(() => undefined);

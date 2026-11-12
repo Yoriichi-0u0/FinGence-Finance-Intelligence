@@ -21,6 +21,20 @@ describe('server processing jobs', () => {
     let db: PGlite, calls: string[], deps: { store: ProcessingStore; transport: typeof fetch; interpreter: null };
     beforeEach(async () => { db = await processingDatabase(); calls = []; deps = { store, transport: rpcTransport(db, calls), interpreter: null }; }, 30_000);
 
+    it('a completed job of a signed-in member is saved to their History; a failed save never fails the job', async () => {
+        const saves: { org: string; member: string; processingId: string; documents: number; bundle: unknown }[] = [];
+        const saveRun = (async (org: string, member: string, payload: { processingId: string; bundle: unknown }, documents: unknown[]) => { saves.push({ org, member, processingId: payload.processingId, documents: documents.length, bundle: payload.bundle }); return { id: 'x', filesKept: true }; }) as never;
+        const created = await createJob(march(), null, deps) as { jobId: string };
+        expect(await runJob(created.jobId, march(), '127.0.0.1', { ...deps, organization: 'fingence-default', member: '00000000-0000-4000-8000-000000000002', saveRun })).toBe('COMPLETED');
+        expect(saves).toEqual([{ org: 'fingence-default', member: '00000000-0000-4000-8000-000000000002', processingId: (await processDocuments(march())).processingId, documents: 3,
+            bundle: { interpretations: {}, extractions: {}, job: { id: created.jobId, processingId: expect.any(String) } } }]);
+        // Without a member (no workspace), nothing is saved; and a save that throws leaves the job completed.
+        const again = await createJob(march(), null, deps) as { jobId: string };
+        expect(await runJob(again.jobId, march(), '127.0.0.1', { ...deps, saveRun })).toBe('COMPLETED');
+        expect(saves).toHaveLength(1);
+        const third = await createJob(march(), null, deps) as { jobId: string };
+        expect(await runJob(third.jobId, march(), '127.0.0.1', { ...deps, organization: 'fingence-default', member: '00000000-0000-4000-8000-000000000002', saveRun: (async () => { throw Error('down'); }) as never })).toBe('COMPLETED');
+    });
     it('runs a job to the end and stores its ingestion run, results and flagged items next to each other', async () => {
         const created = await createJob(quarter(), null, deps);
         expect('jobId' in created).toBe(true);
