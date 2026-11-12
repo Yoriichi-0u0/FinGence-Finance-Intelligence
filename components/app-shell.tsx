@@ -280,11 +280,11 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             onClick={() => setMobileOpen(false)}
             aria-label="Close navigation"
           />
-          <aside className="rise-in relative h-full w-[min(86vw,320px)] shadow-2xl">
+          <aside className="rise-in relative h-full w-[calc(min(86vw,320px)+env(safe-area-inset-left))] bg-[var(--rail)] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] shadow-2xl">
             <button
               type="button"
               onClick={() => setMobileOpen(false)}
-              className="absolute right-3 top-5 z-10 grid size-11 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white"
+              className="absolute right-3 top-[calc(1.25rem+env(safe-area-inset-top))] z-10 grid size-11 place-items-center rounded-xl text-white/80 hover:bg-white/10 hover:text-white"
               aria-label="Close navigation"
             >
               <X aria-hidden="true" size={21} />
