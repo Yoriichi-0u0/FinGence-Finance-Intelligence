@@ -87,6 +87,7 @@ export function DashboardEditor({ draft, admin, where, saving, error, onChange, 
     const heading = useRef<HTMLHeadingElement>(null);
     useEffect(() => { heading.current?.focus(); }, []);
     const shift = (id: CardId, delta: -1 | 1) => {
+        if (saving) return;
         const next = move(draft, id, delta, admin);
         if (next === draft) return;
         onChange(current => move(current, id, delta, admin));
@@ -98,8 +99,8 @@ export function DashboardEditor({ draft, admin, where, saving, error, onChange, 
             (same && !same.disabled ? same : document.getElementById(`dashboard-${delta < 0 ? 'down' : 'up'}-${id}`))?.focus();
         });
     };
-    const toggle = (id: CardId, visible: boolean) => { onChange(current => setVisible(current, id, !current.cards.find(c => c.id === id)?.visible)); say(`${CARDS[id].label} ${visible ? 'shown' : 'hidden'}.`); };
-    const reset = () => { onChange(() => DEFAULT_LAYOUT); say('Default layout restored. Press Done to keep it.'); };
+    const toggle = (id: CardId, visible: boolean) => { if (saving) return; onChange(current => setVisible(current, id, !current.cards.find(c => c.id === id)?.visible)); say(`${CARDS[id].label} ${visible ? 'shown' : 'hidden'}.`); };
+    const reset = () => { if (saving) return; onChange(() => DEFAULT_LAYOUT); say('Default layout restored. Press Done to keep it.'); };
     const iconButton = 'grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--surface)]';
     return <section id="dashboard-editor" aria-labelledby="dashboard-editor-title" className="panel-shadow mb-5 min-w-0 overflow-hidden rounded-2xl border border-[var(--brand-line)] bg-[var(--surface)]">
         <div className="border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
@@ -107,7 +108,7 @@ export function DashboardEditor({ draft, admin, where, saving, error, onChange, 
             <h2 id="dashboard-editor-title" ref={heading} tabIndex={-1} className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)] outline-none sm:text-base">Customise dashboard</h2>
             <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">Show or hide cards and move them up or down. The dashboard below changes as you go; press Done to keep it.</p>
         </div>
-        <ol className="divide-y divide-[var(--border)]">{cards.map((card, i) => {
+        <ol aria-busy={saving} className="divide-y divide-[var(--border)]">{cards.map((card, i) => {
             const meta = CARDS[card.id];
             return <li key={card.id} className="flex min-w-0 items-center gap-2.5 px-3 py-2.5 sm:gap-3 sm:px-5">
                 <span aria-hidden="true" className="w-5 shrink-0 text-center text-xs font-semibold text-[var(--muted)] tabular-nums">{i + 1}</span>
@@ -115,20 +116,20 @@ export function DashboardEditor({ draft, admin, where, saving, error, onChange, 
                     <span className={`block text-sm font-semibold ${card.visible ? '' : 'text-[var(--muted-strong)]'}`}>{meta.label}</span>
                     <span className="block text-xs leading-snug text-[var(--muted)]">{meta.detail}</span>
                 </span>
-                <button type="button" role="switch" aria-checked={card.visible} aria-label={`Show ${meta.label}`} onClick={() => toggle(card.id, !card.visible)}
-                    className="group grid min-h-11 shrink-0 place-items-center rounded-xl px-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]">
+                <button type="button" role="switch" aria-checked={card.visible} aria-label={`Show ${meta.label}`} disabled={saving} onClick={() => toggle(card.id, !card.visible)}
+                    className="group grid min-h-11 shrink-0 place-items-center rounded-xl px-1 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)]">
                     <span aria-hidden="true" className={`relative block h-6 w-11 rounded-full transition-colors ${card.visible ? 'bg-[var(--brand-solid)]' : 'bg-[var(--border-strong)]'}`}>
                         <span className={`absolute top-0.5 size-5 rounded-full bg-white shadow transition-[left] ${card.visible ? 'left-[22px]' : 'left-0.5'}`} />
                     </span>
                 </button>
-                <button type="button" id={`dashboard-up-${card.id}`} className={iconButton} disabled={i === 0} aria-label={`Move ${meta.label} up`} onClick={() => shift(card.id, -1)}><ArrowUp aria-hidden="true" size={16} /></button>
-                <button type="button" id={`dashboard-down-${card.id}`} className={iconButton} disabled={i === cards.length - 1} aria-label={`Move ${meta.label} down`} onClick={() => shift(card.id, 1)}><ArrowDown aria-hidden="true" size={16} /></button>
+                <button type="button" id={`dashboard-up-${card.id}`} className={iconButton} disabled={saving || i === 0} aria-label={`Move ${meta.label} up`} onClick={() => shift(card.id, -1)}><ArrowUp aria-hidden="true" size={16} /></button>
+                <button type="button" id={`dashboard-down-${card.id}`} className={iconButton} disabled={saving || i === cards.length - 1} aria-label={`Move ${meta.label} down`} onClick={() => shift(card.id, 1)}><ArrowDown aria-hidden="true" size={16} /></button>
             </li>;
         })}</ol>
         <p aria-live="polite" className="sr-only">{said}</p>
         {error ? <p role="alert" className="border-t border-[var(--warn-line)] bg-[var(--warn-soft)] px-4 py-2.5 text-sm text-[var(--warn-ink)] sm:px-5">{error}</p> : null}
         <div className="flex flex-wrap items-center gap-2 border-t border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-3 sm:px-5">
-            <button type="button" className={button} onClick={reset} disabled={isDefault(draft)}><RotateCcw aria-hidden="true" size={15} />Reset to default</button>
+            <button type="button" className={button} onClick={reset} disabled={saving || isDefault(draft)}><RotateCcw aria-hidden="true" size={15} />Reset to default</button>
             <span className="ml-auto flex gap-2">
                 <button type="button" className={button} onClick={onCancel} disabled={saving}>Cancel</button>
                 <button type="button" className={primaryButton} onClick={onDone} disabled={saving}>{saving ? 'Saving…' : 'Done'}</button>

@@ -133,7 +133,7 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
                 <button ref={customise} type="button" className={button} disabled={!dashboard.ready} onClick={() => { setStatus(''); setDraft(dashboard.layout); }}><SlidersHorizontal aria-hidden="true" size={16} />Customise dashboard</button>
             </div>} />
         <SourceStrip context={c} />
-        {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => setDraft(d => d && update(d))} onDone={() => void done()} onCancel={close} /> : null}
+        {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => { if (!saving) setDraft(d => d && update(d)); }} onDone={() => void done()} onCancel={close} /> : null}
         {!dashboard.ready ? <div aria-busy="true" aria-label="Loading your dashboard" className="min-h-[40vh]" />
             : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} data-card={x.id} className={`grid min-w-0 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
             : <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-8 text-center text-sm text-[var(--muted-strong)]">Every card is hidden. Use Customise dashboard to show them again.</p>}

@@ -12,6 +12,7 @@ const { default: DemoDataWorkspace } = await import('../../components/demo/data-
 const { money, outflow } = await import('../../components/demo/shared');
 const { WorkspaceContext } = await import('../../components/workspace/context');
 const { DEFAULT_LAYOUT, move, setVisible } = await import('../../lib/dashboard/layout');
+const { DashboardEditor } = await import('../../components/demo/dashboard');
 
 const doc = (path: string): DocumentInput => ({ name: path.split('/').at(-1)!, bytes: new Uint8Array(readFileSync(join('public/demo', path))), provenance: 'PUBLIC_SYNTHETIC_SAMPLE' });
 const Provider = DemoProcessingProvider as (props: { enabled: boolean; children?: ReactNode }) => ReactNode;
@@ -73,6 +74,26 @@ describe('Overview with a saved layout (Customise dashboard)', () => {
         if (!isReady(c)) throw Error('sample did not process');
         const none = { v: 1 as const, cards: DEFAULT_LAYOUT.cards.map(x => ({ ...x, visible: false })) };
         expect(text(createElement(DemoModule, { view: 'overview', context: c, layout: none }))).toContain('Every card is hidden. Use Customise dashboard to show them again.');
+    });
+});
+
+describe('Customise dashboard editor', () => {
+    const editor = (saving: boolean) => renderToStaticMarkup(createElement(DashboardEditor, { draft: setVisible(DEFAULT_LAYOUT, 'checks', false), admin: true, where: 'workspace', saving, error: null, onChange: () => undefined, onDone: () => undefined, onCancel: () => undefined }));
+    const off = (button: string) => /\sdisabled=""/.test(button);
+    const switches = (html: string) => [...html.matchAll(/<button[^>]*role="switch"[^>]*>/g)].map(m => m[0]);
+    const moves = (html: string) => [...html.matchAll(/<button[^>]*aria-label="Move [^"]*"[^>]*>/g)].map(m => m[0]);
+    const reset = (html: string) => html.match(/<button[^>]*>(?:(?!<\/button>).)*Reset to default/)![0];
+    it('while a save is pending, no control can change the layout (an edit then would be lost when the save finishes)', () => {
+        const busy = editor(true), idle = editor(false);
+        expect(switches(busy)).toHaveLength(8);
+        expect(moves(busy)).toHaveLength(16);
+        expect([...switches(busy), ...moves(busy)].every(off)).toBe(true);
+        expect(off(reset(busy))).toBe(true);
+        expect(busy).toContain('aria-busy="true"');
+        // When idle the switches and Reset work, and only the first Up and the last Down are disabled.
+        expect(switches(idle).some(off)).toBe(false);
+        expect(moves(idle).filter(off)).toHaveLength(2);
+        expect(off(reset(idle))).toBe(false);
     });
 });
 
