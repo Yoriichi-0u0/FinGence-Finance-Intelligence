@@ -42,6 +42,16 @@ describe('Overview dashboard', () => {
         expect(page).not.toContain('How FinGence checked these figures');
         expect(renderToStaticMarkup(createElement(Provider, { enabled: true }, createElement(DemoModule, { view: 'overview', context: c })))).toContain('href="/reports?print=1"');
     });
+    it('the reconciliation tile names months that were never reconciled instead of claiming everything was explained', async () => {
+        // A January–March statement against books for January and February only: March is not reconciled.
+        const ledger = readFileSync(join('public/demo/quarter', 'demo-general-ledger-2026-q1-sgd.csv'), 'utf8').split('\n').filter((l, i) => i === 0 || !l.includes(',2026-03-')).join('\n');
+        const c = await processDocuments([doc('quarter/demo-bank-statement-2026-q1-sgd.csv'), { name: 'demo-general-ledger-2026-q1-sgd.csv', bytes: new TextEncoder().encode(ledger), provenance: 'PUBLIC_SYNTHETIC_SAMPLE' }]);
+        if (!isReady(c)) throw Error('sample did not process');
+        expect(c.outputs.notReconciled.map(n => [n.period, n.side])).toEqual([['2026-03', 'BANK']]);
+        const page = text(createElement(DemoModule, { view: 'overview', context: c }));
+        expect(page).toContain('Not reconciled: March 2026 (bank statement only)');
+        expect(page).not.toContain('Every difference matched or explained');
+    });
     it('shows months side by side for a multi-month processing', async () => {
         const c = await processDocuments(['demo-bank-statement-2026-q1-sgd.csv', 'demo-general-ledger-2026-q1-sgd.csv'].map(n => doc(`quarter/${n}`)));
         if (!isReady(c)) throw Error('quarter sample did not process');
