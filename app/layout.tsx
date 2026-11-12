@@ -22,10 +22,13 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
+  // The phone top bar is the dark rail in both themes, so the status bar matches it.
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f4f5fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#080b1a" },
+    { media: "(prefers-color-scheme: light)", color: "#081124" },
+    { media: "(prefers-color-scheme: dark)", color: "#050a17" },
   ],
+  // Lets the bars reach the screen edges; safe-area insets keep their contents clear.
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {

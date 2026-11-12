@@ -159,7 +159,7 @@ function Grid({ rows, read, ai, active, setActive, cellField, disputes }: Shared
             const used = read.has(line);
             return <tr key={line} ref={active === line ? ref : undefined} onMouseEnter={() => used && setActive(line)} onClick={() => used && setActive(line)}
                 className={`border-b border-[var(--border)] align-top ${active === line ? 'bg-[var(--teal-soft)]' : ''} ${used ? '' : 'text-[var(--muted)] opacity-60'} ${ai.has(line) ? 'outline outline-1 -outline-offset-1 outline-dashed outline-indigo-400' : ''}`}>
-                <td className="sticky left-0 w-9 select-none bg-[var(--surface-subtle)] px-1.5 py-1 text-right text-[10px] text-[var(--muted)]">{line + 1}</td>
+                <td className="sticky left-0 w-9 select-none bg-[var(--surface-subtle)] px-1.5 py-1 text-right text-[11px] text-[var(--muted)]">{line + 1}</td>
                 {cells.map((c, k) => { const f = used ? cellField.get(k) : null; return <td key={k} className={`whitespace-nowrap px-1.5 py-1 ${f ? FIELD[f].color : ''} ${disputes.has(`${line}:${k}`) ? 'outline outline-2 -outline-offset-2 outline-red-500' : ''}`}>{c}</td>; })}
             </tr>;
         })}

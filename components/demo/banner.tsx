@@ -42,6 +42,6 @@ export function DemoBanner() {
             {method}
             {technical ? <Chip icon={<Fingerprint aria-hidden="true" size={13} className="text-[var(--brand)]" />} title={context.processingId}>Processing <code className="text-[var(--ink)]">{context.processingId.slice(0, 12)}…</code></Chip> : null}
         </> : <Chip tone="warn" icon={<TriangleAlert aria-hidden="true" size={13} />}>Last documents quarantined</Chip>
-            : <>{method}{pathname !== '/data' && status !== 'loading' ? <Link href="/data" className={`${chip} ${TONE.brand} font-semibold hover:bg-[var(--surface)]`}>Nothing processed yet · open Data<ArrowRight aria-hidden="true" size={13} /></Link> : null}</>}
+            : <>{method}{pathname !== '/data' && status !== 'loading' ? <Link href="/data" className={`touch-target ${chip} ${TONE.brand} font-semibold hover:bg-[var(--surface)]`}>Nothing processed yet · open Data<ArrowRight aria-hidden="true" size={13} /></Link> : null}</>}
     </aside>;
 }
