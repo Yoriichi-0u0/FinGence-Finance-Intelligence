@@ -9,6 +9,9 @@ import { jobResult, MAX_FLAGGED, stageSummary, type FlaggedItem, type StageSumma
 import { aiGatewayEnabled } from '../ai/groq-interpreter';
 import { serverInterpreter } from '../ai/interpret';
 import { PROCESSING_ORGANIZATION, rpc, StoreError, type ProcessingStore } from './store';
+import { savedRunPayload } from '../../history/saved-run';
+import { saveRun } from '../history/save';
+import { interpretationsOf } from '../../document-ingestion/ingest';
 
 /**
  * Server processing jobs. A job is created (unless processing is paused), answered at once with its ID, and then run
@@ -58,7 +61,9 @@ export type JobView = {
 };
 type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string;
     /** The signed-in member who submitted the job (workspace on); shown as "by" on the Technical log. */
-    member?: string; timeoutMs?: number; extractor?: Extractor; maxFlagged?: number };
+    member?: string;
+    /** Where a completed run is saved for its person (tests replace it). */
+    saveRun?: typeof saveRun; timeoutMs?: number; extractor?: Extractor; maxFlagged?: number };
 /** A job stops itself before the 300 s a hosted function may run, so it is failed with a reason instead of cut off. */
 export const JOB_TIMEOUT_MS = 280_000;
 class JobTimeout extends Error {}
@@ -103,7 +108,13 @@ export async function runJob(jobId: string, documents: DocumentInput[], client: 
         const result = jobResult(context);
         if (result.flagged.length > (deps.maxFlagged ?? MAX_FLAGGED)) { await call('fingence_processing_fail_job', { job: jobId, code: 'TOO_MANY_FLAGGED' }, deps); return 'FAILED'; }
         const done = await call<{ jobId?: string; error?: string }>('fingence_processing_finish_job', { job: jobId, run: run.data, result: { ...result, extractions } }, deps);
-        return done?.jobId ? 'COMPLETED' : 'FAILED';
+        if (!done?.jobId) return 'FAILED';
+        // The person's History: the documents and the bundle that reproduces this result. A save that fails never fails the job.
+        if (deps.member && deps.organization) {
+            const payload = await savedRunPayload(context, documents, { interpretations: interpretationsOf(context.documents), extractions, job: { id: jobId, processingId: context.processingId } }, new Date().toISOString());
+            await (deps.saveRun ?? saveRun)(deps.organization, deps.member, payload, documents).catch(() => undefined);
+        }
+        return 'COMPLETED';
     } catch (error) {
         const code = error instanceof StoreError ? error.code : error instanceof JobTimeout ? 'TIMED_OUT' : 'PROCESSING_FAILED';
         await call('fingence_processing_fail_job', { job: jobId, code }, deps).catch(() => undefined);
