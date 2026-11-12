@@ -10,6 +10,9 @@ const { DemoProcessingProvider } = await import('../../components/demo/context')
 const { DemoModule, isReady } = await import('../../components/demo/modules');
 const { default: DemoDataWorkspace } = await import('../../components/demo/data-workspace');
 const { money, outflow } = await import('../../components/demo/shared');
+const { WorkspaceContext } = await import('../../components/workspace/context');
+const { DEFAULT_LAYOUT, move, setVisible } = await import('../../lib/dashboard/layout');
+const { DashboardEditor } = await import('../../components/demo/dashboard');
 
 const doc = (path: string): DocumentInput => ({ name: path.split('/').at(-1)!, bytes: new Uint8Array(readFileSync(join('public/demo', path))), provenance: 'PUBLIC_SYNTHETIC_SAMPLE' });
 const Provider = DemoProcessingProvider as (props: { enabled: boolean; children?: ReactNode }) => ReactNode;
@@ -38,6 +41,59 @@ describe('Overview dashboard', () => {
         if (!isReady(c)) throw Error('quarter sample did not process');
         expect(c.scope.months.length).toBe(3);
         expect(text(createElement(DemoModule, { view: 'overview', context: c }))).toContain('Cash in and out by month');
+    });
+});
+
+describe('Overview with a saved layout (Customise dashboard)', () => {
+    // The chart hidden, "Flagged by FinGence" first, the two optional cards shown, and the Admin-only card switched on.
+    const saved = move(move(setVisible(setVisible(setVisible(setVisible(DEFAULT_LAYOUT, 'cash-chart', false), 'counterparties', true), 'reconciliation-summary', true), 'last-runs', true), 'flagged', -1, true), 'flagged', -1, true);
+    const asRole = (role: 'FINANCE' | 'ADMIN', child: ReactNode) => createElement(WorkspaceContext.Provider, { value: { enabled: true, loading: false, session: { email: 'x@example.invalid', role, organization: { name: 'SAIC' }, processing: { paused: false, reason: null, since: null }, ai: { enabled: true } }, viewRole: role, setViewAs: () => undefined, ended: false, refresh: async () => null, signOut: async () => undefined } }, child);
+    it('draws the cards in the saved order, leaves hidden ones out, and adds the optional cards', async () => {
+        const c = await processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv')]);
+        if (!isReady(c)) throw Error('sample did not process');
+        const page = text(asRole('FINANCE', createElement(DemoModule, { view: 'overview', context: c, layout: saved })));
+        const flagged = c.outputs.resolution!.attention.length + c.outputs.anomalyResolution!.flagged ? 'Flagged by FinGence' : 'Nothing flagged';
+        const at = (s: string) => { const i = page.indexOf(s); expect(i, s).toBeGreaterThan(-1); return i; };
+        expect(at(flagged)).toBeLessThan(at('Cash in '));
+        expect(at('Cash in ')).toBeLessThan(at('How FinGence checked these figures'));
+        expect(at('How FinGence checked these figures')).toBeLessThan(at('Largest counterparties'));
+        expect(at('Largest counterparties')).toBeLessThan(at('Reconciliation summary'));
+        expect(page).not.toContain('Cash position through');
+        expect(page).toContain('Customise dashboard');
+        // The largest payer in, from the verified rows, with its total.
+        const top = new Map<string, number>(); for (const r of c.outputs.bankRows) if (r.direction === 'Credit') top.set(r.counterparty, (top.get(r.counterparty) ?? 0) + Number(r.amount));
+        const [name] = [...top.entries()].sort((a, b) => b[1] - a[1])[0];
+        expect(page).toContain(name);
+        expect(page).toContain(`Matched exactly ${c.outputs.reconciliation!.counts.MATCH_EXACT}`);
+        // A Finance user (or an Admin viewing as one) never gets the Admin-only card, whatever the layout says.
+        expect(page).not.toContain('Last processing runs');
+        expect(text(asRole('ADMIN', createElement(DemoModule, { view: 'overview', context: c, layout: saved })))).toContain('Last processing runs');
+    });
+    it('with every card hidden, it says how to bring them back', async () => {
+        const c = await processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv')]);
+        if (!isReady(c)) throw Error('sample did not process');
+        const none = { v: 1 as const, cards: DEFAULT_LAYOUT.cards.map(x => ({ ...x, visible: false })) };
+        expect(text(createElement(DemoModule, { view: 'overview', context: c, layout: none }))).toContain('Every card is hidden. Use Customise dashboard to show them again.');
+    });
+});
+
+describe('Customise dashboard editor', () => {
+    const editor = (saving: boolean) => renderToStaticMarkup(createElement(DashboardEditor, { draft: setVisible(DEFAULT_LAYOUT, 'checks', false), admin: true, where: 'workspace', saving, error: null, onChange: () => undefined, onDone: () => undefined, onCancel: () => undefined }));
+    const off = (button: string) => /\sdisabled=""/.test(button);
+    const switches = (html: string) => [...html.matchAll(/<button[^>]*role="switch"[^>]*>/g)].map(m => m[0]);
+    const moves = (html: string) => [...html.matchAll(/<button[^>]*aria-label="Move [^"]*"[^>]*>/g)].map(m => m[0]);
+    const reset = (html: string) => html.match(/<button[^>]*>(?:(?!<\/button>).)*Reset to default/)![0];
+    it('while a save is pending, no control can change the layout (an edit then would be lost when the save finishes)', () => {
+        const busy = editor(true), idle = editor(false);
+        expect(switches(busy)).toHaveLength(8);
+        expect(moves(busy)).toHaveLength(16);
+        expect([...switches(busy), ...moves(busy)].every(off)).toBe(true);
+        expect(off(reset(busy))).toBe(true);
+        expect(busy).toContain('aria-busy="true"');
+        // When idle the switches and Reset work, and only the first Up and the last Down are disabled.
+        expect(switches(idle).some(off)).toBe(false);
+        expect(moves(idle).filter(off)).toHaveLength(2);
+        expect(off(reset(idle))).toBe(false);
     });
 });
 

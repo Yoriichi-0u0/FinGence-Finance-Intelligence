@@ -28,6 +28,8 @@ if (fresh) {
 }
 // The Technical log (v3) is written to be re-runnable, so an existing local store picks it up too.
 await db.exec(readFileSync('supabase/sql/workspace-v3-log.sql', 'utf8'));
+// So are member preferences (v4).
+await db.exec(readFileSync('supabase/sql/workspace-v4-preferences.sql', 'utf8'));
 // One statement at a time, like a single database connection.
 let queue = Promise.resolve();
 const serial = work => (queue = queue.then(work, work));

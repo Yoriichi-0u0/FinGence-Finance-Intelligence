@@ -64,6 +64,20 @@ FinGence-Production Supabase project (v1 applied on 4 November with 0 organizati
 
 `fingence_workspace_log(token, since)` returns runs (with each document's method, model and checks, and a server job's stages), failed jobs and AI calls. Only Admins and Superadmins of the organization can read it, and never more than 90 days back. The page is `/log`; a Finance user, or someone viewing as one, does not see it.
 
+## Member preferences: Customise dashboard (v4)
+
+`supabase/sql/workspace-v4-preferences.sql` (needs v1 and v2 only) stores each member's Overview layout in
+`fingence_workspace.preferences`, one row per member, removed with the member. The layout has one strict shape,
+`{"v": 1, "cards": [{"id", "visible"}]}`, with only the known card IDs (`lib/dashboard/layout.ts`, `CARD_IDS`), each at most once.
+The functions check it (`fingence_workspace.valid_dashboard`), and so does a CHECK constraint on the table.
+
+- `fingence_workspace_preferences(token)` and `fingence_workspace_save_preferences(token, layout | null)`: any signed-in
+  member, for themselves only. The member comes from the session token; no function takes a member ID. `null` resets to the default.
+- RLS forced with no policies; only the service role executes the functions. Saves are personal and not audited.
+- Route: `GET`/`PUT /api/workspace/preferences`. With the workspace off, the layout is kept in the browser (`localStorage`).
+- The "Last processing runs" card reads `/api/workspace/log` and is offered only to Admins and above (and hidden when viewing as Finance).
+- A new card needs a migration that replaces `valid_dashboard` with the new ID list.
+
 ## Owner bootstrap
 
 ```bash
@@ -84,4 +98,5 @@ Then open `/join` with the code.
 `tests/workspace/workspace.test.ts` runs both migrations in PGlite through a PostgREST-shaped transport: joining and
 sign-in, no public demo, one organization, service-role-only grants, every role processing, each boundary of the role
 ladder (server and database), session ending, access changes, pause and resume, and the AI switch.
-`tests/workspace/proxy.test.ts` covers the sign-in proxy.
+`tests/workspace/proxy.test.ts` covers the sign-in proxy. `tests/workspace/preferences.test.ts` covers the v4 layouts:
+per-member save, load and reset, unknown cards refused by the route, the function and the table, and no member reading another's layout.

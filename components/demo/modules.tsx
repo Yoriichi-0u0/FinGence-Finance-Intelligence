@@ -1,8 +1,8 @@
 'use client';
 import Link from 'next/link';
 import { useTechnicalDetail } from '@/components/workspace/context';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowRight, ChevronRight, Download, Flag, Printer, ReceiptText, Search, Send, ShieldCheck, Sparkles } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { ArrowRight, ChevronRight, Download, Flag, Printer, ReceiptText, Search, Send, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
 import { LineChart } from '@/components/charts';
 import { PageHeader, Panel } from '@/components/ui';
 import { RULES, type RuleId } from '@/lib/poc-anomalies/detector';
@@ -21,6 +21,8 @@ import { ReconciliationOutcomePanel } from './reconciliation-outcome';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
 import { AiCommentary } from './commentary';
 import { useDemoProcessing } from './context';
+import { CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout } from './dashboard';
+import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { Callout, DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
@@ -56,7 +58,7 @@ function monthlyTotals(c: Ready) {
 
 type Attention = { tone: 'warn' | 'brand'; title: string; detail: string; href: string };
 
-function Overview({ c }: { c: Ready }) {
+function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
     const { scope: s, outputs: o } = c, r = o.reconciliation, f = o.forecast.forecast, ar = o.anomalyResolution;
     const checks = c.stages.flatMap(x => x.checks), passedChecks = checks.filter(k => k.passed).length;
     const matchedCount = r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT, rate = r.results.length ? Math.round((matchedCount / r.results.length) * 100) : 0;
@@ -71,36 +73,43 @@ function Overview({ c }: { c: Ready }) {
         ...(entries ? [{ tone: 'brand' as const, title: `${entries} correcting entr${entries === 1 ? 'y' : 'ies'} prepared for your books`, detail: 'Prepared from stated rules, not posted. Download them on Reconciliation.', href: '/reconciliation' }] : []),
     ];
     const warnings = attention.filter(a => a.tone === 'warn').length;
-    return <>
-        <PageHeader eyebrow={`Overview · ${periodLabel(s.period)}`} title={s.businessName} description={`Cash movement and reconciliation for ${periodLabel(s.period)}, in ${s.currency}.`} />
-        <SourceStrip context={c} />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    const dashboard = useDashboardLayout(initial);
+    const [draft, setDraft] = useState<Layout | null>(null), [saving, setSaving] = useState(false), [error, setError] = useState<string | null>(null), [status, setStatus] = useState('');
+    const customise = useRef<HTMLButtonElement>(null), editing = draft !== null, shown = draft ?? dashboard.layout;
+    const close = () => { setDraft(null); setError(null); requestAnimationFrame(() => customise.current?.focus()); };
+    const done = async () => {
+        if (!draft) return;
+        setSaving(true); setError(null);
+        const failed = await dashboard.save(draft);
+        setSaving(false);
+        if (failed) { setError(failed); return; }
+        setStatus(dashboard.where === 'workspace' ? 'Layout saved. It follows you on any device.' : 'Layout saved in this browser.');
+        close();
+    };
+    const cards: Record<CardId, ReactNode> = {
+        figures: <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <Stat tone="brand" label="Cash in" value={money(s.currency, o.totals.credits)} detail={`${o.totals.creditRows} bank receipts`} />
             <Stat tone="plain" label="Cash out" value={outflow(s.currency, o.totals.debits)} detail={`${o.totals.debitRows} bank payments`} />
             <Stat tone="brand" label="Net movement" value={money(s.currency, o.totals.net)} detail="Cash in minus cash out" />
             <Stat tone="good" label="Reconciled automatically" value={`${rate}%`} detail={`${matchedCount} of ${r.results.length} records matched${o.resolution ? ` · ${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved` : ''}`} />
-        </div>
-        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            {months.length > 1
-                ? <Panel title="Cash in and out by month" eyebrow={o.history.accepted ? 'Verified bank history' : 'Statement months'} action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
-                    <div className="p-3 sm:p-4"><LineChart ariaLabel="Monthly bank cash in and cash out" labels={months.map(m => m.p.slice(2))} series={[{ label: 'Cash in', color: 'var(--chart-in)', values: months.map(m => Number(m.credits)) }, { label: 'Cash out', color: 'var(--chart-out)', values: months.map(m => -Number(m.debits)) }]} /></div>
-                </Panel>
-                : <Panel title={`Cash position through ${periodLabel(s.period)}`} eyebrow="Running net movement, by day" action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
-                    <div className="p-3 sm:p-4"><LineChart ariaLabel={`Running net bank movement by day in ${periodLabel(s.period)}`} labels={days.map(x => s.months.length > 1 ? x.d.slice(5) : x.d.slice(8))} series={[{ label: 'Running net movement', color: 'var(--chart-in)', values: days.map(x => x.v), fill: true }]} /></div>
-                </Panel>}
-            <div className="grid content-start gap-5">
-                <Panel title={warnings ? 'Flagged by FinGence' : 'Nothing flagged'} eyebrow={warnings ? `${warnings} to know about` : 'All clear'}>
-                    {attention.length ? <ul className="divide-y divide-[var(--border)]">{attention.map(a => <li key={a.title}><Link href={a.href} className="group flex min-h-16 items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--surface-subtle)] sm:px-5">
-                        <span className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ${a.tone === 'warn' ? 'bg-[var(--warn-soft)] text-[var(--warn)]' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>{a.tone === 'warn' ? <Flag aria-hidden="true" size={16} /> : <ReceiptText aria-hidden="true" size={16} />}</span>
-                        <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{a.title}</span><span className="block text-xs leading-relaxed text-[var(--muted)]">{a.detail}</span></span>
-                        <ChevronRight aria-hidden="true" size={16} className="mt-1 shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-0.5" />
-                    </Link></li>)}</ul> : null}
-                    {warnings ? null : <p className="flex items-start gap-2.5 px-4 py-3.5 text-sm text-[var(--muted-strong)] sm:px-5"><ShieldCheck aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--good)]" />FinGence explained every difference with a stated rule. Nothing was sent to your technical team.</p>}
-                </Panel>
-                <Stat tone="plain" label="Next month, expected net" value={f.status === 'AVAILABLE' ? money(s.currency, f.net) : 'Not available yet'} detail={f.status === 'AVAILABLE' ? `${periodLabel(f.period)} · average of the last six months` : f.detail} />
-            </div>
-        </div>
-        <details className="group mt-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
+        </div>,
+        'cash-chart': months.length > 1
+            ? <Panel className="h-full" title="Cash in and out by month" eyebrow={o.history.accepted ? 'Verified bank history' : 'Statement months'} action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
+                <div className="p-3 sm:p-4"><LineChart ariaLabel="Monthly bank cash in and cash out" labels={months.map(m => m.p.slice(2))} series={[{ label: 'Cash in', color: 'var(--chart-in)', values: months.map(m => Number(m.credits)) }, { label: 'Cash out', color: 'var(--chart-out)', values: months.map(m => -Number(m.debits)) }]} /></div>
+            </Panel>
+            : <Panel className="h-full" title={`Cash position through ${periodLabel(s.period)}`} eyebrow="Running net movement, by day" action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
+                <div className="p-3 sm:p-4"><LineChart ariaLabel={`Running net bank movement by day in ${periodLabel(s.period)}`} labels={days.map(x => s.months.length > 1 ? x.d.slice(5) : x.d.slice(8))} series={[{ label: 'Running net movement', color: 'var(--chart-in)', values: days.map(x => x.v), fill: true }]} /></div>
+            </Panel>,
+        flagged: <Panel className="h-full" title={warnings ? 'Flagged by FinGence' : 'Nothing flagged'} eyebrow={warnings ? `${warnings} to know about` : 'All clear'}>
+            {attention.length ? <ul className="divide-y divide-[var(--border)]">{attention.map(a => <li key={a.title}><Link href={a.href} className="group flex min-h-16 items-start gap-3 px-4 py-3 transition-colors hover:bg-[var(--surface-subtle)] sm:px-5">
+                <span className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg ${a.tone === 'warn' ? 'bg-[var(--warn-soft)] text-[var(--warn)]' : 'bg-[var(--brand-soft)] text-[var(--brand)]'}`}>{a.tone === 'warn' ? <Flag aria-hidden="true" size={16} /> : <ReceiptText aria-hidden="true" size={16} />}</span>
+                <span className="min-w-0 flex-1"><span className="block text-sm font-semibold">{a.title}</span><span className="block text-xs leading-relaxed text-[var(--muted)]">{a.detail}</span></span>
+                <ChevronRight aria-hidden="true" size={16} className="mt-1 shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-0.5" />
+            </Link></li>)}</ul> : null}
+            {warnings ? null : <p className="flex items-start gap-2.5 px-4 py-3.5 text-sm text-[var(--muted-strong)] sm:px-5"><ShieldCheck aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--good)]" />FinGence explained every difference with a stated rule. Nothing was sent to your technical team.</p>}
+        </Panel>,
+        forecast: <Stat tone="plain" label="Next month, expected net" value={f.status === 'AVAILABLE' ? money(s.currency, f.net) : 'Not available yet'} detail={f.status === 'AVAILABLE' ? `${periodLabel(f.period)} · average of the last six months` : f.detail} />,
+        checks: <details className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
             <summary className="flex min-h-12 cursor-pointer items-center gap-2.5 px-4 py-3 text-sm sm:px-5">
                 <ChevronRight aria-hidden="true" size={16} className="disclosure-chevron shrink-0 text-[var(--muted)] transition-transform" />
                 <ShieldCheck aria-hidden="true" size={17} className="shrink-0 text-[var(--good)]" />
@@ -111,7 +120,23 @@ function Overview({ c }: { c: Ready }) {
                 <p className="text-[var(--muted-strong)]">{c.stages.filter(x => x.decision === 'AUTO_ACCEPTED').length} of {c.stages.length} stages passed their automated checks. No manual approval was needed; anything FinGence could not explain is flagged, never treated as fact.</p>
                 <ol className="grid gap-1.5 sm:grid-cols-2">{c.stages.map((x, i) => <li key={x.id} className="flex min-w-0 items-center gap-3 rounded-xl bg-[var(--surface-subtle)] px-3 py-2 ring-1 ring-inset ring-[var(--border)]"><span className="w-4 text-xs font-semibold text-[var(--muted)] tabular-nums">{i + 1}</span><span className="min-w-0 flex-1 text-[13px] font-medium">{x.title}</span><DecisionBadge decision={x.decision} label={x.decision === 'AUTO_ACCEPTED' ? 'Verified' : undefined} /></li>)}</ol>
             </div>
-        </details>
+        </details>,
+        counterparties: <CounterpartiesCard currency={s.currency} rows={o.bankRows} />,
+        'reconciliation-summary': <ReconciliationSummaryCard currency={s.currency} counts={r.counts} records={r.results.length} resolution={o.resolution} />,
+        'last-runs': <LastRunsCard />,
+    };
+    const visible = offered(shown, dashboard.admin).filter(x => x.visible), spans = cardSpans(visible.map(x => x.id));
+    return <>
+        <PageHeader eyebrow={`Overview · ${periodLabel(s.period)}`} title={s.businessName} description={`Cash movement and reconciliation for ${periodLabel(s.period)}, in ${s.currency}.`}
+            actions={editing ? null : <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:justify-end">
+                <p role="status" className="text-xs text-[var(--muted)]">{dashboard.failed ? <>Your saved layout could not be loaded, so the default is shown. <button type="button" className="inline-flex min-h-10 items-center font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2" onClick={dashboard.retry}>Try again</button></> : status}</p>
+                <button ref={customise} type="button" className={button} disabled={!dashboard.ready || dashboard.failed} onClick={() => { setStatus(''); setDraft(dashboard.layout); }}><SlidersHorizontal aria-hidden="true" size={16} />Customise dashboard</button>
+            </div>} />
+        <SourceStrip context={c} />
+        {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => { if (!saving) setDraft(d => d && update(d)); }} onDone={() => void done()} onCancel={close} /> : null}
+        {!dashboard.ready ? <div aria-busy="true" aria-label="Loading your dashboard" className="min-h-[40vh]" />
+            : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} data-card={x.id} className={`grid min-w-0 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
+            : <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-8 text-center text-sm text-[var(--muted-strong)]">Every card is hidden. Use Customise dashboard to show them again.</p>}
         <p className="mt-4 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>
     </>;
 }
@@ -323,9 +348,10 @@ function aiSuggestions(c: Ready) {
     return [`Who did we pay the most ${span}?`, ...(top ? [`How much did we receive from ${top}?`] : []), 'Which reconciliation items still need review, and what reason was recorded?', 'How much more money came in than went out?'];
 }
 
-export function DemoModule({ view, context }: { view: DemoView; context: Ready }) {
+/** `layout` renders the Overview with a saved layout (tests); otherwise the signed-in person's own layout is loaded. */
+export function DemoModule({ view, context, layout }: { view: DemoView; context: Ready; layout?: Layout }) {
     switch (view) {
-        case 'overview': return <Overview c={context} />;
+        case 'overview': return <Overview c={context} layout={layout} />;
         case 'transactions': return <Transactions c={context} />;
         case 'reconciliation': return <Reconciliation c={context} />;
         case 'analytics': return <Analytics c={context} />;
