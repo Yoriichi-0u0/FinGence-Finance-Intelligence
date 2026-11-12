@@ -23,9 +23,33 @@ export type DashboardLayout = {
     where: 'workspace' | 'browser';
     /** Admin and above (in the role the app is shown as): the Admin-only cards are offered. */
     admin: boolean;
+    /**
+     * The saved layout could not be loaded (network or database down). The default is shown, but it is not this person's
+     * choice: it is not cached, and customising is off until `retry` loads the real one, so it can never overwrite it.
+     */
+    failed: boolean;
+    retry: () => void;
     /** Save a layout, or null to return to the default. Resolves to an error message, or null when saved. */
     save: (next: Layout | null) => Promise<string | null>;
 };
+
+/**
+ * Load the signed-in person's saved layout. A successful answer is the layout (or the default when they never saved one)
+ * and is kept for this tab; a failed request is reported as such and never kept, so it is not mistaken for their choice.
+ */
+export async function loadLayout(email: string, request: typeof fetch = fetch): Promise<{ layout: Layout } | { failed: true }> {
+    try {
+        const res = await request('/api/workspace/preferences', { cache: 'no-store' });
+        if (!res.ok) return { failed: true };
+        const body = await res.json() as { dashboard?: unknown };
+        if (!body || typeof body !== 'object' || !('dashboard' in body)) return { failed: true };
+        const layout = normalise(body.dashboard);
+        cached = { email, layout };
+        return { layout };
+    } catch { return { failed: true }; }
+}
+/** The layout already loaded in this tab for this person, if any (exported for tests). */
+export const cachedLayout = (email: string) => cached?.email === email ? cached.layout : null;
 
 function browserLayout(): Layout {
     try { return normalise(JSON.parse(localStorage.getItem(BROWSER_KEY) ?? 'null')); } catch { return DEFAULT_LAYOUT; }
@@ -39,23 +63,24 @@ function browserLayout(): Layout {
 export function useDashboardLayout(initial?: Layout): DashboardLayout {
     const { enabled, loading, session, viewRole } = useWorkspace();
     const email = session?.email ?? null;
-    const [state, setState] = useState<{ layout: Layout; ready: boolean }>(() =>
-        initial ? { layout: normalise(initial), ready: true }
-        : !enabled ? { layout: browserLayout(), ready: true }
-        : email && cached?.email === email ? { layout: cached.layout, ready: true }
-        : { layout: DEFAULT_LAYOUT, ready: false });
-    const { layout, ready } = state;
-    const setLayout = (next: Layout) => setState({ layout: next, ready: true });
+    const [state, setState] = useState<{ layout: Layout; ready: boolean; failed: boolean }>(() => {
+        const known = email ? cachedLayout(email) : null;
+        return initial ? { layout: normalise(initial), ready: true, failed: false }
+            : !enabled ? { layout: browserLayout(), ready: true, failed: false }
+            : known ? { layout: known, ready: true, failed: false }
+            : { layout: DEFAULT_LAYOUT, ready: false, failed: false };
+    });
+    const { layout, ready, failed } = state;
+    const setLayout = (next: Layout) => setState({ layout: next, ready: true, failed: false });
     useEffect(() => {
         if (ready || !enabled || loading || !email) return;
         let live = true;
-        void fetch('/api/workspace/preferences', { cache: 'no-store' })
-            .then(async res => res.ok ? normalise((await res.json() as { dashboard: unknown }).dashboard) : DEFAULT_LAYOUT)
-            .catch(() => DEFAULT_LAYOUT)
-            .then(next => { cached = { email, layout: next }; if (live) setState({ layout: next, ready: true }); });
+        void loadLayout(email).then(out => { if (live) setState('failed' in out ? { layout: DEFAULT_LAYOUT, ready: true, failed: true } : { layout: out.layout, ready: true, failed: false }); });
         return () => { live = false; };
     }, [ready, enabled, loading, email]);
+    const retry = useCallback(() => setState(s => s.failed ? { ...s, ready: false, failed: false } : s), []);
     const save = useCallback(async (next: Layout | null) => {
+        if (failed) return plainMessage('WORKSPACE_UNAVAILABLE');
         const value = next && !isDefault(next) ? next : null;
         if (!enabled) {
             try { if (value) localStorage.setItem(BROWSER_KEY, JSON.stringify(value)); else localStorage.removeItem(BROWSER_KEY); }
@@ -70,8 +95,8 @@ export function useDashboardLayout(initial?: Layout): DashboardLayout {
         setLayout(value ?? DEFAULT_LAYOUT);
         if (email) cached = { email, layout: value ?? DEFAULT_LAYOUT };
         return null;
-    }, [enabled, email]);
-    return { layout, ready, where: enabled ? 'workspace' : 'browser', admin: enabled && atLeast(viewRole ?? undefined, 'ADMIN'), save };
+    }, [enabled, email, failed]);
+    return { layout, ready, failed, retry, where: enabled ? 'workspace' : 'browser', admin: enabled && atLeast(viewRole ?? undefined, 'ADMIN'), save };
 }
 
 /**

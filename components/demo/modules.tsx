@@ -129,8 +129,8 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
     return <>
         <PageHeader eyebrow={`Overview · ${periodLabel(s.period)}`} title={s.businessName} description={`Cash movement and reconciliation for ${periodLabel(s.period)}, in ${s.currency}.`}
             actions={editing ? null : <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 sm:justify-end">
-                <p role="status" className="text-xs text-[var(--muted)]">{status}</p>
-                <button ref={customise} type="button" className={button} disabled={!dashboard.ready} onClick={() => { setStatus(''); setDraft(dashboard.layout); }}><SlidersHorizontal aria-hidden="true" size={16} />Customise dashboard</button>
+                <p role="status" className="text-xs text-[var(--muted)]">{dashboard.failed ? <>Your saved layout could not be loaded, so the default is shown. <button type="button" className="inline-flex min-h-10 items-center font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2" onClick={dashboard.retry}>Try again</button></> : status}</p>
+                <button ref={customise} type="button" className={button} disabled={!dashboard.ready || dashboard.failed} onClick={() => { setStatus(''); setDraft(dashboard.layout); }}><SlidersHorizontal aria-hidden="true" size={16} />Customise dashboard</button>
             </div>} />
         <SourceStrip context={c} />
         {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => { if (!saving) setDraft(d => d && update(d)); }} onDone={() => void done()} onCancel={close} /> : null}
