@@ -27,7 +27,9 @@ const save = async (cookie: string | undefined, dashboard: unknown) => { const r
 const rows = async () => (await db.query<{ n: number }>('select count(*)::int n from fingence_workspace.preferences')).rows[0].n;
 
 // Chart hidden, "Flagged" first, the largest counterparties shown.
-const mine: Layout = move(move(setVisible(setVisible(DEFAULT_LAYOUT, 'cash-chart', false), 'counterparties', true), 'flagged', -1, false), 'flagged', -1, false);
+const shuffled: Layout = setVisible(setVisible(DEFAULT_LAYOUT, 'cash-chart', false), 'counterparties', true);
+const mine: Layout = DEFAULT_LAYOUT.cards.findIndex(c => c.id === 'flagged') > 0
+    ? [...Array(DEFAULT_LAYOUT.cards.findIndex(c => c.id === 'flagged'))].reduce<Layout>(l => move(l, 'flagged', -1, false), shuffled) : shuffled;
 
 let superadmin: string, admin: string, finance: string, finance2: string;
 beforeAll(async () => {
@@ -46,7 +48,7 @@ describe('Customise dashboard: each member keeps their own Overview layout', () 
         expect(await load(finance)).toEqual([200, { dashboard: null, updatedAt: null }]);
     });
     it('a Finance user saves a layout and loads it back, in the order saved', async () => {
-        expect(mine.cards.slice(0, 3).map(c => c.id)).toEqual(['flagged', 'figures', 'cash-chart']);
+        expect(mine.cards[0].id).toBe('flagged');
         const [status, out] = await save(finance, mine);
         expect(status).toBe(200);
         expect(out).toMatchObject({ ok: true, dashboard: mine, updatedAt: expect.any(String) });

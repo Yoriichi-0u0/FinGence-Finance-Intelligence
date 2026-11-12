@@ -30,6 +30,7 @@ if (fresh) {
 await db.exec(readFileSync('supabase/sql/workspace-v3-log.sql', 'utf8'));
 // So are member preferences (v4).
 await db.exec(readFileSync('supabase/sql/workspace-v4-preferences.sql', 'utf8'));
+await db.exec(readFileSync('supabase/sql/workspace-v5-dashboard-cards.sql', 'utf8'));
 await db.exec(readFileSync('supabase/sql/workspace-v6-saved-runs.sql', 'utf8'));
 // One statement at a time, like a single database connection.
 let queue = Promise.resolve();
