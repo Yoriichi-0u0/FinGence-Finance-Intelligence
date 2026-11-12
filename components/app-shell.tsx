@@ -22,6 +22,7 @@ import {
   Database,
   FileBarChart,
   Gauge,
+  History,
   House,
   Menu,
   PanelLeftClose,
@@ -61,6 +62,8 @@ const management = { href: "/management", label: "Management", icon: Gauge };
 const operationsItem: NavItem = { href: "/operations", label: "Operations", icon: Activity };
 const teamItem: NavItem = { href: "/team", label: "Team", icon: Users };
 const logItem: NavItem = { href: "/log", label: "Technical log", icon: ScrollText };
+// Signed in: every run a person processed, saved with its documents.
+const historyItem: NavItem = { href: "/history", label: "History", icon: History };
 
 function Brand({ compact = false, rail = false }: { compact?: boolean; rail?: boolean }) {
   return (
@@ -145,7 +148,7 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
       </div>
 
       <nav aria-label="Primary navigation" className={`thin-scrollbar relative min-h-0 flex-1 space-y-5 overflow-y-auto pb-4 ${rail ? "px-2" : "px-3"}`}>
-        <NavGroup label="Workspace" items={workspace} pathname={pathname} onNavigate={onNavigate} rail={rail} />
+        <NavGroup label="Workspace" items={session.enabled ? [...workspace, historyItem] : workspace} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} rail={rail} />
@@ -227,7 +230,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   const pathname = usePathname();
   const sidebar = useSidebarLayout();
   const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
-  const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem, logItem].find((item) => isActive(pathname, item.href));
+  const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem, logItem, historyItem].find((item) => isActive(pathname, item.href));
 
   // Signing in and joining stand on their own page, without the navigation a visitor cannot use yet.
   if (workspaceEnabled && (pathname === "/sign-in" || pathname === "/join")) return <WorkspaceProvider enabled><AuthLayout>{children}</AuthLayout></WorkspaceProvider>;

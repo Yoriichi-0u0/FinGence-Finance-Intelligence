@@ -1,5 +1,26 @@
 # FinGence — current technical entrypoint
 
+## History: saved runs per person — 12 November 2026
+
+- **What is saved.** Every completed run is saved for the person who ran it, until they (or an Admin) delete it. The owner decided this on 12 Nov. A saved run has three parts:
+  - its documents, in a private Supabase Storage bucket (`FINGENCE_FILES_BUCKET`, default `fingence-documents`), stored once per organization by SHA-256;
+  - a small restore bundle: the AI's accepted readings, OCR readings and the server job;
+  - a summary: business, period, currency, confidence and the report summary.
+- **Reopening** re-runs the same deterministic restore as a reload, from the documents and the bundle, with no model call. A server job is re-checked against its processing ID.
+- **Data:** `supabase/sql/workspace-v6-saved-runs.sql`.
+  - `saved_runs` and `saved_files`.
+  - Functions: `plan_save` and `save_run` (the server passes the organization and member after checking the session); `history`, `saved_run` and `delete_run` (token-checked: own runs, or Admin and above).
+  - Free-plan cap: 900 MB of files and 300 MB of rows per organization. Over it, the run is saved without its documents and cannot be reopened.
+  - Deleting is audited (`run.deleted`) and removes documents no other saved run uses.
+- **Code:**
+  - server jobs save themselves (`lib/server/processing/jobs.ts`, which calls `lib/server/history/save.ts`);
+  - browser runs post to `/api/workspace/history` (`components/demo/save-run.tsx`);
+  - file store: `lib/server/files/store.ts` (Storage, or `.local/dev/files` locally);
+  - routes: `/api/workspace/history[/:id[/document/:i]]`;
+  - page: `/history` (`components/workspace/history.tsx`);
+  - `openSaved` in `components/demo/context.tsx`, and a "Saved run" chip in the banner.
+- **Production order:** create the private bucket, apply v6, then deploy.
+
 ## Customise dashboard — 11 November 2026
 
 Each signed-in person can show, hide and reorder the Overview cards. The layout is saved per member and follows them to any device. See the "Member preferences" section of [docs/architecture/workspace-roles.md](../architecture/workspace-roles.md).

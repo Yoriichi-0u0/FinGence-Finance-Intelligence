@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowRight, Building2, Cpu, FileText, Fingerprint, ShieldAlert, Sparkles, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Building2, Cpu, FileText, Fingerprint, History, ShieldAlert, Sparkles, TriangleAlert } from 'lucide-react';
 import { useDemoProcessing } from './context';
 import { periodLabel, usesOwnDocuments } from './shared';
 import { useTechnicalDetail, useWorkspace } from '@/components/workspace/context';
@@ -21,7 +21,7 @@ function Chip({ tone = 'plain', icon, title, children }: { tone?: keyof typeof T
  * they were processed. Processing IDs and model names are shown to Admins and Superadmins only.
  */
 export function DemoBanner() {
-    const { status, context } = useDemoProcessing(), pathname = usePathname(), s = context?.scope;
+    const { status, context, savedRun, clear } = useDemoProcessing(), pathname = usePathname(), s = context?.scope;
     const { session } = useWorkspace(), technical = useTechnicalDetail();
     // Only a model whose proposal was ACCEPTED shaped this processing; quarantined proposals did not.
     const aiModels = [...new Set(context?.documents.flatMap(d => d.interpretation?.decision === 'AUTO_ACCEPTED' && d.interpretation.receipt ? [d.interpretation.receipt.model] : []) ?? [])];
@@ -35,6 +35,8 @@ export function DemoBanner() {
     return <aside aria-label="Processing status" className="mb-5 flex flex-wrap items-center gap-1.5 print:hidden">
         {session ? <Chip tone="brand" icon={<Building2 aria-hidden="true" size={13} />}>{session.organization.name}</Chip>
             : <Chip tone="warn" icon={<ShieldAlert aria-hidden="true" size={13} />}>Public demo · do not use confidential or real financial documents</Chip>}
+        {savedRun && context ? <span className={`${chip} ${TONE.brand} font-semibold`}><History aria-hidden="true" size={13} />Saved run · {new Date(savedRun.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{savedRun.by ? ` · ${savedRun.by}` : ''}
+            <button type="button" onClick={clear} className="ml-1 underline underline-offset-2" aria-label="Close the saved run">Close</button></span> : null}
         {status === 'ready' && context ? s ? <>
             <Chip icon={<FileText aria-hidden="true" size={13} />}>{s.businessName} · {periodLabel(s.period)} · {s.currency} · {usesOwnDocuments(context) ? 'your documents' : 'sample documents'}</Chip>
             {method}
