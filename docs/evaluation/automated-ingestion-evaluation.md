@@ -159,3 +159,113 @@ Every set-B layout states its own conventions.
 **Targets are unchanged.** M3b, set-B digital straight-through **≥ 80%**, is now the generalisation test. M1 (0 false acceptances) still fails the evaluation on any single event.
 
 **Budget:** run 6 has more documents than one day of the free-tier token allowance (about 450k tokens, about 95 calls). It runs in parts, in this order: set B; set A; then the development, FinGence and adversarial regression; then AgamiAI. The parts are merged with `evaluate-ingestion.mjs`. Only `RATE_LIMITED` refusals are rerun.
+
+## Results: run 6 (6, 7 and 11 Nov 2026)
+
+Run 6 was scored against the amended protocol above. It used `openai/gpt-oss-120b` on Groq with two free-tier keys, and the ingestion code of `main` at `1698770`; the commits in this branch change only the benchmark and the scoring script. It ran in six parts because of the free-tier allowance: set B on 6 and 7 Nov, then set A, the development, FinGence and adversarial regression, and AgamiAI on 7 Nov. 23 documents hit the daily allowance (`RATE_LIMITED`) on 7 Nov and were rerun on 11 Nov with `FINGENCE_BENCH_IDS`, with nothing else changed. None hit the allowance in the rerun, so **all 127 documents are scored**. Model cost: $0.136 in total.
+
+Reproduce: `node scripts/evaluate-ingestion.mjs` with the eight run files `ingestion-2026-11-06-r6-setB.json`, `ingestion-2026-11-06-r6-setB-full.json`, `ingestion-2026-11-07-r6-{setB,setA,corpus,fingence-adv,agami}.json` and `ingestion-2026-11-11-r6-rerun.json`. A document's last scored run counts.
+
+**The 6 Nov partial runs agree.** Set B was first started on 6 Nov and stopped by the allowance. The 11 set-B documents that finished on 6 Nov (10 accepted exactly, 1 scan refused) had the same outcome on 7 Nov.
+
+| # | Metric | Result | Target | Verdict |
+| --- | --- | --- | --- | --- |
+| M1 | False acceptances | **0** of 82 accepted documents (95% upper bound 3.6%) | 0 | **Met** |
+| M2 | Data accuracy of accepted records | Dates 3,884 / 3,884 = **100%** (95% CI 99.9–100%). Signed amounts 3,884 / 3,884 = **100%** (99.9–100%) | ≥ 99% per field | **Met** |
+| M3 | Straight-through, digital (FinGence, development, set A and set B) | 71 / 77 = **92.2%** (95% CI 84.0–96.4%) | ≥ 90% | **Met** |
+| M3h | Straight-through, held-out set A digital | 18 / 21 = **85.7%** (95% CI 65.4–95.0%) | ≥ 80% | Met, but **set A is no longer unseen**, so this is not evidence of generalisation |
+| **M3b** | **Straight-through, held-out set B digital: the generalisation test** | **24 / 24 = 100%** (95% CI 86.2–100%) | **≥ 80%** | **Met** |
+| M3s | Straight-through, scans and photos | 7 / 20 = 35.0% (18.1–56.7%). Set A: 0 / 6. Set B: 2 / 6 | Reported | — |
+| — | Ambiguous by design (set A's signed USD ledger) refused | 3 / 3 | 100% | **Met** |
+| M4 | Invalid documents refused | 11 / 11 = **100%** (95% CI 74.1–100%) | 100% | **Met** |
+| M5 | Document type and currency identified | Type 78 / 78, currency 78 / 78 | 100% | **Met** |
+| M6 | Rows read exactly by the proposed layout, before the checks | 5,210 / 7,382 = 70.6% | Reported | — |
+| M7 | Time and cost | Median 11.4 s per document, 35.6 s per 100 rows. About $0.0011 per interpreted document | Reported | — |
+| — | Second attempts | 13 documents were asked twice. 1 was then accepted exactly (`corpus/lejar-tunai-malay-108.xlsx`), none falsely. The other 12 stayed refused: 8 correctly (ambiguous, adversarial or AgamiAI), and 4 valid (the Malay bank-account ledger in three formats, one scan) | Reported | — |
+| M8 | Manual verification | Sheet of 200 random accepted records produced (`manual-verification-r6.csv`) | ≥ 99% agree | **Pending the team** |
+| M9 | Ingestion time versus manual entry | Not yet timed | Reported | **Pending the team** |
+
+**Time by format** (median):
+
+| Format | Documents | Seconds per document | Seconds per 100 rows |
+| --- | --- | --- | --- |
+| CSV | 43 | 3.9 | 9.8 |
+| XLSX | 26 | 8.0 | 11.0 |
+| PDF (text) | 32 | 11.7 | 20.8 |
+| PDF (scanned) | 19 | 20.0 | 41.7 |
+| Photo (JPEG) | 7 | 11.6 | 36.4 |
+
+**By set** (accepted exactly / documents), with run 5 for comparison:
+
+| Set | CSV | XLSX | PDF (text) | PDF (scanned) | Photo | Run 5 digital |
+| --- | --- | --- | --- | --- | --- | --- |
+| **Held-out set B** (new) | **8 / 8** | **8 / 8** | **8 / 8** | 1 / 4 | 1 / 2 | — |
+| Held-out set A (no longer unseen) | 6 / 8 | 6 / 8 | 6 / 8 | 0 / 4 | 0 / 2 | 12 / 24 |
+| Generated, development | 7 / 8 | 8 / 8 | 7 / 8 | 2 / 4 | 1 / 2 | 24 / 24 |
+| FinGence samples | 4 / 4 | 1 / 2 | 2 / 2 | 1 / 1 | 1 / 1 | 8 / 8 |
+| Adversarial (correct decision) | 15 / 15 | | | | | 15 / 15 |
+| AgamiAI (must refuse: the source balances break) | | | 0 / 6 accepted | 0 / 6 accepted | | 0 / 5 accepted |
+
+Set A's two CSV, XLSX and PDF misses are the same two layouts in each format: the Malay bank-account ledger (refused) and the signed USD ledger (refused, as now expected). The table counts the USD ledger as not accepted; M3h counts it as correctly refused.
+
+## What run 6 shows
+
+**1. Still no wrong figure.** In 127 scored documents FinGence accepted 82, and every one of their 3,884 records matched the truth in date and signed amount to the cent. All 11 invalid adversarial documents and all 12 AgamiAI statements (whose own balances break) were refused.
+
+**2. The fixes generalise to layouts nobody looked at.** Set B was written after run 5. None of its layouts was looked at while making the fixes, and it includes French headings, which the vocabulary does not cover. Every digital set-B document (24 of 24) was accepted exactly, against a target of 80%. With 24 documents the 95% lower bound is 86.2%, so the claim is "at least about 86% on unseen layouts like these", not 100%.
+
+**3. Set A improved as intended.** The Indonesian statement (vocabulary), the Kinabalu PDF (a total follows its label), the THB CSV and the Labuan workbook were all accepted exactly. The signed USD ledger was refused, as now expected. One layout is still refused: the **Malay bank-account ledger** ("lejar bank") in all five formats. In CSV, XLSX and PDF, the model proposed a bank statement. The role check found that the document reads as a ledger and refused it. The second attempt, told which check had failed, made the same proposal. Refusing is the safe outcome, but it is a model limitation still to fix: a Malay ledger of a bank account is easy to mistake for a statement.
+
+**4. Three development documents accepted in run 5 were refused in run 6.** The code and layouts did not change. The model's answer did:
+
+| Document | What happened | Why it was not retried |
+| --- | --- | --- |
+| `corpus/sarawak-digital-drcr-105.csv` | The model proposed separate debit and credit columns for an amount with a "CR"/"DR" indicator ("RM 2,858.63", "CR"). The amounts check refused all 52 rows | An amounts failure is not one the protocol re-asks |
+| `corpus/deccan-inr-quarter-106.pdf` | The provider rejected the model's reply because it did not match the required JSON schema (`json_validate_failed`, HTTP 400). Under the protocol a malformed reply counts as a quarantine | There was no proposal to check |
+| `rimba-demo-kitchen-march-2026.xlsx` › Cash ledger | The model abstained, saying a ledger needs a per-row account column. The bank-statement sheet of the same workbook was accepted | An abstention is not re-asked |
+
+These are **model variance**: about 3 in 32 development and FinGence digital documents changed outcome from run 5 to run 6, every time from accepted to refused, never to a wrong figure. The cost of variance is a document left for review. A retry for provider schema failures and abstentions is a reasonable next change, but it would have to be measured on a new held-out set.
+
+**5. Scans and photos have not changed.** 7 of 20 were accepted. The refusals are OCR digit misreads ("172235iil", "BW3712", "BENZ" read as amounts), which the arithmetic checks refuse, as designed.
+
+## Claim run 6 supports
+
+> FinGence's AI-assisted ingestion is **reliable and generalises to new layouts**. In 127 scored documents it never accepted a wrong figure. All 3,884 accepted records were exact, and every invalid or internally inconsistent document was refused. On 24 digital documents in eight layouts written after the fixes and never looked at, including a language its vocabulary does not cover, it accepted every one exactly with no human input. Run-to-run model variance occasionally turns an acceptance into a refusal (3 of 32 regression documents), never into a wrong figure. Scans and photos remain limited by OCR.
+
+It still does not support any claim about real (non-fictional) documents, and M8 and M9 still need the team.
+
+## External documents (11 Nov 2026, outside the pre-registered targets)
+
+Every set above came from FinGence's own generator, except AgamiAI. This part tests 35 text PDFs made by others, with the same code and model as run 6. Their truth and expected outcomes were fixed on 7 Nov, before any run. They are reported on their own, against no target.
+
+- **Bankstatemently benchmark** (MIT), 5 statements: Singapore (SGD), Dutch (EUR, one signed column), Hong Kong (HKD and USD accounts), French-Canadian (CAD), and a **credit card** statement that must be refused.
+- **Synthetic Indonesian Bank Statements** (MIT), 30 versions of two IDR statements: 2 clean, 7 with harmless changes (linearised, decrypted, re-paged, highlighted), and **21 tampered**. In the tampered versions an amount was edited by overlay, resizing, digit insertion, redaction, a stamp, page rewriting, flattening or re-encryption. Every tampered version must be refused.
+
+Reproduce: `FINGENCE_BENCH_CORPUS=EXTERNAL` with the benchmark, then `node scripts/evaluate-ingestion.mjs .local/benchmark/ingestion-2026-11-11-external.json`. Model cost: $0.036.
+
+| Measure | Result |
+| --- | --- |
+| **False acceptances** | **0**. Nothing was accepted |
+| **Tampered or out-of-scope documents refused** | **22 / 22** (95% CI 85.1–100%): all 21 tampered statements and the credit card |
+| Valid documents accepted exactly | **0 / 11** (95% CI 0–25.9%) |
+| Documents that may be accepted only if exact (Dutch, Hong Kong) | 2 refused. Allowed |
+
+**Why the tampered documents were refused.**
+
+- **17 of 21: the edit itself was caught.** In 14, the overlay, resize, insert, stamp, re-page and spoof edits leave two amounts in the text layer at the edited line ("9,501,500.00 8,501,500.00"), and the amounts check refuses it. In 3 (the two redactions and the re-encryption), the running balance breaks at the edited line, and the balance check refuses it.
+- **4 of 21: unreadable, not detected.** The four flattened versions have no text layer at all, so they were refused because no layout could be read. The tampering was not what refused them. Detecting it would need OCR plus the same checks.
+
+**The credit card was refused, but not because it was recognised as one.** Like the other Bankstatemently documents, its transaction table was not found (below).
+
+**Why the valid documents were refused.** Nothing was misread. FinGence refused rather than guess:
+
+| Documents | Rows read exactly | Reason |
+| --- | --- | --- |
+| 9 Indonesian clean and benign versions | **50 / 50 in every one** | **Scope: the currency is not stated.** These statements print amounts with no currency code or symbol anywhere ("IDR", "Rp" or "rupiah" never appear). FinGence never assumes a currency, so the scope check refused them. The layout, amounts and balances were all read exactly |
+| 4 Bankstatemently statements, and the credit card | 0 | **The model never saw the transaction table.** These are realistic multi-page statements that open with a cover and an account-summary page. The model said the lines it was shown had no table header, and abstained. In the Singapore statement, for example, the header ("Date, Description, Withdrawal (-), Deposit (+), Balance") only starts on page 2 |
+
+**What this shows.**
+
+1. The safety property holds on documents made by others: **no wrong figure was accepted**, including 21 deliberately tampered statements. 17 of those were refused because of the tampering itself, and 4 because they could not be read.
+2. **Automation does not yet transfer to real-world statement layouts.** There are two specific causes. First, **finding the transaction table** in a multi-page statement with summary pages: the lines shown to the model should come from where the table starts. Second, a statement that does **not name its currency**: the account's currency could be supplied once by the user or the bank profile, instead of being refused. Both are next steps, and each would have to be measured on new external documents, not these.
+3. This is the same conclusion as the run 6 claim, with one limit: "generalises to new layouts" holds for layouts like FinGence's generated statements, not yet for statements with cover and summary pages.

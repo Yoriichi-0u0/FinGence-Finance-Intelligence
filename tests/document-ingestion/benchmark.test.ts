@@ -13,7 +13,9 @@
  *    and held-out set B (FINGENCE_BENCH_HELDOUT_B_DIR, `--held-out-b`), fixed after run 5 to re-test its fixes.
  * Each result also records the role and currency FinGence decided, against the truth, and the accepted records
  * (date, signed cents, description) for the manual verification sample (scripts/evaluate-ingestion.mjs).
- * FINGENCE_BENCH_OUT (JSON path; a .md summary is written next to it), FINGENCE_BENCH_ONLY (substring filter).
+ * FINGENCE_BENCH_OUT (JSON path; a .md summary is written next to it), FINGENCE_BENCH_ONLY (substring filter),
+ * FINGENCE_BENCH_CORPUS (comma-separated corpus names, e.g. FINGENCE,ADVERSARIAL, to run a regression part on its own),
+ * FINGENCE_BENCH_IDS (a file of document ids, one per line, to rerun only the documents a run left RATE_LIMITED).
  */
 import { describe, expect, it, vi } from 'vitest';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -32,7 +34,13 @@ const AGAMI = process.env.FINGENCE_BENCH_AGAMI_DIR ?? '.local/datasets/agami';
 const CORPUS = process.env.FINGENCE_BENCH_CORPUS_DIR ?? '.local/benchmark/corpus';
 const HELDOUT = process.env.FINGENCE_BENCH_HELDOUT_DIR ?? '.local/benchmark/heldout';
 const HELDOUT_B = process.env.FINGENCE_BENCH_HELDOUT_B_DIR ?? '.local/benchmark/heldout-b';
+// External documents made by others (Bankstatemently, Synthetic Indonesian Bank Statements; not committed): a manifest whose
+// truth is read with an independent PDF reader and checked against each statement's own arithmetic, expectations fixed in it.
+const EXTERNAL = process.env.FINGENCE_BENCH_EXTERNAL_DIR ?? '.local/datasets/external';
 const only = process.env.FINGENCE_BENCH_ONLY;
+const corpora = process.env.FINGENCE_BENCH_CORPUS?.split(',').map(c => c.trim()).filter(Boolean);
+// A result id may carry a worksheet ("book.xlsx › Sheet"); the case is the file, so only the part before " › " counts.
+const ids = process.env.FINGENCE_BENCH_IDS ? new Set(readFileSync(process.env.FINGENCE_BENCH_IDS, 'utf8').split('\n').map(l => l.split(' › ')[0].trim()).filter(Boolean)) : null;
 type Truth = { date: string; cents: bigint }[];
 /**
  * Reading accuracy, independent of acceptance: the rows the model's proposed layout reads from the document's table
@@ -63,7 +71,7 @@ function truthBalanceBreaks(json: string) {
 }
 type Expect = 'ACCEPT' | 'QUARANTINE' | 'EXACT_OR_QUARANTINE';
 type Meta = { role: string; currency: string };
-type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED' | 'HELD_OUT' | 'HELD_OUT_B'; file: string; expect: Expect; truth: (name: string) => Truth | null; meta?: (name: string) => Meta };
+type Case = { id: string; format: string; corpus: 'FINGENCE' | 'ADVERSARIAL' | 'AGAMI' | 'GENERATED' | 'HELD_OUT' | 'HELD_OUT_B' | 'EXTERNAL'; file: string; expect: Expect; truth: (name: string) => Truth | null; meta?: (name: string) => Meta };
 
 const cents = (v: string | number) => { const [w, f = ''] = String(typeof v === 'number' ? v.toFixed(2) : v).replace(/,/g, '').split('.'); const n = BigInt(w.replace('-', '')) * 100n + BigInt((f + '00').slice(0, 2)); return String(v).trim().startsWith('-') ? -n : n; };
 const csvRows = (path: string) => Papa.parse<Record<string, string>>(readFileSync(path, 'utf8'), { header: true, skipEmptyLines: true }).data;
@@ -90,9 +98,9 @@ const cases: Case[] = [
         ...['opaque-headings-no-balance.csv', 'corrupted-running-balance.csv', 'mislabelled-withdrawal-deposit.csv', 'usd-statement.csv', 'staff-roster.csv', 'signed-amount-reversed-no-balance.csv', 'ledger-signed-opaque-no-balance.csv', 'ledger-multiple-accounts.csv', 'ledger-sales-account.csv', 'ledger-bank-loan-account.csv', 'ledger-no-account-evidence.csv', 'bank-ambiguous-debit-credit.csv'].map(f => [f, 'QUARANTINE'])] as [string, Expect][])
         .map(([f, expect]) => ({ id: f, format: 'CSV', corpus: 'ADVERSARIAL' as const, file: join(F, f), expect, truth: () => bankTruth })),
     // The generated corpora (scripts/generate-statement-corpus.mjs): every document is valid and must be read exactly.
-    ...[[CORPUS, 'corpus', 'GENERATED'], [HELDOUT, 'heldout', 'HELD_OUT'], [HELDOUT_B, 'heldout-b', 'HELD_OUT_B']].flatMap(([dir, prefix, corpus]) => existsSync(join(dir, 'manifest.json')) ? (JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string }[] }).documents.map(d => {
+    ...[[CORPUS, 'corpus', 'GENERATED'], [HELDOUT, 'heldout', 'HELD_OUT'], [HELDOUT_B, 'heldout-b', 'HELD_OUT_B'], [EXTERNAL, 'external', 'EXTERNAL']].flatMap(([dir, prefix, corpus]) => existsSync(join(dir, 'manifest.json')) ? (JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf8')) as { documents: { file: string; format: string; truth: string; expect?: Expect }[] }).documents.map(d => {
         const truth = () => JSON.parse(readFileSync(join(dir, d.truth), 'utf8')) as Meta & { transactions: { date: string; cents: string }[] };
-        return { id: `${prefix}/${d.file}`, format: d.format, corpus: corpus as Case['corpus'], file: join(dir, d.file), expect: 'ACCEPT' as const,
+        return { id: `${prefix}/${d.file}`, format: d.format, corpus: corpus as Case['corpus'], file: join(dir, d.file), expect: d.expect ?? 'ACCEPT' as Expect,
             truth: () => truth().transactions.map(t => ({ date: t.date, cents: BigInt(t.cents) })), meta: () => ({ role: truth().role, currency: truth().currency }) };
     }) : []),
     ...(existsSync(AGAMI) ? readdirSync(AGAMI).flatMap(type => readdirSync(join(AGAMI, type)).filter(f => f.endsWith('.pdf')).map(f => ({
@@ -126,7 +134,7 @@ describe.skipIf(!LIVE)('live ingestion-layer benchmark', () => {
         const results: Record<string, unknown>[] = [];
         const out = process.env.FINGENCE_BENCH_OUT ?? `.local/benchmark/ingestion-${new Date().toISOString().slice(0, 10)}.json`;
         const save = (complete: boolean) => { mkdirSync(dirname(out), { recursive: true }); writeFileSync(out, JSON.stringify({ date: new Date().toISOString(), complete, results }, null, 2)); };
-        for (const c of cases.filter(x => !only || x.id.includes(only))) {
+        for (const c of cases.filter(x => (!only || x.id.includes(only)) && (!corpora?.length || corpora.includes(x.corpus)) && (!ids || ids.has(x.id)))) {
             const started = Date.now(), input: DocumentInput = { name: basename(c.file), bytes: new Uint8Array(readFileSync(c.file)), provenance: 'USER_SUPPLIED' };
             // The evidence the interpreter is shown carries the table it was read from; keep the tables, in order, for reading accuracy.
             const tables: Uint8Array[] = [];

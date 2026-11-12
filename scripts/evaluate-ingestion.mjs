@@ -43,7 +43,10 @@ const exact = rs => rs.filter(r => r.outcome === 'ACCEPTED_EXACT').length;
 const retried = results.filter(r => r.retried);
 const mustRefuse = results.filter(r => r.corpus === 'ADVERSARIAL' && r.expect === 'QUARANTINE');
 // Valid-looking documents the protocol says must be refused because they do not state their own conventions.
-const ambiguous = results.filter(r => r.corpus !== 'ADVERSARIAL' && r.expect === 'QUARANTINE');
+const ambiguous = results.filter(r => !['ADVERSARIAL', 'EXTERNAL'].includes(r.corpus) && r.expect === 'QUARANTINE');
+// Documents made by others (reported, not a pre-registered target of runs 5 and 6): valid ones must be read exactly or,
+// where the manifest allows it, refused; tampered or out-of-scope ones must be refused.
+const externalValid = results.filter(r => r.corpus === 'EXTERNAL' && r.expect !== 'QUARANTINE'), externalRefuse = results.filter(r => r.corpus === 'EXTERNAL' && r.expect === 'QUARANTINE');
 const falseAcceptances = results.filter(r => r.outcome === 'FALSE_ACCEPTANCE');
 
 // M1: with zero events the one-sided 95% upper bound is 1 - 0.05^(1/n) (about 3/n).
@@ -86,6 +89,8 @@ const md = [
     `| M3s | Straight-through, scans and photos | ${rate(exact(scans), scans.length)}; held-out only ${rate(exact(heldScans), heldScans.length)}${heldBScans.length ? `; set B only ${rate(exact(heldBScans), heldBScans.length)}` : ''} | Reported | — |`,
     ...(ambiguous.length ? [`| — | Ambiguous-by-design documents refused | ${rate(ambiguous.filter(r => r.outcome === 'QUARANTINED').length, ambiguous.length)} | 100% | ${ambiguous.every(r => r.outcome === 'QUARANTINED') ? '**Met**' : '**Not met**'} |`] : []),
     `| M4 | Invalid documents refused | ${rate(mustRefuse.filter(r => r.outcome === 'QUARANTINED').length, mustRefuse.length)} | 100% | ${verdict('M4')} |`,
+    ...(externalValid.length ? [`| — | External documents (made by others) read exactly | ${rate(exact(externalValid), externalValid.length)}; refused where allowed: ${externalValid.filter(r => r.outcome === 'QUARANTINED' && r.meets).length} | Reported | — |`] : []),
+    ...(externalRefuse.length ? [`| — | External tampered or out-of-scope documents refused | ${rate(externalRefuse.filter(r => r.outcome === 'QUARANTINED').length, externalRefuse.length)} | Reported | — |`] : []),
     `| M5 | Document type and currency identified | type ${roleOk.length} / ${identified.length}; currency ${currencyOk.length} / ${identified.length} | 100% | ${verdict('M5')} |`,
     `| M6 | Rows read exactly by the proposed layout (before the checks) | ${rate(sum(reading, r => r.readExact), sum(reading, r => r.truthRows))} | Reported | — |`,
     `| M7 | Time and cost | median ${median(results.map(r => r.seconds))} s per document; ${(sum(results, r => r.seconds) / Math.max(1, sum(results, r => r.truthRows)) * 100).toFixed(1)} s per 100 rows; model cost $${sum(results, r => r.usd).toFixed(4)} in all, $${(sum(results, r => r.usd) / Math.max(1, results.filter(r => r.usd).length)).toFixed(5)} per interpreted document | Reported | — |`,
