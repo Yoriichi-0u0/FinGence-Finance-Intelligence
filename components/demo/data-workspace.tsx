@@ -6,6 +6,8 @@ import { PageHeader, Panel } from '@/components/ui';
 import { STAGE_TITLES, type DocumentInput, type StageId } from '@/lib/demo/pipeline';
 import { useDemoProcessing } from './context';
 import { DocumentEvidenceEntry } from './document-evidence';
+import { DocumentPreview } from './document-preview';
+import { ConfidenceCard } from './confidence';
 import { InterpretationPanel } from './interpretation-panel';
 import { SaveRun } from './save-run';
 import { useTechnicalDetail, useWorkspace } from '@/components/workspace/context';
@@ -170,30 +172,40 @@ export default function DemoDataWorkspace() {
                 {error ? <Callout role="alert" tone="bad" className="m-4">{error}</Callout> : null}
             </Panel>
         </div>
+        {/* Step 1's preview: the documents as chosen, until they have been processed (then the side-by-side view shows them). */}
+        {selected.length && !(context && status === 'ready' && sameDocuments(selected, inputs)) ? <DocumentPreview documents={selected} /> : null}
         {context ? <div className="mt-6 space-y-5">
             {scope && out?.reconciliation && out.totals ? <Panel className="scroll-mt-20" id="results" title="Verified outputs" eyebrow={`Step 3 · Results · ${scope.businessName} · ${periodLabel(scope.period)} · ${scope.currency}`}>
+                <ConfidenceCard context={context} className="mx-4 mt-4 sm:mx-5 sm:mt-5" />
                 <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5 xl:grid-cols-4">
-                    <Stat tone="brand" label="Net signed bank movement" value={money(scope.currency, out.totals.net)} detail={`${out.totals.rows} bank records`} />
+                    <Stat tone="brand" label="Net movement" value={money(scope.currency, out.totals.net)} detail={`${out.totals.rows} bank records`} />
                     <Stat tone="brand" label="Bank − ledger difference" value={money(scope.currency, out.reconciliation.cashMovement.signedDifference)} detail={`Ledger ${money(scope.currency, out.reconciliation.cashMovement.ledger)}`} />
                     <Stat tone="good" label="Matched automatically" value={`${out.reconciliation.counts.MATCH_EXACT + out.reconciliation.counts.MATCH_DATE_SHIFT} of ${out.reconciliation.results.length}`} detail={out.resolution ? `${out.resolution.totals.timing + out.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved · ${out.resolution.attention.length} flagged` : `${context.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length} exceptions flagged`} />
-                    <Stat tone="plain" label="Next-month baseline" value={out.forecast?.forecast.status === 'AVAILABLE' ? money(scope.currency, out.forecast.forecast.net) : 'Unavailable'} detail={out.forecast?.forecast.status === 'AVAILABLE' ? `${out.forecast.forecast.period} net, six-month mean` : 'Needs 7 consecutive months'} />
+                    <Stat tone="plain" label="Next month, expected net" value={out.forecast?.forecast.status === 'AVAILABLE' ? money(scope.currency, out.forecast.forecast.net) : 'Unavailable'} detail={out.forecast?.forecast.status === 'AVAILABLE' ? `${out.forecast.forecast.period} net, six-month mean` : 'Needs 7 consecutive months'} />
                 </div>
                 <nav aria-label="Connected results" className="grid grid-cols-2 gap-2 border-t border-[var(--border)] p-4 sm:grid-cols-4 sm:px-5">
                     {([['/', 'Overview', House], ['/transactions', 'Transactions', ReceiptText], ['/reconciliation', 'Reconciliation', RefreshCw], ['/analytics', 'Analytics', ChartNoAxesCombined], ['/anomalies', 'Anomalies', AlertTriangle], ['/forecasting', 'Forecasting', TrendingUp], ['/reports', 'Reports', FileBarChart], ['/ask', 'Finance Q&A', MessageSquareText]] as const).map(([href, label, Icon]) => <Link key={href} href={href} className="group flex min-h-12 items-center gap-2.5 rounded-xl border border-[var(--border)] px-3 text-sm font-semibold transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)]"><Icon aria-hidden="true" size={17} className="shrink-0 text-[var(--brand)]" /><span className="min-w-0 flex-1 truncate">{label}</span><ArrowRight aria-hidden="true" size={15} className="hidden shrink-0 text-[var(--muted)] transition-transform group-hover:translate-x-0.5 sm:block" /></Link>)}
                 </nav>
                 {context.job ? null : <SaveRun context={context} />}
             </Panel> : <Panel className="scroll-mt-20" id="results" title="Outputs" eyebrow="Step 3 · Results"><p className="p-5 text-sm">No financial outputs were produced because the documents were quarantined. See the stage checks above for the exact reason.</p></Panel>}
-            <Panel title="Documents identified" eyebrow={processedAt ? `Details · processed ${new Date(processedAt).toLocaleString()}${persisted ? '' : ' · not kept after reload'}` : 'Details'}>
-                <Table caption="Identified documents" columns={['Document', 'Role', 'Decision', 'Records', 'Scope', ...(technical ? ['SHA-256'] : [])]} rows={context.documents.map(d => [
-                    <span key="n" className="grid gap-1"><span className="break-all">{d.name}</span>{d.source?.kind === 'WORKSHEET' ? <span className="text-xs font-normal text-[var(--muted)]">Worksheet {d.source.sheetNumber} of {d.source.workbook}{technical ? <> · workbook SHA-256 <code>{d.source.workbookSha256.slice(0, 12)}…</code></> : null}</span>
-                        : d.source ? <span className="text-xs font-normal text-[var(--muted)]">{d.source.kind === 'OCR' ? `Read by OCR ${context.job ? 'on the server' : 'in this browser'} · ${d.source.confidence}% mean confidence` : 'PDF text layer'} · {d.source.pages} page{d.source.pages === 1 ? '' : 's'}{technical ? <> · file SHA-256 <code>{d.source.fileSha256.slice(0, 12)}…</code></> : null}</span> : null}</span>, d.role ? ROLE[d.role] : 'Not identified',
-                    <span key="d" className="grid justify-items-start gap-1"><DecisionBadge decision={d.decision} label={d.decision === 'AUTO_ACCEPTED' && context.status === 'QUARANTINED' ? 'Identified · run quarantined' : undefined} /><span className="text-xs text-[var(--muted)]">{d.reason}</span></span>,
-                    d.rows ?? '—', d.businessId ? `${d.businessId} · ${d.periods.length > 1 ? `${d.periods[0]} to ${d.periods.at(-1)}` : d.periods[0] ?? ''} · ${d.currency}` : '—',
-                    ...(technical ? [<code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>] : []),
-                ])} />
-            </Panel>
-            <DocumentEvidenceEntry context={context} inputs={inputs} />
-            <InterpretationPanel context={context} />
+            {/* What FinGence read, next to each document as supplied: open at once, as SAIC asked. */}
+            <DocumentEvidenceEntry context={context} inputs={inputs} defaultOpen />
+            {/* The documents table, the AI layout panel (model, tokens, cost) and the like are for Admins; a Finance user has the confidence above. */}
+            {technical ? <details className="group rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-panel)]">
+                <summary className="flex min-h-12 cursor-pointer items-center gap-2 px-4 py-3 text-sm font-semibold sm:px-5"><ChevronRight aria-hidden="true" size={16} className="disclosure-chevron transition-transform" />Technical details<span className="ml-auto text-xs font-normal text-[var(--muted)]">Admins and Superadmins</span></summary>
+                <div className="space-y-5 border-t border-[var(--border)] p-4 sm:p-5">
+                    <Panel title="Documents identified" eyebrow={processedAt ? `Details · processed ${new Date(processedAt).toLocaleString()}${persisted ? '' : ' · not kept after reload'}` : 'Details'}>
+                        <Table caption="Identified documents" columns={['Document', 'Role', 'Decision', 'Records', 'Scope', ...(technical ? ['SHA-256'] : [])]} rows={context.documents.map(d => [
+                            <span key="n" className="grid gap-1"><span className="break-all">{d.name}</span>{d.source?.kind === 'WORKSHEET' ? <span className="text-xs font-normal text-[var(--muted)]">Worksheet {d.source.sheetNumber} of {d.source.workbook}{technical ? <> · workbook SHA-256 <code>{d.source.workbookSha256.slice(0, 12)}…</code></> : null}</span>
+                                : d.source ? <span className="text-xs font-normal text-[var(--muted)]">{d.source.kind === 'OCR' ? `Read by OCR ${context.job ? 'on the server' : 'in this browser'} · ${d.source.confidence}% mean confidence` : 'PDF text layer'} · {d.source.pages} page{d.source.pages === 1 ? '' : 's'}{technical ? <> · file SHA-256 <code>{d.source.fileSha256.slice(0, 12)}…</code></> : null}</span> : null}</span>, d.role ? ROLE[d.role] : 'Not identified',
+                            <span key="d" className="grid justify-items-start gap-1"><DecisionBadge decision={d.decision} label={d.decision === 'AUTO_ACCEPTED' && context.status === 'QUARANTINED' ? 'Identified · run quarantined' : undefined} /><span className="text-xs text-[var(--muted)]">{d.reason}</span></span>,
+                            d.rows ?? '—', d.businessId ? `${d.businessId} · ${d.periods.length > 1 ? `${d.periods[0]} to ${d.periods.at(-1)}` : d.periods[0] ?? ''} · ${d.currency}` : '—',
+                            ...(technical ? [<code key="s" className="break-all text-xs" title={d.sha256}>{d.sha256.slice(0, 16)}…</code>] : []),
+                        ])} />
+                    </Panel>
+                    <InterpretationPanel context={context} />
+                </div>
+            </details> : null}
         </div> : null}
     </>;
 }
@@ -215,3 +227,6 @@ function Steps({ current, progress }: { current: Step; progress: { done: number;
         })}</ol>
     </nav>;
 }
+
+/** The chosen documents are the ones the current results came from (same names, in order). */
+const sameDocuments = (a: DocumentInput[], b: DocumentInput[]) => a.length === b.length && a.every((d, i) => d.name === b[i]?.name && d.bytes.byteLength === b[i]?.bytes.byteLength);
