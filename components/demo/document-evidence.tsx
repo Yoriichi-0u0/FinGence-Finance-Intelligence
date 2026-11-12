@@ -230,8 +230,8 @@ function Pages({ input, coords, geometry, read, ai, active, setActive, cellField
 }
 
 /** The entry on the Data page: shown once a processing has documents read as tables. */
-export function DocumentEvidenceEntry({ context, inputs }: { context: ProcessingContext; inputs: DocumentInput[] }) {
-    const [open, setOpen] = useState(false);
+export function DocumentEvidenceEntry({ context, inputs, defaultOpen = false }: { context: ProcessingContext; inputs: DocumentInput[]; defaultOpen?: boolean }) {
+    const [open, setOpen] = useState(defaultOpen);
     if (!context.documents.some(d => d.reading)) return null;
     return open ? <DocumentEvidence context={context} inputs={inputs} />
         : <button type="button" onClick={() => setOpen(true)} className="group flex w-full items-center gap-4 rounded-2xl border border-[var(--brand-line)] bg-[var(--brand-soft)] p-4 text-left transition-colors hover:border-[var(--brand)] sm:p-5">
