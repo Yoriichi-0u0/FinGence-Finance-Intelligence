@@ -1,5 +1,19 @@
 # FinGence — current technical entrypoint
 
+## Change your own password — 13 November 2026
+
+- **Why.** Until now a password was set only when joining with an invitation code. The accounts the owner created for SAIC and Dr Sim came with passwords the team knows (#105, #111).
+- **Where.** The account menu has "Your account and password", which opens `/account` (`components/workspace/account.tsx`). `POST /api/workspace/password` is `changePassword` in `lib/server/workspace/handlers.ts`.
+- **Rules.**
+  - The request must come from the same origin and from a signed-in member.
+  - The current password is checked with scrypt and rate-limited like sign-in; a wrong one returns `WRONG_PASSWORD`.
+  - The new password follows the joining rule (12 to 128 characters) and must differ from the current one.
+  - The change is compare-and-set on the verified hash. Every other session of the member ends (reason `PASSWORD_CHANGED`); this one stays open.
+  - The change is audited as `member.password_changed`, with no detail.
+- **Data:** `supabase/sql/workspace-v7-password.sql` (needs v1 and v2): `fingence_workspace_change_password`, executable by the service role only, plus the new session end reason.
+- **Production order:** apply v7, then deploy.
+- **Tests:** "changing your own password" in `tests/workspace/workspace.test.ts`.
+
 ## History: saved runs per person — 12 November 2026
 
 - **What is saved.** Every completed run is saved for the person who ran it, until they (or an Admin) delete it. The owner decided this on 12 Nov. A saved run has three parts:

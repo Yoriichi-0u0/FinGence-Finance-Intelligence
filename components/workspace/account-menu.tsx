@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useId, useRef, useState } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronsUpDown, LogOut } from 'lucide-react';
+import { ChevronsUpDown, KeyRound, LogOut } from 'lucide-react';
 import { ThemeSwitch } from '@/components/theme-switch';
 import { ROLE_LABEL, useWorkspace } from './context';
 import { ViewSwitch } from './view-switch';
@@ -10,7 +11,8 @@ const initials = (email: string) => email.split('@')[0].split(/[._-]+/).filter(B
 
 /**
  * One account button at the foot of the navigation. It opens a small menu with who is signed in, "View as"
- * (Admins and Superadmins), the colour theme and Sign out, so the footer stays one line instead of three cards.
+ * (Admins and Superadmins), the colour theme, Your account (change password) and Sign out, so the footer stays one line
+ * instead of three cards.
  */
 export function AccountMenu({ compact = false }: { compact?: boolean }) {
     const { session, viewRole, signOut } = useWorkspace();
@@ -39,6 +41,9 @@ export function AccountMenu({ compact = false }: { compact?: boolean }) {
                 <p className="px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">Theme</p>
                 <ThemeSwitch />
             </div>
+            <Link href="/account" className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-[13px] font-semibold text-white/90 hover:bg-white/10 hover:text-white">
+                <KeyRound aria-hidden="true" size={17} />Your account and password
+            </Link>
             <button type="button" onClick={() => void signOut()} className="flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-[13px] font-semibold text-white/90 hover:bg-white/10 hover:text-white">
                 <LogOut aria-hidden="true" size={17} />Sign out
             </button>

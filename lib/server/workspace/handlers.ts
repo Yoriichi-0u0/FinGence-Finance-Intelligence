@@ -76,6 +76,30 @@ export async function signOut(request: Request, deps: Deps) {
     return new Response(JSON.stringify({ signedIn: false }), { headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Set-Cookie': clearedCookie() } });
 }
 
+const passwordBody = z.object({ current: z.string().min(1).max(512), next: z.string().max(512) }).strict();
+/**
+ * Any signed-in member: change their own password. The current password must be right (rate-limited like sign-in), the new
+ * one follows the joining rule, and every other session of the member ends; this one stays signed in.
+ */
+export async function changePassword(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    if (!sameOrigin(request.headers)) return json({ code: 'CROSS_ORIGIN' }, 403);
+    const read = await boundedJson(request, 4_000);
+    if ('refusal' in read) return read.refusal;
+    const body = passwordBody.safeParse(read.body);
+    if (!body.success) return json({ code: 'INVALID_INPUT' }, 400);
+    if (!passwordAcceptable(body.data.next)) return json({ code: 'PASSWORD_RULE' }, 400);
+    if (body.data.next === body.data.current) return json({ code: 'PASSWORD_UNCHANGED' }, 400);
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    if (!await deps.attempts(request.headers, who.principal.email)) return json({ code: 'TOO_MANY_ATTEMPTS' }, 429);
+    const found = await rpc<{ memberId: string; passwordHash: string; active: boolean } | null>('fingence_workspace_credentials', { p_email: who.principal.email }, deps.store, deps.transport);
+    if (!found.ok) return json({ code: 'WORKSPACE_UNAVAILABLE' }, 503);
+    if (found.value?.memberId !== who.principal.memberId || !await verifyPassword(body.data.current, found.value.passwordHash)) return json({ code: 'WRONG_PASSWORD' }, 401);
+    const result = await rpc<{ changed: boolean; otherSessionsEnded: number }>('fingence_workspace_change_password', { p_token_hash: who.tokenHash, p_current_hash: found.value.passwordHash, p_new_hash: await hashPassword(body.data.next) }, deps.store, deps.transport);
+    return result.ok ? json(result.value) : fail(result.error);
+}
+
 const fail = (error: string) => json({ code: error.startsWith('STORE_') ? 'WORKSPACE_UNAVAILABLE' : error }, error.startsWith('STORE_') ? 503 : error === 'FORBIDDEN' || error === 'ROLE_NOT_ALLOWED' ? 403 : error === 'NOT_FOUND' ? 404 : 409);
 
 /** Admin and above: the team, invitations (a one-time code shown once), role and access changes, ending sessions. Each acts only on people below their own level. */

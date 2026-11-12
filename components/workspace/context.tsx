@@ -108,6 +108,9 @@ export function plainMessage(code: string | undefined | null): string {
         case 'INVITATION_UNAVAILABLE': case 'INVALID_CODE': return 'This invitation code is not valid any more. Ask your administrator for a new one.';
         case 'ALREADY_MEMBER': return 'This email already has an account. Sign in instead.';
         case 'PASSWORD_RULE': return 'Choose a password of 12 to 128 characters.';
+        case 'WRONG_PASSWORD': return 'Your current password is not right. Please type it again.';
+        case 'PASSWORD_UNCHANGED': return 'The new password is the same as the current one. Choose a different one.';
+        case 'PASSWORD_CHANGED_ELSEWHERE': return 'Your password was just changed in another window. Sign in again with the newest password.';
         case 'PROCESSING_PAUSED': return 'Processing is paused by your administrator. Nothing was processed; please try again later.';
         case 'AI_OFF': return 'The AI is switched off by your administrator, so FinGence used its rules only.';
         case 'ROLE_NOT_ALLOWED': case 'FORBIDDEN': return 'Your role cannot make this change.';
