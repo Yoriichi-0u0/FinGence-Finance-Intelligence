@@ -1,5 +1,5 @@
 -- FinGence workspace v4: each member's own Overview layout ("Customise dashboard"). Requires workspace-v1.sql and
--- workspace-v2-saic.sql (not workspace-v3-log.sql). NOT yet applied to FinGence-Production.
+-- workspace-v2-saic.sql (not workspace-v3-log.sql). Applied to FinGence-Production on 12 Nov 2026 (fingence_workspace_v4_preferences).
 --   - One row per member: which Overview cards they show, and in what order. Nothing financial is stored.
 --   - The member is always the one behind the session token; no function takes a member ID, so nobody reads or writes
 --     another person's layout.

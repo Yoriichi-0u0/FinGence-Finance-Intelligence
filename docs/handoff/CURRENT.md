@@ -6,7 +6,7 @@ Each signed-in person can show, hide and reorder the Overview cards. The layout 
 
 - **Cards:** the five original cards, in the original order by default. Three optional cards start hidden: largest counterparties, reconciliation summary, and last processing runs (Admin and above only, from the Technical log).
 - **Editor:** "Customise dashboard" on Overview has a show/hide switch and Up/Down buttons for each card, all usable from the keyboard. The dashboard previews changes live; Done saves, Cancel discards, and Reset to default restores the default.
-- **Data:** `supabase/sql/workspace-v4-preferences.sql`, one strict layout shape checked by the route, the function and the table (`lib/dashboard/layout.ts`). **Not applied to Production**; that is the owner's decision. Without it, `GET`/`PUT /api/workspace/preferences` fail and the Overview shows the default layout. With the workspace off, the layout is kept in the browser.
+- **Data:** `supabase/sql/workspace-v4-preferences.sql`, one strict layout shape checked by the route, the function and the table (`lib/dashboard/layout.ts`). **Applied to FinGence-Production on 12 Nov 2026** (migration `fingence_workspace_v4_preferences`, on the owner's go-ahead), and verified there: RLS is forced, only the service role may execute the functions, and an unknown card is refused. With the workspace off, the layout is kept in the browser.
 - **Locally:** `scripts/dev-store.mjs` applies v4 on every start.
 
 ## Technical log and the AI-call door — 11 November 2026
