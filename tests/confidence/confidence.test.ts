@@ -28,6 +28,23 @@ describe('processing confidence', () => {
         expect(c.explained).toEqual({ cents: '129900', records: 1, reasons: ['1 unusual record (SGD 1,299.00) the books could not settle'] });
         expect(c.read.records).toBe(0);
     });
+    it('a bank record that clears an item from a month only the books cover counts as explained', async () => {
+        // Only January's books: the February bank credit BANK-Q1-0038 clears January's deposit in transit (GL-Q1-0036).
+        const text = (p: string) => readFileSync(join('public/demo/quarter', p), 'utf8'), LEDGER = 'demo-general-ledger-2026-q1-sgd.csv';
+        const january = text(LEDGER).split('\n').filter((l, i) => i === 0 || l.includes(',2026-01-')).join('\n');
+        const c = await processDocuments([doc('quarter/demo-bank-statement-2026-q1-sgd.csv'), { name: LEDGER, bytes: new TextEncoder().encode(january), provenance: 'PUBLIC_SYNTHETIC_SAMPLE' }]);
+        const linked = c.outputs.resolution!.periods.flatMap(p => p.items).find(i => i.link?.side === 'BANK' && i.link.recordId === 'BANK-Q1-0038');
+        expect(linked?.resolution).toMatch(/TIMING_CLEARED|MATCHED_LATE/);
+        const conf = processingConfidence(c);
+        if (conf.status !== 'MEASURED') throw Error(conf.reason);
+        // February and March have no books, so most of their records stay unexplained, but BANK-Q1-0038 is not among them.
+        const row = c.outputs.bankRows.find(r => r.rowId === 'BANK-Q1-0038')!;
+        const withoutLink = structuredClone(c);
+        for (const p of withoutLink.outputs.resolution!.periods) for (const i of p.items) if (i.link?.recordId === 'BANK-Q1-0038') i.link = null;
+        const before = processingConfidence(withoutLink);
+        if (before.status !== 'MEASURED') throw Error(before.reason);
+        expect(BigInt(conf.countedCents) - BigInt(before.countedCents)).toBe(BigInt(row.signedAmount.replace('-', '').replace('.', '')));
+    });
     it('a statement read by OCR below 90% confidence is not read reliably: none of its money counts', async () => {
         const m = copy(await march()), statement = m.documents.find(d => d.role === 'BANK_STATEMENT')!;
         statement.source = { kind: 'OCR', file: 'scan.jpg', fileSha256: 'a'.repeat(64), pages: 1, confidence: 85, notes: [], disputes: [] };

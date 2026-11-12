@@ -64,7 +64,12 @@ export function processingConfidence(c: ProcessingContext): Confidence {
     const results = o.periods.length ? o.periods.flatMap(p => p.snapshot.results) : reconciliation?.results ?? [];
     const matched = new Set(results.filter(r => r.bankRecordId && (r.status === 'MATCH_EXACT' || r.status === 'MATCH_DATE_SHIFT')).map(r => r.bankRecordId!));
     const resolved = new Set<string>(), unexplained = new Set<string>();
-    for (const p of o.resolution?.periods ?? []) for (const i of p.items) if (i.bankRecordId) (i.resolution === 'UNEXPLAINED' ? unexplained : resolved).add(i.bankRecordId);
+    for (const p of o.resolution?.periods ?? []) for (const i of p.items) {
+        if (i.bankRecordId) (i.resolution === 'UNEXPLAINED' ? unexplained : resolved).add(i.bankRecordId);
+        // A ledger item cleared by a bank record in a month only the bank covers carries that record on its link
+        // (as lib/anomalies/resolve.ts reads it): the bank record is explained too.
+        if (i.resolution !== 'UNEXPLAINED' && i.link?.side === 'BANK') resolved.add(i.link.recordId);
+    }
     const flagged = new Set((o.anomalyResolution?.items ?? []).filter(a => a.resolution === 'FLAGGED').map(a => a.row.rowId));
 
     let total = 0n, counted = 0n, readShort = 0n, explainShort = 0n, readRecords = 0, explainRecords = 0, countedRecords = 0, notMatched = 0n, notMatchedRecords = 0, flaggedCents = 0n;

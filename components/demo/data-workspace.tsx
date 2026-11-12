@@ -228,5 +228,6 @@ function Steps({ current, progress }: { current: Step; progress: { done: number;
     </nav>;
 }
 
-/** The chosen documents are the ones the current results came from (same names, in order). */
-const sameDocuments = (a: DocumentInput[], b: DocumentInput[]) => a.length === b.length && a.every((d, i) => d.name === b[i]?.name && d.bytes.byteLength === b[i]?.bytes.byteLength);
+/** The chosen documents are exactly the ones the current results came from: same names and the same bytes, in order. */
+const sameBytes = (x: Uint8Array, y: Uint8Array) => x.byteLength === y.byteLength && x.every((v, i) => v === y[i]);
+const sameDocuments = (a: DocumentInput[], b: DocumentInput[]) => a.length === b.length && a.every((d, i) => !!b[i] && d.name === b[i].name && sameBytes(d.bytes, b[i].bytes));
