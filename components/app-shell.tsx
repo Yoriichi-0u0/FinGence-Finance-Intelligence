@@ -87,7 +87,7 @@ function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label:
   if (!items.length) return null;
   return (
     <div>
-      {rail ? <p className="sr-only">{label}</p> : <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">{label}</p>}
+      {rail ? <p className="sr-only">{label}</p> : <p className="px-3 pb-1.5 text-[12px] font-semibold text-[var(--rail-muted)]/80">{label}</p>}
       <ul className="space-y-0.5">
         {items.map((item) => {
           const Icon = item.icon;

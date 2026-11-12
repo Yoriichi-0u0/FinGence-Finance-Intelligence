@@ -64,7 +64,7 @@ export default function ForecastingPage() {
             />
           </div>
           <aside className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--muted)]">Selected model</p>
+            <p className="text-[12px] font-semibold text-[var(--muted)]">Selected model</p>
             <div className="mt-2 flex items-center gap-2"><Sparkles aria-hidden="true" size={19} className="text-[var(--teal)]" /><p className="text-xl font-semibold">{model.name}</p></div>
             <dl className="mt-6 space-y-5">
               <div>

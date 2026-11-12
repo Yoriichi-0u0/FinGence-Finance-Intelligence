@@ -23,14 +23,11 @@ export function PageHeader({
   return (
     <header className="rise-in mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <p className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--brand)]">
-          <span aria-hidden="true" className="brand-gradient h-1 w-6 rounded-full" />
-          {eyebrow ?? "FinGence"}
-        </p>
-        <h1 className="text-[28px] font-semibold leading-[1.1] tracking-[-0.035em] text-[var(--ink)] sm:text-[34px]">
+        <p className="mb-1 text-[13px] font-semibold text-[var(--brand)]">{eyebrow ?? "FinGence"}</p>
+        <h1 className="text-[32px] font-bold leading-[1.08] tracking-[-0.025em] text-[var(--ink)] sm:text-[40px]">
           {title}
         </h1>
-        <p className="mt-2 max-w-3xl text-[15px] leading-relaxed text-[var(--muted)]">{description}</p>
+        <p className="mt-2.5 max-w-3xl text-[16px] leading-relaxed text-[var(--muted)] sm:text-[17px]">{description}</p>
       </div>
       {actions ? <div className="min-w-0 max-w-full sm:w-auto sm:shrink-0">{actions}</div> : null}
     </header>
@@ -58,11 +55,11 @@ export function Panel({
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
           <div className="min-w-0">
             {eyebrow ? (
-              <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand)]">
+              <p className="mb-0.5 text-[12px] font-semibold text-[var(--brand)]">
                 {eyebrow}
               </p>
             ) : null}
-            {title ? <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)] sm:text-base">{title}</h2> : null}
+            {title ? <h2 className="text-[17px] font-semibold tracking-[-0.015em] text-[var(--ink)]">{title}</h2> : null}
           </div>
           {action}
         </div>

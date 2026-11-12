@@ -28,8 +28,8 @@ export function ConfidenceCard({ context, className = '' }: { context: Processin
         onMouseEnter={() => { if (leave.current) clearTimeout(leave.current); setHover(true); }} onMouseLeave={() => { leave.current = setTimeout(() => setHover(false), 150); }}>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-3">
             <span className={`grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--surface)] ring-1 ring-inset ring-[var(--border)] ${band?.tone ?? 'text-[var(--muted)]'}`}><Gauge aria-hidden="true" size={22} /></span>
-            <div className="min-w-0 flex-1">
-                <p className="text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--muted)]">Processing confidence</p>
+            <div className="min-w-0 flex-[1_1_14rem]">
+                <p className="text-[12px] font-medium text-[var(--muted)]">Processing confidence</p>
                 {c.status === 'MEASURED'
                     ? <p className="flex flex-wrap items-baseline gap-x-3"><span className="text-[34px] font-semibold leading-tight tracking-[-0.03em] tabular-nums">{c.percent}%</span><span className={`text-sm font-semibold ${band!.tone}`}>{band!.label}</span></p>
                     : <p className="text-xl font-semibold leading-tight">Incomplete</p>}
