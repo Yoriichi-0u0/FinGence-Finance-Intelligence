@@ -30,6 +30,7 @@ import { processingConfidence } from '@/lib/confidence';
 import { attentionCounts } from '@/lib/demo/attention';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
+import { ConnectedDemoAiReport } from '@/components/ai-reporting/connected-demo-report';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
@@ -324,6 +325,7 @@ function Forecasting({ c }: { c: Ready }) {
 
 function Reports({ c }: { c: Ready }) {
     const technical = useTechnicalDetail(), confidence = useMemo(() => processingConfidence(c), [c]);
+    const { inputs, processedAt, ai } = useDemoProcessing();
     // "Download report" on the Overview opens /reports?print=1: the browser's Save as PDF dialog opens on the print-ready report.
     useEffect(() => {
         if (new URLSearchParams(window.location.search).get('print') !== '1') return;
@@ -358,6 +360,7 @@ function Reports({ c }: { c: Ready }) {
                 {technical ? <p className="text-xs text-[var(--muted)]">Processing {c.processingId} · {c.version}</p> : null}
             </div>
         </Panel>
+        <ConnectedDemoAiReport context={c} inputs={inputs} processedAt={processedAt} providerProbeEnabled={Boolean(ai?.available)} />
     </>;
 }
 

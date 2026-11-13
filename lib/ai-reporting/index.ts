@@ -1,4 +1,5 @@
 export * from "./contracts";
+export * from "./demo-document-report";
 export * from "./evaluation";
 export * from "./exceptions";
 export * from "./financial-explanation-input";

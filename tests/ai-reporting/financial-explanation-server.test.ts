@@ -1,13 +1,17 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { analyzeAcceptedDataPayload } from "../../lib/analytics/accepted-data-adapter";
 import { GET as getExplanationStatus, POST as postExplanation } from "../../app/api/ai-reporting/explain/route";
 import {
   FINANCIAL_EXPLANATION_PROMPT_VERSION,
+  createDemoDocumentReport,
   createFinancialExplanationRequest,
   createLocalManagementReport,
   type FinancialExplanationModelOutput,
   type FinancialExplanationRequest,
 } from "../../lib/ai-reporting";
+import { processDocuments, type DocumentInput } from "../../lib/demo/pipeline";
 import { createAcceptedDataPayload, type IngestionResult } from "../../lib/ingestion";
 import {
   aiReportingRequestAllowed,
@@ -29,6 +33,7 @@ import { consultationResults } from "../integration/fixtures";
 vi.mock("server-only", () => ({}));
 
 let request: FinancialExplanationRequest;
+let dataSampleRequest: FinancialExplanationRequest;
 
 beforeAll(async () => {
   const results: IngestionResult[] = await consultationResults();
@@ -43,6 +48,19 @@ beforeAll(async () => {
     generatedAt: "2026-11-13T08:00:00.000Z",
   });
   request = createFinancialExplanationRequest(report);
+
+  const dataInputs: DocumentInput[] = ["demo-bank-statement-2026-03.csv", "demo-general-ledger-2026-03.csv"].map(name => ({
+    name,
+    bytes: new Uint8Array(readFileSync(join("public/demo", name))),
+    provenance: "PUBLIC_SYNTHETIC_SAMPLE",
+  }));
+  const dataContext = await processDocuments(dataInputs);
+  const dataReport = await createDemoDocumentReport({
+    context: dataContext,
+    inputs: dataInputs,
+    generatedAt: "2026-11-13T08:00:00.000Z",
+  });
+  dataSampleRequest = createFinancialExplanationRequest(dataReport.report);
 });
 
 afterEach(() => vi.unstubAllEnvs());
@@ -199,6 +217,27 @@ describe("AI explanation service validation", () => {
     expect(result.validation).toMatchObject({
       assurance: "STRUCTURAL_ONLY",
       publicationAuthorized: false,
+    });
+  });
+
+  it("accepts the bank document registered for the connected Data report", async () => {
+    const provider: FinancialExplanationProvider = {
+      generate: async () => ({
+        output: validOutput(),
+        generation: {
+          provider: "TEST",
+          actualModelRequest: false,
+          modelIdentifier: "synthetic-test-model",
+          requestId: null,
+          inputTokens: null,
+          outputTokens: null,
+          generatedAt: "2026-11-13T08:01:00.000Z",
+        },
+      }),
+    };
+    expect(dataSampleRequest.sourceFileSha256).toBe("da31e6f437ddff7cfb3a029db21caa56320bd1c6162c5701503f60687ba9ef3e");
+    await expect(generateFinancialExplanation(dataSampleRequest, provider)).resolves.toMatchObject({
+      validation: { assurance: "STRUCTURAL_ONLY", publicationAuthorized: false },
     });
   });
 

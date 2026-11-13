@@ -16,8 +16,16 @@ import { extractQuarterlyWorkbookSupplements } from "./workbook-supplements";
 const REPORT_TIMEZONE = "Asia/Kuching";
 const SUPPLIED_SYNTHETIC_WORKBOOK_SHA256 = "13c0d038845941abb8e974bc55832f0b1f157bac343c4f4ab5189ba0b0a30bfb";
 const REALISTIC_SYNTHETIC_LEDGER_SHA256 = "f10edefcf4f09a7695125ff1d727e2501ebb22f7283d441d0ed8a22336173d3a";
+const RIMBA_DEMO_BANK_SHA256 = "da31e6f437ddff7cfb3a029db21caa56320bd1c6162c5701503f60687ba9ef3e";
+const STRAITS_DEMO_BANK_SHA256 = "48668a7eb1fca288f8c853aee5a7b6d2ebcf9076e7cd7ba95a6d7f0df386a5fc";
 
 const registeredSyntheticBusinessNames: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  [RIMBA_DEMO_BANK_SHA256]: {
+    "DEMO-001": "Rimba Demo Kitchen (Synthetic)",
+  },
+  [STRAITS_DEMO_BANK_SHA256]: {
+    "DEMO-002": "Straits Demo Bakery (Synthetic)",
+  },
   [REALISTIC_SYNTHETIC_LEDGER_SHA256]: {
     "SYNTH-DEMO-001": "Synthetic Example Sdn Bhd",
   },

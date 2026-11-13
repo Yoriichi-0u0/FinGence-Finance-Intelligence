@@ -17,6 +17,8 @@ const sha256Pattern = /^[a-f0-9]{64}$/;
 
 /** Published synthetic sample hashes shared by the local Data/Reports demonstration. */
 export const REGISTERED_SYNTHETIC_REPORT_HASHES = new Set([
+  "da31e6f437ddff7cfb3a029db21caa56320bd1c6162c5701503f60687ba9ef3e", // Data: Rimba Demo Kitchen bank statement
+  "48668a7eb1fca288f8c853aee5a7b6d2ebcf9076e7cd7ba95a6d7f0df386a5fc", // Data: Straits Demo Bakery Q1 bank statement
   "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9", // ledger.csv
   "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf", // bank_statement.xlsx
   "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd", // edge_cases.csv
