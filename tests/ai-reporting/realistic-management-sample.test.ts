@@ -5,8 +5,12 @@ import {
   createManagementReportPresentation,
   createFinancialExplanationRequest,
   createLocalManagementReport,
+  createQuarterlyFinancialActivityReport,
+  discoverReportBusinesses,
+  listAvailableQuarterPeriods,
   renderLocalManagementReportHtml,
 } from "../../lib/ai-reporting";
+import { validateStoredLocalManagementReport } from "../../lib/ai-reporting/local-report-repository";
 import {
   DEFAULT_OPTIONS,
   approveMapping,
@@ -111,5 +115,53 @@ describe("realistic synthetic management-report sample", () => {
     expect(explanationInput.sourceFileSha256).toBe("f10edefcf4f09a7695125ff1d727e2501ebb22f7283d441d0ed8a22336173d3a");
     expect(explanationInput.untrustedSourceTextPolicy).toBe("EXCLUDED_FROM_MODEL_INPUT");
     expect(JSON.stringify(explanationInput)).not.toContain("Northstar Retail");
+  });
+
+  it("supports the restored company-scoped quarterly workflow without manual synthetic naming", async () => {
+    const bytes = await readFile("public/samples/ai-reporting/realistic_company_ledger.csv");
+    const file = await inspectFile(bytes, { name: "realistic_company_ledger.csv" });
+    const dataset = createDataset(file, 0);
+    const mapping = approveMapping(suggestMapping(dataset));
+    const result = ingestDatasetRun(dataset, mapping, {
+      ...DEFAULT_OPTIONS,
+      sourceSystem: "Synthetic Company Ledger",
+      monetaryMode: "debit_credit",
+      dateBasis: "transaction_date",
+    });
+    const payload = createAcceptedDataPayload([result]);
+    expect(discoverReportBusinesses(payload)).toMatchObject({
+      reliable: true,
+      options: [{
+        businessId: "SYNTH-DEMO-001",
+        displayName: "Synthetic Example Sdn Bhd",
+        nameBasis: "REGISTERED_SYNTHETIC",
+        recordCount: 36,
+      }],
+    });
+    const [period] = listAvailableQuarterPeriods(payload, "SYNTH-DEMO-001");
+    expect(period.key).toBe("2026-Q3");
+    const report = await createQuarterlyFinancialActivityReport({
+      payload,
+      warningPolicy: "include",
+      supplementaryWorkbook: file,
+      selection: {
+        businessId: "SYNTH-DEMO-001",
+        businessDisplayName: "Synthetic Example Sdn Bhd",
+        currentPeriod: period,
+        comparisonPeriod: null,
+      },
+      generatedAt: "2026-10-29T12:05:00.000Z",
+    });
+    expect(report).toMatchObject({
+      reportType: "QUARTERLY_FINANCIAL_ACTIVITY",
+      organizationName: "Synthetic Example Sdn Bhd",
+      title: "THIRD QUARTER 2026 FINANCIAL ACTIVITY RESULTS",
+      quarterlyActivity: {
+        business: { nameBasis: "REGISTERED_SYNTHETIC" },
+        current: { bankCredits: "43010", bankDebits: "85600", includedTransactionCount: 36 },
+      },
+    });
+    expect(validateStoredLocalManagementReport(report)).toBe(report);
+    expect(createFinancialExplanationRequest(report).sourceFileSha256).toBe(dataset.file.fingerprint);
   });
 });

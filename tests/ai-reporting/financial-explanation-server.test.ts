@@ -9,7 +9,10 @@ import {
   type FinancialExplanationRequest,
 } from "../../lib/ai-reporting";
 import { createAcceptedDataPayload, type IngestionResult } from "../../lib/ingestion";
-import { financialExplanationRequestAllowed } from "../../lib/server/ai-reporting/access";
+import {
+  aiReportingRequestAllowed,
+  financialExplanationRequestAllowed,
+} from "../../lib/server/ai-reporting/access";
 import {
   GROQ_FINANCIAL_EXPLANATION_MODEL,
   FinancialExplanationProviderError,
@@ -47,6 +50,7 @@ afterEach(() => vi.unstubAllEnvs());
 function configureGroq() {
   vi.stubEnv("NODE_ENV", "development");
   vi.stubEnv("VERCEL", "");
+  vi.stubEnv("FINGENCE_AI_REPORTING_LOCAL", "1");
   vi.stubEnv("FINGENCE_AI_EXPLANATION_LOCAL", "1");
   vi.stubEnv("FINGENCE_AI_EXPLANATION_PROVIDER", "groq");
   vi.stubEnv("FINGENCE_AI_EXPLANATION_MODEL", GROQ_FINANCIAL_EXPLANATION_MODEL);
@@ -70,7 +74,20 @@ const requestHeaders = {
 };
 
 describe("local AI explanation access boundary", () => {
-  it("requires development, the explicit feature flag and a loopback request", () => {
+  it("separates local reporting access from the additional model-dispatch flag", () => {
+    configureGroq();
+    vi.stubEnv("FINGENCE_AI_EXPLANATION_LOCAL", "0");
+    expect(aiReportingRequestAllowed(new Request(
+      "http://127.0.0.1:3000/ai-reporting",
+      { headers: requestHeaders },
+    ))).toBe(true);
+    expect(financialExplanationRequestAllowed(new Request(
+      "http://127.0.0.1:3000/api/ai-reporting/explain",
+      { headers: requestHeaders },
+    ))).toBe(false);
+  });
+
+  it("requires development, both explicit feature flags and a loopback request", () => {
     configureGroq();
     expect(financialExplanationRequestAllowed(new Request(
       "http://127.0.0.1:3000/api/ai-reporting/explain",

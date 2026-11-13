@@ -2,7 +2,10 @@ import { estimateUsd, runAsCaller } from "@/lib/ai-calls";
 import { admit, clientAddress } from "@/lib/server/ai/budget";
 import { worstCaseCompletionUsd } from "@/lib/server/ai/groq";
 import { boundedJson, noStoreJson as json } from "@/lib/server/ai/request";
-import { financialExplanationRequestAllowed } from "@/lib/server/ai-reporting/access";
+import {
+  aiReportingRequestAllowed,
+  financialExplanationRequestAllowed,
+} from "@/lib/server/ai-reporting/access";
 import { financialExplanationProviderStatus } from "@/lib/server/ai-reporting/provider";
 import {
   FinancialExplanationServiceError,
@@ -37,7 +40,7 @@ async function gateRequest(request: Request) {
 }
 
 export async function GET(request: Request) {
-  if (!financialExplanationRequestAllowed(request)) return notFound();
+  if (!aiReportingRequestAllowed(request)) return notFound();
   const gate = await gateRequest(request);
   if ("refusal" in gate) return gate.refusal;
   return json(financialExplanationProviderStatus());

@@ -2,14 +2,14 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { LocalAiReportingWorkspace } from "@/components/ai-reporting/local-demo-workspace";
 import {
-  financialExplanationLocalEnabled,
-  financialExplanationRequestAllowed,
+  aiReportingLocalEnabled,
+  aiReportingRequestAllowed,
 } from "@/lib/server/ai-reporting/access";
 
 export const dynamic = "force-dynamic";
 
 export default async function LocalAiReportingPage() {
-  if (!financialExplanationLocalEnabled()) notFound();
+  if (!aiReportingLocalEnabled()) notFound();
   const incoming = await headers();
   let request: Request;
   try {
@@ -17,6 +17,6 @@ export default async function LocalAiReportingPage() {
   } catch {
     notFound();
   }
-  if (!financialExplanationRequestAllowed(request)) notFound();
+  if (!aiReportingRequestAllowed(request)) notFound();
   return <LocalAiReportingWorkspace />;
 }

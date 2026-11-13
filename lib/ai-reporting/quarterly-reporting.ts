@@ -15,8 +15,12 @@ import { extractQuarterlyWorkbookSupplements } from "./workbook-supplements";
 
 const REPORT_TIMEZONE = "Asia/Kuching";
 const SUPPLIED_SYNTHETIC_WORKBOOK_SHA256 = "13c0d038845941abb8e974bc55832f0b1f157bac343c4f4ab5189ba0b0a30bfb";
+const REALISTIC_SYNTHETIC_LEDGER_SHA256 = "f10edefcf4f09a7695125ff1d727e2501ebb22f7283d441d0ed8a22336173d3a";
 
 const registeredSyntheticBusinessNames: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  [REALISTIC_SYNTHETIC_LEDGER_SHA256]: {
+    "SYNTH-DEMO-001": "Synthetic Example Sdn Bhd",
+  },
   [SUPPLIED_SYNTHETIC_WORKBOOK_SHA256]: {
     "BUS-001": "Kopi Kita Cafe Sdn. Bhd.",
     "BUS-002": "Borneo BuildWorks Sdn. Bhd.",
