@@ -1,14 +1,12 @@
-import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
-import { pocLocalEnabled, pocRequestAllowed } from '@/lib/server/poc-reconciliation/runtime';
-import FinanceQuestionsWorkspace from '@/components/poc-finance-qa/workspace';
-export const metadata = { title: 'Finance questions' };
-/** Combined local PoC stack only; there is no hosted or illustrative version of this page. */
-export default async function Page() {
-    if (!pocLocalEnabled()) notFound();
-    const h = await headers();
-    let request: Request;
-    try { request = new Request(`http://${h.get('host') ?? 'invalid'}/finance-questions`, { headers: h }); } catch { notFound(); }
-    if (!pocRequestAllowed(request)) notFound();
-    return <FinanceQuestionsWorkspace />;
+import { redirect } from 'next/navigation';
+
+/** Keep old bookmarks and selected source links working under the unified chatbot route. */
+export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+    const values = await searchParams;
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(values)) {
+        if (Array.isArray(value)) for (const item of value) query.append(key, item);
+        else if (value !== undefined) query.set(key, value);
+    }
+    redirect(`/chatbot${query.size ? `?${query.toString()}` : ''}`);
 }
