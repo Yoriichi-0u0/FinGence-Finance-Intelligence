@@ -1,6 +1,7 @@
 import "server-only";
 import type { IngestionResult } from "../../ingestion/models";
 import type { TransactionDatabase } from "../db/postgres";
+import type { TrustedPrincipal } from "../security/authorization";
 import { PersistenceError, type PersistedAttempt } from "./contracts";
 import { preparePersistencePlan } from "./map";
 import { createPersistenceRepository } from "./repository";
@@ -9,6 +10,8 @@ import { createPersistenceRepository } from "./repository";
 export interface GroupedPersistenceRequest {
   attempt_id: string;
   results: readonly IngestionResult[];
+  /** Trusted server-resolved identity context. Never populate from request JSON. */
+  ownership?: TrustedPrincipal;
 }
 export interface GroupedPersistenceReceipt {
   attempt_id: string;
@@ -24,6 +27,22 @@ function attemptId(value: unknown): string {
   }
   return value.toLowerCase();
 }
+function trustedOwnership(value: unknown): Readonly<{ subjectId: string; organizationId: string }> | null {
+  if (value === undefined) return null;
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new PersistenceError("INVALID_INPUT");
+  const prototype = Object.getPrototypeOf(value);
+  const descriptors = Object.getOwnPropertyDescriptors(value);
+  if ((prototype !== Object.prototype && prototype !== null) || Object.keys(descriptors).sort().join(",") !== "organizationId,role,subjectId"
+    || Object.values(descriptors).some(descriptor => !("value" in descriptor))) throw new PersistenceError("INVALID_INPUT");
+  const subjectId = descriptors.subjectId.value;
+  const organizationId = descriptors.organizationId.value;
+  if (typeof subjectId !== "string" || typeof organizationId !== "string" || descriptors.role.value !== "finance_analyst"
+    || !uuid.test(subjectId) || !uuid.test(organizationId)) {
+    throw new PersistenceError("INVALID_INPUT");
+  }
+  return Object.freeze({ subjectId: subjectId.toLowerCase(), organizationId: organizationId.toLowerCase() });
+}
 
 /** Must use the same authoritative writable database for writes and investigation. */
 export function createGroupedPersistenceService(database: TransactionDatabase) {
@@ -31,6 +50,7 @@ export function createGroupedPersistenceService(database: TransactionDatabase) {
     async persistGroupedAttempt(input: GroupedPersistenceRequest): Promise<GroupedPersistenceReceipt> {
       const id = attemptId(input.attempt_id);
       if (!Array.isArray(input.results) || input.results.length === 0) throw new PersistenceError("INVALID_INPUT");
+      const ownership = trustedOwnership(input.ownership);
       // Validate every dataset before BEGIN, including zero-accepted results.
       const children = input.results.map(result => ({
         plan: preparePersistencePlan({ results: [result] }),
@@ -65,6 +85,15 @@ export function createGroupedPersistenceService(database: TransactionDatabase) {
               "UPDATE public.ingestion_batches SET persistence_attempt_id=$1, dataset_id=$2, context=$3::jsonb WHERE id=$4",
               [id, dataset_id, JSON.stringify(child.metadata), receipt.batch_id]);
             if (linked.rowCount !== 1) throw new PersistenceError("PERSISTENCE_FAILED");
+            // Ownership is recorded atomically with the new C1 batch. If this insert
+            // fails, the surrounding grouped transaction rolls back the financial write.
+            if (ownership) {
+              const owned = await connection.query(
+                `INSERT INTO public.transaction_batch_ownership (batch_id, organization_id, owner_subject_id)
+                 VALUES ($1::uuid, $2::uuid, $3::uuid)`,
+                [receipt.batch_id, ownership.organizationId, ownership.subjectId]);
+              if (owned.rowCount !== 1) throw new PersistenceError("PERSISTENCE_FAILED");
+            }
             datasets.push({ ...receipt, dataset_id, source_file: child.plan.batch.source_file,
               status: receipt.accepted_record_count === 0 ? "COMPLETED_EMPTY" : "ACTIVE" });
           }
