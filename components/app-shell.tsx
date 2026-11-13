@@ -41,9 +41,7 @@ const navigation = [...workspace, ...results];
 // Local M5 only; the page itself enforces role-scoped access on the server.
 const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
 // Local combined PoC only; the page and API are absent elsewhere.
-const financeQuestions = { href: "/finance-questions", label: "Finance questions", icon: MessageSquareText };
-// Browser-only synthetic demo: rule-based answers over the current processing context.
-const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareText };
+const financeQuestions = { href: "/chatbot", label: "Finance chatbot", icon: MessageSquareText };
 // Management (Technical): server processing jobs, flagged items and the pause switch; absent unless the server enables it.
 const management = { href: "/management", label: "Management", icon: Gauge };
 
@@ -105,7 +103,7 @@ type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boo
 
 function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const ask = [...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : [])];
+  const ask = localReconciliation || syntheticDemo ? [financeQuestions] : [];
   const technical = [...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])];
 
   return (
@@ -139,13 +137,13 @@ function Sidebar({ onNavigate, localFinancialConsumers = false, localAdministrat
 }
 
 /** Phone navigation: the four most used pages in a bottom bar, and everything else behind "More". */
-function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDemo: boolean }) {
+function BottomBar({ onMore, chatbotAvailable }: { onMore: () => void; chatbotAvailable: boolean }) {
   const pathname = usePathname();
   const items: NavItem[] = [
     { href: "/", label: "Overview", icon: House },
     { href: "/data", label: "Data", icon: Database },
     { href: "/reconciliation", label: "Reconcile", icon: RefreshCw },
-    syntheticDemo ? { href: "/ask", label: "Ask", icon: MessageSquareText } : { href: "/reports", label: "Reports", icon: FileBarChart },
+    chatbotAvailable ? { href: "/chatbot", label: "Chat", icon: MessageSquareText } : { href: "/reports", label: "Reports", icon: FileBarChart },
   ];
   const elsewhere = !items.some((item) => isActive(pathname, item.href));
   return (
@@ -178,7 +176,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
-  const current = [...navigation, financeQuestions, demoQuestions, administration, management].find((item) => isActive(pathname, item.href));
+  const current = [...navigation, financeQuestions, administration, management].find((item) => isActive(pathname, item.href));
 
   return (
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
@@ -205,14 +203,14 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1480px] px-4 pb-28 pt-5 sm:px-6 sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
-          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
+          {syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/chatbot"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link> Hosted persistence, authentication and reconciliation are pending.
           </aside>}
           {children}
         </main>
       </div>
 
-      <BottomBar onMore={() => setMobileOpen(true)} syntheticDemo={syntheticDemo} />
+      <BottomBar onMore={() => setMobileOpen(true)} chatbotAvailable={syntheticDemo || localReconciliation} />
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
