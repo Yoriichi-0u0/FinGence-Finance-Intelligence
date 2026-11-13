@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/app-shell";
 import "./globals.css";
@@ -46,7 +47,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <head>
         {/* The saved theme choice (if any) is applied before the first paint; otherwise the system setting is used. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("fingence-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()` }} />
+        <Script id="fingence-theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem("fingence-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`}
+        </Script>
       </head>
       <body className="min-h-full">
         <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()}>{children}</AppShell>
