@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-12",
+  "branch": "feature/ai06-gpt-integration-celester",
+  "status": "BLOCKED_BEFORE_CONNECTION",
+  "scope": "Approved group-only catalog inspection; no owner/service/application identity fallback",
+  "declared_target": {
+    "project": "FinGence-Production",
+    "database_branch": "main",
+    "schema": "fingence_reconciliation"
+  },
+  "target_verification": {
+    "historical_project_ref": "zmtdozblpvtjniehwjrw",
+    "historical_database": "postgres",
+    "historical_source_commit": "943e0ef3e904fb5ba338cc3ba51ddc63dc7b20c9",
+    "current_project_branch_attestation": "NOT_VERIFIED",
+    "current_database_identity": "NOT_VERIFIED"
+  },
+  "configuration_findings": {
+    "group_catalog_inspector_candidates": 0,
+    "group_owner_configuration": "PRESENT_REJECTED_WITHOUT_CONNECTION",
+    "group_application_runtime_configuration": "PRESENT_REJECTED_WITHOUT_CONNECTION",
+    "group_broker_configuration": "PRESENT_REJECTED_WITHOUT_CONNECTION",
+    "separate_inspector_configuration": "PERSONAL_FYP_A_TARGET_REJECTED_WITHOUT_CONNECTION",
+    "group_ca_file": "CONFIGURED_AND_EXISTS",
+    "live_peer_certificate_verification": "NOT_ATTEMPTED",
+    "live_role_privilege_verification": "NOT_ATTEMPTED"
+  },
+  "approved_sql": {
+    "path": "supabase/tests/db04-005-production-catalog-review.sql",
+    "sha256": "a024940f6016fa11ef09eac3709e430d9116b92f5a9ff4bda529545c29c9cd5c",
+    "matches_previous_review_zip": true,
+    "statements": 36,
+    "static_catalog_only_guard": "PASS_NOT_ENGINE_VALIDATED",
+    "executed_statements": 0
+  },
+  "migration_005": {
+    "sha256": "7813c97657cb947e950d23d88d7e2666ed9a57dc8b72daa73c8bc2a603a9ff92",
+    "changed": false,
+    "applied": false,
+    "readiness": "BLOCKED_PENDING_RESTRICTED_ACCESS_AND_TARGET_DEPENDENCY_REVIEW"
+  },
+  "historical_not_live_findings": {
+    "source": "943e0ef:docs/integration/db04-group-hosted-installation.md and supabase/sql/db04-group-review/install-review.sql",
+    "postgresql_version": "17.11",
+    "reconciliation_table_count": 11,
+    "group_membership_relation": "fingence_db04_group_synthetic.memberships",
+    "group_runtime_role": "fingence_db04_group_runtime",
+    "migration_005_membership_relation": "fingence_m2.memberships",
+    "migration_005_runtime_role": "fingence_reconciliation_runtime",
+    "compatibility": "SOURCE_MISMATCH_REQUIRES_LIVE_VERIFICATION_AND_SEPARATE_REVIEW"
+  },
+  "current_live_findings": {
+    "postgresql_version": null,
+    "db04_table_count": null,
+    "constraints_foreign_keys": null,
+    "triggers_rls": null,
+    "roles_grants": null,
+    "authentication_audit_dependencies": null
+  },
+  "actions": {
+    "connections_attempted": 0,
+    "sql_statements_executed": 0,
+    "ddl_dml": 0,
+    "financial_auth_session_rows_read": 0,
+    "credential_or_permission_changes": 0,
+    "groq_calls": 0,
+    "push_merge_deploy": 0
+  },
+  "retained_local_test_evidence": {
+    "source": "prior local regression run; not rerun this task",
+    "passed": 157,
+    "failed": 0,
+    "skipped": 1,
+    "included_gpt_native_passed": 14,
+    "hosted_tests_executed_this_task": 0
+  },
+  "resume_requirements": [
+    "Existing dedicated group catalog-only connection supplied privately, with exact project/main branch attestation and TLS CA configuration; no role provisioning implied",
+    "Restricted actual identity and effective privileges must be verified using separately reviewed catalog-only gating before the main inspection",
+    "Review historical namespace/runtime mismatch with responsible owners; do not create personal identity namespaces or rewrite existing objects",
+    "Any migration modification/application requires separate review/approval"
+  ]
+}

@@ -6,6 +6,9 @@ import {createFinancialProcessingService} from './service';
 import {financialViews} from './financial-views';
 import type {RegisteredPair} from './processing';
 import type {Provider} from './ai03/types';
+import {createGPTProposer,type GPTProvider} from './gpt';
+import type {GPTResult} from './gpt';
+import {createGPTEvidenceService} from './gpt-persistence';
 /** Internal composition only. No route, owner connection or identity fallback.
  * Caller owns both pools and supplies the separately approved authority. */
 export function createReconciliationBackend(input:{financial:TransactionDatabase;broker:TransactionDatabase;authority:HostedAuthority;registry:RegisteredPair}){
@@ -18,6 +21,12 @@ export function createReconciliationBackend(input:{financial:TransactionDatabase
    financialViews:financialViews({version:'db04-processing-read/1',processingId:id,...context},id)};
  };
  return {
+  persistGPTEvidence:(accessToken:string,result:GPTResult)=>admission.withFinance(accessToken,capability=>
+   createGPTEvidenceService(input.financial,input.registry).persist(capability,result)),
+  getGPTEvidence:(accessToken:string,processingId:string,evidenceId:string)=>admission.withFinance(accessToken,capability=>
+   createGPTEvidenceService(input.financial,input.registry).get(capability,processingId,evidenceId)),
+  proposeGPT:(accessToken:string,processingId:string,provider:GPTProvider)=>admission.withFinance(accessToken,capability=>
+   createGPTProposer(async(token,id)=>({version:'db04-processing-read/1',processingId:id,...await processing.get(token,id)}),input.registry)(capability,processingId,provider)),
   process:(accessToken:string,documents:unknown,e5?:Provider)=>admission.withFinance(accessToken,async capability=>{
    const result=await pipeline.process(capability,documents,e5);
    if(!result.supported)return result;

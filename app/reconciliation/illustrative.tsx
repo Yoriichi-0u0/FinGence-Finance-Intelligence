@@ -1,4 +1,5 @@
 "use client";
+import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
 
 import { useMemo, useState } from "react";
 import {
@@ -100,6 +101,7 @@ export default function ReconciliationPage() {
         </div>
       </Panel>
 
+      <GPTSuggestions/>
       <div className="mt-4 grid grid-cols-3 rounded-xl border border-[var(--border)] bg-white p-1 panel-shadow" role="tablist" aria-label="Reconciliation status">
         {tabs.map((item) => (
           <button

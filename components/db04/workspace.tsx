@@ -1,4 +1,5 @@
 'use client';
+import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
 import {useState} from 'react';
 import {dashboardContext,type ProcessingDashboardV1} from '@/lib/reconciliation-dashboard';
 import ProposalEvidence from './proposal-evidence';
@@ -27,7 +28,7 @@ export default function DB04Workspace({view}:{view:'transactions'|'reconciliatio
  <button onClick={()=>setTab('analytics')}>Analytics</button><button onClick={()=>setTab('forecasting')}>Forecasting</button><button onClick={()=>setTab('reports')}>Reports</button>
  <div hidden={tab!=='transactions'&&tab!=='reconciliation'}>
  {tab==='transactions'?<table><thead><tr><th>Source</th><th>Record</th><th>Date basis</th><th>Date</th><th>Amount</th><th>Currency</th></tr></thead><tbody>{result.transactions.map(t=><tr key={`${t.kind}:${t.record_id}`}><td>{String(t.kind)}</td><td>{String(t.record_id)}</td><td>{String(t.date_basis)}</td><td>{String(t.canonical_date)}</td><td>{String(t.signed_amount)}</td><td>{String(t.currency)}</td></tr>)}</tbody></table>:<><table><thead><tr><th>BANK record</th><th>LEDGER record</th><th>Decision</th></tr></thead><tbody>{result.proposals.map((p,i)=><tr key={i}><td>{String(p.bank_record_id)}</td><td>{String(p.ledger_record_id)}</td><td>{String(p.decision)}</td></tr>)}</tbody></table><p>Unresolved cases: {result.cases.length}</p></>}
- {tab==='reconciliation'&&<ProposalEvidence context={result}/>}
+ {tab==='reconciliation'&&<><GPTSuggestions batchId={result.processingId}/><ProposalEvidence context={result}/></>}
  </div>
  {['analytics','forecasting','reports'].includes(tab)&&<FinancialViews view={tab} data={result.financialViews}/>}
  </> }</section>;

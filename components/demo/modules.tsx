@@ -1,4 +1,5 @@
 'use client';
+import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { Download, Printer, Send } from 'lucide-react';
@@ -86,6 +87,7 @@ function Reconciliation({ c }: { c: Ready }) {
         <PageHeader title="Reconciliation" description="Deterministic bank-to-ledger matching for the verified source pair. Exceptions stay open; nothing is cleared automatically." />
         <SourceStrip context={c} />
         <div className="mb-4 grid gap-3 sm:grid-cols-3"><Stat label="Bank cash movement" value={money(s.currency, r.cashMovement.bank)} /><Stat label="Ledger cash movement" value={money(s.currency, r.cashMovement.ledger)} /><Stat label="Signed bank − ledger difference" value={money(s.currency, r.cashMovement.signedDifference)} detail="Cause is not inferred" /></div>
+        <GPTSuggestions batchId={c.processingId}/>
         <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">{reconciliationStatuses.map(k => <button key={k} type="button" aria-pressed={filter === k} onClick={() => { setFilter(k); setPage(0); setOpen(null); }} className={`min-h-11 rounded-lg border p-2.5 text-left ${filter === k ? 'border-[var(--teal)] bg-[var(--teal-soft)]' : 'border-[var(--border)] bg-white'}`}><span className="block text-xs">{STATUS_LABEL[k]}</span><span className="text-xl font-semibold tabular-nums">{r.counts[k]}</span></button>)}</div>
         <div className="mb-3 flex flex-wrap gap-2">{([['EXCEPTIONS', 'Quarantined exceptions'], ['ALL', 'All outcomes']] as const).map(([k, label]) => <button key={k} type="button" className={filter === k ? primaryButton : button} onClick={() => { setFilter(k); setPage(0); setOpen(null); }}>{label}</button>)}</div>
         <Panel>

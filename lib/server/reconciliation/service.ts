@@ -9,7 +9,7 @@ import { tokenHash } from '../ai-ingestion/m2/identity';
 import { approvedPoCSourceHashes } from '../poc-reconciliation/service';
 import { PIPELINE_VERSION, prepareProcessing, supportedPolicy, SAME_DAY_POLICY, type RegisteredPair, type SourceInput, type VerificationPolicy } from './processing';
 const schema = 'fingence_reconciliation';
-async function principal(tx: SqlConnection, token: string) {
+export async function principal(tx: SqlConnection, token: string) {
     if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{43}$/.test(token))
         throw Error('ACCESS_DENIED');
     await tx.query("SELECT set_config('fingence.reconciliation_token_hash',$1,true)", [tokenHash(token)]);
@@ -105,22 +105,10 @@ export function createFinancialProcessingService(db: TransactionDatabase, regist
             if (!/^[a-f0-9]{64}$/.test(id))
                 throw Error('ACCESS_DENIED');
             return db.transaction(async (tx) => {
-                const p = await principal(tx, token), args = [p.organization_id, id];
-                const job = (await tx.query(`SELECT * FROM ${schema}.jobs WHERE organization_id=$1 AND processing_id=$2`, args)).rows[0];
-                if (!job)
-                    throw Error('ACCESS_DENIED');
-                const sources = (await tx.query(`SELECT d.* FROM ${schema}.job_sources s JOIN ${schema}.documents d USING(organization_id,sha256,kind) WHERE s.organization_id=$1 AND s.processing_id=$2 ORDER BY kind`, args)).rows;
-                // Explicit text projections avoid pg NUMERIC and DATE parser mutation by any other consumer.
-                const transactions = (await tx.query(`SELECT kind,record_id,source_row,sha256,status,canonical_date::text,transaction_date::text,value_date::text,posting_date::text,date_basis,currency,signed_amount::text,original_amount,reference,evidence FROM ${schema}.transactions WHERE organization_id=$1 AND processing_id=$2 ORDER BY kind,source_row`, args)).rows;
-                const proposals = (await tx.query(`SELECT p.*,d.policy_version,d.decision,d.checks FROM ${schema}.proposals p JOIN ${schema}.decisions d USING(organization_id,processing_id,ordinal) WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
-                const cases = (await tx.query(`SELECT ordinal,reason,evidence FROM ${schema}.cases WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
-                const reviews = (await tx.query(`SELECT case_ordinal,version,state,rationale,actor_id,created_at FROM ${schema}.reviews WHERE organization_id=$1 AND processing_id=$2 ORDER BY case_ordinal,version`, args)).rows;
-                const installed=(await tx.query<{present:boolean}>("SELECT to_regclass('fingence_reconciliation.rankings') IS NOT NULL present")).rows[0].present;
-                const rankings=installed?(await tx.query(`SELECT version,evidence,created_by,created_at FROM ${schema}.rankings WHERE organization_id=$1 AND processing_id=$2 ORDER BY version`,args)).rows:[];
-                const verified=(await tx.query<{present:boolean}>("SELECT to_regclass('fingence_reconciliation.proposal_verifications') IS NOT NULL present")).rows[0].present;
-                const proposalVerifications=verified?(await tx.query(`SELECT snapshot_sha256,policy_version,outcome,evidence,created_at FROM ${schema}.proposal_verifications WHERE organization_id=$1 AND processing_id=$2 ORDER BY created_at,snapshot_sha256`,args)).rows:[];
+                const p = await principal(tx, token);
+                const context=await readReconciliationContext(tx,p.organization_id,id);
                 await audit(tx, p, id, 'READ');
-                return { job, sources, transactions, proposals, cases, reviews, rankings,proposalVerifications };
+                return context;
             }, { isolationLevel: 'READ COMMITTED' });
         },
         async review(token: string, id: string, ordinal: number, expectedVersion: number, state: 'OPEN' | 'INVESTIGATING' | 'EXPLAINED' | 'ESCALATED', rationale: string) {
@@ -143,4 +131,23 @@ export function createFinancialProcessingService(db: TransactionDatabase, regist
         }
     };
     return service;
+}
+
+/** Internal authorized transaction reader; caller must resolve principal in this transaction. */
+export async function readReconciliationContext(tx:SqlConnection,organizationId:string,id:string){
+    const args=[organizationId,id];
+    const job = (await tx.query(`SELECT * FROM ${schema}.jobs WHERE organization_id=$1 AND processing_id=$2`, args)).rows[0];
+    if (!job)
+        throw Error('ACCESS_DENIED');
+    const sources = (await tx.query(`SELECT d.* FROM ${schema}.job_sources s JOIN ${schema}.documents d USING(organization_id,sha256,kind) WHERE s.organization_id=$1 AND s.processing_id=$2 ORDER BY kind`, args)).rows;
+    // Explicit text projections avoid pg NUMERIC and DATE parser mutation by any other consumer.
+    const transactions = (await tx.query(`SELECT kind,record_id,source_row,sha256,status,canonical_date::text,transaction_date::text,value_date::text,posting_date::text,date_basis,currency,signed_amount::text,original_amount,reference,evidence FROM ${schema}.transactions WHERE organization_id=$1 AND processing_id=$2 ORDER BY kind,source_row`, args)).rows;
+    const proposals = (await tx.query(`SELECT p.*,d.policy_version,d.decision,d.checks FROM ${schema}.proposals p JOIN ${schema}.decisions d USING(organization_id,processing_id,ordinal) WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
+    const cases = (await tx.query(`SELECT ordinal,reason,evidence FROM ${schema}.cases WHERE organization_id=$1 AND processing_id=$2 ORDER BY ordinal`, args)).rows;
+    const reviews = (await tx.query(`SELECT case_ordinal,version,state,rationale,actor_id,created_at FROM ${schema}.reviews WHERE organization_id=$1 AND processing_id=$2 ORDER BY case_ordinal,version`, args)).rows;
+    const installed=(await tx.query<{present:boolean}>("SELECT to_regclass('fingence_reconciliation.rankings') IS NOT NULL present")).rows[0].present;
+    const rankings=installed?(await tx.query(`SELECT version,evidence,created_by,created_at FROM ${schema}.rankings WHERE organization_id=$1 AND processing_id=$2 ORDER BY version`,args)).rows:[];
+    const verified=(await tx.query<{present:boolean}>("SELECT to_regclass('fingence_reconciliation.proposal_verifications') IS NOT NULL present")).rows[0].present;
+    const proposalVerifications=verified?(await tx.query(`SELECT snapshot_sha256,policy_version,outcome,evidence,created_at FROM ${schema}.proposal_verifications WHERE organization_id=$1 AND processing_id=$2 ORDER BY created_at,snapshot_sha256`,args)).rows:[];
+    return {job,sources,transactions,proposals,cases,reviews,rankings,proposalVerifications};
 }

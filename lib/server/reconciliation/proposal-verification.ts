@@ -32,7 +32,7 @@ export function verifyPersistedProposals(org:string,id:string,job:Row,sources:Ro
    RAW_DATES:be.ValueDate===b?.value_date&&le.PostingDate===l?.posting_date&&date(be.ValueDate)&&date(le.PostingDate),
    DISTINCT_RECORDS:!!b&&!!l&&b!==l,
   };
-  const known=['db04-fuzzy-proposals/1','db04-e5-proposals/1'].includes(String(algorithm));
+  const known=['db04-fuzzy-proposals/1','db04-e5-proposals/1','db04-gpt-proposals/1'].includes(String(algorithm));
   const lineage=known&&c.version===algorithm&&c.bankSha256===b?.sha256&&c.ledgerSha256===l?.sha256&&c.amount===b?.signed_amount&&c.currency===b?.currency&&c.bankDateBasis===b?.date_basis&&c.ledgerDateBasis===l?.date_basis&&typeof c.score==='number'&&Number.isFinite(c.score)&&c.scoringEvidence!==null&&typeof c.scoringEvidence==='object';
   const identity={REFERENCE:!!text(be.BankReference)&&text(be.BankReference)===text(le.LedgerReference),COUNTERPARTY:!!text(be.Counterparty)&&text(be.Counterparty)===text(le.Counterparty)};
   const bankPartners=[...new Set(candidates.filter(x=>x.candidate.bankRecordId===c.bankRecordId).map(x=>x.candidate.ledgerRecordId))];
