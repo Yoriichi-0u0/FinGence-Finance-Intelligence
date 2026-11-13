@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { parseBatchId } from "../api/batch-contract";
 import { createBatchQueryService } from "../api/batch-query";
 import { parseTransactionId } from "../api/transaction-contract";
@@ -31,6 +32,11 @@ export function createScopedReadService(deps: ScopedReadDependencies) {
     || Buffer.byteLength(deps.cursorSecret, "utf8") < 32) throw new Error("Scoped read dependencies are unavailable");
   const guard = createTransactionSecurityGuard({ database: deps.auditDatabase, resolvePrincipal: deps.resolvePrincipal,
     resolveAccess: deps.resolveAccess, resolveTransactionScope: deps.resolveTransactionScope });
+
+  async function auditMalformedTarget(action: "transaction.read" | "batch.read") {
+    await recordApiSecurityEvent(deps.auditDatabase, { actorId: null, organizationId: null, action, outcome: "denied",
+      targetType: null, targetId: null, requestId: randomUUID(), approvalId: null });
+  }
 
   function snapshot(context: AuthorizedTransactionRequest): AuthorizedTransactionRequest {
     return Object.freeze({ ...context, principal: Object.freeze({ ...context.principal }),
@@ -70,7 +76,9 @@ export function createScopedReadService(deps: ScopedReadDependencies) {
     },
 
     async getTransaction(id: string, request: Request) {
-      const target = parseTransactionId(id);
+      let target: string;
+      try { target = parseTransactionId(id); }
+      catch { await auditMalformedTarget("transaction.read"); throw new TransactionSecurityError(404, "RESOURCE_NOT_FOUND"); }
       let authorized: AuthorizedTransactionRequest;
       try { authorized = await guard.authorizeRequest(request, "transaction.read", target); }
       catch (error) {
@@ -92,7 +100,9 @@ export function createScopedReadService(deps: ScopedReadDependencies) {
     },
 
     async getBatch(id: string, request: Request) {
-      const target = parseBatchId(id);
+      let target: string;
+      try { target = parseBatchId(id); }
+      catch { await auditMalformedTarget("batch.read"); throw new TransactionSecurityError(404, "RESOURCE_NOT_FOUND"); }
       let authorized: AuthorizedTransactionRequest;
       try { authorized = await guard.authorizeRequest(request, "batch.read", target); }
       catch (error) {
