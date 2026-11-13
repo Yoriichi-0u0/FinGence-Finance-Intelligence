@@ -8,9 +8,14 @@ if(process.argv[2]==='serve'){
  const require=createRequire(import.meta.url),child=spawn(process.execPath,[require.resolve('next/dist/bin/next'),'dev','--hostname','127.0.0.1','--port','3183'],{env:process.env,stdio:'inherit'});
  for(const signal of['SIGINT','SIGTERM'])process.on(signal,()=>child.kill(signal));child.on('exit',code=>{process.exitCode=code??1;});
 }else{
- await import('./ai-runtime-03.mjs');const{m3Runtime}=await import('../lib/server/financial-m3/runtime.ts');const{closeM2Runtime}=await import('../lib/server/ai-ingestion/m2/runtime.ts');const{provisionM3Account,setLocalOrganizationActive}=await import('../lib/server/financial-m3/management.ts');
- try{const{database}=await m3Runtime();if(process.argv[2]==='account'){
+ await import('./ai-runtime-03.mjs');const{m3Runtime}=await import('../lib/server/financial-m3/runtime.ts');const{closeM2Runtime}=await import('../lib/server/ai-ingestion/m2/runtime.ts');const{provisionM3Account,resetM3LocalAccountPassword,setLocalOrganizationActive}=await import('../lib/server/financial-m3/management.ts');
+ try{const{database,identity}=await m3Runtime();if(process.argv[2]==='account'){
  const result=await provisionM3Account(database,{email:process.env.M2_LOCAL_EMAIL??'',password:process.env.M2_LOCAL_PASSWORD??'',organizationName:process.env.M2_LOCAL_ORGANIZATION,organizationId:process.env.M3_LOCAL_ORGANIZATION_ID,role:process.env.M3_LOCAL_ROLE??'Finance'});console.log(JSON.stringify({userId:result.userId,organizationId:result.organizationId,membershipActive:result.active}));
- }else if(process.argv[2]==='organization'&&['activate','deactivate'].includes(process.argv[3])){await setLocalOrganizationActive(database,process.env.M3_LOCAL_ORGANIZATION_ID??'',process.argv[3]==='activate');console.log('Local organization lifecycle updated. Memberships/sessions were not automatically reinstated.');}else throw new Error('Use serve, account or organization activate/deactivate.');
+ }else if(process.argv[2]==='reset-password'){
+ const result=await resetM3LocalAccountPassword(database,{email:process.env.M2_LOCAL_EMAIL??'',password:process.env.M2_LOCAL_PASSWORD??''});console.log(JSON.stringify(result));
+ }else if(process.argv[2]==='check-login'){
+ try{const login=await identity.login(process.env.M2_LOCAL_EMAIL??'',process.env.M2_LOCAL_PASSWORD??'');await identity.logout(login.token);console.log('LOCAL_LOGIN_CHECK: PASS (credentials and active membership accepted; temporary session revoked)');}
+ catch(error){if(error instanceof Error&&error.message==='ACCESS_DENIED')console.log('LOCAL_LOGIN_CHECK: FAIL (credentials or active membership were refused)');else throw error;}
+ }else if(process.argv[2]==='organization'&&['activate','deactivate'].includes(process.argv[3])){await setLocalOrganizationActive(database,process.env.M3_LOCAL_ORGANIZATION_ID??'',process.argv[3]==='activate');console.log('Local organization lifecycle updated. Memberships/sessions were not automatically reinstated.');}else throw new Error('Use serve, account, reset-password or organization activate/deactivate.');
  }finally{await closeM2Runtime();}
 }
