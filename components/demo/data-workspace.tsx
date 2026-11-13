@@ -131,7 +131,7 @@ export default function DemoDataWorkspace() {
                     </details>
                     {notice ? <Callout role="alert" tone="bad">{notice}</Callout> : null}
                     <div>
-                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Selected {selected.length ? `· ${selected.length}` : ''}</p>
+                        <p className="mb-2 text-[12px] font-semibold text-[var(--muted)]">Selected {selected.length ? `· ${selected.length}` : ''}</p>
                         {selected.length ? <ul aria-label="Selected documents" className="space-y-1.5">{selected.map(d => <li key={d.name} className="flex min-w-0 items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2 text-sm"><FileText aria-hidden="true" size={16} className="shrink-0 text-[var(--muted)]" /><span className="min-w-0 flex-1 break-all">{d.name}</span><span className="shrink-0 text-xs text-[var(--muted)]">{kb(d.bytes.byteLength)} · {d.provenance === 'PUBLIC_SYNTHETIC_SAMPLE' ? 'sample' : 'yours'}</span></li>)}</ul>
                             : <p className="rounded-xl border border-dashed border-[var(--border)] px-3 py-3 text-sm text-[var(--muted)]">No documents selected.</p>}
                     </div>

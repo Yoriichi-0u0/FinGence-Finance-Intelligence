@@ -14,7 +14,7 @@ export const outflow = (currency: string, value: string) => money(currency, valu
 /** True when the current processing includes the visitor's own files rather than only the built-in fictional samples. */
 export const usesOwnDocuments = (context: ProcessingContext) => context.documents.some(d => d.provenance === 'USER_SUPPLIED');
 export const button = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-4 py-2 text-sm font-semibold text-[var(--ink)] transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-[var(--border-strong)] disabled:hover:bg-[var(--surface)]';
-export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-4 py-2 text-sm font-semibold text-white shadow-[0_6px_16px_-6px_rgb(79_70_229/0.55)] transition-colors hover:bg-[var(--brand-solid-hover)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none';
+export const primaryButton = 'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[var(--brand-solid)] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--brand-solid-hover)] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none';
 /** A text input or select. */
 export const field = 'min-h-11 w-full rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm text-[var(--ink)] outline-none transition-colors placeholder:text-[var(--muted)] focus:border-[var(--brand)] focus:ring-4 focus:ring-[var(--brand-soft)]';
 /** A pill-shaped choice (tabs, filters, segmented controls); pass the selected state. */
@@ -39,7 +39,7 @@ const TONE: Record<Tone, string> = { brand: 'bg-[var(--brand)]', good: 'bg-[var(
 export function Stat({ label, value, detail, tone = 'plain', icon }: { label: string; value: string; detail?: string; tone?: Tone; icon?: React.ReactNode }) {
     return <div className="panel-shadow relative min-w-0 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
         <span aria-hidden="true" className={`absolute inset-y-4 left-0 w-[3px] rounded-r-full ${TONE[tone]}`} />
-        <p className="flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--muted)]">{icon}{label}</p>
+        <p className="flex items-center gap-1.5 text-[12px] font-medium text-[var(--muted)]">{icon}{label}</p>
         <p className="mt-2 break-words text-[22px] font-semibold leading-tight tracking-[-0.03em] tabular-nums sm:text-[26px]">{value}</p>
         {detail ? <p className="mt-1.5 text-xs leading-relaxed text-[var(--muted)]">{detail}</p> : null}
     </div>;
@@ -95,7 +95,7 @@ export function Table({ columns, rows, caption, stack = true, numeric = [] }: { 
         <div className={`thin-scrollbar overflow-x-auto ${stack ? 'hidden md:block' : ''}`}>
             <table className="w-full min-w-[640px] text-left text-sm">
                 <caption className="sr-only">{caption}</caption>
-                <thead><tr className="border-b border-[var(--border)] bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.06em] text-[var(--muted)]">{columns.map((c, j) => <th key={c} scope="col" className={`px-4 py-2.5 font-semibold ${align(j)}`}>{c}</th>)}</tr></thead>
+                <thead><tr className="border-b border-[var(--border)] bg-[var(--surface-subtle)] text-[11px] text-[var(--muted)]">{columns.map((c, j) => <th key={c} scope="col" className={`px-4 py-2.5 font-semibold ${align(j)}`}>{c}</th>)}</tr></thead>
                 <tbody>{rows.map((r, i) => <tr key={i} className="border-b border-[var(--border)] transition-colors last:border-0 hover:bg-[var(--surface-subtle)]">{r.map((cell, j) => <td key={j} className={`px-4 py-3 align-top ${align(j)}`}>{cell}</td>)}</tr>)}</tbody>
             </table>
         </div>

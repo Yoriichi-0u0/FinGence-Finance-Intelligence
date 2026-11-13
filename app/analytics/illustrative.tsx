@@ -107,13 +107,13 @@ export default function AnalyticsPage() {
         </Panel>
       </div>
 
-      <Panel title="AI financial insights" className="mt-4" action={<span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--teal)]"><CircleGauge aria-hidden="true" size={14} /> Structured insight cards</span>}>
+      <Panel title="AI financial insights" className="mt-4" action={<span className="inline-flex items-center gap-1 text-[12px] font-semibold text-[var(--teal)]"><CircleGauge aria-hidden="true" size={14} /> Structured insight cards</span>}>
         <div className="grid divide-y divide-[var(--border)] md:grid-cols-2 md:divide-x md:divide-y-0">
           {financialInsights.map((insight, index) => (
             <article key={insight} className="flex gap-3 p-5">
               <InsightIcon />
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.09em] text-[var(--muted)]">Insight {index + 1}</p>
+                <p className="text-[12px] font-semibold text-[var(--muted)]">Insight {index + 1}</p>
                 <p className="mt-1.5 text-sm leading-6 text-[var(--muted-strong)]">{insight}</p>
               </div>
             </article>

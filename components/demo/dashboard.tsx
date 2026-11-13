@@ -129,7 +129,7 @@ export function DashboardEditor({ draft, admin, where, saving, error, onChange, 
     const iconButton = 'grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--ink)] transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-[var(--surface)]';
     return <section id="dashboard-editor" aria-labelledby="dashboard-editor-title" className="panel-shadow mb-5 min-w-0 overflow-hidden rounded-2xl border border-[var(--brand-line)] bg-[var(--surface)]">
         <div className="border-b border-[var(--border)] px-4 py-3.5 sm:px-5">
-            <p className="mb-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand)]">{where === 'workspace' ? 'Only you see this layout · it follows you on any device' : 'Kept in this browser'}</p>
+            <p className="mb-0.5 text-[12px] font-semibold text-[var(--brand)]">{where === 'workspace' ? 'Only you see this layout · it follows you on any device' : 'Kept in this browser'}</p>
             <h2 id="dashboard-editor-title" ref={heading} tabIndex={-1} className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--ink)] outline-none sm:text-base">Customise dashboard</h2>
             <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">Show or hide cards and move them up or down. The dashboard below changes as you go; press Done to keep it.</p>
         </div>
@@ -173,7 +173,7 @@ export function CounterpartiesCard({ currency, rows }: { currency: string; rows:
         return [...by.entries()].sort((a, b) => (b[1].cents > a[1].cents ? 1 : b[1].cents < a[1].cents ? -1 : a[0].localeCompare(b[0]))).slice(0, 5);
     };
     const side = (title: string, list: ReturnType<typeof top>, show: (v: string) => string) => <div className="min-w-0 px-4 py-3 sm:px-5">
-        <h3 className="text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--muted)]">{title}</h3>
+        <h3 className="text-[12px] font-medium text-[var(--muted)]">{title}</h3>
         {list.length ? <ol className="mt-2 space-y-1.5">{list.map(([name, t]) => <li key={name} className="flex min-w-0 items-baseline gap-3 text-sm">
             <span className="min-w-0 flex-1 truncate" title={name}>{name}</span>
             <span className="shrink-0 text-xs text-[var(--muted)] tabular-nums">{t.n}×</span>
@@ -242,12 +242,12 @@ export function AtAGlanceCard({ tiles, report }: { tiles: GlanceTile[]; report: 
     return <Panel title="Your results at a glance" eyebrow="Every page, in one line each">
         <ul className="grid gap-px bg-[var(--border)] sm:grid-cols-2 xl:grid-cols-4">
             {tiles.map(t => <li key={t.href} className="bg-[var(--surface)]"><Link href={t.href} className="group flex h-full min-h-24 flex-col gap-1 px-4 py-3.5 transition-colors hover:bg-[var(--surface-subtle)] sm:px-5">
-                <span className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--muted)]"><span className="text-[var(--brand)]">{t.icon}</span>{t.label}<ArrowRight aria-hidden="true" size={13} className="ml-auto transition-transform group-hover:translate-x-0.5" /></span>
+                <span className="flex items-center gap-2 text-[12px] font-medium text-[var(--muted)]"><span className="text-[var(--brand)]">{t.icon}</span>{t.label}<ArrowRight aria-hidden="true" size={13} className="ml-auto transition-transform group-hover:translate-x-0.5" /></span>
                 <span className="text-lg font-semibold leading-snug tracking-[-0.02em] tabular-nums">{t.value}</span>
                 <span className="text-xs leading-relaxed text-[var(--muted)]">{t.detail}</span>
             </Link></li>)}
             <li className="flex flex-col gap-2 bg-[var(--brand-soft)] px-4 py-3.5 sm:col-span-2 sm:px-5 xl:col-span-2">
-                <span className="flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.06em] text-[var(--brand-ink)]"><FileDown aria-hidden="true" size={14} />Report</span>
+                <span className="flex items-center gap-2 text-[12px] font-medium text-[var(--brand-ink)]"><FileDown aria-hidden="true" size={14} />Report</span>
                 <span className="text-xs leading-relaxed text-[var(--muted-strong)]">{report.detail}</span>
                 <span className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-2">
                     <Link href="/reports?print=1" className={primaryButton}><FileDown aria-hidden="true" size={15} />Download report</Link>

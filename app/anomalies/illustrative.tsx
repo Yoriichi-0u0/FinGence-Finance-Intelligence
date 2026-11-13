@@ -57,7 +57,7 @@ export default function IllustrativeAnomaliesPage() {
         <Panel title="Detected anomalies" action={<span className="text-xs text-[var(--muted)]">Sorted by risk score</span>}>
           <div className="thin-scrollbar overflow-x-auto">
             <table className="w-full min-w-[820px] text-left text-xs">
-              <thead className="bg-[var(--surface-subtle)] text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
+              <thead className="bg-[var(--surface-subtle)] text-[10px] text-[var(--muted)]">
                 <tr>
                   {[
                     "Risk",

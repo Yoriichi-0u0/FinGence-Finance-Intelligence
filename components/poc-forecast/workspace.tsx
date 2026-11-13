@@ -26,7 +26,7 @@ const points = (value: string | null) => value === null ? "n/a" : `${value.start
 const secondary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
 const primary = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-teal-800 px-4 text-sm font-semibold text-white hover:bg-teal-900 disabled:cursor-not-allowed disabled:opacity-50";
 const field = "mt-1 block min-h-11 w-full min-w-0 rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
-const th = "px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--muted)]", td = "px-3 py-2 text-sm tabular-nums";
+const th = "px-3 py-2 text-left text-[12px] font-semibold text-[var(--muted)]", td = "px-3 py-2 text-sm tabular-nums";
 
 function ScoreTable({ title, rows, currency }: { title: string; rows: { metric: Metric; methods: MethodScore[]; lowestWape: Method | null }[]; currency: string | null }) {
   return (
