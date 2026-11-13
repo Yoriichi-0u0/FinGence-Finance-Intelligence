@@ -1,5 +1,7 @@
 # Phase 3 security foundation
 
+> **Current status (13 November 2026):** the local C1 transaction API security integration is now described in [c1-transaction-api-local-integration.md](./c1-transaction-api-local-integration.md). It adds loopback/development-only GET routes, M2 local session verification, an additive batch-ownership table, and audited scoped reads. The historical limitations below remain applicable to production/hosted integration and grouped persistence-attempt ownership; they do not describe the new local C1 GET routes.
+
 ## Scope
 
 This is a local, unintegrated security foundation for the proposed backend/API boundary. It contains a server-only authorization policy and an allowlisted security-audit event constructor with unit tests. It does not change Phase 1 or Phase 2 database behavior, the ingestion contract, hosted Supabase, or any team member's ZIP file.
