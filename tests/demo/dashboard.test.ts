@@ -156,3 +156,15 @@ describe('Data as three steps', () => {
         expect(page).not.toContain('Identify documents and roles');
     });
 });
+
+describe('Reconciliation: saved GPT matching suggestions (#121)', () => {
+    const asRole = (role: 'FINANCE' | 'ADMIN', child: ReactNode) => createElement(WorkspaceContext.Provider, { value: { enabled: true, loading: false, session: { email: 'x@example.invalid', role, organization: { name: 'SAIC' }, processing: { paused: false, reason: null, since: null }, ai: { enabled: true } }, viewRole: role, setViewAs: () => undefined, ended: false, refresh: async () => null, signOut: async () => undefined } }, child);
+    it('is shown to Admins only, because it is not switched on for hosted use yet', async () => {
+        const c = await processDocuments([doc('demo-bank-statement-2026-03.csv'), doc('demo-general-ledger-2026-03.csv')]);
+        if (!isReady(c)) throw Error('sample did not process');
+        const finance = text(asRole('FINANCE', createElement(DemoModule, { view: 'reconciliation', context: c })));
+        expect(finance).toContain('Every record, matched');
+        expect(finance).not.toContain('GPT Matching Suggestions');
+        expect(text(asRole('ADMIN', createElement(DemoModule, { view: 'reconciliation', context: c })))).toContain('GPT Matching Suggestions');
+    });
+});
