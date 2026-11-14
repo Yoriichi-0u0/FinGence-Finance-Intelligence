@@ -32,6 +32,15 @@ export function DemoBanner() {
         ? <Chip tone="brand" icon={<Sparkles aria-hidden="true" size={13} />} title={where}>{technical ? `AI layout (${aiModels.join(', ')} on Groq), checked by rules` : 'AI read the layout, rules checked every figure'}</Chip>
         : aiRejected ? <Chip tone="warn" icon={<TriangleAlert aria-hidden="true" size={13} />} title={where}>AI proposal quarantined, rules only</Chip>
         : <Chip icon={<Cpu aria-hidden="true" size={13} />} title={where}>{session ? session.ai.enabled ? 'Rule-based processing' : 'AI is off · rules only' : `rule-based processing ${context?.job ? 'on the FinGence server' : 'in your browser'}, not live AI`}</Chip>;
+    // Finance users (Farish, 15 Nov): the status chips are noise. Keep only what they act on: the saved run they opened
+    // (with Close) and a warning that the last documents were set aside. Admins and the public demo see every chip.
+    if (session && !technical) {
+        const savedChip = savedRun && context ? <span className={`${chip} ${TONE.brand} font-semibold`}><History aria-hidden="true" size={13} />Saved run · {new Date(savedRun.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}{savedRun.by ? ` · ${savedRun.by}` : ''}
+            <button type="button" onClick={clear} className="ml-1 underline underline-offset-2" aria-label="Close the saved run">Close</button></span> : null;
+        const setAside = status === 'ready' && context && !s ? <Chip tone="warn" icon={<TriangleAlert aria-hidden="true" size={13} />}>Last documents quarantined</Chip> : null;
+        if (!savedChip && !setAside) return null;
+        return <aside aria-label="Processing status" className="mb-5 flex flex-wrap items-center gap-1.5 print:hidden">{savedChip}{setAside}</aside>;
+    }
     return <aside aria-label="Processing status" className="-mx-4 mb-5 [scrollbar-width:none] flex items-center gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 [&>*]:shrink-0 sm:[&>*]:shrink print:hidden">
         {session ? <Chip tone="brand" icon={<Building2 aria-hidden="true" size={13} />}>{session.organization.name}</Chip>
             : <Chip tone="warn" icon={<ShieldAlert aria-hidden="true" size={13} />}>Public demo · do not use confidential or real financial documents</Chip>}
