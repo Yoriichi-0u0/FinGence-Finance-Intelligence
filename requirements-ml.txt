@@ -1,0 +1,8 @@
+# Optional local runtime for the MLForecast + XGBoost challenger (scripts/ml_forecast.py).
+# Verified on Python 3.12.3, Linux x86_64. Direct pins only; transitive dependencies resolve from these.
+# Setup:  python3 -m venv .venv-ml && .venv-ml/bin/pip install -r requirements-ml.txt
+# Run:    FINGENCE_ML_FORECAST=1 pnpm dev
+mlforecast==1.1.0
+xgboost==3.4.1
+pandas==2.3.3
+numpy==2.5.4

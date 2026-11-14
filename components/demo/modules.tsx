@@ -21,6 +21,7 @@ import { ReconciliationStatementPanel } from './reconciliation-statement';
 import { ReconciliationOutcomePanel } from './reconciliation-outcome';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
 import { AiCommentary } from './commentary';
+import { MlChallenger } from './ml-forecast';
 import { useDemoProcessing } from './context';
 import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
 import { ConfidenceCard, CONFIDENCE_DEFINITION } from './confidence';
@@ -267,8 +268,9 @@ function Forecasting({ c }: { c: Ready }) {
                 <Panel title="Net cash by month, and next month" eyebrow={`Average of ${periodLabel(`${f.basis.first}/${f.basis.last}`)}`}><div className="p-3"><LineChart ariaLabel="Monthly net movement and next-month baseline" labels={[...bf.history.map(m => m.period.slice(2)), f.period.slice(2)]} series={[{ label: 'Observed net', color: 'var(--chart-in)', values: [...bf.history.map(m => Number(m.net)), null], fill: true }, { label: 'Baseline', color: 'var(--chart-net)', dashed: true, values: [...bf.history.map((_, i) => i === bf.history.length - 1 ? Number(bf.history[i].net) : null), Number(f.net)] }]} /></div></Panel>
                 <Panel title="How accurate this method has been" eyebrow={`Tested on ${f.tests} months already known`}><p className="border-b border-[var(--border)] px-4 py-3 text-xs leading-relaxed text-[var(--muted-strong)] sm:px-5">Average error when each method predicted a month whose real figures were already known (WAPE; lower is better). The forecast above uses the six-month average.</p><Table caption="Backtest error" numeric={[1, 2, 3]} columns={['Figure', 'Last month', '3-month average', '6-month average']} rows={(['credits', 'debits', 'net'] as const).map(m => [m === 'credits' ? 'Cash in' : m === 'debits' ? 'Cash out' : 'Net', ...(['LAST_MONTH', 'MEAN_3', 'MEAN_6'] as const).map(k => { const w = f.backtest[m].methods.find(x => x.method === k)?.wape; return w === null || w === undefined ? 'n/a' : `${w}%`; })])} /></Panel>
             </div>
+            <MlChallenger key={c.processingId} forecast={bf} />
         </>}
-        <p className="mt-4 text-xs text-[var(--muted)]">Deterministic statistical baseline (mean of the last six months) with rolling-origin backtests. No trained or AI forecasting model is used.</p>
+        <p className="mt-4 text-xs text-[var(--muted)]">The primary forecast is a deterministic statistical baseline (mean of the last six months) with rolling-origin backtests; no trained or AI model produces it. An optional, clearly labelled XGBoost challenger can be shown beside it when the local ML worker is enabled.</p>
     </>;
 }
 
