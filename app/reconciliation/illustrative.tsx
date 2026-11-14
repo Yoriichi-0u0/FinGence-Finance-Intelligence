@@ -1,5 +1,6 @@
 "use client";
 import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
+import { useTechnicalDetail } from '@/components/workspace/context';
 
 import { useMemo, useState } from "react";
 import {
@@ -35,6 +36,7 @@ export default function ReconciliationPage() {
   const [records, setRecords] = useState<ReconciliationRecord[]>(seededRecords);
   const [selectedId, setSelectedId] = useState(seededRecords[0].id);
   const [detailsVisible, setDetailsVisible] = useState(false);
+  const technical = useTechnicalDetail();
   const [message, setMessage] = useState<string | null>(null);
 
   const visibleRecords = useMemo(() => records.filter((record) => recordFitsTab(record, tab)), [records, tab]);
@@ -101,7 +103,8 @@ export default function ReconciliationPage() {
         </div>
       </Panel>
 
-      <GPTSuggestions/>
+      {/* Admins only: with no processed documents there is no saved GPT evidence to show a Finance user. */}
+      {technical ? <GPTSuggestions /> : null}
       <div className="mt-4 grid grid-cols-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 panel-shadow" role="tablist" aria-label="Reconciliation status">
         {tabs.map((item) => (
           <button
