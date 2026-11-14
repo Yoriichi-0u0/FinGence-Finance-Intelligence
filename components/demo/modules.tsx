@@ -1,4 +1,5 @@
 'use client';
+import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
 import Link from 'next/link';
 import { useTechnicalDetail } from '@/components/workspace/context';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -199,6 +200,7 @@ function Reconciliation({ c }: { c: Ready }) {
         {c.outputs.notReconciled.length ? <p className="mb-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">Not reconciled, because only one document covers {c.outputs.notReconciled.length === 1 ? 'this month' : 'these months'}: {c.outputs.notReconciled.map(n => `${periodLabel(n.period)} (${n.side === 'BANK' ? 'bank statement only' : 'books only'}, ${n.records} records)`).join('; ')}. These records are shown, never matched against nothing.</p> : null}
         {multi ? <div role="tablist" aria-label="Statement month" className="mb-3 flex flex-wrap items-center gap-2"><span className="mr-1 text-xs font-semibold text-[var(--muted)]">Statement for</span>{periods.map((p, i) => <button key={p.period} type="button" role="tab" aria-selected={month === i} className={chip(month === i)} onClick={() => setMonth(i)}>{periodLabel(p.period)}</button>)}</div> : null}
         {statement ? <div className="mb-5"><ReconciliationStatementPanel statement={statement} /></div> : null}
+        <GPTSuggestions batchId={c.processingId}/>
         <h2 className="mb-3 mt-7 text-lg font-semibold tracking-[-0.02em]">Every record, matched</h2>
         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">{reconciliationStatuses.map(k => <button key={k} type="button" aria-pressed={filter === k} onClick={() => { setFilter(k); setPage(0); setOpen(null); }} className={`min-h-11 rounded-xl border p-3 text-left transition-colors ${filter === k ? 'border-[var(--brand)] bg-[var(--brand-soft)] shadow-[inset_0_0_0_1px_var(--brand)]' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-line)]'} ${r.counts[k] ? '' : 'opacity-60'}`}><span className="block text-xs text-[var(--muted-strong)]">{STATUS_LABEL[k]}</span><span className="text-xl font-semibold tabular-nums">{r.counts[k]}</span></button>)}</div>
         <div className="mb-3 flex flex-wrap gap-2">{([['EXCEPTIONS', 'Matcher exceptions'], ['ALL', 'All outcomes']] as const).map(([k, label]) => <button key={k} type="button" className={chip(filter === k)} onClick={() => { setFilter(k); setPage(0); setOpen(null); }}>{label}</button>)}</div>
