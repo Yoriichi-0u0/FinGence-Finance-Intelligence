@@ -26,6 +26,7 @@ import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, Recon
 import { ConfidenceCard, CONFIDENCE_DEFINITION } from './confidence';
 import { HeadlineBand, NeedsYou, RoutineLine, type NeedsItem } from './signal';
 import { processingConfidence } from '@/lib/confidence';
+import { attentionCounts } from '@/lib/demo/attention';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { Callout, DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
 
@@ -67,9 +68,8 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
     const checks = c.stages.flatMap(x => x.checks), passedChecks = checks.filter(k => k.passed).length;
     const matchedCount = r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT, rate = r.results.length ? Math.round((matchedCount / r.results.length) * 100) : 0;
     const days = useMemo(() => dailyCumulative(o.bankRows), [o.bankRows]), months = monthlyTotals(c);
-    const unexplained = o.resolution?.attention.length ?? c.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length;
-    const flaggedAnomalies = ar?.flagged ?? o.anomalies.length, entries = o.resolution?.totals.entries ?? 0;
-    const unusedDocuments = c.quarantine.filter(q => q.kind === 'DOCUMENT' || q.kind === 'HISTORY').length;
+    const counts = attentionCounts(c), unexplained = counts.reconciliation, flaggedAnomalies = counts.anomalies, unusedDocuments = counts.documents;
+    const entries = o.resolution?.totals.entries ?? 0;
     const attention: Attention[] = [
         ...(unexplained ? [{ tone: 'warn' as const, title: `${unexplained} reconciliation item${unexplained === 1 ? '' : 's'} not explained`, detail: o.resolution ? `${money(s.currency, o.resolution.totals.unexplained.replace(/^-/, ''))} in total. Flagged for your technical team.` : 'Flagged for your technical team.', href: '/reconciliation' }] : []),
         ...(flaggedAnomalies ? [{ tone: 'warn' as const, title: `${flaggedAnomalies} unusual bank record${flaggedAnomalies === 1 ? '' : 's'} flagged`, detail: 'Your books could not settle them. Flagged for your technical team, not treated as fact.', href: '/anomalies' }] : []),
