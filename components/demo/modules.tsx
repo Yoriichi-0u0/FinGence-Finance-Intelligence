@@ -24,6 +24,7 @@ import { AiCommentary } from './commentary';
 import { useDemoProcessing } from './context';
 import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
 import { ConfidenceCard, CONFIDENCE_DEFINITION } from './confidence';
+import { HeadlineBand, NeedsYou, RoutineLine, type NeedsItem } from './signal';
 import { processingConfidence } from '@/lib/confidence';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { Callout, DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
@@ -76,6 +77,16 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         ...(entries ? [{ tone: 'brand' as const, title: `${entries} correcting entr${entries === 1 ? 'y' : 'ies'} prepared for your books`, detail: 'Prepared from stated rules, not posted. Download them on Reconciliation.', href: '/reconciliation' }] : []),
     ];
     const warnings = attention.filter(a => a.tone === 'warn').length;
+    // Signal ledger level 1: only what a person must act on, loud and first.
+    const confidence = useMemo(() => processingConfidence(c), [c]);
+    const needs: NeedsItem[] = [
+        ...(flaggedAnomalies ? [{ level: 'attention' as const, count: String(flaggedAnomalies), title: `unusual bank record${flaggedAnomalies === 1 ? '' : 's'} flagged`, detail: 'Your books could not settle them.', href: '/anomalies', verb: 'Review' }] : []),
+        ...(confidence.status === 'MEASURED' && confidence.band === 'LOW' ? [{ level: 'attention' as const, count: `${confidence.percent}%`, title: 'Low confidence', detail: 'Do not rely on these figures yet.', href: '#card-confidence', verb: 'See why' }] : []),
+        ...(confidence.status === 'INCOMPLETE' ? [{ level: 'attention' as const, title: 'No confidence figure', detail: confidence.reason, href: '#card-confidence', verb: 'See why' }] : []),
+        ...(unexplained ? [{ level: 'caution' as const, count: String(unexplained), title: `reconciliation item${unexplained === 1 ? '' : 's'} not explained`, detail: o.resolution ? `${money(s.currency, o.resolution.totals.unexplained.replace(/^-/, ''))} in total.` : 'Flagged for your technical team.', href: '/reconciliation', verb: 'Review' }] : []),
+        ...(unusedDocuments ? [{ level: 'caution' as const, count: String(unusedDocuments), title: `document${unusedDocuments === 1 ? '' : 's'} set aside`, detail: 'See the reason on Data.', href: '/data', verb: 'See why' }] : []),
+        ...(confidence.status === 'MEASURED' && confidence.band === 'CHECK' ? [{ level: 'caution' as const, count: `${confidence.percent}%`, title: 'Check advised', detail: 'Most of the money is accounted for. Look at what fell short.', href: '#card-confidence', verb: 'See why' }] : []),
+    ];
     // One line per results page, for "Your results at a glance".
     const top = useMemo(() => { const by = new Map<string, { cents: bigint; n: number }>(); for (const row of o.bankRows) { const t = by.get(row.counterparty) ?? { cents: 0n, n: 0 }, v = toCents(row.signedAmount); by.set(row.counterparty, { cents: t.cents + (v < 0n ? -v : v), n: t.n + 1 }); } return [...by.entries()].sort((a, b) => (b[1].cents > a[1].cents ? 1 : b[1].cents < a[1].cents ? -1 : a[0].localeCompare(b[0])))[0] ?? null; }, [o.bankRows]);
     const tiles: GlanceTile[] = [
@@ -104,12 +115,14 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         close();
     };
     const cards: Record<CardId, ReactNode> = {
-        figures: <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat tone="brand" label="Cash in" value={money(s.currency, o.totals.credits)} detail={`${o.totals.creditRows} bank receipts`} />
-            <Stat tone="plain" label="Cash out" value={outflow(s.currency, o.totals.debits)} detail={`${o.totals.debitRows} bank payments`} />
-            <Stat tone="brand" label="Net movement" value={money(s.currency, o.totals.net)} detail="Cash in minus cash out" />
-            <Stat tone="good" label="Reconciled automatically" value={`${rate}%`} detail={`${matchedCount} of ${r.results.length} records matched${o.resolution ? ` · ${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved` : ''}`} />
-        </div>,
+        figures: <HeadlineBand
+            figures={[
+                { label: 'Cash in', value: money(s.currency, o.totals.credits), detail: `${o.totals.creditRows} bank receipts` },
+                { label: 'Cash out', value: outflow(s.currency, o.totals.debits), detail: `${o.totals.debitRows} bank payments` },
+                { label: 'Net movement', value: money(s.currency, o.totals.net), detail: 'Cash in minus cash out' },
+            ]}
+            reconciled={{ label: 'Reconciled automatically', percent: rate, detail: `${matchedCount} of ${r.results.length} records matched${o.resolution ? ` · ${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved` : ''}` }}
+            report={{ href: '/reports?print=1', detail: `The ${periodLabel(s.period)} report is ready${warnings ? `, with the ${warnings} open item${warnings === 1 ? '' : 's'} marked` : ''}.` }} />,
         'cash-chart': months.length > 1
             ? <Panel className="h-full" title="Cash in and out by month" eyebrow={o.history.accepted ? 'Verified bank history' : 'Statement months'} action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
                 <div className="p-3 sm:p-4"><LineChart ariaLabel="Monthly bank cash in and cash out" labels={months.map(m => m.p.slice(2))} series={[{ label: 'Cash in', color: 'var(--chart-in)', values: months.map(m => Number(m.credits)) }, { label: 'Cash out', color: 'var(--chart-out)', values: months.map(m => -Number(m.debits)) }]} /></div>
@@ -141,7 +154,11 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         counterparties: <CounterpartiesCard currency={s.currency} rows={o.bankRows} />,
         'reconciliation-summary': <ReconciliationSummaryCard currency={s.currency} counts={r.counts} records={r.results.length} resolution={o.resolution} />,
         'last-runs': <LastRunsCard />,
-        confidence: <ConfidenceCard context={c} className="shadow-[var(--shadow-panel)]" />,
+        // High confidence is routine, so it steps back to one line; anything lower keeps the full card (and is listed under Needs you).
+        confidence: confidence.status === 'MEASURED' && confidence.band === 'HIGH'
+            ? <RoutineLine label="Processing confidence" items={[<>Processing confidence <b className="font-semibold text-[var(--ink)]">{confidence.percent}%</b> High confidence</>, `${passedChecks} of ${checks.length} checks passed`, ...(unusedDocuments ? [] : ['No documents set aside'])]}
+                more={<details className="group text-[14px]"><summary className="flex min-h-11 cursor-pointer items-center font-semibold text-[var(--brand-ink)]">How is this measured?</summary><p className="max-w-md pb-2 text-[var(--muted-strong)]">{CONFIDENCE_DEFINITION}</p></details>} />
+            : <ConfidenceCard context={c} className="shadow-[var(--shadow-panel)]" />,
         'at-a-glance': <AtAGlanceCard tiles={tiles} report={{ detail: `Management summary for ${s.businessName}, ${periodLabel(s.period)}: every figure, the reconciliation statement, flagged items and the processing confidence.` }} />,
     };
     const visible = offered(shown, dashboard.admin).filter(x => x.visible), spans = cardSpans(visible.map(x => x.id));
@@ -152,9 +169,10 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
                 <button ref={customise} type="button" className={button} disabled={!dashboard.ready || dashboard.failed} onClick={() => { setStatus(''); setDraft(dashboard.layout); }}><SlidersHorizontal aria-hidden="true" size={16} />Customise dashboard</button>
             </div>} />
         <SourceStrip context={c} />
+        {editing ? null : <NeedsYou items={needs} />}
         {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => { if (!saving) setDraft(d => d && update(d)); }} onDone={() => void done()} onCancel={close} /> : null}
         {!dashboard.ready ? <div aria-busy="true" aria-label="Loading your dashboard" className="min-h-[40vh]" />
-            : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} data-card={x.id} className={`grid min-w-0 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
+            : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} id={`card-${x.id}`} data-card={x.id} className={`grid min-w-0 scroll-mt-20 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
             : <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-8 text-center text-sm text-[var(--muted-strong)]">Every card is hidden. Use Customise dashboard to show them again.</p>}
         <p className="mt-4 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>
     </>;

@@ -23,8 +23,8 @@ export function PageHeader({
   return (
     <header className="rise-in mb-6 flex flex-col gap-4 sm:mb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
-        <p className="mb-1 text-[13px] font-semibold text-[var(--brand)]">{eyebrow ?? "FinGence"}</p>
-        <h1 className="text-[32px] font-bold leading-[1.08] tracking-[-0.025em] text-[var(--ink)] sm:text-[40px]">
+        <p className="mb-1.5 text-[14px] font-bold text-[var(--brand)]">{eyebrow ?? "FinGence"}</p>
+        <h1 className="text-[32px] font-extrabold leading-[1.06] tracking-[-0.03em] text-[var(--ink)] sm:text-[40px]">
           {title}
         </h1>
         <p className="mt-2.5 max-w-3xl text-[16px] leading-relaxed text-[var(--muted)] sm:text-[17px]">{description}</p>
@@ -59,7 +59,7 @@ export function Panel({
                 {eyebrow}
               </p>
             ) : null}
-            {title ? <h2 className="text-[17px] font-semibold tracking-[-0.015em] text-[var(--ink)]">{title}</h2> : null}
+            {title ? <h2 className="text-[18px] font-bold tracking-[-0.015em] text-[var(--ink)]">{title}</h2> : null}
           </div>
           {action}
         </div>
