@@ -42,7 +42,7 @@ export function NeedsYou({ items }: { items: NeedsItem[] }) {
 export type Figure = { label: string; value: string; detail?: string };
 
 /** The period's key figures on one ledger-navy band, with the reconciled share as a bar and the report beside them. */
-export function HeadlineBand({ figures, reconciled, report }: { figures: Figure[]; reconciled: { label: string; percent: number; detail: string }; report: { href: string; detail: string } }) {
+export function HeadlineBand({ figures, reconciled, report }: { figures: Figure[]; reconciled: { label: string; percent: number; detail: string }; report?: { href: string; detail: string } }) {
     const pct = Math.max(0, Math.min(100, reconciled.percent));
     return <section aria-label="Headline figures" className="rise-in min-w-0 rounded-[22px] bg-[var(--band)] p-5 text-[var(--band-ink)] shadow-[0_24px_48px_-28px_rgb(11_23_54/0.7)] sm:p-7">
         <div className="grid gap-x-8 gap-y-6 sm:grid-cols-2 xl:grid-cols-4">
@@ -58,10 +58,10 @@ export function HeadlineBand({ figures, reconciled, report }: { figures: Figure[
                 <p className="mt-2 text-[13px] leading-snug text-[var(--band-muted)]">{reconciled.detail}</p>
             </div>
         </div>
-        <div className="mt-6 flex flex-col gap-3 border-t border-[var(--band-line)] pt-5 sm:flex-row sm:items-center sm:justify-between">
+        {report ? <div className="mt-6 flex flex-col gap-3 border-t border-[var(--band-line)] pt-5 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-[15px] leading-snug text-[var(--band-muted)]">{report.detail}</p>
             <Link href={report.href} className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2.5 rounded-[14px] bg-white px-5 text-[16px] font-extrabold text-[#0b1736] transition-transform hover:-translate-y-0.5 focus-visible:outline-white"><FileDown aria-hidden="true" size={18} />Download report</Link>
-        </div>
+        </div> : null}
     </section>;
 }
 
