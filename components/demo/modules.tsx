@@ -28,7 +28,7 @@ import { HeadlineBand, NeedsYou, RoutineLine, type NeedsItem } from './signal';
 import { processingConfidence } from '@/lib/confidence';
 import { attentionCounts } from '@/lib/demo/attention';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
-import { Callout, DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
+import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
@@ -212,13 +212,23 @@ function Reconciliation({ c }: { c: Ready }) {
     const statement = multi ? periods[month]?.statement : c.outputs.statement ?? periods[0]?.statement;
     // Saved GPT matching suggestions (#121) are not switched on for hosted use yet, so the panel would only say
     // "unavailable". Admins and Superadmins see it; Finance users see Reconciliation without it.
-    const technical = useTechnicalDetail();
+    const technical = useTechnicalDetail(), unexplained = attentionCounts(c).reconciliation;
     return <>
         <PageHeader eyebrow={resultsEyebrow(s)} title="Reconciliation" description="Your bank statement matched against your books, with every difference explained or flagged." />
         <SourceStrip context={c} />
-        {c.outputs.resolution ? <div className="mb-5"><ReconciliationOutcomePanel outcome={c.outputs.resolution} /></div> : null}
-        <div className="mb-5 grid gap-3 sm:grid-cols-3"><Stat tone="brand" label="Bank cash movement" value={money(s.currency, r.cashMovement.bank)} detail={multi ? `${periods.length} reconciled months` : undefined} /><Stat tone="brand" label="Ledger cash movement" value={money(s.currency, r.cashMovement.ledger)} /><Stat tone={periods.every(p => p.statement.explained) ? 'good' : 'warn'} label="Bank − ledger difference" value={money(s.currency, r.cashMovement.signedDifference)} detail={periods.every(p => p.statement.explained) ? 'Explained by the reconciling items below' : 'Cause is not inferred'} /></div>
-        {c.outputs.notReconciled.length ? <p className="mb-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">Not reconciled, because only one document covers {c.outputs.notReconciled.length === 1 ? 'this month' : 'these months'}: {c.outputs.notReconciled.map(n => `${periodLabel(n.period)} (${n.side === 'BANK' ? 'bank statement only' : 'books only'}, ${n.records} records)`).join('; ')}. These records are shown, never matched against nothing.</p> : null}
+        <NeedsYou items={[
+            ...(unexplained ? [{ level: 'caution' as const, count: String(unexplained), title: `difference${unexplained === 1 ? '' : 's'} not explained`, detail: c.outputs.resolution ? `${money(s.currency, c.outputs.resolution.totals.unexplained.replace(/^-/, ''))} in total. Flagged for your technical team.` : 'Flagged for your technical team.', href: '#reconciliation-outcome', verb: 'See them' }] : []),
+            ...(c.outputs.notReconciled.length ? [{ level: 'caution' as const, count: String(c.outputs.notReconciled.length), title: `month${c.outputs.notReconciled.length === 1 ? '' : 's'} not reconciled`, detail: 'Only one document covers it, so nothing could be matched.', href: '#not-reconciled', verb: 'See why' }] : []),
+        ]} />
+        <div className="mb-5"><HeadlineBand
+            figures={[
+                { label: 'Bank cash movement', value: money(s.currency, r.cashMovement.bank), detail: multi ? `${periods.length} reconciled months` : 'From your bank statement' },
+                { label: 'Ledger cash movement', value: money(s.currency, r.cashMovement.ledger), detail: 'From your books' },
+                { label: 'Bank − ledger difference', value: money(s.currency, r.cashMovement.signedDifference), detail: periods.every(p => p.statement.explained) ? 'Explained by the reconciling items below' : 'Cause is not inferred' },
+            ]}
+            reconciled={{ label: 'Reconciled automatically', percent: r.results.length ? Math.round(((r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT) / r.results.length) * 100) : 0, detail: `${r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT} of ${r.results.length} records matched` }} /></div>
+        {c.outputs.resolution ? <div id="reconciliation-outcome" className="mb-5 scroll-mt-20"><ReconciliationOutcomePanel outcome={c.outputs.resolution} /></div> : null}
+        {c.outputs.notReconciled.length ? <p id="not-reconciled" className="mb-5 scroll-mt-20 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">Not reconciled, because only one document covers {c.outputs.notReconciled.length === 1 ? 'this month' : 'these months'}: {c.outputs.notReconciled.map(n => `${periodLabel(n.period)} (${n.side === 'BANK' ? 'bank statement only' : 'books only'}, ${n.records} records)`).join('; ')}. These records are shown, never matched against nothing.</p> : null}
         {multi ? <div role="tablist" aria-label="Statement month" className="mb-3 flex flex-wrap items-center gap-2"><span className="mr-1 text-xs font-semibold text-[var(--muted)]">Statement for</span>{periods.map((p, i) => <button key={p.period} type="button" role="tab" aria-selected={month === i} className={chip(month === i)} onClick={() => setMonth(i)}>{periodLabel(p.period)}</button>)}</div> : null}
         {statement ? <div className="mb-5"><ReconciliationStatementPanel statement={statement} /></div> : null}
         {technical ? <GPTSuggestions batchId={c.processingId} /> : null}
@@ -260,18 +270,35 @@ function Analytics({ c }: { c: Ready }) {
 function Anomalies({ c }: { c: Ready }) {
     const list = c.outputs.anomalies, ids = Object.keys(RULES) as RuleId[], ar = c.outputs.anomalyResolution;
     const resolved = ar?.items ?? list.map(x => ({ ...x, resolution: 'FLAGGED' as const, summary: x.findings.map(f => f.rationale).join(' '), rule: '', booked: null }));
-    const groups = [['FLAGGED', 'Flagged for your technical team'], ['CORROBORATED_BY_BOOKS', 'Confirmed by your books: no action needed']] as const;
+    const abs = (v: string) => { const n = toCents(v); return n < 0n ? -n : n; };
+    // Signal ledger: what needs a person first, most serious and largest at the top; what the books settled steps back.
+    const flagged = resolved.filter(x => x.resolution === 'FLAGGED').sort((a, b) => a.severity !== b.severity ? (a.severity === 'HIGH' ? -1 : 1) : abs(b.row.signedAmount) > abs(a.row.signedAmount) ? 1 : abs(b.row.signedAmount) < abs(a.row.signedAmount) ? -1 : 0);
+    const cleared = resolved.filter(x => x.resolution === 'CORROBORATED_BY_BOOKS');
+    const atStake = flagged.reduce((t, x) => t + abs(x.row.signedAmount), 0n);
+    const findings = (x: typeof resolved[number]) => <details className="mt-2 text-[13px] text-[var(--muted)]"><summary className="inline-flex min-h-10 cursor-pointer items-center gap-1 font-semibold text-[var(--brand-ink)]"><ChevronRight aria-hidden="true" size={14} className="disclosure-chevron transition-transform" />Rule findings</summary><p className="mt-1">{x.row.counterparty} · {x.row.description} · <span className="break-all">{x.row.rowId}</span></p><ul className="mt-1 space-y-1">{x.findings.map(f => <li key={f.ruleId}><strong>{RULES[f.ruleId].title}:</strong> {f.rationale}</li>)}</ul>{x.rule ? <p className="mt-1">Resolution rule: {x.rule}</p> : null}</details>;
     return <>
-        <PageHeader eyebrow={resultsEyebrow(c.scope)} title="Anomalies" description="Unusual bank records, each checked against your books. A finding is never a fraud conclusion." />
+        <PageHeader eyebrow={resultsEyebrow(c.scope)} title="Anomalies" description="Unusual bank records, each checked against your books. A finding is never a fraud conclusion."
+            actions={flagged.length ? <div className="sm:text-right"><p className="text-[14px] font-semibold text-[var(--muted-strong)]">Money at stake</p><p className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-[var(--bad-ink)] tabular-nums sm:text-[34px]">{money(c.scope.currency, fromCents(atStake))}</p></div> : null} />
         <SourceStrip context={c} />
-        {ar ? <Callout role="status" tone={ar.flagged ? 'warn' : 'good'} className="mb-5">{ar.summary}</Callout> : null}
-        <div className="grid gap-3 sm:grid-cols-3"><Stat tone="brand" label="Unusual records found" value={`${list.length} of ${c.outputs.bankRows.length}`} detail="Rows with at least one rule finding" /><Stat tone="good" label="Confirmed by your books" value={String(ar?.corroborated ?? 0)} detail="Recorded in the ledger with the same amount" /><Stat tone={(ar?.flagged ?? list.length) ? 'warn' : 'good'} label="Flagged for attention" value={String(ar?.flagged ?? list.length)} detail="Sent to the technical team, not to Finance" /></div>
-        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <Panel title="What FinGence found and did">{resolved.length ? groups.filter(([g]) => resolved.some(x => x.resolution === g)).map(([g, title]) => <section key={g} className="border-b border-[var(--border)] last:border-b-0">
-                <h3 className={`flex items-center gap-2 px-4 pt-4 text-sm font-semibold sm:px-5 ${g === 'FLAGGED' ? 'text-[var(--warn-ink)]' : 'text-[var(--good-ink)]'}`}>{g === 'FLAGGED' ? <Flag aria-hidden="true" size={15} /> : <ShieldCheck aria-hidden="true" size={15} />}{title}</h3>
-                <ul className="divide-y divide-[var(--border)]">{resolved.filter(x => x.resolution === g).map(x => <li key={x.row.rowId} className={`p-4 text-sm sm:px-5 ${g === 'FLAGGED' ? 'shadow-[inset_3px_0_0_var(--warn)]' : ''}`}><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold">{x.row.date} · <span className="break-all">{x.row.rowId}</span> · <span className="tabular-nums">{money(x.row.currency, x.row.signedAmount)}</span></p><DecisionBadge decision={g === 'FLAGGED' ? 'QUARANTINED' : 'AUTO_ACCEPTED'} label={g === 'FLAGGED' ? `${x.severity === 'HIGH' ? 'High' : 'Medium'} · flagged` : 'Confirmed by books'} /></div><p className="mt-1.5 leading-relaxed text-[var(--muted-strong)]">{x.summary}</p>
-                    <details className="mt-1.5 text-xs text-[var(--muted)]"><summary className="inline-flex min-h-8 cursor-pointer items-center gap-1 font-semibold text-[var(--brand-ink)]"><ChevronRight aria-hidden="true" size={13} className="disclosure-chevron transition-transform" />Rule findings</summary><p className="mt-1">{x.row.counterparty} · {x.row.description}</p><ul className="mt-1 space-y-1">{x.findings.map(f => <li key={f.ruleId}><strong>{RULES[f.ruleId].title}:</strong> {f.rationale}</li>)}</ul>{x.rule ? <p className="mt-1">Resolution rule: {x.rule}</p> : null}</details></li>)}</ul>
-            </section>) : <p className="p-5 text-sm">No rule produced a candidate for these records.</p>}</Panel>
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="min-w-0 space-y-5">
+                {flagged.length ? <section aria-labelledby="anomalies-flagged">
+                    <h2 id="anomalies-flagged" className="level-label mb-2.5 text-[var(--bad-ink)]">Needs you · {flagged.length} flagged</h2>
+                    <ol className="space-y-3">{flagged.map((x, i) => <li key={x.row.rowId} className={`rise-in rounded-[20px] bg-[var(--surface)] p-4 sm:p-5 ${x.severity === 'HIGH' ? 'shadow-[0_0_0_2px_var(--attention),0_18px_36px_-22px_rgb(196_42_74/0.6)]' : 'shadow-[0_0_0_1.5px_var(--caution),var(--shadow-panel)]'}`} style={{ animationDelay: `${i * 50}ms` }}>
+                        <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+                            <span className={`inline-flex min-h-7 shrink-0 items-center rounded-full px-3 text-[12px] font-extrabold uppercase tracking-[0.06em] text-[var(--on-solid)] ${x.severity === 'HIGH' ? 'bg-[var(--attention)]' : 'bg-[var(--caution)]'}`}>{x.severity === 'HIGH' ? 'High' : 'Medium'}</span>
+                            <div className="min-w-0 flex-[1_1_16rem]"><p className="text-[17px] font-bold leading-snug">{x.row.counterparty}</p><p className="text-[14px] text-[var(--muted-strong)]">{x.row.date}</p></div>
+                            <p className="ml-auto text-[24px] font-extrabold tracking-[-0.03em] tabular-nums sm:text-[28px]">{money(x.row.currency, x.row.signedAmount)}</p>
+                        </div>
+                        <p className="mt-2 text-[15px] leading-relaxed text-[var(--muted-strong)]">{x.summary}</p>
+                        {findings(x)}
+                    </li>)}</ol>
+                </section> : <RoutineLine label="Nothing flagged" items={[ar ? ar.summary : 'No rule produced a candidate for these records.']} />}
+                {resolved.length ? <RoutineLine label="Already settled" items={[`${list.length} of ${c.outputs.bankRows.length} records looked unusual`, `${cleared.length} confirmed by your books, no action needed`]} /> : null}
+                {cleared.length ? <details className="-mt-3 text-[14px]"><summary className="flex min-h-11 cursor-pointer items-center font-semibold text-[var(--brand-ink)]">Show the {cleared.length} settled</summary>
+                        <ul className="mb-2 divide-y divide-[var(--border)] rounded-xl bg-[var(--surface)] ring-1 ring-inset ring-[var(--border)]">{cleared.map(x => <li key={x.row.rowId} className="px-3 py-2.5"><p className="flex flex-wrap justify-between gap-2 text-[var(--ink)]"><span>{x.row.date} · {x.row.counterparty}</span><span className="tabular-nums">{money(x.row.currency, x.row.signedAmount)}</span></p><p className="text-[13px] text-[var(--muted)]">{x.summary}</p>{findings(x)}</li>)}</ul>
+                    </details> : null}
+            </div>
             <Panel title="Rules" eyebrow="How candidates are found"><ul className="space-y-3 p-4 text-xs sm:p-5">{ids.map(id => <li key={id}><p className="font-semibold">{RULES[id].title} · {list.filter(x => x.findings.some(f => f.ruleId === id)).length}</p><p className="text-[var(--muted)]">{RULES[id].basis}</p></li>)}{ar ? <li className="border-t border-[var(--border)] pt-3"><p className="font-semibold">How a finding is resolved</p><ul className="mt-1 list-disc space-y-1 pl-4 text-[var(--muted)]">{ar.rules.slice(1).map(r => <li key={r}>{r}</li>)}</ul></li> : null}</ul></Panel>
         </div>
     </>;
