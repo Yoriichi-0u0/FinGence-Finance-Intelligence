@@ -7,6 +7,7 @@ import {readWebsiteJobSuggestions,type WebsiteGPTStore} from '../../lib/server/r
 import {GPTSuggestionsView,loadGPTEvidence} from '../../components/reconciliation/gpt-suggestions';
 import type {Caller} from '../../lib/server/workspace/session';
 import type {Role} from '../../lib/server/workspace/store';
+import {WorkspaceContext,type WorkspaceRole} from '../../components/workspace/context';
 
 const jobId='00000000-0000-4000-8000-000000000001';
 const data:GPTEvidenceView={version:'gpt-evidence-view/1',batchId:jobId,processingId:'private-processing',runs:[{
@@ -68,5 +69,34 @@ describe('backend role projections',()=>{
   const backend=store();backend.read=vi.fn(async()=>{throw Error('private audit failure');});
   const response=await readWebsiteJobSuggestions(request(),{store:backend,verify:async()=>identity(role)});
   expect(response.status).toBe(503);expect(await response.text()).not.toContain('private');
+ });
+});
+
+describe('AI06 workspace role preview',()=>{
+ const render=(role:WorkspaceRole,viewRole:WorkspaceRole,body=role==='FINANCE'?financeGPTView(data):data)=>renderToStaticMarkup(createElement(WorkspaceContext.Provider,{
+  value:{enabled:true,loading:false,session:{email:'synthetic@example.invalid',role,organization:{name:'Synthetic'},processing:{paused:false,reason:null,since:null},ai:{enabled:true}},viewRole,
+   setViewAs:()=>{},ended:false,refresh:async()=>null,signOut:async()=>{}},
+ },createElement(GPTSuggestionsView,{state:{status:'ready',data:body}})));
+
+ it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s viewing Finance sees the same simplified results',role=>{
+  const html=render(role,'FINANCE');
+  expect(html).toBe(render('FINANCE','FINANCE'));
+  expect(html).toContain('PASS');expect(html).toContain('UNRESOLVED');expect(html).toContain('BANK REF');
+  for(const technical of ['private-','<pre','SHA256','Processing ','Supporting evidence'])expect(html).not.toContain(technical);
+ });
+ it.each(['ADMIN','SUPERADMIN'] as const)('%s normal view retains technical evidence after returning from Finance preview',role=>{
+  const before=JSON.stringify(data),normal=render(role,role);
+  expect(normal).toContain('private-model');expect(normal).toContain('private-bank-hash');expect(normal).toContain('private-processing');expect(normal).toContain('<pre');
+  expect(render(role,'FINANCE')).not.toContain('private-');
+  expect(render(role,role)).toBe(normal);expect(JSON.stringify(data)).toBe(before);
+ });
+ it('cannot recover server-redacted Finance evidence by changing the client preview role',()=>{
+  expect(render('FINANCE','SUPERADMIN')).not.toContain('private-');
+  expect(render('FINANCE','SUPERADMIN')).not.toContain('<pre');
+ });
+ it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s API uses its verified role despite a client preview header',async role=>{
+  const response=await readWebsiteJobSuggestions(new Request(request(),{headers:{'X-View-As':role==='FINANCE'?'SUPERADMIN':'FINANCE'}}),{store:store(),verify:async()=>identity(role)});
+  expect(response.status).toBe(200);const body=await response.json();
+  expect(body.version).toBe(role==='FINANCE'?'gpt-finance-view/1':'gpt-evidence-view/1');
  });
 });

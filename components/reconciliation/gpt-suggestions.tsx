@@ -1,7 +1,8 @@
 "use client";
 import {useEffect,useState} from 'react';
 import {Panel} from '@/components/ui';
-import {pairVerificationResult,type GPTDisplayView} from '@/lib/gpt-evidence-view';
+import {financeGPTView,pairVerificationResult,type GPTDisplayView} from '@/lib/gpt-evidence-view';
+import {useTechnicalDetail} from '@/components/workspace/context';
 export type GPTEvidenceState={status:'loading'|'generating'|'empty'|'unavailable'|'error'}|{status:'ready';data:GPTDisplayView};
 export async function loadGPTEvidence(batchId:string,signal:AbortSignal,transport:typeof fetch=fetch,websiteJob=false):Promise<GPTEvidenceState>{
  try{
@@ -35,7 +36,11 @@ export function watchGPTEvidence(batchId:string,websiteJob:boolean,onState:(stat
  void read();
  return stop;
 }
-export function GPTSuggestionsView({state}:{state:GPTEvidenceState}){
+export function GPTSuggestionsView({state:input}:{state:GPTEvidenceState}){
+ const technical=useTechnicalDetail();
+ // Preview only reduces presentation. The API still authorizes using the real server session role.
+ const state=input.status==='ready'&&!technical&&input.data.version==='gpt-evidence-view/1'
+  ?{...input,data:financeGPTView(input.data)}:input;
  return <div className="my-4"><Panel title="GPT Matching Suggestions" eyebrow="Saved evidence · human review required"><div className="space-y-3 p-5 text-sm">
  <p className="text-xs text-[var(--muted)]">Suggestions remain UNRESOLVED and do not change reconciliation totals or approve financial matches.</p>
  {state.status!=='ready'?<p role={state.status==='error'?'alert':'status'}>{state.status==='loading'?'Loading saved GPT evidence…':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved GPT suggestions or abstentions for this batch.':state.status==='unavailable'?'GPT evidence is unavailable. Please contact your administrator if this continues.':'Unable to load GPT evidence. No results are shown.'}</p>:state.data.runs.map((run,index)=><article key={index} className="min-w-0 rounded-lg border border-[var(--border)] p-4">
@@ -55,9 +60,10 @@ export function GPTSuggestionsView({state}:{state:GPTEvidenceState}){
  </div></Panel></div>;
 }
 function EvidenceLoader({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){
+ const technical=useTechnicalDetail();
  const [state,setState]=useState<GPTEvidenceState>({status:batchId?'loading':'unavailable'});
  const [refresh,setRefresh]=useState(0);
  useEffect(()=>{if(!batchId)return;return watchGPTEvidence(batchId,websiteJob,setState);},[batchId,websiteJob,refresh]);
- return <>{websiteJob&&<p className="text-xs text-[var(--muted)]">Website job evidence · stored separately from DB04. <button type="button" onClick={()=>{setState({status:'loading'});setRefresh(n=>n+1);}}>Refresh suggestions</button></p>}<GPTSuggestionsView state={state}/></>;
+ return <>{websiteJob&&<p className="text-xs text-[var(--muted)]">{technical&&<>Website job evidence · stored separately from DB04. </>}<button type="button" onClick={()=>{setState({status:'loading'});setRefresh(n=>n+1);}}>Refresh suggestions</button></p>}<GPTSuggestionsView state={state}/></>;
 }
 export default function GPTSuggestions({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){return <EvidenceLoader key={`${websiteJob}:${batchId??'unavailable'}`} batchId={batchId} websiteJob={websiteJob}/>;}
