@@ -3,9 +3,10 @@ import {useEffect,useState} from 'react';
 import {Panel} from '@/components/ui';
 import type {GPTEvidenceView} from '@/lib/gpt-evidence-view';
 export type GPTEvidenceState={status:'loading'|'empty'|'unavailable'|'error'}|{status:'ready';data:GPTEvidenceView};
-export async function loadGPTEvidence(batchId:string,signal:AbortSignal,transport:typeof fetch=fetch):Promise<GPTEvidenceState>{
+export async function loadGPTEvidence(batchId:string,signal:AbortSignal,transport:typeof fetch=fetch,websiteJob=false):Promise<GPTEvidenceState>{
  try{
-  const response=await transport(`/api/reconciliation/gpt-evidence?batchId=${encodeURIComponent(batchId)}`,{credentials:'same-origin',cache:'no-store',signal});
+  const response=await transport(websiteJob?`/api/reconciliation/website-gpt-evidence?jobId=${encodeURIComponent(batchId)}`:`/api/reconciliation/gpt-evidence?batchId=${encodeURIComponent(batchId)}`,{credentials:'same-origin',cache:'no-store',signal});
+  if(websiteJob&&response.status===404)return {status:'empty'};
   if([401,403,404,503].includes(response.status))return {status:'unavailable'};
   if(!response.ok)return {status:'error'};
   const data:GPTEvidenceView=await response.json();
@@ -31,9 +32,10 @@ export function GPTSuggestionsView({state}:{state:GPTEvidenceState}){
  </article>)}
  </div></Panel></div>;
 }
-function EvidenceLoader({batchId}:{batchId?:string}){
+function EvidenceLoader({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){
  const [state,setState]=useState<GPTEvidenceState>({status:batchId?'loading':'unavailable'});
- useEffect(()=>{if(!batchId)return;const controller=new AbortController();void loadGPTEvidence(batchId,controller.signal).then(result=>{if(!controller.signal.aborted)setState(result);});return ()=>controller.abort();},[batchId]);
- return <GPTSuggestionsView state={state}/>;
+ const [refresh,setRefresh]=useState(0);
+ useEffect(()=>{if(!batchId)return;const controller=new AbortController();void loadGPTEvidence(batchId,controller.signal,fetch,websiteJob).then(result=>{if(!controller.signal.aborted)setState(result);});return ()=>controller.abort();},[batchId,websiteJob,refresh]);
+ return <>{websiteJob&&<p className="text-xs text-[var(--muted)]">Website job evidence · stored separately from DB04. <button type="button" onClick={()=>{setState({status:'loading'});setRefresh(n=>n+1);}}>Refresh suggestions</button></p>}<GPTSuggestionsView state={state}/></>;
 }
-export default function GPTSuggestions({batchId}:{batchId?:string}){return <EvidenceLoader key={batchId??'unavailable'} batchId={batchId}/>;}
+export default function GPTSuggestions({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){return <EvidenceLoader key={`${websiteJob}:${batchId??'unavailable'}`} batchId={batchId} websiteJob={websiteJob}/>;}

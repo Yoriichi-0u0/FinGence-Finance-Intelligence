@@ -6,6 +6,10 @@ import { createJob, decodeJobForm, maxJobBodyBytes, processingState, runJob } fr
 import { processingStore, StoreError } from '@/lib/server/processing/store';
 import { aiCaller, processingGate, signedInMember } from '@/lib/server/workspace/session';
 import { runAsCaller } from '@/lib/ai-calls';
+import {saveWebsiteJobSuggestions} from '@/lib/server/reconciliation/website-job-gpt';
+import {websiteGPTGenerationAllowed} from '@/lib/server/reconciliation/website-gpt-storage';
+import {sessionToken} from '@/lib/server/workspace/session';
+import {secretHash} from '@/lib/server/workspace/store';
 
 export const dynamic = 'force-dynamic';
 /** A job runs after the response, for at most this long; one that never finishes is failed by the store after 10 minutes. */
@@ -51,6 +55,17 @@ export async function POST(request: Request) {
     try { created = await createJob(documents, clientHash(client, budget.secret), scope); }
     catch (error) { return json({ code: storeCode(error) }, 502); }
     if ('error' in created) return json({ code: created.error, reason: created.reason, since: created.since }, 423);
-    after(() => runAsCaller(aiCaller(gate.principal, created.jobId), () => runJob(created.jobId, documents, client, scope)));
+    const started=Date.now();
+    after(() => runAsCaller(aiCaller(gate.principal, created.jobId), () => runJob(created.jobId, documents, client, {
+        ...scope,
+        suggestions: async context => {
+            // Leave enough of the existing 300-second function budget for one model call.
+            if(!websiteGPTGenerationAllowed(gate.principal?.memberId)||Date.now()-started>230_000||!gate.principal)return;
+            const current=await processingGate(request.headers,{ai:true});
+            if('refusal' in current||!current.principal||current.principal.memberId!==gate.principal.memberId||current.principal.organization.id!==gate.principal.organization.id)return;
+            const token=sessionToken(request.headers);if(!token)return;
+            await saveWebsiteJobSuggestions(context,{organizationId:current.principal.organization.id,memberId:current.principal.memberId,jobId:created.jobId},client,secretHash(token));
+        },
+    })));
     return json({ jobId: created.jobId }, 202);
 }
