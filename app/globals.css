@@ -9,7 +9,7 @@
  */
 :root {
   color-scheme: light;
-  --canvas: #f5f5f7;
+  --canvas: #f2f4f8;
   --surface: #ffffff;
   --surface-subtle: #fafafc;
   --surface-sunken: #eeeff3;
@@ -18,6 +18,23 @@
   --muted-strong: #2b3245;
   --border: #e4e6ec;
   --border-strong: #c6cad5;
+
+  /*
+   * Signal ledger: three levels of loudness.
+   * Needs you: solid attention / caution fills with white text.
+   * Headline: the ledger-navy band with white figures.
+   * Routine: grey text and a green tick, no card.
+   */
+  --attention: #c42a4a;
+  --caution: #9a4f06;
+  --on-solid: #ffffff;
+  --band: #0b1736;
+  --band-ink: #ffffff;
+  --band-muted: #a9b8da;
+  --band-good: #7be3b0;
+  --band-line: rgb(255 255 255 / 0.12);
+  --routine: #5b6478;
+  --tick: #0a6b48;
 
   --brand: #1d4ed8;
   --brand-strong: #1e40af;
@@ -49,7 +66,7 @@
   --rail-line: rgb(255 255 255 / 0.09);
 
   --gradient-brand: linear-gradient(120deg, #1e40af 0%, #2563eb 52%, #38bdf8 100%);
-  --shadow-panel: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 18px -6px rgb(0 0 0 / 0.07);
+  --shadow-panel: 0 1px 2px rgb(10 16 36 / 0.06), 0 10px 26px -14px rgb(10 16 36 / 0.16);
   --shadow-raise: 0 2px 4px rgb(14 19 48 / 0.06), 0 16px 40px -16px rgb(14 19 48 / 0.22);
   --chart-grid: #e4e9f2;
   --chart-in: #1d4ed8;
@@ -75,7 +92,7 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --canvas: #04070f;
+    --canvas: #050914;
     --surface: #0e1628;
     --surface-subtle: #121c33;
     --surface-sunken: #0a1222;
@@ -84,6 +101,13 @@
     --muted-strong: #b9c5de;
     --border: #1f2c4a;
     --border-strong: #2f3f66;
+    --attention: #b3203f;
+    --caution: #9a4f06;
+    --band: #13245a;
+    --band-muted: #a9b8da;
+    --band-line: rgb(255 255 255 / 0.1);
+    --routine: #8d99b5;
+    --tick: #4fd69b;
     --brand: #6ea8fe;
     --brand-strong: #93bdff;
     --brand-ink: #a9c8ff;
@@ -116,7 +140,7 @@
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --canvas: #04070f;
+  --canvas: #050914;
   --surface: #0e1628;
   --surface-subtle: #121c33;
   --surface-sunken: #0a1222;
@@ -125,6 +149,13 @@
   --muted-strong: #b9c5de;
   --border: #1f2c4a;
   --border-strong: #2f3f66;
+  --attention: #b3203f;
+  --caution: #9a4f06;
+  --band: #13245a;
+  --band-muted: #a9b8da;
+  --band-line: rgb(255 255 255 / 0.1);
+  --routine: #8d99b5;
+  --tick: #4fd69b;
   --brand: #6ea8fe;
   --brand-strong: #93bdff;
   --brand-ink: #a9c8ff;
@@ -191,7 +222,7 @@
 @theme inline {
   --color-background: var(--canvas);
   --color-foreground: var(--ink);
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-geist-sans), system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
@@ -209,8 +240,7 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--ink);
-  /* San Francisco on Apple devices, Geist elsewhere. */
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
 }
@@ -393,4 +423,13 @@ details[open] > summary .disclosure-chevron {
   :focus-visible {
     outline-color: var(--brand);
   }
+}
+
+/* Signal ledger section labels: short, heavy capitals for the levels that matter. */
+.level-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
