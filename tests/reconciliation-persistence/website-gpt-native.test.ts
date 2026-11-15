@@ -62,6 +62,33 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   const data:GPTEvidenceView={version:'gpt-evidence-view/1',batchId:jobId,processingId:processing,runs:[{evidenceId:'c'.repeat(64),model:'openai/gpt-oss-120b',prompt:'website-job-gpt/1',createdAt:new Date().toISOString(),bankSha256:'d'.repeat(64),ledgerSha256:'e'.repeat(64),outcome:'UNRESOLVED',items:[]}]};
   return {owner,data};
  }
+ it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s: existing operate ownership and role-projected audited evidence',async role=>{
+  const verifySession=(sessionToken:string)=>caller(new Headers({cookie:`fingence_session=${sessionToken}`}),{url:'https://synthetic.invalid',key:'synthetic'},(async(_input,init)=>{
+   const args=JSON.parse(String(init?.body));return Response.json((await admin.query('SELECT public.fingence_workspace_principal($1) result',[args.p_token_hash])).rows[0].result);
+  }) as typeof fetch);
+  await admin.query('UPDATE fingence_workspace.members SET role=$1 WHERE id=$2',[role,memberId]);
+  try{
+   const f=await admitted();await store.save(f.owner,f.data);
+   const identity=await verifySession(token);
+   const request=()=>new Request(`http://localhost/?jobId=${f.owner.jobId}`);
+   const response=await readWebsiteJobSuggestions(request(),{store,verify:async()=>identity});
+   expect(response.status).toBe(200);const body=await response.json();
+   expect(body.version).toBe(role==='FINANCE'?'gpt-finance-view/1':'gpt-evidence-view/1');
+   expect(body.runs[0].outcome).toBe('UNRESOLVED');
+   if(role==='FINANCE'){
+    expect(body).not.toHaveProperty('processingId');expect(body.runs[0]).not.toHaveProperty('bankSha256');
+   }else expect(body).toEqual(f.data);
+   {
+    const other=randomUUID(),otherToken=randomUUID().replaceAll('-','')+'O'.repeat(11),hash=secretHash(otherToken);
+    const org=organizationId;
+    await admin.query("INSERT INTO fingence_workspace.members(id,organization_id,email,role,password_hash) VALUES($1,$2,$3,$4,$5)",[other,org,`${other}@example.invalid`,role,'x'.repeat(64)]);
+    await admin.query("INSERT INTO fingence_workspace.sessions(member_id,token_hash,expires_at) VALUES($1,$2,now()+interval '1 hour')",[other,hash]);
+    const otherIdentity=await verifySession(otherToken),otherStore=new PostgresWebsiteGPTStore(transactionDatabase(runtime),hash);
+    const denied=await readWebsiteJobSuggestions(request(),{store:otherStore,verify:async()=>otherIdentity});
+    expect(denied.status).toBe(404);expect(await denied.text()).not.toContain(f.data.processingId);
+   }
+  }finally{await admin.query("UPDATE fingence_workspace.members SET role='FINANCE' WHERE id=$1",[memberId]);}
+ });
  async function admitted(){const f=await job();expect(await store.claim(f.owner)).toBe(true);await store.audit(f.owner,'START');return f;}
  const api=(owner:Owner,backend=store)=>readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${owner.jobId}`),{store:backend,verify:async()=>({kind:'SIGNED_IN',tokenHash,principal:{sessionId:'native',memberId:owner.memberId,email:'native@example.invalid',role:'FINANCE',organization:{id:owner.organizationId,name:'Synthetic'},processing:{paused:false,reason:null,since:null},ai:{enabled:true,since:null}}})});
  it('installs the unchanged review SQL with forced RLS and no direct runtime table grants',async()=>{
@@ -142,7 +169,7 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
    const args=JSON.parse(String(init?.body));const result=await admin.query('SELECT public.fingence_workspace_principal($1) AS principal',[args.p_token_hash]);return Response.json(result.rows[0].principal);
   });
   const response=await readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${f.owner.jobId}`,{headers:{cookie:`fingence_session=${token}`}}),{store,verify});
-  expect(response.status).toBe(200);const data=await response.json();expect(data.processingId).toBe(context.processingId);
+  expect(response.status).toBe(200);const data=await response.json();expect(data.version).toBe('gpt-finance-view/1');expect(data).not.toHaveProperty('processingId');
   expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('UNRESOLVED');
  });
  it('returns 404 for a missing, other-owner or missing-lineage job instead of masking it as 503',async()=>{
