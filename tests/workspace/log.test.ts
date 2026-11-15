@@ -48,26 +48,22 @@ beforeAll(async () => {
 afterEach(() => setAiCallSink(null));
 
 describe('the Technical log', () => {
-    it('own server jobs reach the technical log; other members financial details are withheld', async () => {
-        const member = await memberId('admin@example.invalid');
+    it('a server job records who ran it, and its run reaches the log (it did not before v3)', async () => {
+        const member = await memberId('finance@example.invalid');
         const scope = { store: jobStore, transport: deps.transport, interpreter: null, organization: organizationId, member };
         const created = await createJob(march(), null, scope) as { jobId: string };
         expect(await runJob(created.jobId, march(), '127.0.0.1', scope)).toBe('COMPLETED');
         const [status, out] = await log(admin);
         expect(status).toBe(200);
         expect(out.runs).toHaveLength(1);
-        expect(out.runs[0]).toMatchObject({ by: 'admin@example.invalid', source: 'SERVER', jobId: created.jobId, outcome: expect.any(String) });
+        expect(out.runs[0]).toMatchObject({ by: 'finance@example.invalid', source: 'SERVER', jobId: created.jobId, outcome: expect.any(String) });
         expect(out.runs[0].documents.map((d: { method: string; decision: string }) => [d.method, d.decision])).toEqual([['EXACT_SIGNATURE', 'AUTO_ACCEPTED'], ['EXACT_SIGNATURE', 'AUTO_ACCEPTED']]);
         // A server job also brings each stage's decision, so the log can say how many stages were verified.
         expect(out.runs[0].stages.length).toBeGreaterThan(4);
         expect(out.runs[0].stages[0]).toEqual({ title: expect.any(String), decision: expect.any(String), failedChecks: expect.any(Number) });
-        const outsider=await createJob(march(),null,{...scope,member:await memberId('finance@example.invalid')}) as {jobId:string};
-        expect(await runJob(outsider.jobId,march(),'synthetic',{...scope,member:await memberId('finance@example.invalid')})).toBe('COMPLETED');
-        expect((await log(admin))[1].runs.map((r:{jobId:string})=>r.jobId)).toEqual([created.jobId]);
-        expect((await log(superadmin))[1].runs).toEqual([]);
         // The existing Operations view sees it too, with the member.
         const ops = await (await h.operations(req('/api/workspace/operations', admin), deps)).json();
-        expect(ops.runs.some((r:{by:string;documents:number})=>r.by==='admin@example.invalid'&&r.documents===2)).toBe(true);
+        expect(ops.runs[0]).toMatchObject({ by: 'finance@example.invalid', documents: 2 });
     });
     it('a job cannot be attributed to someone outside the organization', async () => {
         const outsider = '00000000-0000-4000-8000-000000000009';

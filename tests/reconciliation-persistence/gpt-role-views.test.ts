@@ -51,9 +51,22 @@ describe('backend role projections',()=>{
   const transport=vi.fn(async()=>Response.json(view)) as unknown as typeof fetch;
   expect((await loadGPTEvidence(jobId,new AbortController().signal,transport,true)).status).toBe('ready');
  });
- it('does not release evidence when the audited read fails',async()=>{
+ it.each(['FAIL','UNAVAILABLE','NOT_APPLICABLE'] as const)('returns Finance %s through the API without technical payloads',async verdict=>{
+  const saved=structuredClone(data),item=saved.runs[0].items[0];
+  if(verdict==='FAIL')item.verification.equalSignedCents=false;
+  if(verdict==='UNAVAILABLE')item.verification={};
+  if(verdict==='NOT_APPLICABLE')item.type='ABSTENTION';
+  const backend=store();backend.read=vi.fn(async()=>saved);
+  const response=await readWebsiteJobSuggestions(request(),{store:backend,verify:async()=>identity('FINANCE')});
+  expect(response.status).toBe(200);const body=await response.json();
+  expect(body.runs[0].items[0].verificationResult).toBe(verdict);
+  expect(body.runs[0].items[0].outcome).toBe('UNRESOLVED');
+  expect(JSON.stringify(body)).not.toContain('private-');
+  expect(body.runs[0].items[0]).not.toHaveProperty('verification');
+ });
+ it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s receives no evidence when the audited read fails',async role=>{
   const backend=store();backend.read=vi.fn(async()=>{throw Error('private audit failure');});
-  const response=await readWebsiteJobSuggestions(request(),{store:backend,verify:async()=>identity('SUPERADMIN')});
+  const response=await readWebsiteJobSuggestions(request(),{store:backend,verify:async()=>identity(role)});
   expect(response.status).toBe(503);expect(await response.text()).not.toContain('private');
  });
 });

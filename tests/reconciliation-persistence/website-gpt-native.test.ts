@@ -43,7 +43,6 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
    DO $$ BEGIN CREATE ROLE authenticated; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
    DO $$ BEGIN CREATE ROLE service_role; EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
   for(const path of ['ingestion-layer-v1.sql','processing-jobs-v1.sql','workspace-v1.sql','workspace-v2-saic.sql','workspace-v3-log.sql','workspace-v4-preferences.sql','workspace-v5-dashboard-cards.sql','workspace-v6-saved-runs.sql','workspace-v7-password.sql'])await admin.query(readFileSync(`supabase/sql/${path}`,'utf8'));
-  await admin.query(readFileSync('supabase/sql/ai06-owner-only-rbac-review.sql','utf8'));
   baseline=await fingerprint();
   await admin.query(readFileSync('supabase/sql/ai06-website-gpt-storage-review.sql','utf8'));
   await admin.query(readFileSync('supabase/sql/ai06-website-gpt-login-review.sql','utf8'));
@@ -63,25 +62,31 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   const data:GPTEvidenceView={version:'gpt-evidence-view/1',batchId:jobId,processingId:processing,runs:[{evidenceId:'c'.repeat(64),model:'openai/gpt-oss-120b',prompt:'website-job-gpt/1',createdAt:new Date().toISOString(),bankSha256:'d'.repeat(64),ledgerSha256:'e'.repeat(64),outcome:'UNRESOLVED',items:[]}]};
   return {owner,data};
  }
- it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s: native owner lookup, tenant isolation and role-projected audited evidence',async role=>{
+ it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s: existing operate ownership and role-projected audited evidence',async role=>{
+  const verifySession=(sessionToken:string)=>caller(new Headers({cookie:`fingence_session=${sessionToken}`}),{url:'https://synthetic.invalid',key:'synthetic'},(async(_input,init)=>{
+   const args=JSON.parse(String(init?.body));return Response.json((await admin.query('SELECT public.fingence_workspace_principal($1) result',[args.p_token_hash])).rows[0].result);
+  }) as typeof fetch);
   await admin.query('UPDATE fingence_workspace.members SET role=$1 WHERE id=$2',[role,memberId]);
   try{
    const f=await admitted();await store.save(f.owner,f.data);
-   const own=(await admin.query("SELECT public.fingence_workspace_owns_resource($1,'JOB',$2) result",[tokenHash,f.owner.jobId])).rows[0].result;
-   expect(own).toEqual({version:'owner-only/1',owned:true});
-   const other=randomUUID(),hash=secretHash(randomUUID());
-   await admin.query("INSERT INTO fingence_workspace.members(id,organization_id,email,role,password_hash) VALUES($1,$2,$3,$4,$5)",[other,organizationId,`${other}@example.invalid`,role,'x'.repeat(64)]);
-   await admin.query("INSERT INTO fingence_workspace.sessions(member_id,token_hash,expires_at) VALUES($1,$2,now()+interval '1 hour')",[other,hash]);
-   expect((await admin.query("SELECT public.fingence_workspace_owns_resource($1,'JOB',$2) result",[hash,f.owner.jobId])).rows[0].result).toEqual({version:'owner-only/1',owned:false});
-   const identity=await caller(new Headers({cookie:`fingence_session=${token}`}),{url:'https://synthetic.invalid',key:'synthetic'},(async(_input,init)=>{
-    const args=JSON.parse(String(init?.body));return Response.json((await admin.query('SELECT public.fingence_workspace_principal($1) result',[args.p_token_hash])).rows[0].result);
-   }) as typeof fetch);
-   const response=await readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${f.owner.jobId}`),{store,verify:async()=>identity});
+   const identity=await verifySession(token);
+   const request=()=>new Request(`http://localhost/?jobId=${f.owner.jobId}`);
+   const response=await readWebsiteJobSuggestions(request(),{store,verify:async()=>identity});
    expect(response.status).toBe(200);const body=await response.json();
    expect(body.version).toBe(role==='FINANCE'?'gpt-finance-view/1':'gpt-evidence-view/1');
    expect(body.runs[0].outcome).toBe('UNRESOLVED');
-   const grants=(await admin.query("SELECT has_function_privilege('anon','public.fingence_workspace_owns_resource(text,text,uuid)','EXECUTE') anon, has_function_privilege('authenticated','public.fingence_workspace_owns_resource(text,text,uuid)','EXECUTE') authenticated")).rows[0];
-   expect(grants).toEqual({anon:false,authenticated:false});
+   if(role==='FINANCE'){
+    expect(body).not.toHaveProperty('processingId');expect(body.runs[0]).not.toHaveProperty('bankSha256');
+   }else expect(body).toEqual(f.data);
+   {
+    const other=randomUUID(),otherToken=randomUUID().replaceAll('-','')+'O'.repeat(11),hash=secretHash(otherToken);
+    const org=organizationId;
+    await admin.query("INSERT INTO fingence_workspace.members(id,organization_id,email,role,password_hash) VALUES($1,$2,$3,$4,$5)",[other,org,`${other}@example.invalid`,role,'x'.repeat(64)]);
+    await admin.query("INSERT INTO fingence_workspace.sessions(member_id,token_hash,expires_at) VALUES($1,$2,now()+interval '1 hour')",[other,hash]);
+    const otherIdentity=await verifySession(otherToken),otherStore=new PostgresWebsiteGPTStore(transactionDatabase(runtime),hash);
+    const denied=await readWebsiteJobSuggestions(request(),{store:otherStore,verify:async()=>otherIdentity});
+    expect(denied.status).toBe(404);expect(await denied.text()).not.toContain(f.data.processingId);
+   }
   }finally{await admin.query("UPDATE fingence_workspace.members SET role='FINANCE' WHERE id=$1",[memberId]);}
  });
  async function admitted(){const f=await job();expect(await store.claim(f.owner)).toBe(true);await store.audit(f.owner,'START');return f;}

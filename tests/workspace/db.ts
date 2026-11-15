@@ -14,7 +14,6 @@ export async function workspaceDatabase() {
     await db.exec(readFileSync('supabase/sql/workspace-v5-dashboard-cards.sql', 'utf8'));
     await db.exec(readFileSync('supabase/sql/workspace-v6-saved-runs.sql', 'utf8'));
     await db.exec(readFileSync('supabase/sql/workspace-v7-password.sql', 'utf8'));
-    await db.exec(readFileSync('supabase/sql/ai06-owner-only-rbac-review.sql', 'utf8'));
     return db;
 }
 

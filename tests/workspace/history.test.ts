@@ -15,7 +15,7 @@ import { rpcTransport, workspaceDatabase } from './db';
 /**
  * History end to end, against the real migrations (workspace v1â€“v3 and v6-saved-runs) in an in-memory Postgres, with the
  * private file bucket in memory: each person's runs are saved with their documents, listed, reopened and deleted; nobody
- * sees another user's runs, including Admins; a document is stored once; the free-plan cap is kept.
+ * sees another Finance user's runs; Admins see everyone's; a document is stored once; the free-plan cap is kept.
  */
 const ORIGIN = 'http://localhost:3000';
 const store: Store = { url: 'https://example-project.supabase.co', key: 'sb_secret_not_real' };
@@ -34,13 +34,13 @@ const doc = (p: string): DocumentInput => ({ name: p.split('/').at(-1)!, bytes: 
 const march = () => ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv'].map(doc);
 const list = async (cookie: string, scope = 'mine') => { const res = await history.listHistory(req(`/api/workspace/history?scope=${scope}`, cookie), hdeps()); return [res.status, await res.json()] as const; };
 
-let admin: string, finance: string, finance2: string, superadmin: string;
+let admin: string, finance: string, finance2: string;
 beforeAll(async () => {
     db = await workspaceDatabase();
     deps = { store, transport: rpcTransport(db), attempts: async () => true };
     const code = newSecret();
     await db.query('select public.fingence_workspace_bootstrap($1, $2, $3)', ['SAIC', 'super@example.invalid', secretHash(code)]);
-    superadmin = await redeem(code);
+    const superadmin = await redeem(code);
     admin = await redeem(await invite(superadmin, 'admin@example.invalid', 'ADMIN'));
     finance = await redeem(await invite(admin, 'finance@example.invalid', 'FINANCE'));
     finance2 = await redeem(await invite(admin, 'finance2@example.invalid', 'FINANCE'));
@@ -56,7 +56,7 @@ async function saveMarch(email: string) {
 describe('History: saved runs per person', () => {
     let id: string;
     it('a completed run is saved with its documents, each stored once per organization in the private bucket', async () => {
-        const { saved } = await saveMarch('finance@example.invalid');
+        const { c, saved } = await saveMarch('finance@example.invalid');
         expect(saved).toMatchObject({ filesKept: true });
         id = (saved as { id: string }).id;
         expect(files.objects.size).toBe(2);
@@ -66,9 +66,8 @@ describe('History: saved runs per person', () => {
         const [status, out] = await list(finance);
         expect(status).toBe(200);
         expect(out.runs).toHaveLength(1);
-        expect(out.runs[0]).toMatchObject({ id, mine: true, businessName: expect.any(String), period: '2026-03', currency: 'MYR', confidence: { status: 'MEASURED', percent: 100, band: 'HIGH' }, filesKept: true });
+        expect(out.runs[0]).toMatchObject({ id, mine: true, processingId: c.processingId, businessName: c.scope!.businessName, period: '2026-03', currency: 'MYR', confidence: { status: 'MEASURED', percent: 100, band: 'HIGH' }, filesKept: true });
         expect(out.runs[0]).not.toHaveProperty('bundle');
-        expect(out.runs[0]).not.toHaveProperty('processingId');
         expect(out.usage).toMatchObject({ runs: 2, filesCap: 900000000 });
     });
     it('reopening returns the restore bundle and the documents, which reproduce the same processing exactly', async () => {
@@ -84,26 +83,22 @@ describe('History: saved runs per person', () => {
         }
         expect((await processDocuments(back)).processingId).toBe(run.processingId);
     });
-    it('all three roles are denied another member’s financial runs through APIs and database RPCs', async () => {
-        for(const cookie of [finance2,admin,superadmin]){
-            expect((await list(cookie))[1].runs.every((r:{id:string})=>r.id!==id)).toBe(true);
-            expect((await list(cookie,'all'))[0]).toBe(403);
-            expect((await history.openSaved(req('/x',cookie),id,hdeps())).status).toBe(404);
-            expect((await history.savedDocument(req('/x',cookie),id,'0',hdeps())).status).toBe(404);
-            expect((await history.deleteSaved(req('/x',cookie,{method:'DELETE'}),id,hdeps())).status).toBe(404);
-            const hash=secretHash(cookie.split('=')[1]);
-            for(const fn of ['fingence_workspace_saved_run','fingence_workspace_delete_run']){
-                const result=await db.query<{result:{error:string}}>(`select public.${fn}($1,$2) result`,[hash,id]);
-                expect(result.rows[0].result.error).toBe('NOT_FOUND');
-            }
-        }
+    it('a Finance user never sees, opens, downloads or deletes another person\'s run; an Admin can', async () => {
+        expect((await list(finance2))[1].runs.every((r: { id: string }) => r.id !== id)).toBe(true);
+        expect((await history.openSaved(req('/x', finance2), id, hdeps())).status).toBe(404);
+        expect((await history.savedDocument(req('/x', finance2), id, '0', hdeps())).status).toBe(404);
+        expect((await history.deleteSaved(req('/x', finance2, { method: 'DELETE' }), id, hdeps())).status).toBe(404);
+        expect((await list(finance, 'all'))[0]).toBe(403);
+        const [, all] = await list(admin, 'all');
+        expect(all.runs.map((r: { by: string }) => r.by).sort()).toEqual(['finance2@example.invalid', 'finance@example.invalid']);
+        expect((await history.openSaved(req('/x', admin), id, hdeps())).status).toBe(200);
     });
     it('deleting removes the run, and a document only when no other saved run uses it', async () => {
         expect((await history.deleteSaved(req('/x', finance, { method: 'DELETE', type: 'application/json' }), id, hdeps())).status).toBe(200);
         expect((await list(finance))[1].runs).toHaveLength(0);
         expect(files.objects.size).toBe(2);
         const other = (await list(finance2))[1].runs[0].id;
-        const res = await history.deleteSaved(req('/x', finance2, { method: 'DELETE' }), other, hdeps());
+        const res = await history.deleteSaved(req('/x', admin, { method: 'DELETE' }), other, hdeps());
         expect(await res.json()).toMatchObject({ filesRemoved: 2 });
         expect(files.objects.size).toBe(0);
         // The deletion is in the audit trail, with who deleted it.
