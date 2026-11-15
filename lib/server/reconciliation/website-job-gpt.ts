@@ -10,6 +10,7 @@ import {structuredCompletion, portableJsonSchema, worstCaseCompletionUsd, DEFAUL
 import {caller, type Caller} from '../workspace/session';
 import {PersistenceError} from '../persistence/contracts';
 import {websiteGPTStorage,websiteGPTGenerationAllowed} from './website-gpt-storage';
+import {WebsiteGPTError,gptDiagnosticReason,reportWebsiteGPT} from './website-gpt-diagnostics';
 
 const hash=(value:string)=>createHash('sha256').update(value).digest('hex');
 const promptVersion='website-job-gpt/1';
@@ -113,28 +114,39 @@ export async function generateWebsiteJobGPT(context:ProcessingContext,owner:Owne
   const data:GPTEvidenceView={version:'gpt-evidence-view/1',batchId:owner.jobId,processingId:context.processingId,runs:[{evidenceId:hash(JSON.stringify([owner,context.processingId,bank.sha256,ledger.sha256,promptVersion,raw])),model:(banks.length||ledgers.length)?model:'NOT_CALLED_NO_CANDIDATES',prompt:promptVersion,createdAt:new Date().toISOString(),bankSha256:bank.sha256,ledgerSha256:ledger.sha256,outcome:'UNRESOLVED',items}]};
   await deps.store.audit(owner,'SAVE_INTENT');await deps.store.save(owner,data);
  }catch(error){
+  reportWebsiteGPT('GENERATE',gptDiagnosticReason(error,'GENERATION_FAILED'));
   if(error instanceof PersistenceError&&['COMMIT_OUTCOME_UNKNOWN','ROLLBACK_UNCONFIRMED'].includes(error.code))throw error;
   if(reservation?.admitted)await reservation.settle(null);
   await deps.store.audit(owner,'FAILED');throw Error('GPT_SUGGESTIONS_FAILED',{cause:error});
  }
 }
 export async function saveWebsiteJobSuggestions(context:ProcessingContext,owner:Owner,client:string,tokenHash:string){
- if(!websiteGPTGenerationAllowed(owner.memberId)||!websiteGPTGatewayEnabled())return;
+ if(!websiteGPTGenerationAllowed(owner.memberId))return;
+ if(!websiteGPTGatewayEnabled()){
+  reportWebsiteGPT('GENERATE',process.env.FINGENCE_AI_GATEWAY!=='1'?'GPT_GATEWAY_DISABLED':!process.env.GROQ_API_KEY3?'GPT_KEY3_MISSING':'GPT_BUDGET_UNAVAILABLE');return;
+ }
  const store=websiteGPTStorage(tokenHash);if(!store)return;
  await generateWebsiteJobGPT(context,owner,client,{store});
 }
 export async function readWebsiteJobSuggestions(request:Request,deps:{store:WebsiteGPTStore|null|((tokenHash:string)=>WebsiteGPTStore|null);verify?:(headers:Headers)=>Promise<Caller>}){
  const headers={'Cache-Control':'private, no-store','Vary':'Cookie','X-Content-Type-Options':'nosniff'};
  const reply=(body:unknown,status:number)=>Response.json(body,{status,headers});
- if(!deps.store)return reply({code:'GPT_UNAVAILABLE'},503);
+ if(!deps.store){reportWebsiteGPT('READ','STORAGE_UNAVAILABLE');return reply({code:'GPT_UNAVAILABLE'},503);}
  const url=new URL(request.url),jobId=url.searchParams.get('jobId');
- if(!jobId||!/^[0-9a-f-]{36}$/i.test(jobId)||url.searchParams.size!==1)return reply({code:'INVALID_JOB'},400);
+ if(!jobId||!z.uuid().safeParse(jobId).success||url.searchParams.size!==1)return reply({code:'INVALID_JOB'},400);
+ let stage:'SESSION'|'READ'='SESSION';
  try{
   const who=await (deps.verify??caller)(request.headers);
-  if(who.kind!=='SIGNED_IN')return reply({code:'SIGN_IN_REQUIRED'},who.kind==='UNAVAILABLE'?503:401);
+  if(who.kind!=='SIGNED_IN'){if(who.kind==='UNAVAILABLE')reportWebsiteGPT('SESSION','SESSION_SERVICE_UNAVAILABLE');return reply({code:'SIGN_IN_REQUIRED'},who.kind==='UNAVAILABLE'?503:401);}
+  stage='READ';
   const store=typeof deps.store==='function'?deps.store(who.tokenHash):deps.store;
-  if(!store)return reply({code:'GPT_UNAVAILABLE'},503);
+  if(!store){reportWebsiteGPT('READ','STORAGE_UNAVAILABLE');return reply({code:'GPT_UNAVAILABLE'},503);}
   const data=await store.read({organizationId:who.principal.organization.id,memberId:who.principal.memberId,jobId});
   return data?reply(data,200):reply({code:'NO_SAVED_EVIDENCE'},404);
- }catch{return reply({code:'GPT_UNAVAILABLE'},503);}
+ }catch(error){
+  reportWebsiteGPT(stage,gptDiagnosticReason(error,stage==='SESSION'?'SESSION_VERIFICATION_FAILED':'READ_FAILED'));
+  if(error instanceof WebsiteGPTError&&error.reason==='GPT_JOB_DENIED')return reply({code:'NO_SAVED_EVIDENCE'},404);
+  if(error instanceof WebsiteGPTError&&error.reason==='GPT_SESSION_DENIED')return reply({code:'SIGN_IN_REQUIRED'},401);
+  return reply({code:'GPT_UNAVAILABLE'},503);
+ }
 }

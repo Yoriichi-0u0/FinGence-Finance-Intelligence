@@ -54,7 +54,7 @@ it('fails closed before calling the API when runtime permissions/RLS cannot be v
 });
 it('rejects crossed user/tenant scope and never returns evidence on an audit failure',async()=>{
  const f=fixture();f.state.memberId='other';await expect(f.store.claim(owner)).rejects.toThrow('GPT_SCOPE_DENIED');expect(f.state.commits).toBe(0);
- f.state.memberId=owner.memberId;f.state.fail=true;await expect(f.store.read(owner)).rejects.toThrow('private audit failure');
+ f.state.memberId=owner.memberId;f.state.fail=true;await expect(f.store.read(owner)).rejects.toThrow('GPT_SQL_FAILED');
 });
 it('returns duplicate claims without redispatch and uses one atomic SAVE call for evidence and audit',async()=>{
  const f=fixture();f.state.value=false;expect(await f.store.claim(owner)).toBe(false);f.query.mockClear();f.state.value=true;

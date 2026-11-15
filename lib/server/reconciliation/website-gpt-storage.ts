@@ -1,6 +1,8 @@
 import 'server-only';
 import {z} from 'zod';
-import {createPostgresDatabase,serverPoolConfig,type TransactionDatabase} from '../db/postgres';
+import {Pool} from 'pg';
+import {transactionDatabase,serverPoolConfig,type TransactionDatabase} from '../db/postgres';
+import {WebsiteGPTError,gptDiagnosticReason,reportWebsiteGPT,websiteGPTConnectReason,websiteGPTSqlError} from './website-gpt-diagnostics';
 import type {Owner,WebsiteGPTStore} from './website-job-gpt';
 import type {GPTEvidenceView} from '../../gpt-evidence-view';
 
@@ -9,17 +11,19 @@ const project='zmtdozblpvtjniehwjrw',login='fingence_ai06_website_login';
 type Environment=Readonly<Record<string,string|undefined>>;
 /** Dedicated credentials only. Never consult generic Supabase/service-role configuration. */
 export function websiteGPTDatabaseEnvironment(env:Environment=process.env){
- if(env.FINGENCE_GPT_SUGGESTIONS!=='1'||env.FINGENCE_GPT_STORAGE!=='postgres'
-  ||env.FINGENCE_GPT_STORAGE_APPROVAL!==WEBSITE_GPT_STORAGE_CONTRACT)throw Error('GPT_STORAGE_DISABLED');
+ if(env.FINGENCE_GPT_SUGGESTIONS!=='1')throw new WebsiteGPTError('GPT_STORAGE_DISABLED');
+ if(env.FINGENCE_GPT_STORAGE!=='postgres')throw new WebsiteGPTError('GPT_BACKEND_UNAPPROVED');
+ if(env.FINGENCE_GPT_STORAGE_APPROVAL!==WEBSITE_GPT_STORAGE_CONTRACT)throw new WebsiteGPTError('GPT_APPROVAL_REQUIRED');
+ if(!env.FINGENCE_GPT_DATABASE_URL)throw new WebsiteGPTError('GPT_DATABASE_URL_MISSING');
  const database={SUPABASE_DATABASE_URL:env.FINGENCE_GPT_DATABASE_URL,SUPABASE_DATABASE_CA_CERT:env.FINGENCE_GPT_DATABASE_CA_CERT};
- const config=serverPoolConfig(database);
+ let config;try{config=serverPoolConfig(database);}catch{throw new WebsiteGPTError('GPT_DATABASE_INVALID');}
  const direct=config.host===`db.${project}.supabase.co`&&config.port===5432&&config.user===login;
  const pooler=!!env.FINGENCE_GPT_APPROVED_POOLER_HOST&&config.host===env.FINGENCE_GPT_APPROVED_POOLER_HOST
   &&/^[a-z0-9.-]+\.pooler\.supabase\.com$/.test(config.host??'')&&[5432,6543].includes(config.port??0)&&config.user===`${login}.${project}`;
- if((!direct&&!pooler)||config.database!=='postgres'||!config.password||typeof config.ssl!=='object'||config.ssl?.rejectUnauthorized!==true)throw Error('GPT_RESTRICTED_CONNECTION_REQUIRED');
+ if((!direct&&!pooler)||config.database!=='postgres'||!config.password||typeof config.ssl!=='object'||config.ssl?.rejectUnauthorized!==true)throw new WebsiteGPTError('GPT_RESTRICTED_CONNECTION_REQUIRED');
  return database;
 }
-export function websiteGPTStorageConfigured(){try{websiteGPTDatabaseEnvironment();return true;}catch{return false;}}
+export function websiteGPTStorageConfigured(diagnose=false){try{websiteGPTDatabaseEnvironment();return true;}catch(error){if(diagnose)reportWebsiteGPT('CONFIG',gptDiagnosticReason(error,'GPT_DATABASE_INVALID'));return false;}}
 /** Storage/read verification must not activate model calls. Optional pilot binds the trusted member. */
 export function websiteGPTGenerationAllowed(memberId?:string){
  if(process.env.FINGENCE_GPT_GENERATION!=='1'||!websiteGPTStorageConfigured())return false;
@@ -35,14 +39,15 @@ const evidence=z.object({version:z.literal('gpt-evidence-view/1'),batchId:z.uuid
  bankReference:nullable,ledgerReference:nullable,explanation:z.string().max(2000),reasons:z.array(z.string().max(120)).max(16),verification:z.record(z.string(),z.unknown()),score:z.null(),outcome:z.literal('UNRESOLVED')}).strict()).max(100),
 }).strict()).length(1)}).strict();
 export function checkedWebsiteEvidence(value:unknown,jobId:string):GPTEvidenceView{
- const result=evidence.parse(value);if(result.batchId!==jobId||Buffer.byteLength(JSON.stringify(result))>256000)throw Error('GPT_EVIDENCE_INVALID');
+ const parsed=evidence.safeParse(value);if(!parsed.success)throw new WebsiteGPTError('GPT_EVIDENCE_INVALID');
+ const result=parsed.data;if(result.batchId!==jobId||Buffer.byteLength(JSON.stringify(result))>256000)throw new WebsiteGPTError('GPT_EVIDENCE_INVALID');
  return result;
 }
 /** No direct table privileges. The reviewed narrow SQL API revalidates session + stored job on every operation. */
 export class PostgresWebsiteGPTStore implements WebsiteGPTStore{
- constructor(private readonly database:TransactionDatabase,private readonly tokenHash:string){if(!/^[a-f0-9]{64}$/.test(tokenHash))throw Error('GPT_SESSION_REQUIRED');}
+ constructor(private readonly database:TransactionDatabase,private readonly tokenHash:string){if(!/^[a-f0-9]{64}$/.test(tokenHash))throw new WebsiteGPTError('GPT_SESSION_REQUIRED');}
  private async call(owner:Owner,action:string,payload:unknown=null):Promise<unknown>{
-  if(!z.uuid().safeParse(owner.jobId).success||!z.uuid().safeParse(owner.organizationId).success||!z.uuid().safeParse(owner.memberId).success)throw Error('GPT_SCOPE_INVALID');
+  if(!z.uuid().safeParse(owner.jobId).success||!z.uuid().safeParse(owner.organizationId).success||!z.uuid().safeParse(owner.memberId).success)throw new WebsiteGPTError('GPT_SCOPE_INVALID');
   return this.database.transaction(async tx=>{
    const gate=await tx.query<{compatible:boolean}>(`WITH RECURSIVE identities AS (
     SELECT oid FROM pg_roles WHERE rolname IN (current_user,session_user)
@@ -59,32 +64,38 @@ export class PostgresWebsiteGPTStore implements WebsiteGPTStore{
       OR has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES')))
     AND NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
       WHERE (n.nspname IN ('fingence_workspace','fingence_processing','fingence_ingestion','fingence_reconciliation','fingence_db04_group_synthetic')
-      OR n.nspname='public' AND p.proname LIKE 'fingence_%') AND has_function_privilege(current_user,p.oid,'EXECUTE'))
+      OR n.nspname='public' AND p.proname LIKE 'fingence_%') AND has_schema_privilege(current_user,n.oid,'USAGE') AND has_function_privilege(current_user,p.oid,'EXECUTE'))
     AND (SELECT count(*)=3 AND bool_and(c.relrowsecurity AND c.relforcerowsecurity AND pg_get_userbyid(c.relowner)<>current_user
       AND NOT has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
       AND NOT has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES'))
       FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='fingence_gpt_website' AND c.relname IN ('attempts','evidence','audit'))
     AND EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='fingence_gpt_website' AND p.proname='operate'
       AND p.prosecdef AND p.proconfig @> ARRAY['search_path=pg_catalog'] AND pg_get_functiondef(p.oid) LIKE '%website-gpt/1%'
-      AND has_function_privilege(current_user,p.oid,'EXECUTE')) AS compatible`);
-   if(gate.rows.length!==1||gate.rows[0].compatible!==true)throw Error('GPT_RUNTIME_DENIED');
-   const result=await tx.query<{result:unknown}>('SELECT fingence_gpt_website.operate($1,$2::uuid,$3,$4::jsonb) AS result',[this.tokenHash,owner.jobId,action,payload===null?null:JSON.stringify(payload)]);
-   if(result.rows.length!==1)throw Error('GPT_STORAGE_INVALID');
+      AND has_function_privilege(current_user,p.oid,'EXECUTE')) AS compatible`).catch(error=>{const safe=websiteGPTSqlError(error);reportWebsiteGPT('RUNTIME',safe.reason);throw safe;});
+   if(gate.rows.length!==1||gate.rows[0].compatible!==true){reportWebsiteGPT('RUNTIME','GPT_RUNTIME_DENIED');throw new WebsiteGPTError('GPT_RUNTIME_DENIED');}
+   const result=await tx.query<{result:unknown}>('SELECT fingence_gpt_website.operate($1,$2::uuid,$3,$4::jsonb) AS result',[this.tokenHash,owner.jobId,action,payload===null?null:JSON.stringify(payload)]).catch(error=>{const safe=websiteGPTSqlError(error);reportWebsiteGPT('OPERATE',safe.reason);throw safe;});
+   if(result.rows.length!==1)throw new WebsiteGPTError('GPT_STORAGE_INVALID');
    const body=result.rows[0].result as {organizationId?:unknown;memberId?:unknown;value?:unknown}|null;
-   if(!body||body.organizationId!==owner.organizationId||body.memberId!==owner.memberId)throw Error('GPT_SCOPE_DENIED');
+   if(!body||body.organizationId!==owner.organizationId||body.memberId!==owner.memberId)throw new WebsiteGPTError('GPT_SCOPE_DENIED');
    return body.value;
   });
  }
- async claim(owner:Owner){const value=await this.call(owner,'CLAIM');if(typeof value!=='boolean')throw Error('GPT_CLAIM_INVALID');return value;}
- async audit(owner:Owner,action:'START'|'SAVE_INTENT'|'FAILED'|'READ'){if(await this.call(owner,action)!==true)throw Error('GPT_AUDIT_INVALID');}
- async save(owner:Owner,data:GPTEvidenceView){if(await this.call(owner,'SAVE',checkedWebsiteEvidence(data,owner.jobId))!==true)throw Error('GPT_SAVE_INVALID');}
+ async claim(owner:Owner){const value=await this.call(owner,'CLAIM');if(typeof value!=='boolean')throw new WebsiteGPTError('GPT_CLAIM_INVALID');return value;}
+ async audit(owner:Owner,action:'START'|'SAVE_INTENT'|'FAILED'|'READ'){if(await this.call(owner,action)!==true)throw new WebsiteGPTError('GPT_AUDIT_INVALID');}
+ async save(owner:Owner,data:GPTEvidenceView){if(await this.call(owner,'SAVE',checkedWebsiteEvidence(data,owner.jobId))!==true)throw new WebsiteGPTError('GPT_SAVE_INVALID');}
  async read(owner:Owner){const value=await this.call(owner,'READ');return value===null?null:checkedWebsiteEvidence(value,owner.jobId);}
 }
 let database:TransactionDatabase|null=null;
+/** Same shared transaction/TLS behavior, with AI06-only sanitized connection diagnostics. */
+export function createWebsiteGPTDatabase(environment:Parameters<typeof serverPoolConfig>[0]):TransactionDatabase{
+ const pool=new Pool(serverPoolConfig(environment));
+ pool.on('error',()=>reportWebsiteGPT('POOL','DB_POOL_ERROR'));
+ return transactionDatabase({connect:async()=>{try{return await pool.connect();}catch(error){reportWebsiteGPT('POOL',websiteGPTConnectReason(error));throw error;}},end:()=>pool.end()});
+}
 export function websiteGPTStorage(tokenHash:string):WebsiteGPTStore|null{
  try{
   const environment=websiteGPTDatabaseEnvironment();
-  database??=createPostgresDatabase(environment);
+  database??=createWebsiteGPTDatabase(environment);
   return new PostgresWebsiteGPTStore(database,tokenHash);
- }catch{return null;}
+ }catch(error){reportWebsiteGPT('CONFIG',gptDiagnosticReason(error,'GPT_DATABASE_INVALID'));return null;}
 }
