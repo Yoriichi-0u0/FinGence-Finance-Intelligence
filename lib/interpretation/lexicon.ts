@@ -21,6 +21,9 @@ const OPPOSITE: Partial<Record<Meaning, Meaning>> = { IN: 'OUT', OUT: 'IN', DEBI
 const words = (text: string) => ` ${text.toLowerCase().replace(/\([^)]*\)/g, ' ').replace(/[^a-z/]+/g, ' ').replace(/\//g, ' ').replace(/\s+/g, ' ').trim()} `;
 const mentions = (heading: string, meaning: Meaning) => VOCABULARY[meaning].some(term => words(heading).includes(` ${words(term).trim()} `));
 
+/** Every meaning a heading names in this vocabulary: how the rule reader (`rules.ts`) finds its candidate columns. */
+export function headingMeanings(heading: string): Meaning[] { return (Object.keys(VOCABULARY) as Meaning[]).filter(m => mentions(heading, m)); }
+
 export type Agreement = 'AGREES' | 'CONTRADICTS' | 'OPAQUE';
 /** A signed column agrees only when its heading states a signed cash movement; a one-sided heading contradicts it. */
 export function signedAgreement(heading: string): Agreement {
@@ -40,6 +43,11 @@ const TOKENS: Record<'IN' | 'OUT', string[]> = {
     IN: ['CR', 'C', 'CREDIT', 'IN', 'DEPOSIT', 'KREDIT', 'K', 'HABEN', 'H', '+'],
     OUT: ['DR', 'D', 'DEBIT', 'OUT', 'WITHDRAWAL', 'DEBET', 'SOLL', 'S', '-'],
 };
+/** The side a direction literal names on a bank statement (CR = in, DR = out), or null when it is not a known literal. */
+export function tokenSide(token: string): 'IN' | 'OUT' | null {
+    const t = token.trim().toUpperCase();
+    return TOKENS.IN.includes(t) ? 'IN' : TOKENS.OUT.includes(t) ? 'OUT' : null;
+}
 /** For a bank statement inflow = CR; in a cash-account ledger inflow (cash increase) = DR. */
 export function tokenAgreement(tokens: string[], side: 'IN' | 'OUT', ledger: boolean): Agreement {
     const expected = ledger ? (side === 'IN' ? 'OUT' : 'IN') : side, opposite = expected === 'IN' ? 'OUT' : 'IN';
@@ -50,6 +58,8 @@ export function tokenAgreement(tokens: string[], side: 'IN' | 'OUT', ledger: boo
 }
 
 const has = (text: string, terms: string[]) => terms.some(term => words(text).includes(` ${words(term).trim()} `));
+/** Whether a text contains one of the terms as whole words (the same normalisation the heading vocabulary uses). */
+export const containsTerm = (text: string, terms: string[]) => has(text, terms);
 const ROLE: Record<'BANK_STATEMENT' | 'GENERAL_LEDGER', string[]> = {
     BANK_STATEMENT: ['statement', 'bank statement', 'account statement', 'penyata', 'withdrawal', 'withdrawals', 'deposit', 'deposits', 'opening balance', 'closing balance', 'account holder', 'pemegang akaun', 'cheque', 'rekening koran', 'mutasi rekening', 'nasabah', 'saldo awal', 'kontoauszug', 'kontoinhaber'],
     GENERAL_LEDGER: ['ledger', 'general ledger', 'gl', 'journal', 'lejar', 'jurnal', 'voucher', 'nominal', 'buku besar', 'hauptbuch', 'sachkonto'],

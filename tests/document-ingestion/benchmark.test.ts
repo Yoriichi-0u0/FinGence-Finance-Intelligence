@@ -29,7 +29,12 @@ import { parseAmount, parseDate } from '../../lib/interpretation/formats';
 import { proposeLayout } from '../../lib/server/ai/groq-interpreter';
 import { stopOcr } from '../../lib/interpretation/ocr';
 
-const LIVE = process.env.FINGENCE_INGESTION_BENCHMARK === '1' && !!process.env.GROQ_API_KEY;
+/**
+ * FINGENCE_BENCH_RULES: 'only' reads with FinGence's layout rules and no model at all (no key needed, nothing billed);
+ * 'first' reads with the rules and asks the live model only for what they do not read; unset = the model only.
+ */
+const RULES = process.env.FINGENCE_BENCH_RULES;
+const LIVE = process.env.FINGENCE_INGESTION_BENCHMARK === '1' && (RULES === 'only' || !!process.env.GROQ_API_KEY);
 const AGAMI = process.env.FINGENCE_BENCH_AGAMI_DIR ?? '.local/datasets/agami';
 const CORPUS = process.env.FINGENCE_BENCH_CORPUS_DIR ?? '.local/benchmark/corpus';
 const HELDOUT = process.env.FINGENCE_BENCH_HELDOUT_DIR ?? '.local/benchmark/heldout';
@@ -138,9 +143,7 @@ describe.skipIf(!LIVE)('live ingestion-layer benchmark', () => {
             const started = Date.now(), input: DocumentInput = { name: basename(c.file), bytes: new Uint8Array(readFileSync(c.file)), provenance: 'USER_SUPPLIED' };
             // The evidence the interpreter is shown carries the table it was read from; keep the tables, in order, for reading accuracy.
             const tables: Uint8Array[] = [];
-            const capturing: LayoutInterpreter = { async propose(e) { tables.push(lastTable!); return live.propose(e); } };
-            let lastTable: Uint8Array | null = null;
-            const { documents, effective } = await ingestDocuments([input], { interpreter: capturing, scope: INGESTION_SCOPE, onTable: t => { lastTable = t; } });
+            const { documents, effective } = await ingestDocuments([input], { rules: RULES === 'only' || RULES === 'first', interpreter: RULES === 'only' ? null : live, scope: INGESTION_SCOPE, onTable: t => { tables.push(t); } });
             let interpreted = 0;
             const tableOf = (i: number) => documents[i].interpretation ? tables[interpreted++] ?? new Uint8Array() : new Uint8Array();
             documents.forEach((d, i) => {
@@ -170,7 +173,7 @@ describe.skipIf(!LIVE)('live ingestion-layer benchmark', () => {
                     source: d.source && 'kind' in d.source ? d.source.kind : null, ocrConfidence: d.source && 'confidence' in d.source ? d.source.confidence : null,
                     ocrResolved: d.interpretation?.checks.find(k => k.id === 'ocr-readings')?.detail ?? null,
                     failedGates: d.interpretation?.checks.filter(k => !k.passed).map(k => `${k.id}: ${k.detail}`) ?? [], reason: d.reason,
-                    model: r?.model ?? null, latencyMs: r?.latencyMs ?? null, inputTokens: r ? (r.inputTokens ?? 0) + (d.interpretation?.firstAttempt?.receipt.inputTokens ?? 0) : null, outputTokens: r ? (r.outputTokens ?? 0) + (d.interpretation?.firstAttempt?.receipt.outputTokens ?? 0) : null, usd: r ? (r.estimatedUsd ?? 0) + (d.interpretation?.firstAttempt?.receipt.estimatedUsd ?? 0) : null, retried: d.interpretation?.firstAttempt?.check ?? null, seconds: Math.round((Date.now() - started) / 100) / 10,
+                    method: d.interpretation?.method ?? null, model: r?.model ?? null, latencyMs: r?.latencyMs ?? null, inputTokens: r ? (r.inputTokens ?? 0) + (d.interpretation?.firstAttempt?.receipt.inputTokens ?? 0) : null, outputTokens: r ? (r.outputTokens ?? 0) + (d.interpretation?.firstAttempt?.receipt.outputTokens ?? 0) : null, usd: r ? (r.estimatedUsd ?? 0) + (d.interpretation?.firstAttempt?.receipt.estimatedUsd ?? 0) : null, retried: d.interpretation?.firstAttempt?.check ?? null, seconds: Math.round((Date.now() - started) / 100) / 10,
                 };
                 results.push(row);
                 console.log(JSON.stringify({ id: row.id, outcome, meets, rows: row.rows, truth: row.truthRows, failed: row.failedGates.slice(0, 2), seconds: row.seconds }));

@@ -25,10 +25,10 @@ export type VerifiedInterpretation = {
     mappingKey: string | null;
 };
 
-const ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+export const ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** Headings that name a record identifier (not a reference or cheque number, which are separate fields). */
-const ID_HEADING = /^\s*(?:(?:txn|transaction|trans|entry|voucher|journal|jv|record|line|posting)(?:\s*(?:id|no\.?|number|#))?|id|id transaksi|no\.?\s*(?:baucar|rekod|transaksi|kemasukan))\s*$/i;
-const ACCOUNT_HEADING = /^\s*(account|acct|akaun|gl account|account code|account no\.?|kod akaun)\b/i;
+export const ID_HEADING = /^\s*(?:(?:txn|transaction|trans|entry|voucher|journal|jv|record|line|posting)(?:\s*(?:id|no\.?|number|#))?|id|id transaksi|no\.?\s*(?:baucar|rekod|transaksi|kemasukan))\s*$/i;
+export const ACCOUNT_HEADING = /^\s*(account|acct|akaun|gl account|account code|account no\.?|kod akaun)\b/i;
 const TOTAL_LINE = /\b(totals?|jumlah|summe)\b/i;
 const OPENING_LINE = /\b(opening|brought forward|b\/f|baki awal|baki dibawa|saldo awal|anfangssaldo|alter saldo)\b/i;
 const BALANCE_LINE = /\b(opening|closing|brought forward|carried forward|b\/f|c\/f|baki awal|baki akhir|baki dibawa|saldo awal|saldo akhir|anfangssaldo|endsaldo|alter saldo|neuer saldo)\b/i;

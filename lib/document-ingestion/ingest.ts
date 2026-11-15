@@ -13,6 +13,7 @@ import { EVALUATOR_COLUMNS } from '../poc-anomalies/source';
 import { InterpreterUnavailable, retryKey, type InterpretationResult, type LayoutInterpreter, type ModelReceipt } from '../interpretation/contracts';
 import { buildEvidence, readTable } from '../interpretation/evidence';
 import { verifyProposal, verifyWithDisputes, type FieldMapping, type GateOptions } from '../interpretation/gates';
+import { proposeByRules } from '../interpretation/rules';
 import { expandWorkbook, isWorkbook, type WorksheetSource } from '../interpretation/workbook';
 import { extractDocument, isExtractable, type ExtractedSource, type Extractor } from '../interpretation/extract';
 
@@ -40,9 +41,12 @@ export type ProcessedDocument = {
  * model was used): the model proposes the layout from those, and the code reads every line.
  */
 export type DocumentReading = { rows: string[][]; records: { id: string; line: number }[]; columns: { field: string; column: number; heading: string }[]; aiLines: number[] };
-/** A model's layout proposal and what the deterministic gates concluded about it. */
+/**
+ * A layout proposal and what the deterministic gates concluded about it. The proposal comes from the AI model
+ * (`AI_LAYOUT_PROPOSAL`, with a receipt) or from FinGence's own layout rules (`RULE_LAYOUT_READING`, no model and no receipt).
+ */
 export type InterpretationRecord = {
-    method: 'AI_LAYOUT_PROPOSAL'; receipt: ModelReceipt | null; proposal: unknown; error: string | null;
+    method: 'AI_LAYOUT_PROPOSAL' | 'RULE_LAYOUT_READING'; receipt: ModelReceipt | null; proposal: unknown; error: string | null;
     decision: Decision; summary: string; checks: Check[]; mapping: FieldMapping[]; disclosures: string[];
     canonicalSha256: string | null; canonicalNet: string | null; mappingHash: string | null;
     /** The first proposal, when it failed a check the model can fix and the model was asked once more (`proposal` is then the second). */
@@ -126,7 +130,8 @@ function identify(fields: string[] | null): { role: DocumentRole | null; reason:
 export const INGESTION_SCOPE: NonNullable<GateOptions['scope']> = { months: 'MANY', currencies: 'ANY' };
 /** `onTable`: observes the table bytes each document is interpreted from (evaluation); it cannot change them. */
 /** `extract` reads a PDF or image into a table (default: `extractDocument`); a server job's re-check replays the job's reading instead. */
-export type IngestionOptions = { interpreter?: LayoutInterpreter | null; digest?: Digest; scope?: GateOptions['scope']; onTable?: (table: Uint8Array) => void; extract?: Extractor };
+/** `rules`: read an unfamiliar layout with FinGence's own rules first (`rules.ts`); the interpreter is asked only when they do not read it. */
+export type IngestionOptions = { rules?: boolean; interpreter?: LayoutInterpreter | null; digest?: Digest; scope?: GateOptions['scope']; onTable?: (table: Uint8Array) => void; extract?: Extractor };
 export type Ingested = {
     documents: ProcessedDocument[];
     /** The bytes each document continues as, index for index: canonical CSV for an AI-interpreted document, else its own table. */
@@ -166,14 +171,39 @@ export async function ingestDocuments(inputs: DocumentInput[], options: Ingestio
         const doc: ProcessedDocument = { name, sha256, bytes: input.bytes.byteLength, provenance: input.provenance, role: found.role, decision: found.role ? 'AUTO_ACCEPTED' : 'QUARANTINED', reason: found.reason, rows: null, businessId: null, currency: null, periods: [], interpretation: null, source: input.source, reading: null };
         let lineage: { canonical: Uint8Array; lines: number[] } | null = null, aiLines: number[] = [];
         let bytes = input.bytes;
-        const table = !found.role && found.unfamiliar && options.interpreter ? readTable(input.bytes) : null;
+        const table = !found.role && found.unfamiliar && (options.interpreter || options.rules) ? readTable(input.bytes) : null;
         if (table) {
             const record: InterpretationRecord = { method: 'AI_LAYOUT_PROPOSAL', receipt: null, proposal: null, error: null, decision: 'QUARANTINED', summary: '', checks: [], mapping: [], disclosures: [], canonicalSha256: null, canonicalNet: null, mappingHash: null };
-            try {
-                options.onTable?.(input.bytes.slice());
+            const verify = (proposal: unknown) => input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted, scope }) : verifyProposal(table, proposal, { extracted, scope });
+            type Verdict = ReturnType<typeof verify>;
+            const conclude = async (proposal: unknown, verdict: Verdict, by: string) => {
+                Object.assign(record, { proposal, decision: verdict.decision, summary: verdict.summary, checks: verdict.checks, mapping: verdict.mapping, disclosures: verdict.disclosures });
+                if (verdict.canonical && verdict.mappingKey) {
+                    bytes = verdict.canonical.bytes; lineage = { canonical: bytes, lines: verdict.canonical.lineage };
+                    record.canonicalSha256 = await digest(bytes); record.canonicalNet = verdict.canonical.net;
+                    // Identity follows the verified canonical content, so equivalent proposals give the same processing ID.
+                    record.mappingHash = record.canonicalSha256.slice(0, 16);
+                    Object.assign(doc, { role: verdict.role, decision: 'AUTO_ACCEPTED', reason: `${by} accepted after ${verdict.checks.length} deterministic checks.` });
+                } else doc.reason = `${by} quarantined: ${verdict.summary}`;
+            };
+            options.onTable?.(input.bytes.slice());
+            // FinGence's own rules read the layout first. Their one proposal passes through exactly the same gates as a
+            // model's; when they abstain or a gate refuses it, the model (if there is one) is asked as before.
+            let unreadByRules: string | null = null, settled = false;
+            if (options.rules) {
+                const read = proposeByRules(table), verdict = read.proposal ? verify(read.proposal) : null;
+                const failed = verdict?.checks.find(k => !k.passed);
+                unreadByRules = verdict?.decision === 'AUTO_ACCEPTED' ? null : !read.proposal ? read.reason : failed ? `${failed.label}: ${failed.detail}`.slice(0, 300) : verdict!.summary;
+                if (verdict?.decision === 'AUTO_ACCEPTED' || !options.interpreter) {
+                    record.method = 'RULE_LAYOUT_READING';
+                    if (verdict) await conclude(read.proposal, verdict, 'Layout read by FinGence\'s rules (no AI model),');
+                    else { record.summary = read.proposal === null ? read.reason : ''; doc.reason = `${found.reason} FinGence's layout rules did not read it: ${record.summary}`; }
+                    settled = true;
+                }
+            }
+            if (!settled) try {
                 const evidence = buildEvidence(table, sha256, name);
                 aiLines = [...evidence.head, ...evidence.tail].map(l => l.line);
-                const verify = (proposal: unknown) => input.source?.kind === 'OCR' ? verifyWithDisputes(table, proposal, input.source.disputes, { extracted, scope }) : verifyProposal(table, proposal, { extracted, scope });
                 let { proposal, receipt } = await options.interpreter!.propose(evidence);
                 let verdict = verify(proposal);
                 const failed = verdict.decision === 'AUTO_ACCEPTED' ? undefined : verdict.checks.find(k => !k.passed);
@@ -188,19 +218,14 @@ export async function ingestDocuments(inputs: DocumentInput[], options: Ingestio
                         ({ proposal, receipt } = first);
                     }
                 }
-                Object.assign(record, { proposal, receipt, decision: verdict.decision, summary: verdict.summary, checks: verdict.checks, mapping: verdict.mapping, disclosures: verdict.disclosures });
+                record.receipt = receipt;
+                await conclude(proposal, verdict, 'AI layout proposal');
                 if (record.firstAttempt) record.disclosures = [`The first AI proposal failed the "${record.firstAttempt.check}" check (${record.firstAttempt.detail}); the model was asked once more, and its second proposal went through every check again.`, ...record.disclosures];
-                if (verdict.canonical && verdict.mappingKey) {
-                    bytes = verdict.canonical.bytes; lineage = { canonical: bytes, lines: verdict.canonical.lineage };
-                    record.canonicalSha256 = await digest(bytes); record.canonicalNet = verdict.canonical.net;
-                    // Identity follows the verified canonical content, so equivalent proposals give the same processing ID.
-                    record.mappingHash = record.canonicalSha256.slice(0, 16);
-                    Object.assign(doc, { role: verdict.role, decision: 'AUTO_ACCEPTED', reason: `AI layout proposal accepted after ${verdict.checks.length} deterministic checks.` });
-                } else doc.reason = `AI layout proposal quarantined: ${verdict.summary}`;
+                if (unreadByRules) record.disclosures = [`FinGence's own layout rules did not read this document (${unreadByRules}), so the AI model was asked.`, ...record.disclosures];
             } catch (error) {
                 record.error = error instanceof InterpreterUnavailable ? error.code : 'INTERPRETER_FAILED';
                 record.summary = 'The AI interpreter was unavailable; the document was not interpreted.';
-                doc.reason = `${found.reason} AI interpretation unavailable (${record.error}).`;
+                doc.reason = `${found.reason} AI interpretation unavailable (${record.error}).${unreadByRules ? ` FinGence's layout rules did not read it either: ${unreadByRules}` : ''}`;
             }
             doc.interpretation = record;
         }

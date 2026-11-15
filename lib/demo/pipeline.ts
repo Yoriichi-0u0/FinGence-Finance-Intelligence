@@ -33,7 +33,12 @@ export const DEMO_ORGANIZATION = 'synthetic-demo';
 export type StageId = 'IDENTIFY' | 'EXTRACT' | 'INTERPRET' | 'VERIFY' | 'RECONCILE' | 'ANALYZE' | 'FORECAST' | 'REPORT';
 export type Stage = { id: StageId; title: string; decision: Decision; method: string; summary: string; checks: Check[] };
 /** `job`: the server job this run belongs to (the job itself, or the browser re-checking its result). */
-export type ProcessingOptions = { interpreter?: LayoutInterpreter | null; job?: { id: string; runner: ProcessingRunner['kind'] } | null; extract?: Extractor };
+/**
+ * Whether unfamiliar layouts are read by FinGence's own rules before any model is asked. Off unless
+ * NEXT_PUBLIC_FINGENCE_RULES_FIRST=1 (readable in the browser, where the demo runner and every re-check run).
+ */
+export const rulesFirst = () => process.env.NEXT_PUBLIC_FINGENCE_RULES_FIRST === '1';
+export type ProcessingOptions = { rules?: boolean; interpreter?: LayoutInterpreter | null; job?: { id: string; runner: ProcessingRunner['kind'] } | null; extract?: Extractor };
 export type Quarantined = { kind: 'DOCUMENT' | 'RECONCILIATION_EXCEPTION' | 'ANOMALY_CANDIDATE' | 'HISTORY'; reference: string; status: string; reason: string };
 export type ProcessingContext = {
     version: typeof PIPELINE_VERSION; processingId: string; runner: ProcessingRunner['kind'];
@@ -129,7 +134,7 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
 
     // 1. Identify each document's role from its exact column signature; an unfamiliar layout may be interpreted by the model and gates.
     // Ingestion scope: several months and any stated currency; one business and one currency per pair is enforced below.
-    const { documents, effective } = await ingestDocuments(inputs, { digest, interpreter: options.interpreter, scope: INGESTION_SCOPE, extract: options.extract });
+    const { documents, effective } = await ingestDocuments(inputs, { digest, rules: options.rules ?? rulesFirst(), interpreter: options.interpreter, scope: INGESTION_SCOPE, extract: options.extract });
     const aiModels = () => [...new Set(documents.filter(d => d.interpretation?.decision === 'AUTO_ACCEPTED' && d.interpretation.receipt).map(d => d.interpretation!.receipt!.model))];
     const byRole = (role: DocumentRole) => documents.filter(d => d.role === role);
     for (const role of ['BANK_STATEMENT', 'GENERAL_LEDGER', 'BANK_HISTORY'] as const) {
@@ -139,12 +144,14 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     for (const d of documents) if (d.decision === 'QUARANTINED') quarantine.push({ kind: 'DOCUMENT', reference: d.name, status: 'UNIDENTIFIED_OR_AMBIGUOUS', reason: d.reason });
     const bankDoc = byRole('BANK_STATEMENT').find(d => d.decision === 'AUTO_ACCEPTED'), ledgerDoc = byRole('GENERAL_LEDGER').find(d => d.decision === 'AUTO_ACCEPTED'), historyDoc = byRole('BANK_HISTORY').find(d => d.decision === 'AUTO_ACCEPTED');
     const interpreted = documents.filter(d => d.interpretation);
-    const identifyMethod = interpreted.length ? `Exact schema signature; AI layout proposal + deterministic gates for ${interpreted.length} document${interpreted.length === 1 ? '' : 's'}` : 'Exact schema signature';
+    const byRules = (d: ProcessedDocument) => d.interpretation?.method === 'RULE_LAYOUT_READING';
+    const readers = [interpreted.some(byRules) ? `FinGence layout rules for ${interpreted.filter(byRules).length}` : '', interpreted.some(d => !byRules(d)) ? `AI layout proposal for ${interpreted.filter(d => !byRules(d)).length}` : ''].filter(Boolean);
+    const identifyMethod = interpreted.length ? `Exact schema signature; ${readers.join(' and ')} document${interpreted.length === 1 ? '' : 's'}, each verified by deterministic gates` : 'Exact schema signature';
     const identified = await emit('IDENTIFY', bankDoc && ledgerDoc ? 'AUTO_ACCEPTED' : 'QUARANTINED', identifyMethod, bankDoc && ledgerDoc ? `Bank statement and general ledger identified${historyDoc ? ', plus bank history' : ''}.` : 'A single bank statement and a single cash-account general ledger are both required.', [
         check('bank', 'Exactly one bank statement', !!bankDoc, bankDoc ? bankDoc.name : `${byRole('BANK_STATEMENT').length} identified`),
         check('ledger', 'Exactly one cash-account general ledger', !!ledgerDoc, ledgerDoc ? ledgerDoc.name : `${byRole('GENERAL_LEDGER').length} identified`),
         check('unidentified', 'No unidentified or evaluation documents', documents.every(d => d.decision === 'AUTO_ACCEPTED'), `${documents.filter(d => d.decision !== 'AUTO_ACCEPTED').length} quarantined`),
-        ...interpreted.map(d => check(`ai-${d.sha256.slice(0, 8)}`, `AI layout proposal for ${d.name}`, d.interpretation!.decision === 'AUTO_ACCEPTED', d.interpretation!.receipt ? `${d.interpretation!.receipt.model}${d.interpretation!.receipt.mode === 'REPLAYED' ? ' (replayed)' : ''} · ${d.interpretation!.summary}` : d.interpretation!.summary)),
+        ...interpreted.map(d => check(`${byRules(d) ? 'rules' : 'ai'}-${d.sha256.slice(0, 8)}`, `${byRules(d) ? 'Rule-based layout reading' : 'AI layout proposal'} for ${d.name}`, d.interpretation!.decision === 'AUTO_ACCEPTED', d.interpretation!.receipt ? `${d.interpretation!.receipt.model}${d.interpretation!.receipt.mode === 'REPLAYED' ? ' (replayed)' : ''} · ${d.interpretation!.summary}` : d.interpretation!.summary)),
     ]);
     if (identified.decision !== 'AUTO_ACCEPTED') return finish('QUARANTINED', null);
     // AI-interpreted documents continue as their verified canonical form; the original fingerprint stays the document identity.
@@ -184,12 +191,12 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     conventions[2] = `Currency ${bank.currency}, as the documents state it; one currency per processing and no foreign-exchange conversion.`;
     const historyScoped = history.filter(r => r.businessId === scope.businessId && r.currency === scope.currency);
     const aiAccepted = [bankDoc!, ledgerDoc!].filter(d => d.interpretation?.decision === 'AUTO_ACCEPTED');
-    for (const d of aiAccepted) conventions.push(`${d.name}: layout proposed by ${d.interpretation!.receipt?.model ?? 'the AI interpreter'} — ${d.interpretation!.mapping.map(m => `${m.heading} → ${m.field}`).join(', ')}.`);
-    const scoped = await emit('INTERPRET', sameScope ? 'AUTO_ACCEPTED' : 'QUARANTINED', aiAccepted.length ? 'AI layout proposal verified by deterministic gates; configured cash conventions' : 'Configured cash conventions (deterministic)', sameScope ? `${scope.businessId} · ${scope.period} · ${scope.currency}; bank and ledger describe the same business${bankMonths.length > 1 || ledgerMonths.length > 1 ? ` and currency, with ${common.length} month${common.length === 1 ? '' : 's'} in common` : ', month and currency'}.` : 'Bank and ledger describe different businesses or currencies, or share no month; no pairing is assumed.', [
+    for (const d of aiAccepted) conventions.push(`${d.name}: layout ${byRules(d) ? 'read by FinGence\'s rules (no AI model)' : `proposed by ${d.interpretation!.receipt?.model ?? 'the AI interpreter'}`} — ${d.interpretation!.mapping.map(m => `${m.heading} → ${m.field}`).join(', ')}.`);
+    const scoped = await emit('INTERPRET', sameScope ? 'AUTO_ACCEPTED' : 'QUARANTINED', aiAccepted.length ? `${aiAccepted.every(byRules) ? 'Rule-based layout reading' : aiAccepted.some(byRules) ? 'Rule-based layout reading and AI layout proposal' : 'AI layout proposal'} verified by deterministic gates; configured cash conventions` : 'Configured cash conventions (deterministic)', sameScope ? `${scope.businessId} · ${scope.period} · ${scope.currency}; bank and ledger describe the same business${bankMonths.length > 1 || ledgerMonths.length > 1 ? ` and currency, with ${common.length} month${common.length === 1 ? '' : 's'} in common` : ', month and currency'}.` : 'Bank and ledger describe different businesses or currencies, or share no month; no pairing is assumed.', [
         check('scope', 'Bank and ledger share business and currency, and at least one month', sameScope, `bank ${bank.businessId}/${bank.period}/${bank.currency}; ledger ${ledger.businessId}/${ledger.period}/${ledger.currency}`),
         check('conventions', 'Cash sign conventions hold on every row', true, 'Enforced row by row during normalization'),
         ...(historyDoc && !historyProblem ? [check('history-scope', 'History covers the same business and currency', historyScoped.length > 0, `${historyScoped.length} of ${history.length} rows`)] : []),
-        ...aiAccepted.flatMap(d => d.interpretation!.checks.map(k => check(`${d.role === 'BANK_STATEMENT' ? 'bank' : 'ledger'}-ai-${k.id}`, `${d.role === 'BANK_STATEMENT' ? 'Bank' : 'Ledger'} (AI layout): ${k.label}`, k.passed, k.detail))),
+        ...aiAccepted.flatMap(d => d.interpretation!.checks.map(k => check(`${d.role === 'BANK_STATEMENT' ? 'bank' : 'ledger'}-ai-${k.id}`, `${d.role === 'BANK_STATEMENT' ? 'Bank' : 'Ledger'} (${byRules(d) ? 'rules' : 'AI'} layout): ${k.label}`, k.passed, k.detail))),
     ]);
     if (scoped.decision !== 'AUTO_ACCEPTED') {
         quarantine.push({ kind: 'DOCUMENT', reference: `${bankDoc!.name} + ${ledgerDoc!.name}`, status: 'SCOPE_MISMATCH', reason: 'Bank and ledger scope differ.' });
