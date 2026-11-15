@@ -15,7 +15,7 @@ import {processingDatabase,rpcTransport} from '../processing/db';
 import {structuredCompletion} from '../../lib/server/ai/groq';
 import {setAiCallSink,runAsCaller} from '../../lib/ai-calls';
 const owner={organizationId:'org',memberId:'member',jobId:'00000000-0000-4000-8000-000000000001'};
-const verified=async():Promise<Caller>=>({kind:'SIGNED_IN',tokenHash:'unused',principal:{sessionId:'session',memberId:owner.memberId,email:'synthetic@example.invalid',role:'FINANCE',organization:{id:owner.organizationId,name:'Synthetic'},processing:{paused:false,reason:null,since:null},ai:{enabled:true,since:null}}});
+const verified=async():Promise<Caller>=>({kind:'SIGNED_IN',tokenHash:'unused',principal:{sessionId:'session',memberId:owner.memberId,email:'synthetic@example.invalid',role:'ADMIN',organization:{id:owner.organizationId,name:'Synthetic'},processing:{paused:false,reason:null,since:null},ai:{enabled:true,since:null}}});
 const documents=()=>['demo-bank-statement-2026-03.csv','demo-general-ledger-2026-03.csv'].map(name=>({name,bytes:new Uint8Array(readFileSync(`public/demo/${name}`)),provenance:'PUBLIC_SYNTHETIC_SAMPLE' as const}));
 let dir:string,store:WebsiteGPTEvidenceStore,c:ProcessingContext;
 beforeEach(async()=>{dir=await mkdtemp(join(tmpdir(),'ai06-'));store=new WebsiteGPTEvidenceStore(dir);c=await processDocuments(documents(),undefined,undefined,{job:{id:owner.jobId,runner:'BACKEND_JOB_RUNNER'}});

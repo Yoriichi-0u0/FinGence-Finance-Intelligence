@@ -11,3 +11,5 @@
 /supabase/sql/ai06-website-gpt-storage-review.sql text eol=lf
 /supabase/sql/ai06-website-gpt-login-review.sql text eol=lf
 /supabase/tests/ai06-website-gpt-storage-catalog-review.sql text eol=lf
+
+/supabase/sql/ai06-owner-only-rbac-review.sql text eol=lf

@@ -4,11 +4,11 @@ import { boundedForm, noStoreJson as json, sameOrigin } from '../ai/request';
 import { fileStore, objectPath, type FileStore } from '../files/store';
 import { saveRun } from '../history/save';
 import { requireRole } from './session';
+import { ownsFinancialResource } from './ownership';
 import { rpc, type Store } from './store';
 
 /**
- * History: each person's saved runs. Everyone lists and opens their own; Admins and Superadmins may list everyone's in the
- * organization ("all") and open or delete any of them. A document is only ever served after that check, and only to a
+ * History: each person's saved runs. Every role lists, opens and deletes only its own financial runs. A document is only ever served after that check, and only to a
  * member of its organization: by a 60-second signed link to the private bucket, or (developing locally) streamed here.
  */
 export type HistoryDeps = { store: Store | null; transport: typeof fetch; files?: FileStore | null };
@@ -22,10 +22,16 @@ export const MAX_SAVE_BYTES = 4_000_000;
 export async function listHistory(request: Request, deps: HistoryDeps) {
     if (!deps.store) return notFound();
     const scope = new URL(request.url).searchParams.get('scope') === 'all' ? 'all' : 'mine';
-    const who = await requireRole(request.headers, scope === 'all' ? 'ADMIN' : 'FINANCE', deps.store, deps.transport);
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return json({ code: who.refusal.code }, who.refusal.status);
+    if(scope!=='mine')return json({code:'FORBIDDEN'},403);
     const result = await rpc('fingence_workspace_history', { p_token_hash: who.tokenHash, p_scope: scope }, deps.store, deps.transport);
-    return result.ok ? json({ scope, role: who.principal.role, ...result.value as object }) : fail(result.error);
+    if(!result.ok)return fail(result.error);
+    const listing=result.value as {runs:Record<string,unknown>[]};
+    if(who.principal.role==='FINANCE')return json({scope,role:who.principal.role,...listing,runs:listing.runs.map(run=>{
+        const {processingId:_processingId,...financial}=run;void _processingId;return financial;
+    })});
+    return json({ scope, role: who.principal.role, ...listing });
 }
 
 type Saved = { organizationId: string; documents: { sha256: string; contentType: string; name: string; stored: boolean; objectKey: string | null }[]; filesKept: boolean };
@@ -33,6 +39,8 @@ async function load(request: Request, id: string, deps: HistoryDeps) {
     const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return { ok: false as const, response: json({ code: who.refusal.code }, who.refusal.status) };
     if (!UUID.test(id)) return { ok: false as const, response: json({ code: 'NOT_FOUND' }, 404) };
+    const ownership = await ownsFinancialResource(who.tokenHash,'SAVED_RUN',id,deps.store,deps.transport);
+    if(ownership!=='OWNED')return {ok:false as const,response:json({code:ownership==='DENIED'?'NOT_FOUND':'WORKSPACE_UNAVAILABLE'},ownership==='DENIED'?404:503)};
     const result = await rpc<Saved & Record<string, unknown>>('fingence_workspace_saved_run', { p_token_hash: who.tokenHash, p_id: id }, deps.store, deps.transport);
     return result.ok ? { ok: true as const, run: result.value, who } : { ok: false as const, response: fail(result.error) };
 }
@@ -62,13 +70,15 @@ export async function savedDocument(request: Request, id: string, index: string,
     return bytes ? new Response(bytes.slice(), { headers: { 'Content-Type': doc.contentType, 'Cache-Control': 'private, no-store', 'Content-Disposition': `inline; filename="${doc.name.replace(/[^\w.-]+/g, '_')}"` } }) : json({ code: 'FILE_NOT_FOUND' }, 404);
 }
 
-/** Delete a saved run (its owner, or an Admin and above); documents no other saved run uses are removed from storage. */
+/** Delete a saved run (its owner only); documents no other saved run uses are removed from storage. */
 export async function deleteSaved(request: Request, id: string, deps: HistoryDeps) {
     if (!deps.store) return notFound();
     if (!sameOrigin(request.headers)) return json({ code: 'CROSS_ORIGIN' }, 403);
     const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return json({ code: who.refusal.code }, who.refusal.status);
     if (!UUID.test(id)) return json({ code: 'NOT_FOUND' }, 404);
+    const ownership = await ownsFinancialResource(who.tokenHash,'SAVED_RUN',id,deps.store,deps.transport);
+    if(ownership!=='OWNED')return json({code:ownership==='DENIED'?'NOT_FOUND':'WORKSPACE_UNAVAILABLE'},ownership==='DENIED'?404:503);
     const result = await rpc<{ deleted: string; removeFiles: { sha256: string; key: string }[] }>('fingence_workspace_delete_run', { p_token_hash: who.tokenHash, p_id: id }, deps.store, deps.transport);
     if (!result.ok) return fail(result.error);
     // Exactly the copies this delete unregistered: a copy stored again since has a new key and is untouched.

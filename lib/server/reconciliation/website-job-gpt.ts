@@ -4,7 +4,7 @@ import {mkdir, open, readFile, link, unlink, appendFile} from 'node:fs/promises'
 import {isAbsolute, join,relative,resolve} from 'node:path';
 import {z} from 'zod';
 import type {ProcessingContext} from '../../demo/pipeline';
-import type {GPTEvidenceView} from '../../gpt-evidence-view';
+import {financeGPTView,type GPTEvidenceView} from '../../gpt-evidence-view';
 import {admit,budgetStore} from '../ai/budget';
 import {structuredCompletion, portableJsonSchema, worstCaseCompletionUsd, DEFAULT_GROQ_MODEL} from '../ai/groq';
 import {caller, type Caller} from '../workspace/session';
@@ -138,11 +138,12 @@ export async function readWebsiteJobSuggestions(request:Request,deps:{store:Webs
  try{
   const who=await (deps.verify??caller)(request.headers);
   if(who.kind!=='SIGNED_IN'){if(who.kind==='UNAVAILABLE')reportWebsiteGPT('SESSION','SESSION_SERVICE_UNAVAILABLE');return reply({code:'SIGN_IN_REQUIRED'},who.kind==='UNAVAILABLE'?503:401);}
+  if(!['FINANCE','ADMIN','SUPERADMIN'].includes(who.principal.role))return reply({code:'FORBIDDEN'},403);
   stage='READ';
   const store=typeof deps.store==='function'?deps.store(who.tokenHash):deps.store;
   if(!store){reportWebsiteGPT('READ','STORAGE_UNAVAILABLE');return reply({code:'GPT_UNAVAILABLE'},503);}
   const data=await store.read({organizationId:who.principal.organization.id,memberId:who.principal.memberId,jobId});
-  return data?reply(data,200):reply({code:'NO_SAVED_EVIDENCE'},404);
+  return data?reply(who.principal.role==='FINANCE'?financeGPTView(data):data,200):reply({code:'NO_SAVED_EVIDENCE'},404);
  }catch(error){
   reportWebsiteGPT(stage,gptDiagnosticReason(error,stage==='SESSION'?'SESSION_VERIFICATION_FAILED':'READ_FAILED'));
   if(error instanceof WebsiteGPTError&&error.reason==='GPT_JOB_DENIED')return reply({code:'NO_SAVED_EVIDENCE'},404);

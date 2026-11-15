@@ -161,7 +161,7 @@ export async function technicalLog(request: Request, deps: Deps) {
     const days = Number(new URL(request.url).searchParams.get('days') ?? '7');
     if (!LOG_DAYS.includes(days)) return json({ code: 'INVALID_INPUT' }, 400);
     const since = new Date(Date.now() - days * 86_400_000).toISOString();
-    const result = await rpc('fingence_workspace_log', { p_token_hash: who.tokenHash, p_since: since }, deps.store, deps.transport);
+    const result = await rpc('fingence_workspace_own_log', { p_token_hash: who.tokenHash, p_since: since }, deps.store, deps.transport);
     return result.ok ? json({ organization: who.principal.organization.name, role: who.principal.role, days, ...result.value as object }) : fail(result.error);
 }
 const operationsAction = z.discriminatedUnion('action', [
