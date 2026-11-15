@@ -90,8 +90,9 @@ Review artifact SHA256 (working-file bytes; recheck after any Git normalization)
 | `FINGENCE_GPT_APPROVED_POOLER_HOST` | Exact owner-verified Supabase pooler hostname when using pooling. Username must be dedicated login plus `.zmtdozblpvtjniehwjrw`; port 5432 or 6543. Direct group host permits port 5432 only. |
 
 Existing `FINGENCE_WORKSPACE=1`, `FINGENCE_PROCESSING_JOBS=1`, `FINGENCE_AI_GATEWAY=1`,
-an AI-enabled organization and the approved existing `GROQ_API_KEY` configuration are
-still required. Reuse the approved existing gateway settings; do not copy credentials.
+an AI-enabled organization and AI06's approved existing `GROQ_API_KEY3` configuration are
+still required. AI06 never falls back to keys 1/2; other features retain their existing
+keys and rotation. Reuse approved gateway settings; do not copy credentials.
 On Vercel a durable shared budget is mandatory: the existing complete
 `FINGENCE_AI_BUDGET_REST_URL`/`FINGENCE_AI_BUDGET_REST_TOKEN` pair or its approved existing
 Upstash/KV integration equivalent. Existing spend/rate policy remains unchanged.
@@ -168,3 +169,32 @@ prepare an additive execute-only, session/job-bound SQL API with atomic audit an
 evidence. Preserve DB04 and teammate objects. Validate with 13 focused mocked security/
 integration tests plus 13 native PostgreSQL tests; leave Production disabled pending SQL
 approval and real group/Vercel verification. Code review and deployment approval remain required.
+
+## Key-3-only finalization
+
+Base main: `3165eff7f25d7e9d3973b4aa0dc44302a37c68d7` (merged PR #126).
+The owner reports Production storage, restricted login, Vercel configuration and five
+security checks complete. These were not repeated or independently reverified here.
+
+Only `recon-suggest` now uses `GROQ_API_KEY3` through the existing structuredCompletion
+gateway. Missing key 3 fails closed even when other keys exist; HTTP/network failure never
+falls back. AI06 does not advance other features' key rotation. The shared budget, rate
+limits, session/pilot/tenant guards and UNRESOLVED evidence rules are unchanged. Technical
+logging records `key-3`, never the secret. No application environment mutation is used.
+
+Executed validation: 7 key-3 focused tests + 7 existing shared-key regression tests +
+1 affected mocked gateway/evidence test passed (15 executed passes). The 12 filtered-out
+tests in the targeted evidence run were not rerun and are not counted as passes. Initial
+sandbox hard-link failure was resolved by rerunning that one case with local access.
+TypeScript, changed-file lint, server boundary, diff checks and production build passed;
+the documented temporary local build-root workaround was restored exactly.
+
+Production configuration/permission/session/flag verification and hosted E2E are NOT
+recorded as passed: active user input blocked the dashboard browser action. No secret
+value was opened, no Production setting changed and no model call was made. Before a
+hosted test, approve/review the new PR and provide an available authenticated synthetic
+pilot session. Verify key-name presence, the restricted runtime and budget settings,
+storage/generation flags and exact pilot member without revealing secret values. Keep
+pilot restrictions until the hosted upload -> job -> model -> verification -> evidence/
+audit -> UI, duplicate prevention and cross-user isolation checks succeed. General
+activation still requires separate owner approval; this change does not enable it.

@@ -74,7 +74,7 @@ it('fails closed on storage configuration, unexpected query claims and missing e
  vi.stubEnv('VERCEL','');vi.stubEnv('FINGENCE_GPT_EVIDENCE_DIR',join(process.cwd(),'public','evidence'));expect(websiteGPTRoot()).toBeNull();
 });
 it('uses the real shared JSON gateway and AI-call log with a mocked provider, not a live request',async()=>{
- vi.stubEnv('GROQ_API_KEY','');vi.stubEnv('GROQ_API_KEY2','');const log=vi.fn(async()=>{});setAiCallSink(log);
+ vi.stubEnv('GROQ_API_KEY','');vi.stubEnv('GROQ_API_KEY2','');vi.stubEnv('GROQ_API_KEY3','synthetic-key-three');const log=vi.fn(async()=>{});setAiCallSink(log);
  const transport=vi.fn(async()=>({status:200,json:{id:'synthetic',model:'openai/gpt-oss-120b',choices:[{message:{content:JSON.stringify({suggestions:[ids()],abstentions:[]})}}],usage:{prompt_tokens:1,completion_tokens:1}}}));
  await runAsCaller({...owner},()=>generateWebsiteJobGPT(c,owner,'synthetic',{store,admission,complete:req=>structuredCompletion({...req,transport})}));
  expect(transport).toHaveBeenCalledTimes(1);expect(log).toHaveBeenCalledTimes(1);

@@ -5,9 +5,8 @@ import {isAbsolute, join,relative,resolve} from 'node:path';
 import {z} from 'zod';
 import type {ProcessingContext} from '../../demo/pipeline';
 import type {GPTEvidenceView} from '../../gpt-evidence-view';
-import {admit} from '../ai/budget';
+import {admit,budgetStore} from '../ai/budget';
 import {structuredCompletion, portableJsonSchema, worstCaseCompletionUsd, DEFAULT_GROQ_MODEL} from '../ai/groq';
-import {aiGatewayEnabled} from '../ai/groq-interpreter';
 import {caller, type Caller} from '../workspace/session';
 import {PersistenceError} from '../persistence/contracts';
 import {websiteGPTStorage,websiteGPTGenerationAllowed} from './website-gpt-storage';
@@ -22,6 +21,10 @@ export interface WebsiteGPTStore{
  audit(owner:Owner,action:'START'|'SAVE_INTENT'|'FAILED'|'READ'):Promise<void>;
  save(owner:Owner,data:GPTEvidenceView):Promise<void>;
  read(owner:Owner):Promise<GPTEvidenceView|null>;
+}
+/** AI06 readiness uses only its key, while preserving the existing gateway/budget switches. */
+export function websiteGPTGatewayEnabled(){
+ return process.env.FINGENCE_AI_GATEWAY==='1'&&!!process.env.GROQ_API_KEY3&&budgetStore()!==null;
 }
 type Saved={owner:Owner;data:GPTEvidenceView};
 /** Private persistent filesystem only. Never silently use ephemeral Vercel storage. */
@@ -116,7 +119,7 @@ export async function generateWebsiteJobGPT(context:ProcessingContext,owner:Owne
  }
 }
 export async function saveWebsiteJobSuggestions(context:ProcessingContext,owner:Owner,client:string,tokenHash:string){
- if(!websiteGPTGenerationAllowed(owner.memberId)||!aiGatewayEnabled())return;
+ if(!websiteGPTGenerationAllowed(owner.memberId)||!websiteGPTGatewayEnabled())return;
  const store=websiteGPTStorage(tokenHash);if(!store)return;
  await generateWebsiteJobGPT(context,owner,client,{store});
 }
