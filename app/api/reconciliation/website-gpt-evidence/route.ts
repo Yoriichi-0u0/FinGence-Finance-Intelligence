@@ -3,5 +3,5 @@ import {websiteGPTStorage,websiteGPTStorageConfigured} from '@/lib/server/reconc
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 export async function GET(request:Request){
- return readWebsiteJobSuggestions(request,{store:websiteGPTStorageConfigured()?websiteGPTStorage:null});
+ return readWebsiteJobSuggestions(request,{store:websiteGPTStorageConfigured(true)?websiteGPTStorage:null});
 }

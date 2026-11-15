@@ -4,7 +4,7 @@ import {resolve} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {Pool} from 'pg';
 vi.mock('server-only',()=>({}));
-import {PostgresWebsiteGPTStore} from '../../lib/server/reconciliation/website-gpt-storage';
+import {PostgresWebsiteGPTStore,createWebsiteGPTDatabase} from '../../lib/server/reconciliation/website-gpt-storage';
 import {generateWebsiteJobGPT,readWebsiteJobSuggestions,type Owner} from '../../lib/server/reconciliation/website-job-gpt';
 import {transactionDatabase} from '../../lib/server/db/postgres';
 import {caller} from '../../lib/server/workspace/session';
@@ -42,7 +42,7 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   await admin.query(`DO $$ BEGIN CREATE ROLE anon; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
    DO $$ BEGIN CREATE ROLE authenticated; EXCEPTION WHEN duplicate_object THEN NULL; END $$;
    DO $$ BEGIN CREATE ROLE service_role; EXCEPTION WHEN duplicate_object THEN NULL; END $$;`);
-  for(const path of ['ingestion-layer-v1.sql','processing-jobs-v1.sql','workspace-v1.sql','workspace-v2-saic.sql','workspace-v3-log.sql'])await admin.query(readFileSync(`supabase/sql/${path}`,'utf8'));
+  for(const path of ['ingestion-layer-v1.sql','processing-jobs-v1.sql','workspace-v1.sql','workspace-v2-saic.sql','workspace-v3-log.sql','workspace-v4-preferences.sql','workspace-v5-dashboard-cards.sql','workspace-v6-saved-runs.sql','workspace-v7-password.sql'])await admin.query(readFileSync(`supabase/sql/${path}`,'utf8'));
   baseline=await fingerprint();
   await admin.query(readFileSync('supabase/sql/ai06-website-gpt-storage-review.sql','utf8'));
   await admin.query(readFileSync('supabase/sql/ai06-website-gpt-login-review.sql','utf8'));
@@ -63,6 +63,7 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   return {owner,data};
  }
  async function admitted(){const f=await job();expect(await store.claim(f.owner)).toBe(true);await store.audit(f.owner,'START');return f;}
+ const api=(owner:Owner,backend=store)=>readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${owner.jobId}`),{store:backend,verify:async()=>({kind:'SIGNED_IN',tokenHash,principal:{sessionId:'native',memberId:owner.memberId,email:'native@example.invalid',role:'FINANCE',organization:{id:owner.organizationId,name:'Synthetic'},processing:{paused:false,reason:null,since:null},ai:{enabled:true,since:null}}})});
  it('installs the unchanged review SQL with forced RLS and no direct runtime table grants',async()=>{
   const rows=(await admin.query("SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,has_table_privilege('fingence_ai06_website_login',c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE') AS direct FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='fingence_gpt_website' AND c.relkind='r'")).rows;
   expect(rows).toHaveLength(3);expect(rows.every(r=>r.relrowsecurity&&r.relforcerowsecurity&&!r.direct)).toBe(true);
@@ -71,6 +72,17 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
  it('persists and retrieves through the actual restricted runtime with atomic audit',async()=>{
   const f=await admitted();await store.save(f.owner,f.data);expect(await store.read(f.owner)).toEqual(f.data);
   expect((await admin.query('SELECT action FROM fingence_gpt_website.audit WHERE job_id=$1 ORDER BY id',[f.owner.jobId])).rows.map(r=>r.action)).toEqual(['CLAIM','START','SAVED','READ']);
+ });
+ it('allows a non-callable private PUBLIC helper but still denies newly callable access',async()=>{
+  const f=await job();
+  await admin.query('CREATE FUNCTION fingence_workspace.ai06_private_helper() RETURNS boolean LANGUAGE sql AS $$ SELECT true $$');
+  try{
+   await expect(runtime.query('SELECT fingence_workspace.ai06_private_helper()')).rejects.toMatchObject({code:'42501'});
+   expect(await store.claim(f.owner)).toBe(true);
+   await admin.query('GRANT USAGE ON SCHEMA fingence_workspace TO fingence_ai06_website_login');
+   try{await expect(store.read(f.owner)).rejects.toThrow('GPT_RUNTIME_DENIED');}
+   finally{await admin.query('REVOKE USAGE ON SCHEMA fingence_workspace FROM fingence_ai06_website_login');}
+  }finally{await admin.query('DROP FUNCTION fingence_workspace.ai06_private_helper()');}
  });
  it('admits exactly one concurrent request and freezes failed attempts',async()=>{
   const f=await job();expect((await Promise.all([store.claim(f.owner),store.claim(f.owner)])).sort()).toEqual([false,true]);
@@ -132,5 +144,43 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   const response=await readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${f.owner.jobId}`,{headers:{cookie:`fingence_session=${token}`}}),{store,verify});
   expect(response.status).toBe(200);const data=await response.json();expect(data.processingId).toBe(context.processingId);
   expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('UNRESOLVED');
+ });
+ it('returns 404 for a missing, other-owner or missing-lineage job instead of masking it as 503',async()=>{
+  const f=await job();expect((await api({...f.owner,jobId:randomUUID()})).status).toBe(404);
+  await admin.query('UPDATE fingence_processing.jobs SET member_id=NULL WHERE id=$1',[f.owner.jobId]);expect((await api(f.owner)).status).toBe(404);
+ });
+ it('returns 401 when the database session ends after the website identity check',async()=>{
+  const f=await job();await admin.query("UPDATE fingence_workspace.sessions SET ended_at=now(),end_reason='SIGNED_OUT' WHERE token_hash=$1",[tokenHash]);
+  try{expect((await api(f.owner)).status).toBe(401);}finally{await admin.query('UPDATE fingence_workspace.sessions SET ended_at=NULL,end_reason=NULL WHERE token_hash=$1',[tokenHash]);}
+ });
+ it('keeps genuine forbidden table access and missing forced RLS as safe 503 failures',async()=>{
+  const f=await job();await admin.query('GRANT SELECT ON fingence_gpt_website.evidence TO fingence_ai06_website_login');
+  try{expect((await api(f.owner)).status).toBe(503);}finally{await admin.query('REVOKE SELECT ON fingence_gpt_website.evidence FROM fingence_ai06_website_login');}
+  await admin.query('ALTER TABLE fingence_gpt_website.evidence NO FORCE ROW LEVEL SECURITY');
+  try{expect((await api(f.owner)).status).toBe(503);}finally{await admin.query('ALTER TABLE fingence_gpt_website.evidence FORCE ROW LEVEL SECURITY');}
+ });
+ it('fails safely with 503 when the reviewed operate contract is absent',async()=>{
+  const f=await job();await admin.query('ALTER FUNCTION fingence_gpt_website.operate(text,uuid,text,jsonb) RENAME TO native_unavailable_operate');
+  try{expect((await api(f.owner)).status).toBe(503);}finally{await admin.query('ALTER FUNCTION fingence_gpt_website.native_unavailable_operate(text,uuid,text,jsonb) RENAME TO operate');}
+ });
+ it('returns empty 404 for an authorized job and still audits READ_EMPTY',async()=>{
+  const f=await job();expect((await api(f.owner)).status).toBe(404);
+  expect((await admin.query("SELECT 1 FROM fingence_gpt_website.audit WHERE job_id=$1 AND action='READ_EMPTY'",[f.owner.jobId])).rowCount).toBe(1);
+ });
+ it('keeps reads working while AI generation is disabled',async()=>{
+  const f=await admitted();await store.save(f.owner,f.data);await admin.query('UPDATE fingence_workspace.organizations SET ai_enabled=false WHERE id=$1',[organizationId]);
+  try{expect((await api(f.owner)).status).toBe(200);}finally{await admin.query('UPDATE fingence_workspace.organizations SET ai_enabled=true WHERE id=$1',[organizationId]);}
+ });
+ it('fails closed on an invalid saved DTO without returning stored content',async()=>{
+  const f=await admitted();const malformed=structuredClone(f.data);(malformed.runs[0] as {model:unknown}).model={private:'SYNTHETIC_NOT_FOR_CLIENT'};
+  await runtime.query('SELECT fingence_gpt_website.operate($1,$2,$3,$4)',[tokenHash,f.owner.jobId,'SAVE',JSON.stringify(malformed)]);
+  const response=await api(f.owner);expect(response.status).toBe(503);expect(await response.text()).not.toContain('SYNTHETIC_NOT_FOR_CLIENT');
+ });
+ it('returns safe 503 for native TLS and login failures with no plaintext fallback',async()=>{
+  const f=await job();
+  for(const connection of ['postgresql://fingence_ai06_website_login@127.0.0.1:55487/ai06_native_review?sslmode=verify-full','postgresql://native_missing_login@127.0.0.1:55487/ai06_native_review?sslmode=disable']){
+   const db=createWebsiteGPTDatabase({SUPABASE_DATABASE_URL:connection});
+   try{const response=await api(f.owner,new PostgresWebsiteGPTStore(db,tokenHash));expect(response.status).toBe(503);expect(await response.json()).toEqual({code:'GPT_UNAVAILABLE'});}finally{await db.close();}
+  }
  });
 });
