@@ -18,3 +18,12 @@ Commands: vitest run tests/reconciliation-persistence/{gpt-role-views,gpt-pollin
 TypeScript --noEmit --incremental false, ESLint on the six changed TS/TSX files, server boundary and Next.js Production build passed. Build flags disabled live processing/AI. A temporary local Turbopack root override for the Windows dependency junction was restored byte-for-byte and is not part of the diff.
 
 No AI06 implementation blocker remains in this scope. Team review/CI and separate merge/deployment approval remain normal release gates. No Production change, activation or live verification was performed. Legacy recheck APIs remain outside AI06 scope and are preserved.
+
+
+## Finance preview display fix (16 November 2026)
+
+Root cause: the backend correctly uses the verified signed-in role; an Admin/Superadmin selecting View as Finance still legitimately receives its own full evidence. The AI06 component previously rendered technical fields solely based on response shape and ignored the workspace preview role.
+
+The component now reuses useTechnicalDetail() and projects a full authorized response into the existing financial display shape when the selected view is Finance. This is presentation reduction only: no client role is sent to authorize requests, no API scope or role mapping changes, and actual FINANCE continues receiving server-redacted evidence. Returning to normal Admin/Superadmin view restores technical details without mutating saved evidence or restarting polling. The Finance view also omits the technical website-storage/DB04 caption; Refresh remains an optional fallback.
+
+Executed 130 tests across seven AI06 regression files: actual FINANCE response redaction, Admin/Superadmin normal and Finance previews, equivalent simplified output, inability to reconstruct a Finance response by selecting a higher client role, ignored client preview headers at the API, cross-user/organization denial, audit failure, key3 routing, generation and polling. All passed, zero failures/skips. The unchanged operate() and SQL retain the previously executed 25 native PostgreSQL tests from PR #129; those are reused evidence, not a new run. No SQL, environment, workspace-provider, teammate module, generation, storage or backend authorization change is required.
