@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Download, FileBarChart2, LoaderCircle, ShieldCheck, Sparkles } from "lucide-react";
 import { Panel, StatusBadge } from "@/components/ui";
 import type { DocumentInput, ProcessingContext } from "@/lib/demo/pipeline";
@@ -37,6 +37,9 @@ interface ConnectedDemoReportProps {
   inputs: readonly DocumentInput[];
   processedAt: string | null;
   providerProbeEnabled: boolean;
+  activeView: "UPLOADED_REPORTS" | "REPORT_LIBRARY";
+  onOpenSavedReport: () => void;
+  supportingEvidence: ReactNode;
 }
 
 function replaceSaved(reports: readonly SavedLocalReport[], next: SavedLocalReport) {
@@ -75,7 +78,15 @@ function downloadReport(report: LocalManagementReport, explanation: ValidatedFin
   window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }
 
-export function ConnectedDemoAiReport({ context, inputs, processedAt, providerProbeEnabled }: ConnectedDemoReportProps) {
+export function ConnectedDemoAiReport({
+  context,
+  inputs,
+  processedAt,
+  providerProbeEnabled,
+  activeView,
+  onOpenSavedReport,
+  supportingEvidence,
+}: ConnectedDemoReportProps) {
   const repository = useRef<LocalReportRepository | null>(null);
   const [report, setReport] = useState<LocalManagementReport | null>(null);
   const [verification, setVerification] = useState<DemoDocumentReportVerification | null>(null);
@@ -198,6 +209,7 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
     setVerification(null);
     setError("");
     setNotice("Saved synthetic report reopened from this browser.");
+    onOpenSavedReport();
   }
 
   async function deleteSaved(entry: SavedLocalReport) {
@@ -222,52 +234,77 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
     : "Optional AI explanation is off. The independently checked report still works without it.");
 
   return (
-    <section id="ai-reporting-draft" aria-labelledby="ai-reporting-draft-title" className="mt-8 space-y-5 print:break-before-page">
-      <Panel className="print:hidden">
-        <div className="space-y-4 p-4 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">Management reporting</p>
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <h2 id="ai-reporting-draft-title" className="text-xl font-semibold tracking-[-0.02em]">Generated report and saved records</h2>
-                {report ? <StatusBadge status="Draft" /> : null}
+    <>
+      <section
+        id="uploaded-reports-panel"
+        role="tabpanel"
+        aria-labelledby="uploaded-reports-tab"
+        aria-hidden={activeView !== "UPLOADED_REPORTS"}
+        className={`${activeView === "UPLOADED_REPORTS" ? "mt-6" : "hidden"} space-y-5 print:block print:break-before-page`}
+      >
+        <Panel className="print:hidden">
+          <div className="space-y-4 p-4 sm:p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">Management reporting</p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <h2 className="text-xl font-semibold tracking-[-0.02em]">Generated management report</h2>
+                  {report ? <StatusBadge status="Draft" /> : null}
+                </div>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">
+                  Independently re-read the bank document selected on Data, verify it through C1, and prepare a management document from the accepted figures.
+                </p>
               </div>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">
-                The report independently re-reads the bank document selected on Data through C1, checks it against the current processing, and saves registered fictional sample drafts in this browser.
-              </p>
+              {report ? <div className="flex flex-wrap gap-2 print:hidden">
+                <button type="button" className={`${action} border border-[var(--border-strong)] bg-[var(--surface)]`} onClick={() => downloadReport(report, explanation)}>
+                  <Download aria-hidden="true" size={16} />Download HTML
+                </button>
+                <button data-testid="connected-explain-with-ai" type="button" className={`${action} bg-violet-700 text-white hover:bg-violet-800`} disabled={busy !== null || !provider?.ready || !isRegisteredSyntheticReport(report)} onClick={() => void explainReport()}>
+                  {busy === "AI" ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Sparkles aria-hidden="true" size={16} />}
+                  {busy === "AI" ? "Explaining…" : explanation ? "Regenerate AI explanation" : "Explain with AI"}
+                </button>
+              </div> : null}
             </div>
-            {report ? <div className="flex flex-wrap gap-2 print:hidden">
-              <button type="button" className={`${action} border border-[var(--border-strong)] bg-[var(--surface)]`} onClick={() => downloadReport(report, explanation)}>
-                <Download aria-hidden="true" size={16} />Download HTML
-              </button>
-              <button data-testid="connected-explain-with-ai" type="button" className={`${action} bg-violet-700 text-white hover:bg-violet-800`} disabled={busy !== null || !provider?.ready || !isRegisteredSyntheticReport(report)} onClick={() => void explainReport()}>
-                {busy === "AI" ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <Sparkles aria-hidden="true" size={16} />}
-                {busy === "AI" ? "Explaining…" : explanation ? "Regenerate AI explanation" : "Explain with AI"}
-              </button>
+
+            {busy === "REPORT" ? <p role="status" className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm">
+              <LoaderCircle aria-hidden="true" className="animate-spin text-[var(--brand)]" size={17} />Independently re-reading the Data bank statement through C1 and checking every row…
+            </p> : null}
+            {verification ? <div className="flex items-start gap-3 rounded-xl border border-[var(--good-line)] bg-[var(--good-soft)] p-4 text-sm text-[var(--good-ink)]">
+              <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
+              <div>
+                <p className="font-semibold">Independent C1 agreement passed</p>
+                <p className="mt-1 text-xs leading-5">{verification.acceptedRows} rows matched Data on source fingerprint, provenance, business, currency, dates, references, source transaction IDs, direction and exact cents. No newer processing record was converted into C1.</p>
+                <details className="mt-1"><summary className="cursor-pointer text-xs font-semibold underline underline-offset-2">Verification details</summary><p className="mt-1 break-all text-xs">{verification.sourceFile} · SHA-256 {verification.sourceSha256} · {verification.checks.join(" · ")}</p></details>
+              </div>
             </div> : null}
-          </div>
-
-          {busy === "REPORT" ? <p role="status" className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-4 text-sm">
-            <LoaderCircle aria-hidden="true" className="animate-spin text-[var(--brand)]" size={17} />Independently re-reading the Data bank statement through C1 and checking every row…
-          </p> : null}
-          {verification ? <div className="flex items-start gap-3 rounded-xl border border-[var(--good-line)] bg-[var(--good-soft)] p-4 text-sm text-[var(--good-ink)]">
-            <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0" size={18} />
-            <div>
-              <p className="font-semibold">Independent C1 agreement passed</p>
-              <p className="mt-1 text-xs leading-5">{verification.acceptedRows} rows matched Data on source fingerprint, provenance, business, currency, dates, references, source transaction IDs, direction and exact cents. No newer processing record was converted into C1.</p>
-              <details className="mt-1"><summary className="cursor-pointer text-xs font-semibold underline underline-offset-2">Verification details</summary><p className="mt-1 break-all text-xs">{verification.sourceFile} · SHA-256 {verification.sourceSha256} · {verification.checks.join(" · ")}</p></details>
+            {notice ? <p role="status" className="rounded-xl bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted-strong)]">{notice}</p> : null}
+            {error ? <div role="alert" className="rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]"><p className="font-semibold">Saved report records remain available</p><p className="mt-1 leading-6">{error}</p></div> : null}
+            <div className="flex items-start gap-3 text-xs leading-5 text-[var(--muted)]">
+              <FileBarChart2 aria-hidden="true" className="mt-0.5 shrink-0" size={16} />
+              <p>{providerMessage}{provider?.provider ? ` Provider: ${provider.provider}; model: ${provider.model ?? "unavailable"}.` : ""} Deterministic figures never require a model.</p>
             </div>
-          </div> : null}
-          {notice ? <p role="status" className="rounded-xl bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted-strong)]">{notice}</p> : null}
-          {error ? <div role="alert" className="rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]"><p className="font-semibold">Saved report records remain available</p><p className="mt-1 leading-6">{error}</p></div> : null}
-          <div className="flex items-start gap-3 text-xs leading-5 text-[var(--muted)]">
-            <FileBarChart2 aria-hidden="true" className="mt-0.5 shrink-0" size={16} />
-            <p>{providerMessage}{provider?.provider ? ` Provider: ${provider.provider}; model: ${provider.model ?? "unavailable"}.` : ""} Deterministic figures never require a model.</p>
           </div>
-        </div>
-      </Panel>
+        </Panel>
 
-      <div className="print:hidden">
+        {report ? <section aria-label="AI Reporting generated report" className="space-y-4">
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--brand-ink)]">Generated document</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--ink)]">{report.reportType === "QUARTERLY_FINANCIAL_ACTIVITY" ? "Quarterly Financial Activity Report" : "Financial Transaction Review"}</p>
+            <p className="mt-0.5 text-xs text-[var(--muted-strong)]">{report.dataset.sourceFile} · {formatReportPeriod(report.reportingPeriod.startDate, report.reportingPeriod.endDate)}</p>
+          </div>
+          <ManagementReportPreview report={report} />
+        </section> : null}
+        {explanation ? <AiExplanationPanel explanation={explanation} /> : null}
+        {supportingEvidence}
+      </section>
+
+      <section
+        id="report-library-panel"
+        role="tabpanel"
+        aria-labelledby="report-library-tab"
+        aria-hidden={activeView !== "REPORT_LIBRARY"}
+        className={`${activeView === "REPORT_LIBRARY" ? "mt-6" : "hidden"} print:hidden`}
+      >
         <SavedReportsLibrary
           reports={savedReports}
           activeReportId={report?.reportId ?? null}
@@ -276,16 +313,7 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
           onDownload={entry => downloadReport(entry.report, entry.aiExplanation)}
           onRequestDelete={entry => void deleteSaved(entry)}
         />
-      </div>
-
-      {report ? <section aria-label="AI Reporting generated report" className="space-y-4">
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs text-[var(--muted-strong)]">
-          <strong className="text-[var(--ink)]">{report.reportType === "QUARTERLY_FINANCIAL_ACTIVITY" ? "Quarterly Financial Activity Report" : "Financial Transaction Review"}</strong>
-          {` · ${report.dataset.sourceFile} · ${formatReportPeriod(report.reportingPeriod.startDate, report.reportingPeriod.endDate)}`}
-        </div>
-        <ManagementReportPreview report={report} />
-      </section> : null}
-      {explanation ? <AiExplanationPanel explanation={explanation} /> : null}
-    </section>
+      </section>
+    </>
   );
 }
