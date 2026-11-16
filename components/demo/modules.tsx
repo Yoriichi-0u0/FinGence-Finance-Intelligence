@@ -344,9 +344,17 @@ function Reports({ c }: { c: Ready }) {
     return <>
         <PageHeader eyebrow={resultsEyebrow(s)} title="Reports" description="A management summary of the same figures, to print or keep." actions={<div className="flex flex-wrap gap-2 print:hidden"><button type="button" className={button} onClick={download}><Download aria-hidden="true" size={16} />JSON evidence</button><button type="button" className={primaryButton} onClick={() => window.print()}><Printer aria-hidden="true" size={16} />Print or save PDF</button></div>} />
         <SourceStrip context={c} />
-        <AiCommentary key={c.processingId} context={c} onResult={run => setAccepted(run ? { processingId: c.processingId, run } : null)} />
-        <Panel title={`Management summary · ${s.businessName} · ${periodLabel(s.period)}`} eyebrow={`${usesOwnDocuments(c) ? c.job ? 'Your documents, processed on the FinGence server' : 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
-            <div className="space-y-5 p-4 text-sm leading-relaxed sm:p-6 [&>section]:border-b [&>section]:border-[var(--border)] [&>section]:pb-5 [&>section:last-of-type]:border-0 [&_h3]:mb-1 [&_h3]:text-[13px] [&_h3]:uppercase [&_h3]:tracking-[0.08em] [&_h3]:text-[var(--brand-ink)]">
+        <ConnectedDemoAiReport key={c.processingId} context={c} inputs={inputs} processedAt={processedAt} providerProbeEnabled={Boolean(ai?.available)} />
+        <details className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] print:hidden">
+            <summary className="cursor-pointer list-none px-4 py-4 sm:px-5 [&::-webkit-details-marker]:hidden">
+                <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">Supporting evidence</span>
+                <span className="mt-1 block text-base font-semibold text-[var(--ink)]">Processing and reconciliation details</span>
+                <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">Open the current pipeline summary, source fingerprints, reconciliation statements, forecast, automated checks and limitations.</span>
+            </summary>
+            <div className="space-y-5 border-t border-[var(--border)] p-4 sm:p-5">
+                <AiCommentary key={c.processingId} context={c} onResult={run => setAccepted(run ? { processingId: c.processingId, run } : null)} />
+                <Panel title={`Management summary · ${s.businessName} · ${periodLabel(s.period)}`} eyebrow={`${usesOwnDocuments(c) ? c.job ? 'Your documents, processed on the FinGence server' : 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
+                    <div className="space-y-5 p-4 text-sm leading-relaxed sm:p-6 [&>section]:border-b [&>section]:border-[var(--border)] [&>section]:pb-5 [&>section:last-of-type]:border-0 [&_h3]:mb-1 [&_h3]:text-[13px] [&_h3]:uppercase [&_h3]:tracking-[0.08em] [&_h3]:text-[var(--brand-ink)]">
                 <section><h3 className="font-semibold">Processing confidence</h3><p>{confidence.status === 'MEASURED' ? <><strong className="tabular-nums">{confidence.percent}%</strong> ({confidence.band === 'HIGH' ? 'High' : confidence.band === 'CHECK' ? 'Check advised' : 'Low'}). {[...confidence.read.reasons, ...confidence.explained.reasons].length ? `Fell short: ${[...confidence.read.reasons, ...confidence.explained.reasons].join('; ')}.` : 'Every bank record was read reliably, checked and explained.'}</> : `Incomplete: ${confidence.reason}`}</p><p className="mt-1 text-xs">{CONFIDENCE_DEFINITION}</p></section>
                 <section><h3 className="font-semibold">Sources</h3><ul className="mt-1 space-y-1 text-xs">{rep.sources.map(x => <li key={x.sha256} className="break-all">{x.role.replace('_', ' ').toLowerCase()}: {x.name}{technical ? ` · SHA-256 ${x.sha256}` : ''}</li>)}</ul></section>
                 <section><h3 className="font-semibold">Bank cash movement</h3><p>Cash in {money(s.currency, rep.cash.credits)} ({rep.cash.creditRows} records); cash out {outflow(s.currency, rep.cash.debits)} ({rep.cash.debitRows}); net {money(s.currency, rep.cash.net)}. Not revenue, profit or a cash flow statement.</p></section>
@@ -358,9 +366,10 @@ function Reports({ c }: { c: Ready }) {
                 <section><h3 className="font-semibold">Verification</h3><p>{c.stages.filter(x => x.decision === 'AUTO_ACCEPTED').length} of {c.stages.length} stages auto-accepted after automated checks; {c.quarantine.length} items quarantined.</p></section>
                 <section><h3 className="font-semibold">Limitations</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-xs">{rep.limitations.map(l => <li key={l}>{l}</li>)}</ul></section>
                 {technical ? <p className="text-xs text-[var(--muted)]">Processing {c.processingId} · {c.version}</p> : null}
+                    </div>
+                </Panel>
             </div>
-        </Panel>
-        <ConnectedDemoAiReport context={c} inputs={inputs} processedAt={processedAt} providerProbeEnabled={Boolean(ai?.available)} />
+        </details>
     </>;
 }
 

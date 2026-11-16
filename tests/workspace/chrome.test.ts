@@ -46,6 +46,19 @@ describe('page chrome by role', async () => {
         expect(report('FINANCE')).not.toContain('SHA-256');
         expect(report('ADMIN')).toContain(`SHA-256 ${context.documents[0].sha256}`);
     });
+    it('puts generated and saved reports before the supporting processing summary', async () => {
+        const { DemoModule, isReady } = await import('../../components/demo/modules');
+        if (!isReady(context)) throw Error('sample did not process');
+        const report = as('FINANCE', createElement(DemoModule, { view: 'reports', context }));
+        const generated = report.indexOf('Generated report and saved records');
+        const library = report.indexOf('Saved reports');
+        const supporting = report.indexOf('Processing and reconciliation details');
+        const currentSummary = report.indexOf('Management summary');
+        expect(generated).toBeGreaterThanOrEqual(0);
+        expect(library).toBeGreaterThan(generated);
+        expect(supporting).toBeGreaterThan(library);
+        expect(currentSummary).toBeGreaterThan(supporting);
+    });
     it('an Admin viewing as a Finance user sees what a Finance user sees', () => {
         expect(as('ADMIN', createElement(SourceStrip, { context }), 'FINANCE')).not.toContain(context.processingId);
     });

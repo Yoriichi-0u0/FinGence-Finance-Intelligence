@@ -17,9 +17,11 @@ import {
   createIndexedDbReportRepository,
   isRegisteredSyntheticReport,
   type LocalReportRepository,
+  type SavedLocalReport,
 } from "@/lib/ai-reporting/local-report-repository";
 import { AiExplanationPanel } from "./ai-explanation-panel";
 import { ManagementReportPreview } from "./management-report-preview";
+import { SavedReportsLibrary } from "./saved-reports-library";
 
 const action = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -37,10 +39,24 @@ interface ConnectedDemoReportProps {
   providerProbeEnabled: boolean;
 }
 
+function replaceSaved(reports: readonly SavedLocalReport[], next: SavedLocalReport) {
+  return [next, ...reports.filter(item => item.reportId !== next.reportId)]
+    .sort((left, right) => Date.parse(right.savedAt) - Date.parse(left.savedAt));
+}
+
+function mergeSaved(reports: readonly SavedLocalReport[], restored: readonly SavedLocalReport[]) {
+  const byReportId = new Map<string, SavedLocalReport>();
+  for (const entry of [...reports, ...restored]) {
+    const current = byReportId.get(entry.reportId);
+    if (!current || Date.parse(entry.updatedAt) >= Date.parse(current.updatedAt)) byReportId.set(entry.reportId, entry);
+  }
+  return [...byReportId.values()].sort((left, right) => Date.parse(right.savedAt) - Date.parse(left.savedAt));
+}
+
 function safeMessage(value: unknown): string {
   return value instanceof Error
     ? value.message
-    : "The older AI Reporting workflow could not safely use these Data documents.";
+    : "AI Reporting could not safely use these Data documents.";
 }
 
 function downloadReport(report: LocalManagementReport, explanation: ValidatedFinancialExplanation | null) {
@@ -64,13 +80,29 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
   const [report, setReport] = useState<LocalManagementReport | null>(null);
   const [verification, setVerification] = useState<DemoDocumentReportVerification | null>(null);
   const [explanation, setExplanation] = useState<ValidatedFinancialExplanation | null>(null);
+  const [savedReports, setSavedReports] = useState<readonly SavedLocalReport[]>([]);
+  const [storageState, setStorageState] = useState<"LOADING" | "READY" | "UNAVAILABLE">("LOADING");
   const [provider, setProvider] = useState<ProviderStatus | null>(null);
-  const [busy, setBusy] = useState<"REPORT" | "AI" | null>("REPORT");
+  const [busy, setBusy] = useState<"REPORT" | "AI" | "DELETE" | null>("REPORT");
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    repository.current = createIndexedDbReportRepository();
+    let active = true;
+    const localRepository = createIndexedDbReportRepository();
+    repository.current = localRepository;
+    void localRepository.listReports().then(value => {
+      if (!active) return;
+      setSavedReports(current => mergeSaved(current, value.reports));
+      setStorageState("READY");
+      if (value.issues.length) setNotice(`${value.issues.length} incompatible or expired local report snapshot(s) were discarded safely.`);
+    }).catch(() => {
+      if (active) setStorageState("UNAVAILABLE");
+    });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
     if (!providerProbeEnabled) return;
     const controller = new AbortController();
     void fetch("/api/ai-reporting/explain", { cache: "no-store", signal: controller.signal })
@@ -107,10 +139,17 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
         return;
       }
       try {
-        await repository.current.saveReport(generated.report);
-        if (active) setNotice("Report generated and saved in this browser as a registered synthetic draft.");
+        const saved = await repository.current.saveReport(generated.report);
+        if (active) {
+          setSavedReports(current => replaceSaved(current, saved));
+          setStorageState("READY");
+          setNotice("Report generated and saved in this browser as a registered synthetic draft.");
+        }
       } catch {
-        if (active) setNotice("Report generated for this session; browser storage was unavailable.");
+        if (active) {
+          setStorageState("UNAVAILABLE");
+          setNotice("Report generated for this session; browser storage was unavailable.");
+        }
       }
     }).catch(value => {
       if (active) setError(safeMessage(value));
@@ -139,7 +178,8 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
       setExplanation(value.explanation);
       if (repository.current) {
         try {
-          await repository.current.saveExplanation(report.reportId, value.explanation);
+          const updated = await repository.current.saveExplanation(report.reportId, value.explanation);
+          setSavedReports(current => replaceSaved(current, updated));
           setNotice("AI explanation attached to the saved synthetic report snapshot.");
         } catch {
           setNotice("The AI explanation is visible for this session but could not be saved locally.");
@@ -152,23 +192,48 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
     }
   }
 
+  function openSaved(entry: SavedLocalReport) {
+    setReport(entry.report);
+    setExplanation(entry.aiExplanation);
+    setVerification(null);
+    setError("");
+    setNotice("Saved synthetic report reopened from this browser.");
+  }
+
+  async function deleteSaved(entry: SavedLocalReport) {
+    if (!repository.current || busy !== null || !window.confirm("Delete this local synthetic report snapshot?")) return;
+    setBusy("DELETE");
+    setError("");
+    try {
+      await repository.current.deleteReport(entry.reportId);
+      setSavedReports(current => current.filter(item => item.reportId !== entry.reportId));
+      setNotice(report?.reportId === entry.reportId
+        ? "Saved record deleted from this browser. The current preview remains available for this session."
+        : "Saved report deleted from this browser.");
+    } catch {
+      setError("The saved report could not be deleted. Browser storage may be unavailable.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const providerMessage = provider?.message ?? (providerProbeEnabled
     ? "Checking whether the optional AI explanation is enabled…"
     : "Optional AI explanation is off. The independently checked report still works without it.");
 
   return (
     <section id="ai-reporting-draft" aria-labelledby="ai-reporting-draft-title" className="mt-8 space-y-5 print:break-before-page">
-      <Panel>
+      <Panel className="print:hidden">
         <div className="space-y-4 p-4 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-3xl">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">Your AI Reporting workflow</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">Management reporting</p>
               <div className="mt-1 flex flex-wrap items-center gap-2">
-                <h2 id="ai-reporting-draft-title" className="text-xl font-semibold tracking-[-0.02em]">Independent management draft</h2>
+                <h2 id="ai-reporting-draft-title" className="text-xl font-semibold tracking-[-0.02em]">Generated report and saved records</h2>
                 {report ? <StatusBadge status="Draft" /> : null}
               </div>
               <p className="mt-2 text-sm leading-6 text-[var(--muted-strong)]">
-                This is your older C1-backed report, now connected to the same original bank document selected on Data. Chia&apos;s current management summary above remains unchanged.
+                The report independently re-reads the bank document selected on Data through C1, checks it against the current processing, and saves registered fictional sample drafts in this browser.
               </p>
             </div>
             {report ? <div className="flex flex-wrap gap-2 print:hidden">
@@ -194,13 +259,24 @@ export function ConnectedDemoAiReport({ context, inputs, processedAt, providerPr
             </div>
           </div> : null}
           {notice ? <p role="status" className="rounded-xl bg-[var(--surface-subtle)] p-3 text-xs leading-5 text-[var(--muted-strong)]">{notice}</p> : null}
-          {error ? <div role="alert" className="rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]"><p className="font-semibold">The existing report above is still available</p><p className="mt-1 leading-6">{error}</p></div> : null}
+          {error ? <div role="alert" className="rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]"><p className="font-semibold">Saved report records remain available</p><p className="mt-1 leading-6">{error}</p></div> : null}
           <div className="flex items-start gap-3 text-xs leading-5 text-[var(--muted)]">
             <FileBarChart2 aria-hidden="true" className="mt-0.5 shrink-0" size={16} />
             <p>{providerMessage}{provider?.provider ? ` Provider: ${provider.provider}; model: ${provider.model ?? "unavailable"}.` : ""} Deterministic figures never require a model.</p>
           </div>
         </div>
       </Panel>
+
+      <div className="print:hidden">
+        <SavedReportsLibrary
+          reports={savedReports}
+          activeReportId={report?.reportId ?? null}
+          storageState={storageState}
+          onView={openSaved}
+          onDownload={entry => downloadReport(entry.report, entry.aiExplanation)}
+          onRequestDelete={entry => void deleteSaved(entry)}
+        />
+      </div>
 
       {report ? <section aria-label="AI Reporting generated report" className="space-y-4">
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-xs text-[var(--muted-strong)]">
