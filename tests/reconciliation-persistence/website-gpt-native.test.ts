@@ -170,7 +170,8 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   });
   const response=await readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${f.owner.jobId}`,{headers:{cookie:`fingence_session=${token}`}}),{store,verify});
   expect(response.status).toBe(200);const data=await response.json();expect(data.version).toBe('gpt-finance-view/1');expect(data).not.toHaveProperty('processingId');
-  expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('UNRESOLVED');
+  expect(data.runs.every((run:{outcome:string})=>run.outcome==='UNRESOLVED')).toBe(true);
+  expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('Not yet approved');
  });
  it('returns 404 for a missing, other-owner or missing-lineage job instead of masking it as 503',async()=>{
   const f=await job();expect((await api({...f.owner,jobId:randomUUID()})).status).toBe(404);

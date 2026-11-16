@@ -64,6 +64,6 @@ it('manual refresh can start a fresh read after timeout without retaining the ol
 });
 it('renders the requested waiting text, keeps manual refresh and preserves UNRESOLVED rules',()=>{
  expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'generating'}}))).toContain('Generating GPT suggestions...');
- const html=renderToStaticMarkup(createElement(GPTSuggestions,{batchId:batch,websiteJob:true}));expect(html).toContain('Refresh suggestions');expect(html).toContain('UNRESOLVED');
+ const html=renderToStaticMarkup(createElement(GPTSuggestions,{batchId:batch,websiteJob:true}));expect(html).toContain('Refresh suggestions');expect(html).toContain('Not yet approved');
  const ready:GPTEvidenceState={status:'ready',data};expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:ready}))).toContain('UNRESOLVED');
 });
