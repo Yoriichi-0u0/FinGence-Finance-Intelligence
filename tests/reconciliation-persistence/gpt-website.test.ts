@@ -19,7 +19,9 @@ it('renders actual authorized saved evidence through API and UI without scores o
  const f=setup(),r=await f.handler(f.request());expect(r.status).toBe(200);const data=await r.json() as GPTEvidenceView;
  const html=renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}));
  for(const text of ['GPT Matching Suggestions','REF-B','REF-L','UNRESOLVED','financialEligible','Not yet approved'])expect(html).toContain(text);
- expect(html).not.toContain('<script>');expect(html).not.toContain('<button');expect(f.query).toHaveBeenCalledTimes(1);
+ expect(html).not.toContain('<script>');expect(html.match(/<button/g)).toHaveLength(2);
+ expect(html).toContain('Verified suggestions (0)');expect(html).toContain('All outcomes (1)');
+ expect(html).not.toMatch(/<button[^>]*>Approve/i);expect(f.query).toHaveBeenCalledTimes(1);
  expect(JSON.stringify(data)).not.toContain('capability');expect(data.runs[0].items[0].score).toBe(null);
 });
 it('denies unauthenticated, wrong role, foreign tenant and out-of-scope batch before evidence access',async()=>{
