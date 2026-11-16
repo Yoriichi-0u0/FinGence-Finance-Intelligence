@@ -42,17 +42,15 @@ export function GPTSuggestionsView({state:input}:{state:GPTEvidenceState}){
  // Preview only reduces presentation. The API still authorizes using the real server session role.
  const state=input.status==='ready'&&!technical&&input.data.version==='gpt-evidence-view/1'
   ?{...input,data:financeGPTView(input.data)}:input;
- return <div className="my-4 min-w-0"><Panel title="GPT Matching Suggestions" eyebrow="Review your suggested matches"><div className="min-w-0 space-y-5 p-4 text-sm sm:p-5">
- <p className="text-[var(--muted)]">Not yet approved. Suggestions do not approve financial matches or change your reconciliation totals.</p>
+ return <div className="my-4 min-w-0"><Panel title="GPT Matching Suggestions"><div className="min-w-0 space-y-5 p-4 text-sm sm:p-5">
  {state.status!=='ready'?<p className="rounded-xl bg-[var(--surface-subtle)] p-4" role={state.status==='error'?'alert':'status'}>
- {state.status==='loading'?'Loading saved suggestions...':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved suggestions are available yet. You can check again using Refresh suggestions.':state.status==='unavailable'?'Saved suggestions are unavailable. Please contact your administrator if this continues.':'Suggestions could not be loaded. No results are shown.'}</p>:<GPTFinancialSummary data={state.data} technical={technical}/>}
+ {state.status==='loading'?'Loading saved suggestions...':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved suggestions are available.':state.status==='unavailable'?'Saved suggestions are unavailable. Please contact your administrator if this continues.':'Suggestions could not be loaded. No results are shown.'}</p>:<GPTFinancialSummary data={state.data} technical={technical}/>}
  </div></Panel></div>;
 }
 
 function EvidenceLoader({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){
  const [state,setState]=useState<GPTEvidenceState>({status:batchId?'loading':'unavailable'});
- const [refresh,setRefresh]=useState(0);
- useEffect(()=>{if(!batchId)return;return watchGPTEvidence(batchId,websiteJob,setState);},[batchId,websiteJob,refresh]);
- return <>{websiteJob&&<p className="text-xs text-[var(--muted)]"><button type="button" onClick={()=>{setState({status:'loading'});setRefresh(n=>n+1);}}>Refresh suggestions</button></p>}<GPTSuggestionsView state={state}/></>;
+ useEffect(()=>{if(!batchId)return;return watchGPTEvidence(batchId,websiteJob,setState);},[batchId,websiteJob]);
+ return <GPTSuggestionsView state={state}/>;
 }
 export default function GPTSuggestions({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){return <EvidenceLoader key={`${websiteJob}:${batchId??'unavailable'}`} batchId={batchId} websiteJob={websiteJob}/>;}
