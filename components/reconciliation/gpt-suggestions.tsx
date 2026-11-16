@@ -1,7 +1,8 @@
 "use client";
 import {useEffect,useState} from 'react';
 import {Panel} from '@/components/ui';
-import {financeGPTView,pairVerificationResult,type GPTDisplayView} from '@/lib/gpt-evidence-view';
+import {financeGPTView,type GPTDisplayView} from '@/lib/gpt-evidence-view';
+import {GPTFinancialSummary} from './gpt-financial-summary';
 import {useTechnicalDetail} from '@/components/workspace/context';
 export type GPTEvidenceState={status:'loading'|'generating'|'empty'|'unavailable'|'error'}|{status:'ready';data:GPTDisplayView};
 export async function loadGPTEvidence(batchId:string,signal:AbortSignal,transport:typeof fetch=fetch,websiteJob=false):Promise<GPTEvidenceState>{
@@ -41,29 +42,17 @@ export function GPTSuggestionsView({state:input}:{state:GPTEvidenceState}){
  // Preview only reduces presentation. The API still authorizes using the real server session role.
  const state=input.status==='ready'&&!technical&&input.data.version==='gpt-evidence-view/1'
   ?{...input,data:financeGPTView(input.data)}:input;
- return <div className="my-4"><Panel title="GPT Matching Suggestions" eyebrow="Saved evidence · human review required"><div className="space-y-3 p-5 text-sm">
- <p className="text-xs text-[var(--muted)]">Suggestions remain UNRESOLVED and do not change reconciliation totals or approve financial matches.</p>
- {state.status!=='ready'?<p role={state.status==='error'?'alert':'status'}>{state.status==='loading'?'Loading saved GPT evidence…':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved GPT suggestions or abstentions for this batch.':state.status==='unavailable'?'GPT evidence is unavailable. Please contact your administrator if this continues.':'Unable to load GPT evidence. No results are shown.'}</p>:state.data.runs.map((run,index)=><article key={index} className="min-w-0 rounded-lg border border-[var(--border)] p-4">
- <div className="flex flex-wrap justify-between gap-2"><p className="font-semibold">{'model' in run?run.model:'Matching suggestions'}</p><span className="rounded bg-[var(--brand-soft)] px-2 py-1 text-xs font-semibold">UNRESOLVED</span></div>
- <p className="mt-1 break-all text-xs text-[var(--muted)]">Saved {run.createdAt}{'prompt' in run&&<> / {run.prompt} / Evidence {run.evidenceId}</>}</p>
- {!run.items.length&&<p className="mt-3">The model returned no suggestions or abstentions.</p>}
- {run.items.map(item=><section key={`${item.type}:${item.ordinal}`} className="mt-3 rounded-lg bg-[var(--surface-subtle)] p-3">
- <h3 className="font-semibold">{item.type==='ABSTENTION'?`Abstention · ${item.recordId??'Record unavailable'}`:`BANK ${item.bankId??'Unavailable'} → LEDGER ${item.ledgerId??'Unavailable'}`}</h3>
- {item.type==='SUGGESTION'&&<p className="mt-1 break-words text-xs">Bank reference: {item.bankReference??'Unavailable'} · Ledger reference: {item.ledgerReference??'Unavailable'} · Score: unavailable (none persisted)</p>}
- <p className="mt-2 whitespace-pre-wrap">{item.explanation}</p><p className="mt-2 text-xs">{item.reasons.join(' · ')}</p>
- <p className="mt-2 text-xs">Independent verification: {'verificationResult' in item?item.verificationResult:pairVerificationResult(item)}</p>
- {'verification' in item&&'bankSha256' in run&&'processingId' in state.data&&<details className="mt-2 text-xs"><summary className="cursor-pointer font-semibold text-[var(--brand-ink)]">Supporting evidence and independent verification</summary>
- <p className="mt-2 break-all">Processing {state.data.processingId}<br/>BANK SHA256 {run.bankSha256}<br/>LEDGER SHA256 {run.ledgerSha256}</p>
- <pre className="mt-2 max-h-72 overflow-auto whitespace-pre-wrap break-all">{Object.keys(item.verification).length?JSON.stringify(item.verification,null,2):'No independent pair verification for an abstention.'}</pre></details>}
- </section>)}
- </article>)}
+ return <div className="my-4 min-w-0"><Panel title="GPT Matching Suggestions" eyebrow="Review your suggested matches"><div className="min-w-0 space-y-5 p-4 text-sm sm:p-5">
+ <p className="text-[var(--muted)]">Not yet approved. Suggestions do not approve financial matches or change your reconciliation totals.</p>
+ {state.status!=='ready'?<p className="rounded-xl bg-[var(--surface-subtle)] p-4" role={state.status==='error'?'alert':'status'}>
+ {state.status==='loading'?'Loading saved suggestions...':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved suggestions are available yet. You can check again using Refresh suggestions.':state.status==='unavailable'?'Saved suggestions are unavailable. Please contact your administrator if this continues.':'Suggestions could not be loaded. No results are shown.'}</p>:<GPTFinancialSummary data={state.data} technical={technical}/>}
  </div></Panel></div>;
 }
+
 function EvidenceLoader({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){
- const technical=useTechnicalDetail();
  const [state,setState]=useState<GPTEvidenceState>({status:batchId?'loading':'unavailable'});
  const [refresh,setRefresh]=useState(0);
  useEffect(()=>{if(!batchId)return;return watchGPTEvidence(batchId,websiteJob,setState);},[batchId,websiteJob,refresh]);
- return <>{websiteJob&&<p className="text-xs text-[var(--muted)]">{technical&&<>Website job evidence · stored separately from DB04. </>}<button type="button" onClick={()=>{setState({status:'loading'});setRefresh(n=>n+1);}}>Refresh suggestions</button></p>}<GPTSuggestionsView state={state}/></>;
+ return <>{websiteJob&&<p className="text-xs text-[var(--muted)]"><button type="button" onClick={()=>{setState({status:'loading'});setRefresh(n=>n+1);}}>Refresh suggestions</button></p>}<GPTSuggestionsView state={state}/></>;
 }
 export default function GPTSuggestions({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){return <EvidenceLoader key={`${websiteJob}:${batchId??'unavailable'}`} batchId={batchId} websiteJob={websiteJob}/>;}

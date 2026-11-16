@@ -18,7 +18,7 @@ it('keeps the unconfigured actual website route unavailable and uncached',async(
 it('renders actual authorized saved evidence through API and UI without scores or approvals',async()=>{
  const f=setup(),r=await f.handler(f.request());expect(r.status).toBe(200);const data=await r.json() as GPTEvidenceView;
  const html=renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}));
- for(const text of ['GPT Matching Suggestions','REF-B','REF-L','UNRESOLVED','financialEligible','Score: unavailable'])expect(html).toContain(text);
+ for(const text of ['GPT Matching Suggestions','REF-B','REF-L','UNRESOLVED','financialEligible','Not yet approved'])expect(html).toContain(text);
  expect(html).not.toContain('<script>');expect(html).not.toContain('<button');expect(f.query).toHaveBeenCalledTimes(1);
  expect(JSON.stringify(data)).not.toContain('capability');expect(data.runs[0].items[0].score).toBe(null);
 });
@@ -47,7 +47,7 @@ it('validates exact request shape and handles duplicate read requests without wr
 it('shows loading, empty, unavailable, error and saved abstention states',()=>{
  for(const status of ['loading','empty','unavailable','error'] as const){const html=renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status}}));expect(html).toContain('GPT Matching Suggestions');expect(html).not.toContain('REF-B');}
  const data={version:'gpt-evidence-view/1',batchId:batch,processingId:id,runs:[{evidenceId:'e',model:'model',prompt:'p',createdAt:'date',bankSha256:'b',ledgerSha256:'l',outcome:'UNRESOLVED',items:[{type:'ABSTENTION',ordinal:0,bankId:null,ledgerId:null,recordId:'B',bankReference:null,ledgerReference:null,explanation:'Uncertain',reasons:['MODEL_ABSTENTION'],verification:{},score:null,outcome:'UNRESOLVED'}]}]} satisfies GPTEvidenceView;
- expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('Abstention');
+ expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('No match suggested');
 });
 it('loads only same-origin saved evidence, rejects stale batches and maps unavailable responses',async()=>{
  const signal=new AbortController().signal;
