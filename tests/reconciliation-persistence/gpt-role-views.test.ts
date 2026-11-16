@@ -46,7 +46,7 @@ describe('backend role projections',()=>{
  it('renders Finance suggestions and PASS without technical details; preserves immutable source',async()=>{
   const before=JSON.stringify(data),view=financeGPTView(data);
   const html=renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data:view}}));
-  expect(html).toContain('All matching checks passed');expect(html).toContain('Not yet approved');expect(html).toContain('BANK REF');
+  expect(html).toContain('All matching checks passed');expect(html).toContain('Not Yet Approved');expect(html).toContain('BANK REF');
   for(const technical of ['private-','<pre','SHA256','Processing '])expect(html).not.toContain(technical);
   expect(JSON.stringify(data)).toBe(before);
   const transport=vi.fn(async()=>Response.json(view)) as unknown as typeof fetch;
@@ -81,7 +81,7 @@ describe('AI06 workspace role preview',()=>{
  it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s viewing Finance sees the same simplified results',role=>{
   const html=render(role,'FINANCE');
   expect(html).toBe(render('FINANCE','FINANCE'));
-  expect(html).toContain('All matching checks passed');expect(html).toContain('Not yet approved');expect(html).toContain('BANK REF');
+  expect(html).toContain('All matching checks passed');expect(html).toContain('Not Yet Approved');expect(html).toContain('BANK REF');
   for(const technical of ['private-','<pre','SHA256','Processing ','Supporting evidence'])expect(html).not.toContain(technical);
  });
  it.each(['ADMIN','SUPERADMIN'] as const)('%s normal view retains technical evidence after returning from Finance preview',role=>{

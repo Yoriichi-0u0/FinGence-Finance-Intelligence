@@ -62,8 +62,8 @@ it('manual refresh can start a fresh read after timeout without retaining the ol
  const old=vi.fn<typeof fetch>(async()=>empty()),onState=vi.fn();const stop=watchGPTEvidence(batch,true,onState,old);await flush();await vi.advanceTimersByTimeAsync(90_000);stop();
  const current=vi.fn<typeof fetch>(async()=>Response.json(data));watchGPTEvidence(batch,true,onState,current);await flush();expect(current).toHaveBeenCalledTimes(1);expect(onState).toHaveBeenLastCalledWith({status:'ready',data});expect(vi.getTimerCount()).toBe(0);
 });
-it('renders the requested waiting text, keeps manual refresh and preserves UNRESOLVED rules',()=>{
+it('renders the requested waiting text, removes manual refresh and preserves saved outcomes',()=>{
  expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'generating'}}))).toContain('Generating GPT suggestions...');
- const html=renderToStaticMarkup(createElement(GPTSuggestions,{batchId:batch,websiteJob:true}));expect(html).toContain('Refresh suggestions');expect(html).toContain('Not yet approved');
+ const html=renderToStaticMarkup(createElement(GPTSuggestions,{batchId:batch,websiteJob:true}));expect(html).not.toContain('Refresh suggestions');expect(html).toContain('Loading saved suggestions');
  const ready:GPTEvidenceState={status:'ready',data};expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:ready}))).toContain('UNRESOLVED');
 });
