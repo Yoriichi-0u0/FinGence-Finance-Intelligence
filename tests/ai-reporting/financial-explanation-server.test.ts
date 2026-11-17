@@ -90,6 +90,7 @@ const requestHeaders = {
   origin: "http://127.0.0.1:3000",
   "sec-fetch-site": "same-origin",
 };
+const liveProviderTestEnabled = process.env.FINGENCE_AI_REPORTING_LIVE_TEST === "1";
 
 describe("local AI explanation access boundary", () => {
   it("separates local reporting access from the additional model-dispatch flag", () => {
@@ -251,4 +252,50 @@ describe("AI explanation service validation", () => {
     } satisfies Partial<FinancialExplanationServiceError>);
     expect(provider.generate).not.toHaveBeenCalled();
   });
+});
+
+describe("credentialed local AI explanation smoke check", () => {
+  it.runIf(liveProviderTestEnabled)("completes the registered Data sample through the local API route", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("VERCEL", "");
+
+    expect(process.env.GROQ_API_KEY).toBeTruthy();
+    expect(financialExplanationProviderStatus()).toMatchObject({
+      provider: "GROQ",
+      model: GROQ_FINANCIAL_EXPLANATION_MODEL,
+      ready: true,
+    });
+
+    const response = await postExplanation(new Request(
+      "http://127.0.0.1:3000/api/ai-reporting/explain",
+      {
+        method: "POST",
+        headers: { ...requestHeaders, "content-type": "application/json" },
+        body: JSON.stringify(dataSampleRequest),
+      },
+    ));
+    const body = await response.json() as {
+      explanation?: {
+        status: string;
+        generation: { provider: string; actualModelRequest: boolean; modelIdentifier: string };
+        validation: { status: string; publicationAuthorized: boolean };
+      };
+      error?: { code?: string; message?: string };
+    };
+
+    expect(body.error).toBeUndefined();
+    expect(response.status).toBe(200);
+    expect(body.explanation).toMatchObject({
+      status: "AI_DRAFT_REQUIRES_REVIEW",
+      generation: {
+        provider: "GROQ",
+        actualModelRequest: true,
+        modelIdentifier: GROQ_FINANCIAL_EXPLANATION_MODEL,
+      },
+      validation: {
+        status: "PASSED",
+        publicationAuthorized: false,
+      },
+    });
+  }, 60_000);
 });
