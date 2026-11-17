@@ -11,7 +11,7 @@ the new version and its date.
 ## [Unreleased]
 
 ### Added
-- AI06 now considers only final unexplained transactions and supports separately authorized, audited proposal review without changing financial totals (issue #112; PR reference added on publication).
+- AI06 now considers only final unexplained transactions and supports separately authorized, audited proposal review without changing financial totals (#141).
 - AI06 GPT matching suggestions for unexplained reconciliation items, checked independently before they
   are shown and never changing a figure; owner-scoped role views and a categorised results table
   (#121, #122, #126, #129, #131, #132, #133).

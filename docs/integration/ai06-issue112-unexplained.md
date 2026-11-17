@@ -67,3 +67,13 @@ ROLLBACK;
 - The pinned complete pipeline resolved its sample records before GPT: no eligible final records, zero provider calls, saved empty outcomes. This expected abstention is not an authenticated live approval walkthrough.
 - TypeScript (including route type generation), lint and server-boundary checks passed. The website compiled/rendered, then the build stopped with Next.js `SecurityFatalError` for the installed shared dependency. It was not bypassed or upgraded in AI06 scope. CI status is recorded in the PR after execution.
 - Three local synthetic browser scenarios passed (Finance light desktop, Admin dark desktop, Finance 390px phone), including one review read, one POST despite a double click, unchanged evidence/financial state, and retained five-column/five-filter layout. Screenshots and machine-readable proof are in the ignored review ZIP; this mocked browser fixture is not Production authentication proof. No Production database access, live Groq call or Production deployment is authorized by these local results.
+
+## Synthetic browser screenshots (mocked transport, not Production)
+
+Light Finance desktop, dark Admin desktop and Finance phone respectively:
+
+![Synthetic Finance desktop](ai06-issue112/finance-light-1440.png)
+
+![Synthetic Admin dark desktop](ai06-issue112/admin-dark-1440.png)
+
+![Synthetic Finance mobile](ai06-issue112/finance-mobile-390.png)
