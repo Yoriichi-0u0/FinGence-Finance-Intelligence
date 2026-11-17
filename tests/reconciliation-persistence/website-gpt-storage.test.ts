@@ -83,8 +83,9 @@ it('injects only verified session hashes into request-scoped storage; no financi
 });
 it('never audits/retries after an uncertain persistence commit',async()=>{
  const store={claim:vi.fn(async()=>true),audit:vi.fn(async(owner:Owner,action:string)=>{void owner;void action;}),save:vi.fn(async()=>{throw new PersistenceError('COMMIT_OUTCOME_UNKNOWN');}),read:vi.fn(async()=>null)};
- const source={businessId:'synthetic',currency:'MYR',sha256:'d'.repeat(64),rows:[]};
+ const source={businessId:'synthetic',currency:'MYR',sha256:'d'.repeat(64),kind:'bank',rows:[]};
  const context={job:{id:owner.jobId},runner:'BACKEND_JOB_RUNNER',status:'COMPLETED',processingId:'b'.repeat(64),outputs:{bank:source,ledger:source,reconciliation:{results:[]}}} as unknown as ProcessingContext;
+ finalScope(context);
  await expect(generateWebsiteJobGPT(context,owner,'synthetic',{store})).rejects.toMatchObject({code:'COMMIT_OUTCOME_UNKNOWN'});
  expect(store.audit.mock.calls.map(c=>c[1])).toEqual(['START','SAVE_INTENT']);expect(store.save).toHaveBeenCalledTimes(1);
 });
@@ -98,10 +99,11 @@ it('runs generation -> mocked durable Supabase API -> authorized retrieval -> ex
   if(action==='READ')value=saved;
   return {rows:[{result:{organizationId:owner.organizationId,memberId:owner.memberId,value}}],rowCount:1};
  });
- const row={recordId:'BANK-1',date:'2026-11-01',currency:'MYR',signedCents:'100',reference:'SYNTHETIC'};
+ const row={sourceId:'synthetic-bank',businessId:'synthetic',row:1,sourceTransactionId:null,recordId:'BANK-1',date:'2026-11-01',currency:'MYR',signedCents:'100',reference:'SYNTHETIC'};
  const context={job:{id:owner.jobId},runner:'BACKEND_JOB_RUNNER',status:'COMPLETED_WITH_EXCEPTIONS',processingId:data.processingId,outputs:{
- bank:{businessId:'synthetic',currency:'MYR',sha256:'d'.repeat(64),rows:[row]},ledger:{businessId:'synthetic',currency:'MYR',sha256:'e'.repeat(64),rows:[{...row,recordId:'LEDGER-1'}]},
+ bank:{sourceId:'synthetic-bank',kind:'bank',businessId:'synthetic',currency:'MYR',sha256:'d'.repeat(64),rows:[row]},ledger:{sourceId:'synthetic-ledger',kind:'ledger',businessId:'synthetic',currency:'MYR',sha256:'e'.repeat(64),rows:[{...row,sourceId:'synthetic-ledger',recordId:'LEDGER-1'}]},
  reconciliation:{results:[{status:'AMOUNT_MISMATCH_REVIEW',bankRecordId:'BANK-1',ledgerRecordIds:['LEDGER-1']}]}}} as unknown as ProcessingContext;
+ finalScope(context);
  const complete=vi.fn(async()=>({content:{suggestions:[{bankId:'BANK-1',ledgerId:'LEDGER-1'}],abstentions:[]},receipt:{model:'openai/gpt-oss-120b',provider:'GROQ' as const,requestId:'mock',mode:'LIVE' as const,latencyMs:1,inputTokens:1,outputTokens:1,estimatedUsd:0}}));
  const admission=async()=>({admitted:true as const,reservedMicros:1,settle:async()=>{}});
  await generateWebsiteJobGPT(context,owner,'synthetic',{store:f.store,complete,admission});
@@ -119,3 +121,14 @@ it('review-only SQL is additive, atomic, forced-RLS, immutable and execute-only'
  expect(sql).not.toMatch(/ALTER TABLE (?:fingence_workspace|fingence_processing|fingence_ingestion|fingence_reconciliation)\./);
  expect(sql).not.toMatch(/GRANT (?:SELECT|INSERT|UPDATE|DELETE|ALL)/);expect(sql).not.toMatch(/PASSWORD|CREATE ROLE .* LOGIN /);
 });
+
+/** Explicit post-rule contract fixture; raw matcher exceptions are insufficient. */
+function finalScope(context:ProcessingContext){
+ const {bank,ledger}=context.outputs;
+ if(!bank||!ledger)throw Error('fixture');
+ // Separate source objects for the no-candidate uncertain-commit fixture.
+ context.outputs.ledger={...ledger,kind:'ledger'};
+ const item={id:'final-only',resolution:'UNEXPLAINED',bankRecordId:bank.rows[0]?.recordId??null,ledgerRecordIds:ledger.rows.map(r=>r.recordId),link:null,entryIds:[]};
+ context.scope={} as ProcessingContext['scope'];
+ context.outputs.resolution={origin:'DETERMINISTIC_RULES',status:'UNEXPLAINED_DIFFERENCE',checks:[{passed:true}],scope:{businessId:bank.businessId,currency:bank.currency},sources:{bank:{sha256:bank.sha256},ledger:{sha256:ledger.sha256}},periods:[{checks:[{passed:true}],items:bank.rows.length?[item]:[]}],attention:bank.rows.length?[item]:[],entries:[]} as unknown as NonNullable<ProcessingContext['outputs']['resolution']>;
+}

@@ -46,6 +46,7 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   baseline=await fingerprint();
   await admin.query(readFileSync('supabase/sql/ai06-website-gpt-storage-review.sql','utf8'));
   await admin.query(readFileSync('supabase/sql/ai06-website-gpt-login-review.sql','utf8'));
+  await admin.query(readFileSync('supabase/sql/ai06-unexplained-review-approval.sql','utf8'));
   await admin.query("INSERT INTO fingence_workspace.organizations(id,name) VALUES($1,'Synthetic native test')",[organizationId]);
   await admin.query("INSERT INTO fingence_workspace.members(id,organization_id,email,role,password_hash) VALUES($1,$2,'native@example.invalid','FINANCE',$3)",[memberId,organizationId,'x'.repeat(64)]);
   await admin.query("INSERT INTO fingence_workspace.sessions(member_id,token_hash,expires_at) VALUES($1,$2,now()+interval '1 hour')",[memberId,tokenHash]);
@@ -93,7 +94,81 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
  const api=(owner:Owner,backend=store)=>readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${owner.jobId}`),{store:backend,verify:async()=>({kind:'SIGNED_IN',tokenHash,principal:{sessionId:'native',memberId:owner.memberId,email:'native@example.invalid',role:'FINANCE',organization:{id:owner.organizationId,name:'Synthetic'},processing:{paused:false,reason:null,since:null},ai:{enabled:true,since:null}}})});
  it('installs the unchanged review SQL with forced RLS and no direct runtime table grants',async()=>{
   const rows=(await admin.query("SELECT c.relname,c.relrowsecurity,c.relforcerowsecurity,has_table_privilege('fingence_ai06_website_login',c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE') AS direct FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='fingence_gpt_website' AND c.relkind='r'")).rows;
-  expect(rows).toHaveLength(3);expect(rows.every(r=>r.relrowsecurity&&r.relforcerowsecurity&&!r.direct)).toBe(true);
+  expect(rows).toHaveLength(5);expect(rows.every(r=>r.relrowsecurity&&r.relforcerowsecurity&&!r.direct)).toBe(true);
+ });
+ async function reviewFixture(){
+  const f=await admitted(),b=randomUUID(),l=randomUUID(),ref='INV-'+randomUUID().slice(0,8);
+  const ingestion=(await admin.query('SELECT ingestion_run_id FROM fingence_processing.jobs WHERE id=$1',[f.owner.jobId])).rows[0].ingestion_run_id;
+  for(const [ordinal,role,sha,id] of [[0,'BANK_STATEMENT',f.data.runs[0].bankSha256,b],[1,'GENERAL_LEDGER',f.data.runs[0].ledgerSha256,l]] as const){
+   const document=(await admin.query("INSERT INTO fingence_ingestion.documents(run_id,ordinal,name,file_sha256,table_sha256,format,role,decision,reason,method) VALUES($1,$2,'synthetic.csv',$3,$3,'CSV',$4,'AUTO_ACCEPTED','Synthetic native contract fixture','EXACT_SIGNATURE') RETURNING id",[ingestion,ordinal,sha,role])).rows[0].id;
+   await admin.query("INSERT INTO fingence_ingestion.records(document_id,ordinal,record_id,business_id,transaction_date,currency,signed_cents,reference) VALUES($1,0,$2,'synthetic-business','2026-03-01','MYR',913721,$3)",[document,id,ref]);
+  }
+  const keys='authoritativeRecordIds pairTopology uniqueSourceIdentities finalUnexplained distinctRoles bankSourceIdentity bankSourceFingerprint bankEligibility bankTransactionIdentity bankMonetaryBasis bankDateBasis ledgerSourceIdentity ledgerSourceFingerprint ledgerEligibility ledgerTransactionIdentity ledgerMonetaryBasis ledgerDateBasis equalSignedCents sameCurrency sameDirection dateWithinSevenDays referenceAgreement businessScope authoritativeReferences uniqueFinancialPartner uniqueAssignment'.split(' ');
+  f.data.runs[0].items=[{type:'SUGGESTION',ordinal:0,bankId:b,ledgerId:l,recordId:null,bankReference:ref,ledgerReference:ref,explanation:'Synthetic contract fixture',reasons:['PAIR_CHECKS_PASSED'],verification:{...Object.fromEntries(keys.map(k=>[k,true])),policy:'website-pair-verifier/1',proposalPolicy:'website-unexplained/1'},score:null,outcome:'UNRESOLVED'}];
+  const reconciliation={version:'fingence-reconciliation-layer-v1',origin:'DETERMINISTIC_RULES',status:'UNEXPLAINED_DIFFERENCE',scope:{businessId:'synthetic-business'},sources:{bank:{sha256:f.data.runs[0].bankSha256},ledger:{sha256:f.data.runs[0].ledgerSha256}},checks:[{passed:true}],periods:[{checks:[{passed:true}],items:[{resolution:'UNEXPLAINED',bankRecordId:b,ledgerRecordIds:[l],link:null,entryIds:[]}]}],entries:[]};
+  await admin.query('UPDATE fingence_processing.results SET reconciliation=$2 WHERE job_id=$1',[f.owner.jobId,JSON.stringify(reconciliation)]);
+  await store.save(f.owner,f.data);
+  return {...f,b,l,payload:{ordinal:0,expectedEvidenceId:f.data.runs[0].evidenceId,requestId:randomUUID()}};
+ }
+ it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s: own proposal approval is audited and never changes accounting',async role=>{
+  await admin.query('UPDATE fingence_workspace.members SET role=$1 WHERE id=$2',[role,memberId]);
+  try{const f=await reviewFixture(),before=(await admin.query('SELECT reconciliation FROM fingence_processing.results WHERE job_id=$1',[f.owner.jobId])).rows;
+   expect(await store.reviewOperation(f.owner,'READ')).toMatchObject({items:[{canApprove:true,canReject:true,decision:'PENDING'}]});
+   expect(await store.reviewOperation(f.owner,'APPROVE',f.payload)).toMatchObject({decision:'APPROVE',financialOutcome:'UNRESOLVED',accountingEffect:'NONE'});
+   expect((await admin.query('SELECT reconciliation FROM fingence_processing.results WHERE job_id=$1',[f.owner.jobId])).rows).toEqual(before);
+   expect((await store.read(f.owner))!.runs[0].outcome).toBe('UNRESOLVED');
+  }finally{await admin.query("UPDATE fingence_workspace.members SET role='FINANCE' WHERE id=$1",[memberId]);}
+ });
+ it('replays the same request idempotently and rejects altered/stale replay',async()=>{
+  const f=await reviewFixture();await store.reviewOperation(f.owner,'REJECT',f.payload);
+  await expect(store.reviewOperation(f.owner,'REJECT',f.payload)).resolves.toMatchObject({decision:'REJECT'});
+  await expect(store.reviewOperation(f.owner,'APPROVE',f.payload)).rejects.toThrow('GPT_SQL_DUPLICATE');
+  await expect(store.reviewOperation(f.owner,'REJECT',{...f.payload,expectedEvidenceId:'0'.repeat(64)})).rejects.toThrow('GPT_SQL_DUPLICATE');
+  expect((await admin.query('SELECT count(*)::int n FROM fingence_gpt_website.reviews WHERE job_id=$1',[f.owner.jobId])).rows[0].n).toBe(1);
+ });
+ it('serializes conflicting approve/reject decisions and atomically audits the winner',async()=>{
+  const f=await reviewFixture();const results=await Promise.allSettled([store.reviewOperation(f.owner,'APPROVE',f.payload),store.reviewOperation(f.owner,'REJECT',{...f.payload,requestId:randomUUID()})]);
+  expect(results.filter(r=>r.status==='fulfilled')).toHaveLength(1);
+  expect((await admin.query('SELECT count(*)::int n FROM fingence_gpt_website.review_audit WHERE job_id=$1',[f.owner.jobId])).rows[0].n).toBe(1);
+ });
+ it('rolls back review on audit failure and denies cross-user or cross-organization scope',async()=>{
+  const f=await reviewFixture();await admin.query("CREATE FUNCTION fingence_gpt_website.fail_review_audit() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'synthetic audit failure'; END $$; CREATE TRIGGER fail_review_audit BEFORE INSERT ON fingence_gpt_website.review_audit FOR EACH ROW EXECUTE FUNCTION fingence_gpt_website.fail_review_audit()");
+  try{await expect(store.reviewOperation(f.owner,'REJECT',f.payload)).rejects.toThrow();expect((await admin.query('SELECT 1 FROM fingence_gpt_website.reviews WHERE job_id=$1',[f.owner.jobId])).rowCount).toBe(0);}
+  finally{await admin.query('DROP TRIGGER fail_review_audit ON fingence_gpt_website.review_audit; DROP FUNCTION fingence_gpt_website.fail_review_audit()');}
+  for(const field of ['memberId','organizationId'] as const)await expect(store.reviewOperation({...f.owner,[field]:randomUUID()},'REJECT',f.payload)).rejects.toThrow('GPT_SCOPE_DENIED');
+  expect((await admin.query('SELECT 1 FROM fingence_gpt_website.reviews WHERE job_id=$1',[f.owner.jobId])).rowCount).toBe(0);
+ });
+ it.each(['reference','amount','resolved','correcting-entry','failed-check','legacy'] as const)('denies stale/unsafe review: %s',async mode=>{
+  const f=await reviewFixture();
+  if(mode==='reference')await admin.query("UPDATE fingence_ingestion.records SET reference='INV830' WHERE record_id=$1",[f.l]);
+  if(mode==='amount')await admin.query('UPDATE fingence_ingestion.records SET signed_cents=1 WHERE record_id=$1',[f.l]);
+  if(mode==='resolved')await admin.query("UPDATE fingence_processing.results SET reconciliation=jsonb_set(reconciliation,'{periods,0,items,0,resolution}','\"TIMING_OPEN\"') WHERE job_id=$1",[f.owner.jobId]);
+  if(mode==='correcting-entry')await admin.query("UPDATE fingence_processing.results SET reconciliation=jsonb_set(reconciliation,'{entries}',$2) WHERE job_id=$1",[f.owner.jobId,JSON.stringify([{sourceRecordIds:[f.b]}])]);
+  if(mode==='failed-check')await admin.query("UPDATE fingence_processing.results SET reconciliation=jsonb_set(reconciliation,'{checks,0,passed}','false') WHERE job_id=$1",[f.owner.jobId]);
+  // Immutable evidence cannot be changed, even for a test: create a legacy item via its original save contract instead.
+  if(mode==='legacy'){
+   const legacy=await admitted();legacy.data.runs[0].items=[{...f.data.runs[0].items[0],verification:{equalSignedCents:true,sameCurrency:true,dateWithinSevenDays:true}}];await store.save(legacy.owner,legacy.data);
+   expect(await store.reviewOperation(legacy.owner,'READ')).toMatchObject({items:[{canApprove:false,canReject:true}]});
+   await expect(store.reviewOperation(legacy.owner,'APPROVE',{...f.payload,expectedEvidenceId:legacy.data.runs[0].evidenceId})).rejects.toThrow();return;
+  }
+  await expect(store.reviewOperation(f.owner,'APPROVE',f.payload)).rejects.toThrow();
+ });
+ it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s cannot review another member job with a real foreign session',async role=>{
+  const f=await reviewFixture(),other=randomUUID(),otherHash=secretHash(randomUUID()+'synthetic-foreign-session');
+  await admin.query("INSERT INTO fingence_workspace.members(id,organization_id,email,role,password_hash) VALUES($1,$2,$3,$4,$5)",[other,organizationId,`${other}@example.invalid`,role,'x'.repeat(64)]);
+  await admin.query("INSERT INTO fingence_workspace.sessions(member_id,token_hash,expires_at) VALUES($1,$2,now()+interval '1 hour')",[other,otherHash]);
+  const foreign=new PostgresWebsiteGPTStore(transactionDatabase(runtime),otherHash);
+  await expect(foreign.reviewOperation({...f.owner,memberId:other},'APPROVE',f.payload)).rejects.toThrow('GPT_JOB_DENIED');
+  await expect(foreign.reviewOperation({...f.owner,memberId:other},'READ')).rejects.toThrow('GPT_JOB_DENIED');
+ });
+ it('enforces append-only review history and no direct runtime or anonymous privileges',async()=>{
+  const f=await reviewFixture();await store.reviewOperation(f.owner,'REJECT',f.payload);
+  for(const table of ['reviews','review_audit']){
+   await expect(runtime.query(`SELECT * FROM fingence_gpt_website.${table}`)).rejects.toMatchObject({code:'42501'});
+   await expect(admin.query(`DELETE FROM fingence_gpt_website.${table}`)).rejects.toThrow();
+   await expect(admin.query(`TRUNCATE fingence_gpt_website.${table}`)).rejects.toThrow();
+  }
+  expect((await admin.query("SELECT has_function_privilege('anon','fingence_gpt_website.review(text,uuid,text,jsonb)','EXECUTE') allowed")).rows[0].allowed).toBe(false);
  });
  it('preserves existing ingestion/workspace/processing catalog definitions',async()=>{expect(await fingerprint()).toBe(baseline);});
  it('persists and retrieves through the actual restricted runtime with atomic audit',async()=>{
@@ -171,7 +246,8 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   const response=await readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${f.owner.jobId}`,{headers:{cookie:`fingence_session=${token}`}}),{store,verify});
   expect(response.status).toBe(200);const data=await response.json();expect(data.version).toBe('gpt-finance-view/1');expect(data).not.toHaveProperty('processingId');
   expect(data.runs.every((run:{outcome:string})=>run.outcome==='UNRESOLVED')).toBe(true);
-  expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('No verified suggestions.');
+  expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('No saved outcomes.');
+  expect(complete).not.toHaveBeenCalled();
  });
  it('returns 404 for a missing, other-owner or missing-lineage job instead of masking it as 503',async()=>{
   const f=await job();expect((await api({...f.owner,jobId:randomUUID()})).status).toBe(404);

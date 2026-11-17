@@ -1,0 +1,42 @@
+"use client";
+import {useEffect,useRef,useState} from 'react';
+import {gptReviewView,gptReviewResult,type GPTReviewView} from '@/lib/gpt-review-view';
+import {button} from '@/components/demo/shared';
+/** Read-only discovery never starts generation. Missing approved SQL leaves actions unavailable. */
+export function useGPTReview(jobId?:string){
+ const [saved,setSaved]=useState<{jobId:string;value:GPTReviewView}|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
+ const review=saved&&saved.jobId===jobId?saved.value:null;
+ const pending=useRef(false),request=useRef<{key:string;id:string}|null>(null),active=useRef<AbortController|null>(null);
+ useEffect(()=>{
+  const controller=new AbortController();active.current=controller;
+  if(jobId)void fetch(`/api/reconciliation/website-gpt-review?jobId=${encodeURIComponent(jobId)}`,{credentials:'same-origin',cache:'no-store',signal:controller.signal})
+   .then(async response=>{if(response.ok){const parsed=gptReviewView.safeParse(await response.json());if(parsed.success&&active.current===controller&&!controller.signal.aborted)setSaved({jobId:jobId!,value:parsed.data});}}).catch(()=>{});
+  return ()=>{controller.abort();};
+ },[jobId]);
+ const decide=async(ordinal:number,decision:'APPROVE'|'REJECT')=>{
+  if(!review||!jobId||pending.current)return;
+  const item=review.items.find(i=>i.ordinal===ordinal);if(!item||(decision==='APPROVE'?!item.canApprove:!item.canReject))return;
+  pending.current=true;setBusy(true);const controller=active.current,key=JSON.stringify([jobId,review.evidenceId,ordinal,decision]);
+  if(request.current?.key!==key)request.current={key,id:crypto.randomUUID()};
+  try{
+   // No automatic retry after a failed/uncertain POST. Explicit retry retains its idempotency key.
+   const response=await fetch(`/api/reconciliation/website-gpt-review?jobId=${encodeURIComponent(jobId)}`,{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({ordinal,decision,expectedEvidenceId:review.evidenceId,requestId:request.current.id})});
+   const parsed=response.ok?gptReviewResult.safeParse(await response.json()):null;
+   if(controller!==active.current||controller?.signal.aborted)return;
+   if(!parsed?.success){setMessage('Review not confirmed. Reload saved results before retrying.');return;}
+   setSaved({jobId,value:{...review,items:review.items.map(i=>i.ordinal===ordinal?{...i,decision:parsed.data.decision,canApprove:false,canReject:false}:i)}});
+   setMessage('Proposal review saved. Financial totals are unchanged; the match remains unresolved.');
+  }catch{if(controller===active.current&&!controller?.signal.aborted)setMessage('Review not confirmed. Reload saved results before retrying.');}
+  finally{if(controller===active.current&&!controller?.signal.aborted){pending.current=false;setBusy(false);}}
+ };
+ return {review,busy,message,decide};
+}
+export type GPTReviewControls=ReturnType<typeof useGPTReview>;
+export function GPTReviewActions({ordinal,controls}:{ordinal:number;controls:GPTReviewControls}){
+ const item=controls.review?.items.find(i=>i.ordinal===ordinal);if(!item)return null;
+ if(item.decision!=='PENDING')return <span className="block text-xs">Proposal {item.decision==='APPROVE'?'approved':'rejected'} · No financial posting</span>;
+ return <div className="mt-2 flex flex-wrap gap-2">
+  <button type="button" className={button} disabled={controls.busy||!item.canApprove} onClick={()=>void controls.decide(ordinal,'APPROVE')}>Approve suggestion</button>
+  <button type="button" className={button} disabled={controls.busy||!item.canReject} onClick={()=>void controls.decide(ordinal,'REJECT')}>Reject suggestion</button>
+ </div>;
+}

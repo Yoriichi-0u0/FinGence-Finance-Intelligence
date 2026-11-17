@@ -46,7 +46,7 @@ export function checkedWebsiteEvidence(value:unknown,jobId:string):GPTEvidenceVi
 /** No direct table privileges. The reviewed narrow SQL API revalidates session + stored job on every operation. */
 export class PostgresWebsiteGPTStore implements WebsiteGPTStore{
  constructor(private readonly database:TransactionDatabase,private readonly tokenHash:string){if(!/^[a-f0-9]{64}$/.test(tokenHash))throw new WebsiteGPTError('GPT_SESSION_REQUIRED');}
- private async call(owner:Owner,action:string,payload:unknown=null):Promise<unknown>{
+ private async call(owner:Owner,action:string,payload:unknown=null,target:'operate'|'review'='operate'):Promise<unknown>{
   if(!z.uuid().safeParse(owner.jobId).success||!z.uuid().safeParse(owner.organizationId).success||!z.uuid().safeParse(owner.memberId).success)throw new WebsiteGPTError('GPT_SCOPE_INVALID');
   return this.database.transaction(async tx=>{
    const gate=await tx.query<{compatible:boolean}>(`WITH RECURSIVE identities AS (
@@ -73,13 +73,27 @@ export class PostgresWebsiteGPTStore implements WebsiteGPTStore{
       AND p.prosecdef AND p.proconfig @> ARRAY['search_path=pg_catalog'] AND pg_get_functiondef(p.oid) LIKE '%website-gpt/1%'
       AND has_function_privilege(current_user,p.oid,'EXECUTE')) AS compatible`).catch(error=>{const safe=websiteGPTSqlError(error);reportWebsiteGPT('RUNTIME',safe.reason);throw safe;});
    if(gate.rows.length!==1||gate.rows[0].compatible!==true){reportWebsiteGPT('RUNTIME','GPT_RUNTIME_DENIED');throw new WebsiteGPTError('GPT_RUNTIME_DENIED');}
-   const result=await tx.query<{result:unknown}>('SELECT fingence_gpt_website.operate($1,$2::uuid,$3,$4::jsonb) AS result',[this.tokenHash,owner.jobId,action,payload===null?null:JSON.stringify(payload)]).catch(error=>{const safe=websiteGPTSqlError(error);reportWebsiteGPT('OPERATE',safe.reason);throw safe;});
+   if(target==='review'){
+    const contract=await tx.query<{compatible:boolean}>(`SELECT
+     (SELECT count(*)=2 AND bool_and(c.relrowsecurity AND c.relforcerowsecurity AND pg_get_userbyid(c.relowner)<>current_user
+      AND NOT has_table_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+      AND NOT has_any_column_privilege(current_user,c.oid,'SELECT,INSERT,UPDATE,REFERENCES'))
+      FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='fingence_gpt_website' AND c.relname IN ('reviews','review_audit'))
+     AND EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='fingence_gpt_website'
+      AND p.proname='review' AND pg_get_function_identity_arguments(p.oid)='p_token_hash text, p_job uuid, p_action text, p_payload jsonb'
+      AND p.prosecdef AND p.proconfig @> ARRAY['search_path=pg_catalog'] AND pg_get_functiondef(p.oid) LIKE '%website-gpt-review/1%'
+      AND has_function_privilege(current_user,p.oid,'EXECUTE')) AS compatible`);
+    if(contract.rows[0]?.compatible!==true)throw new WebsiteGPTError('GPT_RUNTIME_DENIED');
+   }
+   const sql=target==='review'?'SELECT fingence_gpt_website.review($1,$2::uuid,$3,$4::jsonb) AS result':'SELECT fingence_gpt_website.operate($1,$2::uuid,$3,$4::jsonb) AS result';
+   const result=await tx.query<{result:unknown}>(sql,[this.tokenHash,owner.jobId,action,payload===null?null:JSON.stringify(payload)]).catch(error=>{const safe=websiteGPTSqlError(error);reportWebsiteGPT('OPERATE',safe.reason);throw safe;});
    if(result.rows.length!==1)throw new WebsiteGPTError('GPT_STORAGE_INVALID');
    const body=result.rows[0].result as {organizationId?:unknown;memberId?:unknown;value?:unknown}|null;
    if(!body||body.organizationId!==owner.organizationId||body.memberId!==owner.memberId)throw new WebsiteGPTError('GPT_SCOPE_DENIED');
    return body.value;
   });
  }
+ async reviewOperation(owner:Owner,action:'READ'|'APPROVE'|'REJECT',payload:unknown=null){return this.call(owner,action,payload,'review');}
  async claim(owner:Owner){const value=await this.call(owner,'CLAIM');if(typeof value!=='boolean')throw new WebsiteGPTError('GPT_CLAIM_INVALID');return value;}
  async audit(owner:Owner,action:'START'|'SAVE_INTENT'|'FAILED'|'READ'){if(await this.call(owner,action)!==true)throw new WebsiteGPTError('GPT_AUDIT_INVALID');}
  async save(owner:Owner,data:GPTEvidenceView){if(await this.call(owner,'SAVE',checkedWebsiteEvidence(data,owner.jobId))!==true)throw new WebsiteGPTError('GPT_SAVE_INVALID');}
@@ -92,7 +106,7 @@ export function createWebsiteGPTDatabase(environment:Parameters<typeof serverPoo
  pool.on('error',()=>reportWebsiteGPT('POOL','DB_POOL_ERROR'));
  return transactionDatabase({connect:async()=>{try{return await pool.connect();}catch(error){reportWebsiteGPT('POOL',websiteGPTConnectReason(error));throw error;}},end:()=>pool.end()});
 }
-export function websiteGPTStorage(tokenHash:string):WebsiteGPTStore|null{
+export function websiteGPTStorage(tokenHash:string):PostgresWebsiteGPTStore|null{
  try{
   const environment=websiteGPTDatabaseEnvironment();
   database??=createWebsiteGPTDatabase(environment);
