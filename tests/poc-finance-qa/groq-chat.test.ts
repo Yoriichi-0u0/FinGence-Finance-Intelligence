@@ -118,6 +118,11 @@ describe('Groq chat over verified uploaded-source summaries', () => {
         expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
         answer = `There were ${march.totals.rows} transactions in ${march.selection.period}.`;
         expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        // A written month reads as the source's period; the wrong month is still withheld.
+        answer = 'In March 2026, net signed cash movement was MYR 380.00.';
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        answer = 'In April 2026, net signed cash movement was MYR 380.00.';
+        expect((await ask()).status).toBe('WITHHELD');
         answer = 'Total inflows were MYR 380.00.';
         expect((await ask()).status).toBe('WITHHELD');
         cites = [];

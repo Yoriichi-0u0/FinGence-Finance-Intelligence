@@ -226,7 +226,12 @@ function clausesOf(passages: FinanceChatPassage[]): Clause[] {
         return entry.split(/,\s/).map(part => ({ numbers: new Set(numberTokens(part.replace(PERIOD, ' '))), words: labelWords(part), periods }));
     }));
 }
-export function hasUnboundFigure(answer: string, passages: FinanceChatPassage[], cited: number[]) {
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+/** "March 2026", "Mar. 2026" or "March, 2026" read as the source's own period form, 2026-03. */
+export const isoMonths = (text: string) => text.replace(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?,?\s+(\d{4})\b/gi,
+    (_m, month: string, year: string) => `${year}-${String(MONTHS.indexOf(month.slice(0, 3).toLowerCase()) + 1).padStart(2, '0')}`);
+export function hasUnboundFigure(rawAnswer: string, passages: FinanceChatPassage[], cited: number[]) {
+    const answer = isoMonths(rawAnswer);
     const sources = cited.map(i => passages[i]).filter(Boolean);
     const clauses = clausesOf(sources), sourcePeriods = new Set(sources.flatMap(p => (p.heading + ' ' + p.snippet).match(PERIOD) ?? []));
     return answer.split(/(?<=[.!?])\s+/).some(sentence => {
