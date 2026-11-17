@@ -5,15 +5,17 @@ vi.mock('../../lib/server/poc-reconciliation/runtime', async () => { const { loc
     return { pocLocalEnabled: () => mock.enabled, pocRequestAllowed: (r: Request) => mock.enabled && localAccessAllowed(r) }; });
 vi.mock('../../lib/server/poc-finance-qa/runtime', () => ({ financeQaRuntime: mock.runtime }));
 import * as route from '../../app/api/ai-ingestion/m2/finance-questions/route';
+import { FinanceChatError } from '../../lib/server/poc-finance-qa/groq-chat';
 const { GET, POST } = route;
 
 const session = 'a'.repeat(43), origin = 'http://127.0.0.1:3186', url = origin + '/api/ai-ingestion/m2/finance-questions', source = '11111111-1111-4111-8111-111111111111';
 const questions = { sources: vi.fn(), context: vi.fn(), ask: vi.fn() };
+const chat = { preview: vi.fn(), send: vi.fn() };
 const cookie = 'fingence_poc_session=' + session;
 const get = (query: string, host = '127.0.0.1:3186') => new Request(url + '?' + query, { headers: { host, cookie } });
 const post = (body: unknown, { query = 'action=ask', from = origin, type = 'application/json' } = {}) =>
     new Request(url + '?' + query, { method: 'POST', body: typeof body === 'string' ? body : JSON.stringify(body), headers: { host: '127.0.0.1:3186', cookie, origin: from, 'content-type': type } });
-beforeEach(() => { vi.resetAllMocks(); mock.enabled = true; vi.stubEnv('NODE_ENV', 'development'); vi.stubEnv('VERCEL', ''); vi.stubEnv('FINGENCE_AI_LOCAL', '1'); mock.runtime.mockResolvedValue({ questions }); });
+beforeEach(() => { vi.resetAllMocks(); mock.enabled = true; vi.stubEnv('NODE_ENV', 'development'); vi.stubEnv('VERCEL', ''); vi.stubEnv('FINGENCE_AI_LOCAL', '1'); vi.stubEnv('FINGENCE_POC_GROQ', ''); mock.runtime.mockResolvedValue({ questions, chat }); });
 afterEach(() => vi.unstubAllEnvs());
 
 describe('PoC Finance questions HTTP boundary', () => {
@@ -46,6 +48,42 @@ describe('PoC Finance questions HTTP boundary', () => {
         expect((await POST(post({ source, question: 'Cash?' }, { type: 'text/plain' }))).status).toBe(404);
         expect(questions.ask).not.toHaveBeenCalled(); expect(questions.context).not.toHaveBeenCalled();
     });
+    it('gates Groq chat routes behind the separate local mode and keeps the API-key status boolean only', async () => {
+        const preview = { previewId: 'preview-1', question: 'What was the net cash movement?', passages: [], payloadHash: 'a'.repeat(64), expiresAt: new Date(Date.now() + 10000).toISOString() };
+        chat.preview.mockResolvedValue(preview);
+        chat.send.mockResolvedValue({ status: 'ANSWERED', groqUsed: true, model: 'openai/gpt-oss-20b', citedSections: [] });
+        const previewInput = { source, business: 'BUS-001', period: '2026-03', currency: 'MYR', question: 'What was the net cash movement?' };
+        const denied = await POST(post(previewInput, { query: 'action=chat-preview' }));
+        expect(denied.status).toBe(404);
+        expect(chat.preview).not.toHaveBeenCalled();
+        const deniedSend = await POST(post({ previewId: 'preview-1', payloadHash: 'a'.repeat(64), consent: true }, { query: 'action=chat-send' }));
+        expect(deniedSend.status).toBe(404);
+        expect(chat.send).not.toHaveBeenCalled();
+        expect((await GET(get('action=chat-status'))).status).toBe(404);
+
+        vi.stubEnv('FINGENCE_POC_GROQ', '1');
+        vi.stubEnv('GROQ_API_KEY', 'FAKE_GROQ_KEY_TEST_ONLY');
+        const status = await GET(get('action=chat-status'));
+        expect(status.status).toBe(200);
+        const statusBody = await status.text();
+        expect(JSON.parse(statusBody)).toMatchObject({ groqAvailable: true });
+        expect(statusBody).not.toContain('FAKE_GROQ_KEY_TEST_ONLY');
+        const approvedPreview = await POST(post(previewInput, { query: 'action=chat-preview' }));
+        expect(approvedPreview.status).toBe(200);
+        expect(chat.preview).toHaveBeenCalledWith(session, { source, business: 'BUS-001', period: '2026-03', currency: 'MYR' }, previewInput.question);
+        const sendBody = { previewId: 'preview-1', payloadHash: 'a'.repeat(64), consent: true };
+        const sent = await POST(post(sendBody, { query: 'action=chat-send' }));
+        expect(sent.status).toBe(200);
+        expect(chat.send).toHaveBeenCalledWith(expect.any(Request), session, sendBody);
+
+        const fakeKey = 'FAKE_GROQ_KEY_DO_NOT_RETURN';
+        chat.send.mockRejectedValueOnce(new FinanceChatError('GROQ_NOT_CONFIGURED', 503));
+        const failure = await POST(post(sendBody, { query: 'action=chat-send' }));
+        const failureBody = await failure.text();
+        expect(failure.status).toBe(503);
+        expect(failureBody).toContain('Groq is unavailable because this local server has no API key configured');
+        expect(failureBody).not.toContain(fakeKey);
+    });
     it('hides service refusals and errors behind one generic no-store response', async () => {
         questions.ask.mockResolvedValueOnce({ status: 'REFUSED', code: 'UNAVAILABLE' }).mockRejectedValueOnce(Error('ACCESS_DENIED'));
         for (let i = 0; i < 2; i++) {
@@ -54,3 +92,4 @@ describe('PoC Finance questions HTTP boundary', () => {
         }
     });
 });
+
