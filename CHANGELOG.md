@@ -28,7 +28,7 @@ the new version and its date.
 
 ### Changed
 - Next.js 16.4.5 (from 16.4.1), clearing moderate advisory GHSA-mfr8-8qww-v76h; a local `next build` no longer stops
-  with `SecurityFatalError` (#PR).
+  with `SecurityFatalError` (#144).
 - The Finance chatbot (`finance-chat`) runs on its own Groq key, `GROQ_API_KEY4`, like AI06 on key 3 (#138).
 - "Signal ledger" design: the Overview, Anomalies and Reconciliation lead with what needs attention,
   with counts on the navigation and fewer status chips for Finance users (#123, #124, #125).
