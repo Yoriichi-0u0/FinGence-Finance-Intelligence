@@ -43,3 +43,10 @@ Every call to an AI model goes through `withAiCall` from `lib/ai-calls`, so it a
 (`/log`). Read [docs/ai-integration/ai-calls.md](docs/ai-integration/ai-calls.md) before adding or changing one.
 Record metadata only, never prompts, answers, document contents, amounts or keys. `tests/ai-calls/guard.test.ts`
 fails the build for a direct provider call.
+
+## Changelog and Definition of Done
+
+Every pull request that changes what a user sees or what the system does adds one plain-language line,
+with its PR number, under **Unreleased** in [CHANGELOG.md](CHANGELOG.md). Follow the Definition of Done in
+[CONTRIBUTING.md](CONTRIBUTING.md). Never change the bytes of a pinned fixture (`synthetic/`, `public/demo/`,
+`public/samples/`).
