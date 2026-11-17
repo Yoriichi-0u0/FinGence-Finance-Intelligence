@@ -209,8 +209,16 @@ function hasUnsupportedNumber(answer: string, passages: FinanceChatPassage[]) {
  */
 const PERIOD = /\b\d{4}-(?:0[1-9]|1[0-2])(?:\/\d{4}-(?:0[1-9]|1[0-2]))?\b/g;
 const LABEL_STOP = new Set(['the', 'and', 'for', 'was', 'were', 'are', 'with', 'this', 'that', 'from', 'total', 'selected', 'period', 'currency', 'myr', 'rm', 'sgd', 'usd', 'eur', 'gbp', 'source', 'up', 'to', 'of', 'in', 'is', 'a', 'an', 'by', 'on', 'at', 'our', 'we', 'it', 'its']);
+/** Everyday names for the same measure, folded to the summary's own label word before binding. */
+const MEASURE_ALIAS: Record<string, string> = {
+    transaction: 'record', row: 'record', entry: 'record', entrie: 'record', item: 'record',
+    inflow: 'credit', receipt: 'credit', received: 'credit', incoming: 'credit', deposit: 'credit',
+    outflow: 'debit', payment: 'debit', paid: 'debit', outgoing: 'debit', spent: 'debit', withdrawal: 'debit',
+    flow: 'movement', change: 'movement',
+};
 const labelWords = (text: string) => new Set((text.toLowerCase().replace(PERIOD, ' ').match(/[a-z]+/g) ?? [])
-    .map(w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w).filter(w => w.length > 1 && !LABEL_STOP.has(w)));
+    .map(w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w).map(w => MEASURE_ALIAS[w] ?? w)
+    .filter(w => w.length > 1 && !LABEL_STOP.has(w)));
 type Clause = { numbers: Set<string>; words: Set<string>; periods: string[] };
 function clausesOf(passages: FinanceChatPassage[]): Clause[] {
     return passages.flatMap(p => (p.heading + '. ' + p.snippet).split(/;\s|\.\s/).flatMap(entry => {

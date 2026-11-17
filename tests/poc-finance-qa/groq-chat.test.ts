@@ -113,6 +113,13 @@ describe('Groq chat over verified uploaded-source summaries', () => {
         expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
         answer = 'The credit total was MYR 500.00.';
         expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        // Everyday synonyms bind to the summary's own labels (transactions → records, inflows → credits).
+        answer = 'Total inflows were MYR 500.00.';
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        answer = `There were ${march.totals.rows} transactions in ${march.selection.period}.`;
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        answer = 'Total inflows were MYR 380.00.';
+        expect((await ask()).status).toBe('WITHHELD');
         cites = [];
         expect((await ask()).status).not.toBe('ANSWERED');
     });
