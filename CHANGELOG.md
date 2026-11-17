@@ -17,6 +17,8 @@ the new version and its date.
 - Experimental XGBoost forecast shown beside the six-month baseline on Forecasting, scored on the same
   backtest months; the baseline stays primary and the challenger runs only where its local worker is
   enabled, never on Vercel (#89).
+- Jason's local C1 transaction and batch read API (`/api/transactions`, `/api/batches/[id]`): local M2 mode only,
+  loopback requests and a loopback database, audited scoped reads; still needs its ownership SQL migration (#138).
 - **Fin**, a named assistant on every page (floating button or Ctrl/⌘ K on desktop, the Chat tab on phones): a guide
   to FinGence and a colleague for your figures. Fin's own words never contain a figure; money questions go to the
   verified Q&A, which fills every figure from the records (#137).
@@ -25,6 +27,7 @@ the new version and its date.
 - Changelog, pull request and issue templates, and a Definition of Done in `CONTRIBUTING.md` (#108, #115).
 
 ### Changed
+- The Finance chatbot (`finance-chat`) runs on its own Groq key, `GROQ_API_KEY4`, like AI06 on key 3 (#138).
 - "Signal ledger" design: the Overview, Anomalies and Reconciliation lead with what needs attention,
   with counts on the navigation and fewer status chips for Finance users (#123, #124, #125).
 

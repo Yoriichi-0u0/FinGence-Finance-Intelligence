@@ -5,7 +5,7 @@ import { resolve, sep } from 'node:path';
 
 if (!process.versions.node.startsWith('24.')) throw new Error('LOCAL_NODE_24_REQUIRED');
 if (process.env.VERCEL || process.env.NODE_ENV === 'production') throw new Error('LOCAL_DEMO_ONLY');
-if (!process.env.GROQ_API_KEY || /[\r\n]/.test(process.env.GROQ_API_KEY)) throw new Error('SET_GROQ_API_KEY_IN_SESSION');
+if (!process.env.GROQ_API_KEY4 || /[\r\n]/.test(process.env.GROQ_API_KEY4)) throw new Error('SET_GROQ_API_KEY4_IN_SESSION');
 
 const projectRoot = resolve('.');
 const localRoot = resolve(projectRoot, '.local');
@@ -20,7 +20,7 @@ const hostEnv = {};
 for (const name of ['PATH', 'Path', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'USERPROFILE', 'HOMEDRIVE', 'HOMEPATH', 'APPDATA', 'LOCALAPPDATA', 'PATHEXT', 'ComSpec']) {
     if (process.env[name] !== undefined) hostEnv[name] = process.env[name];
 }
-const demoEnv = { ...hostEnv, NODE_ENV: 'development', VERCEL: '', GROQ_API_KEY: process.env.GROQ_API_KEY,
+const demoEnv = { ...hostEnv, NODE_ENV: 'development', VERCEL: '', GROQ_API_KEY4: process.env.GROQ_API_KEY4,
     FINGENCE_OBSIDIAN_DEMO: '1', FINGENCE_POC_GROQ: '0', FINGENCE_OBSIDIAN_SYNTHETIC_ONLY: '1', FINGENCE_OBSIDIAN_VAULT_PATH: vaultPath };
 for (const name of [
     'FINGENCE_POC_LOCAL', 'FINGENCE_M2_LOCAL', 'FINGENCE_M3_LOCAL', 'FINGENCE_M4_LOCAL', 'FINGENCE_M5_LOCAL',
@@ -33,7 +33,7 @@ for (const name of ['GROQ_API_KEY2', 'FINGENCE_AI_BUDGET_REST_URL', 'FINGENCE_AI
 
 const require = createRequire(import.meta.url);
 const generatorEnv = { ...demoEnv, FINGENCE_AI_LOCAL: '1', FINGENCE_V2_I1_LOCAL: '1' };
-delete generatorEnv.GROQ_API_KEY;
+delete generatorEnv.GROQ_API_KEY4;
 process.stdout.write('Demo mode: local development only\nGroq key: configured (value hidden)\nGenerating isolated synthetic vault from the server pipeline...\n');
 const generated = await new Promise((resolvePromise, reject) => {
     const child = spawn(process.execPath, ['--conditions=react-server', 'scripts/obsidian-demo.mjs', 'generate'], { cwd: projectRoot, env: generatorEnv, stdio: ['ignore', 'pipe', 'inherit'] });

@@ -48,6 +48,17 @@ const defaultTransport: GroqTransport = async (body, signal, key) => {
  * Configured Groq keys, in order: GROQ_API_KEY, then GROQ_API_KEY2. Groq's rate limits are per organization, so the
  * second key adds capacity only when it belongs to a different organization; in the same one, failover finds the same limit.
  */
+/** Features that own a Groq key exclusively: the env variable it reads and the label the Technical log shows. */
+export const DEDICATED_GROQ_KEYS: Partial<Record<AiFeature, { env: string; label: string }>> = {
+    'recon-suggest': { env: 'GROQ_API_KEY3', label: 'key-3' },
+    'finance-chat': { env: 'GROQ_API_KEY4', label: 'key-4' },
+};
+export const dedicatedKey = (feature: AiFeature) => DEDICATED_GROQ_KEYS[feature] ?? null;
+/** Whether a feature can make a call: its dedicated key when it has one, otherwise either shared key. */
+export function groqConfiguredFor(feature: AiFeature) {
+    const dedicated = dedicatedKey(feature);
+    return dedicated ? !!process.env[dedicated.env] : groqKeys().length > 0;
+}
 export function groqKeys(): string[] {
     return [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY2].filter((k): k is string => !!k);
 }
@@ -64,10 +75,11 @@ export function structuredCompletion(req: StructuredRequest): Promise<{ content:
     return withAiCall({ feature: req.feature, model: req.model }, note => completion(req, note));
 }
 async function completion(req: StructuredRequest, note: { keyLabel?: string | null }): Promise<{ content: unknown; receipt: ModelReceipt }> {
-    // AI06 owns key 3 exclusively. Other features retain the existing two-key policy.
-    const ai06 = req.feature === 'recon-suggest';
-    const keys = ai06 ? (process.env.GROQ_API_KEY3 ? [process.env.GROQ_API_KEY3] : []) : groqKeys();
-    if (!keys.length && (ai06 || !req.transport)) throw new InterpreterUnavailable('NOT_CONFIGURED');
+    // A feature with its own key uses only that key and fails closed without it (AI06: key 3; Jason's Finance
+    // chatbot: key 4). Every other feature keeps the shared two-key rotation.
+    const dedicated = dedicatedKey(req.feature);
+    const keys = dedicated ? (process.env[dedicated.env] ? [process.env[dedicated.env] as string] : []) : groqKeys();
+    if (!keys.length && (dedicated || !req.transport)) throw new InterpreterUnavailable('NOT_CONFIGURED');
     const body: Record<string, unknown> = {
         model: req.model, temperature: 0, max_completion_tokens: req.maxCompletionTokens,
         messages: [{ role: 'system', content: req.system }, { role: 'user', content: req.user }],
@@ -78,12 +90,12 @@ async function completion(req: StructuredRequest, note: { keyLabel?: string | nu
     let reply: Awaited<ReturnType<GroqTransport>>;
     // Requests alternate between the configured keys. A 429 is a refusal before processing (never billed), so it moves
     // once to each other key; any other outcome, billed or not, is final. At most one completion is ever produced.
-    const slots = keys.length ? keys : [''], first = ai06 ? 0 : rotation++ % slots.length, signal = AbortSignal.timeout(45_000);
+    const slots = keys.length ? keys : [''], first = dedicated ? 0 : rotation++ % slots.length, signal = AbortSignal.timeout(45_000);
     try {
         for (let attempt = 0; ; attempt++) {
             const slot = (first + attempt) % slots.length;
             // Which configured key answered (GROQ_API_KEY is key-1, GROQ_API_KEY2 is key-2); the key itself is never logged.
-            if (keys.length) note.keyLabel = ai06 ? 'key-3' : `key-${slot + 1}`;
+            if (keys.length) note.keyLabel = dedicated ? dedicated.label : `key-${slot + 1}`;
             reply = await (req.transport ?? defaultTransport)(body, signal, slots[slot]);
             if (reply.status !== 429 || attempt === slots.length - 1) break;
         }

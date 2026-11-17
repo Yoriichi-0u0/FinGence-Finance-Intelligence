@@ -6,7 +6,9 @@ import { route as questionRoute, MAX_QUESTION, type QaFacts } from '../../poc-fi
 import type { QaSelectionInput } from './service';
 import { RULES, type RuleId } from '../../poc-anomalies/detector';
 import { admit, budgetStore, clientAddress, type Admission } from '../ai/budget';
-import { GROQ_MODELS, groqKeys, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
+import { GROQ_MODELS, groqConfiguredFor, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
+/** The Finance chatbot runs on its own Groq key (GROQ_API_KEY4); see DEDICATED_GROQ_KEYS in lib/server/ai/groq.ts. */
+const dedicatedKeyConfigured = () => groqConfiguredFor('finance-chat');
 import { qaModel } from '../ai/grounded-qa';
 import { reasoningEffort } from '../ai/groq-interpreter';
 
@@ -199,6 +201,48 @@ function hasUnsupportedNumber(answer: string, passages: FinanceChatPassage[]) {
     if (NUMBER_WORDS.test(answer)) return true;
     return /\d\s*[+*/=]\s*\d|\d\s+-\s+\d|\b(?:added together|sum of|combined total|calculate(?:d|s)?|percentage share)\b/i.test(answer);
 }
+/**
+ * Every figure must be bound to the measure it belongs to, not merely present somewhere in the summaries: each number
+ * in a sentence must appear in a CITED passage, in a clause whose label shares a word with that sentence ("net signed
+ * cash movement: MYR 380.00" binds 380.00 to a sentence about net cash movement, never to one about credits), and
+ * within that month when the clause belongs to a month. Periods (2026-03) must appear in a cited passage.
+ */
+const PERIOD = /\b\d{4}-(?:0[1-9]|1[0-2])(?:\/\d{4}-(?:0[1-9]|1[0-2]))?\b/g;
+const LABEL_STOP = new Set(['the', 'and', 'for', 'was', 'were', 'are', 'with', 'this', 'that', 'from', 'total', 'selected', 'period', 'currency', 'myr', 'rm', 'sgd', 'usd', 'eur', 'gbp', 'source', 'up', 'to', 'of', 'in', 'is', 'a', 'an', 'by', 'on', 'at', 'our', 'we', 'it', 'its']);
+/** Everyday names for the same measure, folded to the summary's own label word before binding. */
+const MEASURE_ALIAS: Record<string, string> = {
+    transaction: 'record', row: 'record', entry: 'record', entrie: 'record', item: 'record',
+    inflow: 'credit', receipt: 'credit', received: 'credit', incoming: 'credit', deposit: 'credit',
+    outflow: 'debit', payment: 'debit', paid: 'debit', outgoing: 'debit', spent: 'debit', withdrawal: 'debit',
+    flow: 'movement', change: 'movement',
+};
+const labelWords = (text: string) => new Set((text.toLowerCase().replace(PERIOD, ' ').match(/[a-z]+/g) ?? [])
+    .map(w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w).map(w => MEASURE_ALIAS[w] ?? w)
+    .filter(w => w.length > 1 && !LABEL_STOP.has(w)));
+type Clause = { numbers: Set<string>; words: Set<string>; periods: string[] };
+function clausesOf(passages: FinanceChatPassage[]): Clause[] {
+    return passages.flatMap(p => (p.heading + '. ' + p.snippet).split(/;\s|\.\s/).flatMap(entry => {
+        const periods: string[] = entry.match(PERIOD) ?? [];
+        return entry.split(/,\s/).map(part => ({ numbers: new Set(numberTokens(part.replace(PERIOD, ' '))), words: labelWords(part), periods }));
+    }));
+}
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+/** "March 2026", "Mar. 2026" or "March, 2026" read as the source's own period form, 2026-03. */
+export const isoMonths = (text: string) => text.replace(/\b(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|june?|july?|aug(?:ust)?|sept?(?:ember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\.?,?\s+(\d{4})\b/gi,
+    (_m, month: string, year: string) => `${year}-${String(MONTHS.indexOf(month.slice(0, 3).toLowerCase()) + 1).padStart(2, '0')}`);
+export function hasUnboundFigure(rawAnswer: string, passages: FinanceChatPassage[], cited: number[]) {
+    const answer = isoMonths(rawAnswer);
+    const sources = cited.map(i => passages[i]).filter(Boolean);
+    const clauses = clausesOf(sources), sourcePeriods = new Set(sources.flatMap(p => (p.heading + ' ' + p.snippet).match(PERIOD) ?? []));
+    return answer.split(/(?<=[.!?])\s+/).some(sentence => {
+        const periods: string[] = sentence.match(PERIOD) ?? [];
+        if (periods.some(p => !sourcePeriods.has(p))) return true;
+        const words = labelWords(sentence);
+        return numberTokens(sentence.replace(PERIOD, ' ')).some(n => !clauses.some(c => c.numbers.has(n)
+            && [...c.words].some(w => words.has(w))
+            && (!c.periods.length || !periods.length || c.periods.some(p => periods.includes(p)))));
+    });
+}
 function hasUnsupportedFinGenceFigure(answer: string) {
     return /\b(?:MYR|RM|USD|SGD|EUR|GBP)\s*\d|\b(?:FinGence|cash (?:in|out|movement)|transactions?|records?|reconciliation|profit|loss|revenue|income)\b.{0,45}\b\d[\d,.]*/i.test(answer)
         || /\b(?:\d[\d,.]*|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|dozen)\b.{0,40}\b(?:FinGence|our business|our records|our books|we recorded)\b/i.test(answer);
@@ -271,7 +315,7 @@ export function createFinanceGroqChat(options: Options) {
             if (refused) throw new FinanceChatError('QUESTION_REFUSED_' + refused);
             const model = qaModel();
             if (!GROQ_MODELS.includes(model)) throw new FinanceChatError('GROQ_MODEL_UNAVAILABLE', 503);
-            if (!groqKeys().length && !options.transport) throw new FinanceChatError('GROQ_NOT_CONFIGURED', 503);
+            if (!dedicatedKeyConfigured() && !options.transport) throw new FinanceChatError('GROQ_NOT_CONFIGURED', 503);
             const user = promptFor(latest);
             const system = FINANCE_CHAT_SYSTEM;
             const promptChars = system.length + user.length + JSON.stringify(jsonSchema).length;
@@ -301,6 +345,7 @@ export function createFinanceGroqChat(options: Options) {
                 if (!withheld && !latest.passages.length && indexes.length) withheld = 'MODEL_CITATION_INVALID';
                 if (!withheld && indexes.some(i => i >= latest.passages.length)) withheld = 'MODEL_CITATION_INVALID';
                 if (!withheld && latest.passages.length && hasUnsupportedNumber(data.answer, latest.passages)) withheld = 'MODEL_UNGROUNDED_NUMBER';
+                if (!withheld && latest.passages.length && hasUnboundFigure(data.answer, latest.passages, indexes)) withheld = 'MODEL_UNGROUNDED_NUMBER';
                 if (!withheld && !latest.passages.length && hasUnsupportedFinGenceFigure(data.answer)) withheld = 'MODEL_UNGROUNDED_NUMBER';
                 const answerKind = latest.passages.length ? 'GROUNDED_FINANCE' : 'GENERAL_INFORMATION';
                 return withheld

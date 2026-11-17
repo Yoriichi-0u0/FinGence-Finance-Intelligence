@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { createHash } from 'node:crypto';
 import { createFinanceGroqChat, FINANCE_CHAT_SYSTEM, type FinanceChatPassage } from '../../lib/server/poc-finance-qa/groq-chat';
@@ -21,6 +21,8 @@ const fixture = (overrides: Partial<Parameters<typeof createFinanceGroqChat>[0]>
     admitCall: allowed,
     ...overrides,
 });
+// The Finance chatbot runs on its own Groq key 4 (a synthetic test value; calls use a mocked transport).
+beforeEach(() => { vi.stubEnv('GROQ_API_KEY4', 'synthetic-key-four'); });
 afterEach(() => vi.unstubAllEnvs());
 
 describe('Groq chat over verified uploaded-source summaries', () => {
@@ -28,11 +30,15 @@ describe('Groq chat over verified uploaded-source summaries', () => {
         vi.stubEnv('FINGENCE_AI_QA_MODEL', 'openai/gpt-oss-20b');
         const sent: Record<string, unknown>[] = [];
         const passages: FinanceChatPassage[] = [];
+        // The reply cites the passage that actually states the figure; citing another one is withheld (figure binding).
+        let cite = 0;
         const chat = fixture({
-            transport: async body => { sent.push(body); return providerReply('Net signed cash movement was MYR 380.00.', [0], 'openai/gpt-oss-120b'); },
+            transport: async body => { sent.push(body); return providerReply('Net signed cash movement was MYR 380.00.', [cite], 'openai/gpt-oss-120b'); },
         });
         const preview = await chat.preview(tokenA, selection, 'Can you explain the cash movement for this month?');
         passages.push(...preview.passages);
+        cite = passages.findIndex(p => p.heading.startsWith('Cash movement'));
+        expect(cite).toBeGreaterThanOrEqual(0);
         expect(preview.question).toBe('Can you explain the cash movement for this month?');
         expect(passages.length).toBeGreaterThan(0);
         expect(passages.every(p => p.snippet.includes('not profit, loss, revenue, or income') || !p.heading.startsWith('Cash movement'))).toBe(true);
@@ -45,7 +51,7 @@ describe('Groq chat over verified uploaded-source summaries', () => {
         expect(result).toMatchObject({
             status: 'ANSWERED', answerKind: 'GROUNDED_FINANCE', groqUsed: true, providerAttempted: true,
             model: 'openai/gpt-oss-120b', answer: 'Net signed cash movement was MYR 380.00.',
-            citedSections: [{ title: passages[0].title, heading: passages[0].heading, link: passages[0].link }],
+            citedSections: [{ title: passages[cite].title, heading: passages[cite].heading, link: passages[cite].link }],
         });
         const messages = sent[0].messages as { role: string; content: string }[];
         expect(messages[0].content).toBe(FINANCE_CHAT_SYSTEM);
@@ -91,6 +97,36 @@ describe('Groq chat over verified uploaded-source summaries', () => {
         const preview = await chat.preview(tokenA, selection, 'What was our net cash movement?');
         const result = await chat.send(request(), tokenA, { previewId: preview.previewId, payloadHash: preview.payloadHash, consent: true });
         expect(result).toMatchObject({ status: 'WITHHELD', groqUsed: true, answer: null, explanation: expect.stringContaining('figure that was not in') });
+    });
+
+    it('withholds a real figure attached to the wrong measure (credits stated as net movement)', async () => {
+        const chat = fixture({ transport: async () => providerReply('Net signed cash movement was MYR 500.00.', [0]) });
+        const preview = await chat.preview(tokenA, selection, 'What was our net cash movement?');
+        const result = await chat.send(request(), tokenA, { previewId: preview.previewId, payloadHash: preview.payloadHash, consent: true });
+        expect(result).toMatchObject({ status: 'WITHHELD', groqUsed: true, answer: null });
+    });
+
+    it('accepts a figure stated with its own measure, and withholds one only found in an uncited passage', async () => {
+        let answer = 'Net signed cash movement was MYR 380.00.', cites = [0];
+        const chat = fixture({ transport: async () => providerReply(answer, cites) });
+        const ask = async () => { const preview = await chat.preview(tokenA, selection, 'What was our net cash movement and credit total?'); return chat.send(request(), tokenA, { previewId: preview.previewId, payloadHash: preview.payloadHash, consent: true }); };
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        answer = 'The credit total was MYR 500.00.';
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        // Everyday synonyms bind to the summary's own labels (transactions → records, inflows → credits).
+        answer = 'Total inflows were MYR 500.00.';
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        answer = `There were ${march.totals.rows} transactions in ${march.selection.period}.`;
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        // A written month reads as the source's period; the wrong month is still withheld.
+        answer = 'In March 2026, net signed cash movement was MYR 380.00.';
+        expect(await ask()).toMatchObject({ status: 'ANSWERED', answer });
+        answer = 'In April 2026, net signed cash movement was MYR 380.00.';
+        expect((await ask()).status).toBe('WITHHELD');
+        answer = 'Total inflows were MYR 380.00.';
+        expect((await ask()).status).toBe('WITHHELD');
+        cites = [];
+        expect((await ask()).status).not.toBe('ANSWERED');
     });
 
     it('does not return provider error details that could contain a credential', async () => {

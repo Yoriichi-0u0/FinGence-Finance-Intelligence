@@ -62,7 +62,7 @@ describe('PoC Finance questions HTTP boundary', () => {
         expect((await GET(get('action=chat-status'))).status).toBe(404);
 
         vi.stubEnv('FINGENCE_POC_GROQ', '1');
-        vi.stubEnv('GROQ_API_KEY', 'FAKE_GROQ_KEY_TEST_ONLY');
+        vi.stubEnv('GROQ_API_KEY4', 'FAKE_GROQ_KEY_TEST_ONLY');
         const status = await GET(get('action=chat-status'));
         expect(status.status).toBe(200);
         const statusBody = await status.text();

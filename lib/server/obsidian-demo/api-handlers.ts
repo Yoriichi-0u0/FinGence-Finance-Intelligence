@@ -44,7 +44,7 @@ export function createSendHandler(send = sendConsentedChat) {
                 : code === 'CONSENT_REQUIRED' || code === 'PREVIEW_REQUIRED' ? 400
                     : code === 'GROQ_NOT_CONFIGURED' || code === 'BUDGET_UNAVAILABLE' ? 503
                         : code.includes('EXPIRED') || code.includes('UNAVAILABLE') || code.includes('SESSION') ? 410
-                            : code.includes('MISMATCH') ? 409
+                            : code.includes('MISMATCH') || code === 'PREVIEW_IN_PROGRESS' ? 409
                                 : code.includes('RATE_LIMITED') || code.includes('LIMIT') ? 429
                                     : code.startsWith('QUESTION_REFUSED_') ? 422 : 502;
             return noStoreJson({ status: 'ERROR', groqUsed, model, citedSections: [], code, explanation: explainChatError(code) }, status);

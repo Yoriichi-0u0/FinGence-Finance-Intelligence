@@ -259,7 +259,7 @@ function FinanceGroqChatPanel({ context, messages, pending, consent, setConsent,
                     Groq {groqAvailable === null ? 'checking…' : groqAvailable ? 'available' : 'not available'}
                 </span>
             </div>
-            {groqAvailable === false && <p className="border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">The local server is missing its Groq setup. Restart with the `poc:groq` launcher after setting `GROQ_API_KEY`; no question has been sent.</p>}
+            {groqAvailable === false && <p className="border-b border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-950">The local server is missing its Groq setup. Restart with the `poc:groq` launcher after setting `GROQ_API_KEY4`; no question has been sent.</p>}
             <div className="max-h-[52vh] min-h-[260px] space-y-5 overflow-y-auto bg-[var(--surface-muted)] p-4 sm:p-6" aria-live="polite">
                 {!messages.length && !pending && <div className="flex max-w-3xl items-start gap-3">
                     <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-teal-50 text-[var(--teal)]"><Bot size={18} /></span>
