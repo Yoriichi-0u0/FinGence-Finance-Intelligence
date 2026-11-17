@@ -201,6 +201,35 @@ function hasUnsupportedNumber(answer: string, passages: FinanceChatPassage[]) {
     if (NUMBER_WORDS.test(answer)) return true;
     return /\d\s*[+*/=]\s*\d|\d\s+-\s+\d|\b(?:added together|sum of|combined total|calculate(?:d|s)?|percentage share)\b/i.test(answer);
 }
+/**
+ * Every figure must be bound to the measure it belongs to, not merely present somewhere in the summaries: each number
+ * in a sentence must appear in a CITED passage, in a clause whose label shares a word with that sentence ("net signed
+ * cash movement: MYR 380.00" binds 380.00 to a sentence about net cash movement, never to one about credits), and
+ * within that month when the clause belongs to a month. Periods (2026-03) must appear in a cited passage.
+ */
+const PERIOD = /\b\d{4}-(?:0[1-9]|1[0-2])(?:\/\d{4}-(?:0[1-9]|1[0-2]))?\b/g;
+const LABEL_STOP = new Set(['the', 'and', 'for', 'was', 'were', 'are', 'with', 'this', 'that', 'from', 'total', 'selected', 'period', 'currency', 'myr', 'rm', 'sgd', 'usd', 'eur', 'gbp', 'source', 'up', 'to', 'of', 'in', 'is', 'a', 'an', 'by', 'on', 'at', 'our', 'we', 'it', 'its']);
+const labelWords = (text: string) => new Set((text.toLowerCase().replace(PERIOD, ' ').match(/[a-z]+/g) ?? [])
+    .map(w => w.length > 3 && w.endsWith('s') ? w.slice(0, -1) : w).filter(w => w.length > 1 && !LABEL_STOP.has(w)));
+type Clause = { numbers: Set<string>; words: Set<string>; periods: string[] };
+function clausesOf(passages: FinanceChatPassage[]): Clause[] {
+    return passages.flatMap(p => (p.heading + '. ' + p.snippet).split(/;\s|\.\s/).flatMap(entry => {
+        const periods: string[] = entry.match(PERIOD) ?? [];
+        return entry.split(/,\s/).map(part => ({ numbers: new Set(numberTokens(part.replace(PERIOD, ' '))), words: labelWords(part), periods }));
+    }));
+}
+export function hasUnboundFigure(answer: string, passages: FinanceChatPassage[], cited: number[]) {
+    const sources = cited.map(i => passages[i]).filter(Boolean);
+    const clauses = clausesOf(sources), sourcePeriods = new Set(sources.flatMap(p => (p.heading + ' ' + p.snippet).match(PERIOD) ?? []));
+    return answer.split(/(?<=[.!?])\s+/).some(sentence => {
+        const periods: string[] = sentence.match(PERIOD) ?? [];
+        if (periods.some(p => !sourcePeriods.has(p))) return true;
+        const words = labelWords(sentence);
+        return numberTokens(sentence.replace(PERIOD, ' ')).some(n => !clauses.some(c => c.numbers.has(n)
+            && [...c.words].some(w => words.has(w))
+            && (!c.periods.length || !periods.length || c.periods.some(p => periods.includes(p)))));
+    });
+}
 function hasUnsupportedFinGenceFigure(answer: string) {
     return /\b(?:MYR|RM|USD|SGD|EUR|GBP)\s*\d|\b(?:FinGence|cash (?:in|out|movement)|transactions?|records?|reconciliation|profit|loss|revenue|income)\b.{0,45}\b\d[\d,.]*/i.test(answer)
         || /\b(?:\d[\d,.]*|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|dozen)\b.{0,40}\b(?:FinGence|our business|our records|our books|we recorded)\b/i.test(answer);
@@ -303,6 +332,7 @@ export function createFinanceGroqChat(options: Options) {
                 if (!withheld && !latest.passages.length && indexes.length) withheld = 'MODEL_CITATION_INVALID';
                 if (!withheld && indexes.some(i => i >= latest.passages.length)) withheld = 'MODEL_CITATION_INVALID';
                 if (!withheld && latest.passages.length && hasUnsupportedNumber(data.answer, latest.passages)) withheld = 'MODEL_UNGROUNDED_NUMBER';
+                if (!withheld && latest.passages.length && hasUnboundFigure(data.answer, latest.passages, indexes)) withheld = 'MODEL_UNGROUNDED_NUMBER';
                 if (!withheld && !latest.passages.length && hasUnsupportedFinGenceFigure(data.answer)) withheld = 'MODEL_UNGROUNDED_NUMBER';
                 const answerKind = latest.passages.length ? 'GROUNDED_FINANCE' : 'GENERAL_INFORMATION';
                 return withheld

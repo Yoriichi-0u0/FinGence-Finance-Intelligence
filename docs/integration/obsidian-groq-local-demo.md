@@ -17,12 +17,12 @@ $secure = Read-Host "Groq API key" -AsSecureString
 $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
 
 try {
-    $env:GROQ_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+    $env:GROQ_API_KEY4 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
     pnpm.cmd demo:groq
 }
 finally {
     [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
-    Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
+    Remove-Item Env:GROQ_API_KEY4 -ErrorAction SilentlyContinue
 }
 ```
 
@@ -37,7 +37,7 @@ $env:NODE_ENV = 'development'
 $env:FINGENCE_OBSIDIAN_DEMO = '1'
 $env:FINGENCE_OBSIDIAN_SYNTHETIC_ONLY = '1'
 $env:FINGENCE_OBSIDIAN_VAULT_PATH = '.local/obsidian-demo-groq-vault'
-$env:GROQ_API_KEY = ''
+$env:GROQ_API_KEY4 = ''
 pnpm.cmd obsidian:demo:fallback
 ```
 

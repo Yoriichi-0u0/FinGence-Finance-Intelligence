@@ -130,6 +130,30 @@ describe('consented Groq demo chat', () => {
         expect(withheld).toContain('The answer was withheld.'); expect(withheld).toContain('No vault sections cited.');
     });
 
+    it('lets only one of two concurrent sends of the same preview reach the budget and the provider', async () => {
+        enableDemo();
+        let admissions = 0, dispatches = 0, release: () => void = () => undefined;
+        const gate = new Promise<void>(resolve => { release = resolve; });
+        const chat = createConsentChat({ retrieve: async () => [passage], transport: async () => { dispatches++; return reply('Cash came in MYR 12.00.', [0]); },
+            admitCall: async () => { admissions++; await gate; return allowed(); } });
+        const p = await chat.preview(request(), 'How much cash came in March?');
+        const first = chat.send(request(), { previewId: p.previewId, payloadHash: p.payloadHash, consent: true });
+        await expect(chat.send(request(), { previewId: p.previewId, payloadHash: p.payloadHash, consent: true })).rejects.toThrow('PREVIEW_IN_PROGRESS');
+        release(); await first;
+        expect([admissions, dispatches]).toEqual([1, 1]);
+    });
+
+    it('frees the preview again when budget admission refuses, so the person can retry', async () => {
+        enableDemo();
+        let admitted = false;
+        const chat = createConsentChat({ retrieve: async () => [passage], transport: async () => reply('Cash came in MYR 12.00.', [0]),
+            admitCall: async () => admitted ? allowed() : ({ admitted: false as const, code: 'DAILY_BUDGET_EXHAUSTED', status: 429 }) });
+        const p = await chat.preview(request(), 'How much cash came in March?');
+        await expect(chat.send(request(), { previewId: p.previewId, payloadHash: p.payloadHash, consent: true })).rejects.toThrow('DAILY_BUDGET_EXHAUSTED');
+        admitted = true;
+        await expect(chat.send(request(), { previewId: p.previewId, payloadHash: p.payloadHash, consent: true })).resolves.toMatchObject({ groqUsed: true });
+    });
+
     it('calls budget admission before provider dispatch and a budget refusal prevents the call', async () => {
         enableDemo();
         const sequence: string[] = [];

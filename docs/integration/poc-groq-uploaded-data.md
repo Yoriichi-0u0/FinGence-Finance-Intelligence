@@ -20,12 +20,12 @@ From the repository folder in PowerShell, enter the Groq key at a hidden prompt 
 $secure = Read-Host "Groq API key" -AsSecureString
 $pointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
 try {
-    $env:GROQ_API_KEY = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
+    $env:GROQ_API_KEY4 = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($pointer)
     pnpm.cmd poc:groq
 }
 finally {
     [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($pointer)
-    Remove-Item Env:GROQ_API_KEY -ErrorAction SilentlyContinue
+    Remove-Item Env:GROQ_API_KEY4 -ErrorAction SilentlyContinue
 }
 ```
 

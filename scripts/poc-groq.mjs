@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 
 if (process.env.VERCEL || process.env.NODE_ENV === 'production' || !process.versions.node.startsWith('24.')) throw Error('LOCAL_NODE_24_REQUIRED');
-if (!process.env.GROQ_API_KEY || /[\r\n]/.test(process.env.GROQ_API_KEY)) throw Error('SET_GROQ_API_KEY_IN_SESSION');
+if (!process.env.GROQ_API_KEY4 || /[\r\n]/.test(process.env.GROQ_API_KEY4)) throw Error('SET_GROQ_API_KEY4_IN_SESSION');
 
 const env = {
     ...process.env,

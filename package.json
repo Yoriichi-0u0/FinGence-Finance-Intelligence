@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev",
     "poc:dev": "node scripts/poc-reconciliation.mjs",
+    "poc:groq": "node scripts/poc-groq.mjs",
+    "demo:groq": "node scripts/demo-groq.mjs",
+    "obsidian:demo:fallback": "node --conditions=react-server scripts/obsidian-demo.mjs verify-fallback",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

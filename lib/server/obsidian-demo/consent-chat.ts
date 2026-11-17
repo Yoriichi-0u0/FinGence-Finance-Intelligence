@@ -19,7 +19,7 @@ const outputSchema = z.object({ answer: z.string().min(1).max(1800), citations: 
 const jsonSchema = portableJsonSchema(outputSchema);
 
 export type ChatPayload = { question: string; passages: VaultPassage[] };
-type Preview = { payload: ChatPayload; hash: string; sessionHash: string; expiresAt: number; consumed: boolean };
+type Preview = { payload: ChatPayload; hash: string; sessionHash: string; expiresAt: number; consumed: boolean; sending: boolean };
 export type PreviewResponse = { previewId: string; question: string; passages: VaultPassage[]; payloadHash: string; expiresAt: string };
 export type ChatResponse = { status: 'ANSWERED' | 'WITHHELD' | 'FALLBACK'; answerKind: 'GROUNDED_FINANCE' | 'GENERAL_INFORMATION'; groqUsed: boolean; providerAttempted: boolean; model: string | null; answer: string | null; explanation: string | null; citedSections: Pick<VaultPassage, 'title' | 'heading' | 'link'>[] };
 export type ChatFailure = { groqUsed: boolean; model: string | null; code: string };
@@ -138,7 +138,7 @@ export function createConsentChat(options: {
         const hash = payloadHash(payload), expiresAt = now() + PREVIEW_TTL_MS;
         for (const [id, saved] of previews) if (saved.expiresAt <= now() || saved.consumed) previews.delete(id);
         if (previews.size >= 1000) throw new Error('PREVIEW_CAPACITY');
-        previews.set(previewId, { payload, hash, sessionHash: createHash('sha256').update(sessionId).digest('hex'), expiresAt, consumed: false });
+        previews.set(previewId, { payload, hash, sessionHash: createHash('sha256').update(sessionId).digest('hex'), expiresAt, consumed: false, sending: false });
         return { previewId, question, passages, payloadHash: hash, expiresAt: new Date(expiresAt).toISOString() };
     }
 
@@ -148,6 +148,8 @@ export function createConsentChat(options: {
         if (typeof input.previewId !== 'string' || typeof input.payloadHash !== 'string') throw new Error('PREVIEW_REQUIRED');
         const saved = previews.get(input.previewId);
         if (!saved || saved.consumed) throw new Error('PREVIEW_UNAVAILABLE');
+        // One send per preview at a time: a concurrent replay is refused before it can reach budget admission.
+        if (saved.sending) throw new Error('PREVIEW_IN_PROGRESS');
         const sessionId = demoSessionId(request);
         if (!sessionId || createHash('sha256').update(sessionId).digest('hex') !== saved.sessionHash) throw new ConsentChatError('PREVIEW_SESSION_MISMATCH');
         if (saved.expiresAt <= now()) { previews.delete(input.previewId); throw new Error('PREVIEW_EXPIRED'); }
@@ -161,9 +163,13 @@ export function createConsentChat(options: {
         if (!dedicatedKeyConfigured() && !options.transport) throw new Error('GROQ_NOT_CONFIGURED');
         const system = GROUNDED_SYSTEM, user = messageFor(saved.payload), promptChars = system.length + user.length + JSON.stringify(jsonSchema).length;
         const admitCall = options.admitCall ?? (input => admit(input, budgetStore()));
-        const admission = await admitCall({ client: requestClient(request), worstCaseUsd: worstCaseCompletionUsd(promptChars, COMPLETION_TOKENS, model) });
-        if (!admission.admitted) throw new ConsentChatError(admission.code);
-        // Consume before dispatch so concurrent/replayed sends cannot spend a second time.
+        // Lock before the first await, so two sends of one approved preview cannot both be admitted and both spend.
+        saved.sending = true;
+        let admission: Awaited<ReturnType<typeof admitCall>>;
+        try { admission = await admitCall({ client: requestClient(request), worstCaseUsd: worstCaseCompletionUsd(promptChars, COMPLETION_TOKENS, model) }); }
+        catch (error) { saved.sending = false; throw error; }
+        if (!admission.admitted) { saved.sending = false; throw new ConsentChatError(admission.code); }
+        // Consume before dispatch so a later replay cannot spend a second time.
         saved.consumed = true;
         let settled = false;
         let returnedModel: string | null = null;
