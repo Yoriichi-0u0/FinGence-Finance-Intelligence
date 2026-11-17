@@ -1,0 +1,43 @@
+name: UAT finding
+description: Something found during user acceptance testing with SAIC
+labels: ["area: uat"]
+body:
+  - type: dropdown
+    id: task
+    attributes:
+      label: UAT task
+      options:
+        - 1. Sign in
+        - 2. Process the sample
+        - 3. Read the Overview and confidence
+        - 4. Check Reconciliation and Anomalies
+        - 5. Download the report
+        - 6. Reopen it from History
+        - 7. Try your own document
+        - 8. Send feedback
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options: [Works well, Confusing, Wrong result, Idea]
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options: [Blocks the task, Workaround exists, Cosmetic]
+  - type: textarea
+    id: detail
+    attributes:
+      label: What the tester said or saw
+    validations:
+      required: true
+  - type: input
+    id: who
+    attributes:
+      label: Tester role and date
+      description: For example "SAIC Finance user, 18 Nov". No names or emails.
