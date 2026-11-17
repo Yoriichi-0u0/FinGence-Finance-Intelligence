@@ -7,6 +7,7 @@ import { useState } from "react";
 import { DemoProcessingProvider, useDemoProcessing } from "@/components/demo/context";
 import { attentionCounts } from "@/lib/demo/attention";
 import { DemoBanner } from "@/components/demo/banner";
+import { FinDock, FinProvider } from "@/components/fin/fin";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { atLeast, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
 import { OutsideView, ViewingAs } from "@/components/workspace/view-switch";
@@ -54,7 +55,7 @@ const navigation = [...workspace, ...results];
 // Local M5 only; the page itself enforces role-scoped access on the server.
 const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
 // Local combined PoC only; the page and API are absent elsewhere.
-const financeQuestions = { href: "/chatbot", label: "Finance chatbot", icon: MessageSquareText };
+const financeQuestions = { href: "/chatbot", label: "Ask Fin", icon: MessageSquareText };
 // Management (Technical): server processing jobs, flagged items and the pause switch; absent unless the server enables it.
 const management = { href: "/management", label: "Management", icon: Gauge };
 // Hosted workspace (SAIC only): every role uses the finance pages; Admins and Superadmins also get Team and Operations.
@@ -265,6 +266,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   return (
     <WorkspaceProvider enabled={workspaceEnabled}>
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
+    <FinProvider>
     <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[var(--sidebar)_minmax(0,1fr)] print:block" style={{ "--sidebar": `${sidebar.shown}px` } as React.CSSProperties}>
       <aside className="sticky top-0 z-30 hidden h-dvh lg:block print:hidden">
         <Sidebar {...flags} rail={sidebar.collapsed} onToggle={sidebar.toggle} />
@@ -298,6 +300,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
       </div>
 
       <BottomBar onMore={() => setMobileOpen(true)} chatbotAvailable={syntheticDemo || localReconciliation} />
+      {syntheticDemo ? <FinDock /> : null}
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
@@ -321,6 +324,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </div>
       ) : null}
     </div>
+    </FinProvider>
     </DemoProcessingProvider>
     </WorkspaceProvider>
   );

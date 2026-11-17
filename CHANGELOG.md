@@ -17,6 +17,11 @@ the new version and its date.
 - Experimental XGBoost forecast shown beside the six-month baseline on Forecasting, scored on the same
   backtest months; the baseline stays primary and the challenger runs only where its local worker is
   enabled, never on Vercel (#89).
+- **Fin**, a named assistant on every page (floating button or Ctrl/⌘ K on desktop, the Chat tab on phones): a guide
+  to FinGence and a colleague for your figures. Fin's own words never contain a figure; money questions go to the
+  verified Q&A, which fills every figure from the records (#137).
+- Jason's Finance chatbot integrated: one `/chatbot` route (the old `/ask` and `/finance-questions` redirect to it),
+  with Groq chat over verified uploaded data in local mode (#134, #136).
 - Changelog, pull request and issue templates, and a Definition of Done in `CONTRIBUTING.md` (#108, #115).
 
 ### Changed
