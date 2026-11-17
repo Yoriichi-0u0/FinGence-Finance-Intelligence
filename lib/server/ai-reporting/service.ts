@@ -20,7 +20,6 @@ const registeredSyntheticHashes = new Set([
   "42e0789e996c5b4af3653d39128f6c91190faefa7708f1c1ec5d8bfc54fb14d9", // ledger.csv
   "8a4d11c7b5850dc99c1392ec1bd941cf4fa04fac2b61f621dffb35a0226896cf", // bank_statement.xlsx
   "6224c108304ab11e0919919e2454492e8d3dbad9448771e5088d310a3736ccfd", // edge_cases.csv
-  "f10edefcf4f09a7695125ff1d727e2501ebb22f7283d441d0ed8a22336173d3a", // realistic_company_ledger.csv
   "13c0d038845941abb8e974bc55832f0b1f157bac343c4f4ab5189ba0b0a30bfb", // optional supplied synthetic Datasets.xlsx; bytes remain outside Git
 ]);
 

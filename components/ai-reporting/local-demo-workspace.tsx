@@ -27,8 +27,8 @@ import { AiExplanationPanel } from "./ai-explanation-panel";
 import { ManagementReportPreview } from "./management-report-preview";
 import { SavedReportsLibrary } from "./saved-reports-library";
 
-const SAMPLE_URL = "/samples/ai-reporting/realistic_company_ledger.csv";
-const SAMPLE_NAME = "realistic_company_ledger.csv";
+const SAMPLE_URL = "/samples/ingestion/ledger.csv";
+const SAMPLE_NAME = "ledger.csv";
 const inputStyle = "mt-1 min-h-11 w-full rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 text-sm";
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50";
 
@@ -81,7 +81,7 @@ export function LocalAiReportingWorkspace() {
   const [reviewed, setReviewed] = useState(false);
   const [result, setResult] = useState<IngestionResult | null>(null);
   const [warningPolicy, setWarningPolicy] = useState<WarningPolicy>("include");
-  const [reportType, setReportType] = useState<LocalReportType>("QUARTERLY_FINANCIAL_ACTIVITY");
+  const [reportType, setReportType] = useState<LocalReportType>("TRANSACTION_REVIEW");
   const [selectedBusinessId, setSelectedBusinessId] = useState("");
   const [reviewedBusinessNames, setReviewedBusinessNames] = useState<Record<string, string>>({});
   const [selectedPeriodKey, setSelectedPeriodKey] = useState("");
@@ -163,7 +163,7 @@ export function LocalAiReportingWorkspace() {
       const nextDataset = createDataset(nextFile, nextSheet, nextHeader);
       const nextMapping = suggestMapping(nextDataset);
       setSheetIndex(nextSheet); setHeaderRow(nextHeader); setDataset(nextDataset); setMapping(nextMapping);
-      setOptions(suggestedOptions(nextMapping, nextFile.name === SAMPLE_NAME ? "Synthetic Company Ledger" : "AI Reporting Upload"));
+      setOptions(suggestedOptions(nextMapping, nextFile.name === SAMPLE_NAME ? "Ledger" : "AI Reporting Upload"));
       setReviewed(false); setResult(null); setSelectedBusinessId(""); setSelectedPeriodKey(""); setComparisonPeriodKey(""); clearGeneratedReport();
       setError("");
       return true;
@@ -272,7 +272,7 @@ export function LocalAiReportingWorkspace() {
             if (!response.ok) throw new Error("The registered synthetic sample could not be loaded.");
             return new Uint8Array(await response.arrayBuffer());
           }, SAMPLE_NAME)} className={`${button} bg-[var(--teal)] text-white hover:bg-[var(--teal-dark)]`}>
-            {busy === "SOURCE" ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <FileSpreadsheet aria-hidden="true" size={16} />}Use realistic synthetic ledger
+            {busy === "SOURCE" ? <LoaderCircle aria-hidden="true" className="animate-spin" size={16} /> : <FileSpreadsheet aria-hidden="true" size={16} />}Use existing synthetic ledger
           </button>
           <button type="button" disabled={busy !== null} onClick={() => fileInput.current?.click()} className={`${button} border border-[var(--border-strong)] bg-[var(--surface)]`}><Upload aria-hidden="true" size={16} />Upload CSV or XLSX</button>
           <input ref={fileInput} className="hidden" type="file" accept=".csv,.xlsx" aria-label="Upload financial CSV or XLSX file" onChange={event => {
