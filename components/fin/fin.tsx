@@ -142,7 +142,8 @@ export function FinConversation({ compact = false }: { compact?: boolean }) {
     useEffect(() => { end.current?.scrollIntoView({ block: 'end' }); }, [messages]);
     useEffect(() => { if (open || !compact) input.current?.focus(); }, [open, compact]);
     if (!fin) return null;
-    const submit = () => { const t = draft; setDraft(''); void fin.send(t); };
+    // While Fin is answering, Enter keeps what you typed instead of clearing it; send it when the reply is in.
+    const submit = () => { if (fin.busy || !draft.trim()) return; const t = draft; setDraft(''); void fin.send(t); };
     const hasRun = !!(demo.context && groundingIndex(demo.context));
     return <div className="flex min-h-0 flex-1 flex-col">
         <div className={`min-h-0 flex-1 space-y-4 overflow-y-auto ${compact ? 'px-4 py-4' : 'py-2'}`} aria-live="polite">
