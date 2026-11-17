@@ -11,7 +11,7 @@ import { askGrounded, gatewayQaModel, type GroundedRun } from '@/lib/grounded-qa
 import { catalogue, groundingIndex } from '@/lib/grounded-qa/tools';
 import { answerQuestion, type QaAnswer } from '@/lib/poc-finance-qa/answer';
 import { qaFacts } from '@/lib/demo/questions';
-import { FIN_FALLBACK, FIN_NAME, FIN_PAGES, FIN_VERSION, MAX_MESSAGE, MAX_TURNS, finPage, verifyFinReply, type FinPage, type FinRequest, type FinTurn } from '@/lib/fin/contracts';
+import { FIN_FALLBACK, FIN_NAME, FIN_PAGES, FIN_VERSION, MAX_MESSAGE, MAX_TURNS, finPage, verifiedContext, verifyFinReply, type FinPage, type FinRequest, type FinTurn } from '@/lib/fin/contracts';
 import { MAX_QUESTION } from '@/lib/grounded-qa/contracts';
 
 /**
@@ -73,7 +73,8 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
         if (!text || busy) return;
         const userId = next.current++, finId = next.current++;
         // The words sent are the conversation so far plus this message (Fin's figures-free replies and the user's own text).
-        const turns: FinTurn[] = [...latest.current.filter(m => m.text).map(m => ({ role: m.role, text: m.text.slice(0, MAX_MESSAGE) })), { role: 'user' as const, text }].slice(-MAX_TURNS);
+        // A verified answer's names travel with Fin's turn so "them" or "that payee" can be resolved; its figures do not.
+        const turns: FinTurn[] = [...latest.current.filter(m => m.text).map(m => ({ role: m.role, text: (m.role === 'fin' ? [m.text, verifiedContext(m.grounded)].filter(Boolean).join(' ') : m.text).slice(0, MAX_MESSAGE) })), { role: 'user' as const, text }].slice(-MAX_TURNS);
         update(list => [...list, { id: userId, role: 'user', text }, { id: finId, role: 'fin', text: '', links: [], pending: true }]);
         const set = (patch: Partial<Extract<FinMessage, { role: 'fin' }>>) => update(list => list.map(m => m.id === finId && m.role === 'fin' ? { ...m, ...patch } : m));
         setBusy(true);

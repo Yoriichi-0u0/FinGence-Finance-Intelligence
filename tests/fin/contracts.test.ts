@@ -1,7 +1,8 @@
 import { existsSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
-import { FIN_LINKS, FIN_VERSION, finPage, finRequestSchema, verifyFinReply } from '../../lib/fin/contracts';
+import { FIN_LINKS, FIN_VERSION, finPage, finRequestSchema, verifiedContext, verifyFinReply } from '../../lib/fin/contracts';
+import type { GroundedRun } from '../../lib/grounded-qa/client';
 import { FIN_CONFIDENCE, FIN_SYSTEM, finUserMessage } from '../../lib/server/ai/fin';
 import { CONFIDENCE_DEFINITION } from '../../components/demo/confidence';
 
@@ -19,8 +20,15 @@ describe('Fin replies', () => {
         'About 98% of the movement was explained.',
         'You received $40 from them.',
         'Cash in was RM forty thousand.',
+        'There were twelve unmatched transactions.',
+        'You paid forty thousand dollars.',
+        'About half of the payments went to them.',
+        'A dozen records need review.',
     ])('withholds a reply that states a figure: %s', reply => {
         expect(verifyFinReply(guide(reply), { run })).toEqual({ decision: 'WITHHELD', reason: 'FIGURE_IN_REPLY' });
+    });
+    it('allows ordinary words that are not counts', () => {
+        expect(verifyFinReply(guide('Everything is in one place, so you can double-check it at once, often on your behalf.'), { run }).decision).toBe('SHOWN');
     });
     it('withholds anything outside the strict schema: extra fields, unknown links, unknown kinds', () => {
         for (const bad of [{ ...guide('Hello.'), amount: '1' }, guide('Hello.', { kind: 'ANSWER' }), null, 'Hello'])
@@ -65,5 +73,20 @@ describe('Fin knowledge', () => {
     });
     it('links only to pages that exist', () => {
         for (const href of FIN_LINKS) expect(existsSync(`app${href === '/' ? '' : href}/page.tsx`), href).toBe(true);
+    });
+});
+
+describe('Fin follow-up context', () => {
+    const run = (status: GroundedRun['status']): GroundedRun => ({ question: 'Who did we pay the most?', status, refusal: null, queries: [], planChecks: [], facts: [], receipts: [], error: null,
+        verdict: { decision: 'ACCEPTED', checks: [], cited: ['F1'], derived: [], missing: null, sentences: [[
+            { text: 'We paid ' }, { value: 'Staff Payroll', ref: 'F1', label: 'Counterparty #1', sources: [] }, { text: ' the most in ' },
+            { value: 'March 2026', ref: 'F1.period', label: 'Period', sources: [] }, { text: ', with total ' },
+            { value: 'MYR 18,548.18', ref: 'F1.total', label: 'Total', sources: [] }, { text: '.' },
+        ]] } });
+    it('keeps the names of a verified answer and replaces every figure', () => {
+        expect(verifiedContext(run('ANSWERED'))).toBe('Verified answer (figures withheld): We paid Staff Payroll the most in [figure], with total [figure].');
+    });
+    it('adds nothing for an answer that was not verified, or is still pending', () => {
+        expect([verifiedContext(run('WITHHELD')), verifiedContext('PENDING'), verifiedContext(undefined)]).toEqual([null, null, null]);
     });
 });

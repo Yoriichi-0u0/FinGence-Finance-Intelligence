@@ -8,6 +8,7 @@
  */
 import { z } from 'zod';
 import { MAX_QUESTION } from '../grounded-qa/contracts';
+import type { GroundedRun } from '../grounded-qa/client';
 
 export const FIN_VERSION = 'fingence-fin-v1';
 export const FIN_NAME = 'Fin';
@@ -62,15 +63,18 @@ export type FinVerdict =
     | { decision: 'WITHHELD'; reason: 'SCHEMA' | 'FIGURE_IN_REPLY' | 'MISSING_QUESTION' | 'NO_RUN' };
 
 /**
- * Figures belong to the grounded answer only. Fin's own words may not contain a digit, a currency sign or code
- * next to a number word, or a percentage, so a remembered or invented amount can never reach the screen.
+ * Figures belong to the grounded answer only. Fin's own words may not contain a digit, a currency sign or code,
+ * a percentage, or a number written as a word ("twelve", "forty thousand", "a dozen", "half"), so a remembered or
+ * invented amount or count can never reach the screen. "One" and "once" are allowed: they are ordinary words
+ * ("one place", "at once") far more often than counts.
  */
 const FIGURE = /\d|[$€£¥%]|\b(?:MYR|SGD|USD|EUR|GBP|RM)\b/i;
+const NUMBER_WORD = /\b(?:zero|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundreds?|thousands?|millions?|billions?|dozens?|half|halves|twice|percent|per cent|quarter of)\b/i;
 export function verifyFinReply(content: unknown, req: Pick<FinRequest, 'run'>): FinVerdict {
     const parsed = finReplySchema.safeParse(content);
     if (!parsed.success) return { decision: 'WITHHELD', reason: 'SCHEMA' };
     const reply = parsed.data;
-    if (FIGURE.test(reply.reply)) return { decision: 'WITHHELD', reason: 'FIGURE_IN_REPLY' };
+    if (FIGURE.test(reply.reply) || NUMBER_WORD.test(reply.reply)) return { decision: 'WITHHELD', reason: 'FIGURE_IN_REPLY' };
     if (reply.kind === 'FINANCE') {
         if (!reply.financeQuestion?.trim()) return { decision: 'WITHHELD', reason: 'MISSING_QUESTION' };
         if (!req.run) return { decision: 'WITHHELD', reason: 'NO_RUN' };
@@ -87,3 +91,15 @@ export const FIN_FALLBACK = {
     withheld: 'I started to answer, but my reply didn\'t pass FinGence\'s checks, so I\'ve held it back. Could you ask that another way?',
     noRun: 'I can answer that once there are figures to read. Process a sample or your own documents on Data, then ask me again.',
 } as const;
+
+/**
+ * What Fin remembers of a verified answer for follow-ups ("how much did we pay them in February?"): its words and the
+ * names it filled in, with every figure (amount, count, date, period) replaced by [figure]. Figures never travel back.
+ */
+export const VERIFIED_PREFIX = 'Verified answer (figures withheld):';
+export function verifiedContext(run: GroundedRun | 'PENDING' | undefined): string | null {
+    if (!run || run === 'PENDING' || run.status !== 'ANSWERED' || !run.verdict?.sentences) return null;
+    const words = run.verdict.sentences.map(sentence => sentence.map(seg => 'text' in seg ? seg.text
+        : FIGURE.test(seg.value) || NUMBER_WORD.test(seg.value) ? '[figure]' : seg.value).join('')).join(' ').replace(/\s+/g, ' ').trim();
+    return words ? `${VERIFIED_PREFIX} ${words}`.slice(0, 400) : null;
+}
