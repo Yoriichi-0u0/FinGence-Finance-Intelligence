@@ -6,6 +6,9 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
 const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
+const loginDiagnostic = (reason: 'LOCAL_MODE_DISABLED' | 'REQUEST_GUARD' | 'ORIGIN_GUARD' | 'INVALID_BODY' | 'IDENTITY_DENIED' | 'IDENTITY_FAILURE' | 'RUNTIME_FAILURE_LOCAL_DATABASE_PATH' | 'RUNTIME_FAILURE_TYPE_ERROR' | 'RUNTIME_FAILURE_OTHER' | 'BODY_FAILURE' | 'RESPONSE_FAILURE') => {
+    if (process.env.NODE_ENV === 'development') console.warn(`[local-login] ${reason}`);
+};
 const cookieName = localSessionCookieName();
 const cookie = (value: string, age: number) => `${cookieName}=${value}; HttpOnly; SameSite=Strict; Path=/api/ai-ingestion/m2; Max-Age=${age}`;
 const token = (r: Request) => r.headers.get('cookie')?.split(';').map(s => s.trim()).find(s => s.startsWith(cookieName + '='))?.slice(cookieName.length + 1) ?? '';
@@ -26,15 +29,17 @@ export async function GET(request: Request) {
     if (!m2LocalEnabled() || !localAccessAllowed(request))
         return deny();
     try {
-        const db = await (m4LocalEnabled()?m4Runtime():m2Runtime()), url = new URL(request.url), session = token(request);
-        if (url.searchParams.get('action') === 'session') {
+        const url = new URL(request.url), session = token(request), action = url.searchParams.get('action');
+        if (action === 'session') {
             try {
+                const db = await m2Runtime();
                 return Response.json({ active: true, ...await db.identity.session(session), mode: m4LocalEnabled()?'RECORDED_TEST':'SIMULATED', liveProviderAvailable: false }, { headers });
             }
             catch {
                 return Response.json({ active: false }, { headers });
             }
         }
+        const db = await (m4LocalEnabled() ? m4Runtime() : m2Runtime());
         const id = url.searchParams.get('id');
         if(id&&url.searchParams.get('action')==='reference')return Response.json(await db.pipeline.reference(session,id),{headers});
         if (id) {
@@ -51,21 +56,45 @@ export async function GET(request: Request) {
 }
 let lastSignIn = 0;
 export async function POST(request: Request) {
-    if (!m2LocalEnabled() || !localAccessAllowed(request))
+    const url = new URL(request.url), action = url.searchParams.get('action');
+    if (!m2LocalEnabled()) {
+        if (action === 'login') loginDiagnostic('LOCAL_MODE_DISABLED');
         return deny();
-    const url = new URL(request.url);
-    if (request.headers.get('origin') !== `${url.protocol}//${request.headers.get('host') ?? url.host}`)
+    }
+    if (!localAccessAllowed(request)) {
+        if (action === 'login') loginDiagnostic('REQUEST_GUARD');
         return deny();
+    }
+    if (request.headers.get('origin') !== `${url.protocol}//${request.headers.get('host') ?? url.host}`) {
+        if (action === 'login') loginDiagnostic('ORIGIN_GUARD');
+        return deny();
+    }
+    let loginStage: 'runtime' | 'body' | 'identity' | 'response' = 'runtime';
     try {
-        const db = await (m4LocalEnabled()?m4Runtime():m2Runtime()), session = token(request), action = url.searchParams.get('action');
+        const session = token(request);
+        const identityOnly = action === 'login' || action === 'logout';
+        const db = identityOnly
+            ? await m2Runtime()
+            : (m4LocalEnabled() ? await m4Runtime() : await m2Runtime());
         if (action === 'login') {
             if (Date.now() - lastSignIn < 1000)
                 return Response.json({ error: 'Please wait before signing in again.' }, { status: 429, headers });
             lastSignIn = Date.now();
+            loginStage = 'body';
             const input = JSON.parse((await body(request, 4096)).toString());
-            if (typeof input.email !== 'string' || typeof input.password !== 'string')
+            if (typeof input.email !== 'string' || typeof input.password !== 'string') {
+                loginDiagnostic('INVALID_BODY');
                 return deny();
-            const result = await db.identity.login(input.email, input.password);
+            }
+            loginStage = 'identity';
+            let result;
+            try {
+                result = await db.identity.login(input.email, input.password);
+            } catch (error) {
+                loginDiagnostic(error instanceof Error && error.message === 'ACCESS_DENIED' ? 'IDENTITY_DENIED' : 'IDENTITY_FAILURE');
+                return deny();
+            }
+            loginStage = 'response';
             return Response.json({ active: true, role: result.principal.role, userId: result.principal.user_id, organizationId: result.principal.organization_id, membershipVersion: result.principal.version }, { headers: { ...headers, 'Set-Cookie': cookie(result.token, 1800) } });
         }
         if (action === 'logout') {
@@ -116,7 +145,14 @@ export async function POST(request: Request) {
             } }, cancel() { closed = true; } });
         return new Response(stream, { headers: { ...headers, 'Content-Type': 'application/x-ndjson' } });
     }
-    catch {
+    catch (error) {
+        if (action === 'login') {
+            const reason = loginStage === 'runtime'
+                ? error instanceof Error && error.message === 'LOCAL_DATABASE_PATH' ? 'RUNTIME_FAILURE_LOCAL_DATABASE_PATH'
+                    : error instanceof TypeError ? 'RUNTIME_FAILURE_TYPE_ERROR' : 'RUNTIME_FAILURE_OTHER'
+                : loginStage === 'body' ? 'BODY_FAILURE' : 'RESPONSE_FAILURE';
+            loginDiagnostic(reason);
+        }
         return deny();
     }
 }

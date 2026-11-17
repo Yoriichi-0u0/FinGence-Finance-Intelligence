@@ -50,6 +50,23 @@ export async function provisionM3Account(db: TransactionDatabase, input: {
     });
     return { userId, organizationId: org, active: !input.organizationId };
 }
+/** OS-local credential recovery only. Never exposed through an HTTP route. */
+export async function resetM3LocalAccountPassword(db: TransactionDatabase, input: { email: string; password: string }) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input.email) || input.email.length > 200)
+        throw new Error('INVALID_LOCAL_ACCOUNT');
+    const passwordHash = await hashLocalPassword(input.password);
+    return db.transaction(async (tx) => {
+        const user = (await tx.query<{ id: string; organization_id: string }>(
+            'SELECT u.id::text,m.organization_id::text FROM fingence_m2.users u JOIN fingence_m2.memberships m ON m.user_id=u.id WHERE u.email=$1 ORDER BY m.organization_id LIMIT 1 FOR UPDATE OF u',
+            [input.email.trim().toLowerCase()],
+        )).rows[0];
+        if (!user) throw new Error('LOCAL_ACCOUNT_UNAVAILABLE');
+        await tx.query('UPDATE fingence_m2.users SET password_hash=$2 WHERE id=$1', [user.id, passwordHash]);
+        const revoked = await tx.query('UPDATE fingence_m2.sessions SET revoked=true WHERE user_id=$1 AND NOT revoked', [user.id]);
+        await auditManagement(tx, null, 'admin.configuration_changed', 'local-password-reset', 'organization_user');
+        return { passwordReset: true, sessionsRevoked: revoked.rowCount };
+    });
+}
 /** Active Admin memberships whose account can still sign in. Caller holds the organization's advisory lock. */
 export async function signableAdmins(tx: SqlConnection, organizationId: string) {
     const admins = (await tx.query<{ user_id: string }>("SELECT user_id::text FROM fingence_m2.memberships WHERE organization_id=$1 AND active AND role='Admin'", [organizationId])).rows;

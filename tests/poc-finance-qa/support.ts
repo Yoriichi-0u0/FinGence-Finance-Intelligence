@@ -28,7 +28,7 @@ function months(start: string, n: number): ForecastRow[] {
 }
 export const march: QaFacts = {
     selection, businesses: ['BUS-T', 'BUS-U'], periods: ['2026-03'], totals, series: [{ period: '2026-03', ...totals }],
-    candidates: [{ rowId: 'B3', severity: 'HIGH', rules: ['DUPLICATE_REFERENCE', 'AMOUNT_OUTLIER'], review: 'OPEN' }, { rowId: 'B5', severity: 'MEDIUM', rules: ['AMOUNT_OUTLIER'], review: 'EXPLAINED' }],
+    candidates: [{ rowId: 'B3', severity: 'HIGH', rules: ['DUPLICATE_REFERENCE', 'AMOUNT_OUTLIER'], review: 'OPEN', findingDetails: [{ ruleId: 'DUPLICATE_REFERENCE', rationale: 'Reference PAY-204 also appears on B2.' }] }, { rowId: 'B5', severity: 'MEDIUM', rules: ['AMOUNT_OUTLIER'], review: 'EXPLAINED' }],
     reconciliation: readReconciliation(snapshot(), binding), forecast: forecastBusiness(months('2026-03', 1)), pooled: null,
 };
 const yearly = forecastBusiness(months('2025-09', 12)), backtest = poolBacktests([yearly])!;

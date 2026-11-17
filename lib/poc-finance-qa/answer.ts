@@ -21,6 +21,7 @@ export const INTENTS = {
     RECONCILIATION_MATCHES: 'Reconciliation matches by category',
     REVIEW_ITEMS: 'Records that require review',
     ANOMALY_COUNT: 'Anomaly review candidates',
+    ANOMALY_EXPLANATION: 'Meaning of an anomaly review flag',
     MONTHLY_HISTORY: 'Observed monthly history',
     CASH_FORECAST: 'Next-month cash baseline',
 } as const;
@@ -29,7 +30,7 @@ export type RefusalCode = 'UNSUPPORTED_METRIC' | 'ADVICE_OR_ALLEGATION' | 'CAUSE
 export type UnavailableCode = 'ABSENT_PERIOD' | 'RECONCILIATION_UNAVAILABLE' | 'FORECAST_UNAVAILABLE';
 
 export type QaSelection = { sourceId: string; fileName: string; sha256: string; businessId: string; businessName: string; period: string; currency: string };
-export type QaCandidate = { rowId: string; severity: Severity; rules: RuleId[]; review: 'OPEN' | 'EXPLAINED' | 'ESCALATED' };
+export type QaCandidate = { rowId: string; severity: Severity; rules: RuleId[]; review: 'OPEN' | 'EXPLAINED' | 'ESCALATED'; findingDetails?: { ruleId: RuleId; rationale: string }[] };
 /** Everything an answer may quote, computed server-side for one selection. */
 export type QaFacts = {
     selection: QaSelection;
@@ -95,12 +96,25 @@ const REFUSALS: Record<WordingRefusal, [headline: string, interpretation: string
     CAUSE_NOT_ESTABLISHED: ['Causes are not established by the source data.', 'Reconciliation categories and anomaly rules show which records differ or stand out, not why. Open the linked records and ask the people responsible for them.'],
     UNSUPPORTED_QUESTION: ['This question is not supported.', 'Only fixed, source-computed questions are answered: records and totals, cash movement, reconciliation difference and matches, records to review, anomaly candidates, monthly history and the next-month cash baseline. Try a suggested question.'],
 };
-export type Route = { kind: 'INTENT'; intent: Intent } | { kind: 'REFUSED'; code: WordingRefusal };
+export type Route = { kind: 'INTENT'; intent: Intent; ruleId?: RuleId } | { kind: 'REFUSED'; code: WordingRefusal };
 /** Pure routing on wording only; scope checks against the selection happen in answerQuestion. */
 export function route(question: string): Route {
     const q = normalize(question);
     if (UNSUPPORTED.test(q)) return { kind: 'REFUSED', code: 'UNSUPPORTED_METRIC' };
     if (ADVICE.test(q)) return { kind: 'REFUSED', code: 'ADVICE_OR_ALLEGATION' };
+    // A specific request to understand a detector flag is answerable from the rules themselves.
+    // Check it before the general cause refusal so "explain this flag" is not rejected.
+    const ruleMentions: [RuleId, RegExp][] = [
+        ['DUPLICATE_REFERENCE', /\bduplicate\s+reference\b/],
+        ['REFERENCE_FORMAT_IRREGULAR', /\b(irregular\s+reference|reference\s+format)\b/],
+        ['DIRECTION_CONFLICT', /\bdirection\s+conflict\b/],
+        ['UNUSUAL_DIRECTION_FOR_COUNTERPARTY', /\bunusual\s+direction\b/],
+        ['AMOUNT_OUTLIER', /\bamount\s+outlier\b/],
+        ['UNVERIFIED_COUNTERPARTY', /\bunverified\s+counterparty\b/],
+        ['DESCRIPTION_COUNTERPARTY_MISMATCH', /\b(description\s+mismatch|counterparty\s+mismatch)\b/],
+    ];
+    const rule = ruleMentions.find(([, pattern]) => pattern.test(q))?.[0];
+    if (rule && /\b(flag|flagged|mean|means|explain\w*|what\s+does)\b/.test(q)) return { kind: 'INTENT', intent: 'ANOMALY_EXPLANATION', ruleId: rule };
     if (CAUSE.test(q)) return { kind: 'REFUSED', code: 'CAUSE_NOT_ESTABLISHED' };
     const hit = ROUTES.find(([, pattern]) => pattern.test(q));
     return hit ? { kind: 'INTENT', intent: hit[0] } : { kind: 'REFUSED', code: 'UNSUPPORTED_QUESTION' };
@@ -138,6 +152,7 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
     const routed = route(question);
     if (routed.kind === 'REFUSED') return refuse(routed.code, ...REFUSALS[routed.code]);
     const intent = routed.intent;
+    const ruleId = routed.ruleId;
 
     // The question can never widen or change the selection; named scope must equal the selected scope.
     const named = question.toUpperCase().match(/\b[A-Z]{2,5}-[A-Z0-9]{1,8}\b/g)?.filter(id => facts.businesses.includes(id) || /^BUS-/.test(id)) ?? [];
@@ -157,6 +172,20 @@ export function answerQuestion(facts: QaFacts, rawQuestion: string): QaAnswer {
     }
 
     const t = facts.totals, scope = `${s.businessId} · ${s.period}`;
+    if (intent === 'ANOMALY_EXPLANATION' && ruleId) {
+        const rule = RULES[ruleId], affected = facts.candidates.filter(candidate => candidate.rules.includes(ruleId));
+        const severity = affected[0]?.severity ?? (ruleId === 'DUPLICATE_REFERENCE' || ruleId === 'DIRECTION_CONFLICT' ? 'HIGH' : 'MEDIUM');
+        const detectedDetails = affected.flatMap(candidate => candidate.findingDetails?.filter(finding => finding.ruleId === ruleId).map(finding => finding.rationale) ?? []);
+        const detail = affected.length
+            ? `${affected.length} selected-period record${affected.length === 1 ? '' : 's'} in this source have this review flag.${detectedDetails.length ? ` Detector detail: ${[...new Set(detectedDetails)].join(' ')}` : ''} Open the linked Anomaly review page to compare the rows and original bank evidence.`
+            : `No selected-period record in this source currently has this flag. The rule definition still describes what it checks.`;
+        return answered(intent,
+            `${rule.title} is a ${severity.toLowerCase()}-severity review flag.`,
+            `${rule.basis} ${detail} It is a prompt for a person to check the source; it does not prove that a payment is duplicated, incorrect or fraudulent.`,
+            [{ id: 'rule', label: 'Rule', value: rule.title, unit: 'TEXT' }, { id: 'basis', label: 'What the rule checks', value: rule.basis, unit: 'TEXT' }, { id: 'severity', label: 'Rule severity', value: severity, unit: 'TEXT' }, ...(detectedDetails.length ? [{ id: 'detector-detail', label: 'Why these rows were flagged', value: [...new Set(detectedDetails)].join(' '), unit: 'TEXT' as const }] : []), { id: 'affected', label: 'Selected-period flagged records', value: String(affected.length), unit: 'COUNT' }],
+            [link.anomalies, link.transactions],
+            affected.length ? [{ label: `${rule.title} review candidates`, detail: 'Compare each source row with the other row sharing this reference. The flag itself does not establish an error.', recordIds: affected.map(candidate => candidate.rowId) }] : []);
+    }
     if (intent === 'SOURCE_TOTALS') return answered(intent,
         `${plural(t.rows, 'source record')} for ${scope}: ${plural(t.creditRows, 'credit')} totalling ${money(c, t.credits)} and ${plural(t.debitRows, 'debit')} totalling ${money(c, t.debits)}.`,
         `Counts and sums of the uploaded bank rows for the selected business, month and currency. Credits add cash and debits remove it by the source's bank direction; no accounting category is inferred.`,

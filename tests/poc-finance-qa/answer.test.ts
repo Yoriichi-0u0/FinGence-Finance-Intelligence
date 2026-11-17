@@ -35,6 +35,17 @@ describe('answers quote only the computed facts', () => {
         expect(history.headline).toBe('12 consecutive observed months for BUS-T (MYR), 2025-09 to 2026-08.');
         expect(history.interpretation).toContain('from MYR 600.00 in 2025-09 to MYR 1,700.00 in 2026-08');
     });
+    it('explains a named anomaly flag from the detector rule and selected source evidence', () => {
+        expect(route('What does this duplicate-reference flag mean?')).toEqual({ kind: 'INTENT', intent: 'ANOMALY_EXPLANATION', ruleId: 'DUPLICATE_REFERENCE' });
+        const answer = answerQuestion(march, 'What does this duplicate-reference flag mean?');
+        expect(answer).toMatchObject({ status: 'ANSWERED', intent: 'ANOMALY_EXPLANATION', answerOrigin: 'DETERMINISTIC_VERIFIED_SOURCE', liveModel: false });
+        expect(answer.headline).toBe('Duplicate reference is a high-severity review flag.');
+        expect(answer.interpretation).toContain('The same reference appears on more than one row of this business.');
+        expect(answer.interpretation).toContain('Reference PAY-204 also appears on B2.');
+        expect(answer.interpretation).toContain('does not prove that a payment is duplicated, incorrect or fraudulent');
+        expect(answer.records).toEqual([{ label: 'Duplicate reference review candidates', detail: expect.any(String), recordIds: ['B3'] }]);
+        expect(answer.evidence.map(item => item.href)).toContain(`/anomalies?source=${selection.sourceId}&business=BUS-T&period=2026-03&currency=MYR`);
+    });
     it('quotes the reconciliation difference, matches and review records only for the bound snapshot', () => {
         const diff = answerQuestion(march, 'What is the bank-versus-ledger difference?');
         expect(diff.headline).toBe('Bank minus ledger for BUS-T · 2026-03 is MYR 10.00 (bank MYR 380.00, ledger MYR 370.00).');
