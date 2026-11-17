@@ -267,7 +267,7 @@ export default function AnomalyWorkspace() {
             {!analysis.candidates.length ? <div className="p-5"><EmptyState title="No review candidates" description="No rule produced a candidate for this business and period." /></div> : (<>
               <div className="thin-scrollbar hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[560px] text-left text-xs">
-                  <thead className="bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                  <thead className="bg-[var(--surface-subtle)] text-[11px] text-[var(--muted)]">
                     <tr>{["Severity", "Source row", "Counterparty and rules", "Signed amount", "Review"].map(h => <th key={h} className={`px-3 py-3 font-semibold ${h === "Signed amount" ? "text-right" : ""}`}>{h}</th>)}</tr>
                   </thead>
                   <tbody className="divide-y divide-[var(--border)]">

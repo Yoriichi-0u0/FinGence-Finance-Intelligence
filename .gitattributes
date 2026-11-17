@@ -9,3 +9,8 @@
 # Exact bytes also for the public ingestion fixtures and the demo documents (their SHA-256 is published and tested).
 /public/samples/ingestion/** -text
 /public/demo/** -text
+
+# Stable review checksums for new AI06 website SQL only (not deployed DB04 SQL).
+/supabase/sql/ai06-website-gpt-storage-review.sql text eol=lf
+/supabase/sql/ai06-website-gpt-login-review.sql text eol=lf
+/supabase/tests/ai06-website-gpt-storage-catalog-review.sql text eol=lf

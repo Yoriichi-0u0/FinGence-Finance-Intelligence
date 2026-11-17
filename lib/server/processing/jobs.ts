@@ -60,6 +60,8 @@ export type JobView = {
     results?: { reconciliation: unknown; anomalies: unknown; report: unknown; documents: unknown } | null; flagged?: (FlaggedItem & { ordinal: number })[];
 };
 type Deps = { store?: ProcessingStore | null; transport?: typeof fetch; interpreter?: LayoutInterpreter | null; organization?: string;
+    /** Optional website-scoped evidence hook, after the authoritative job commit. Failure never changes job results. */
+    suggestions?: (context: Awaited<ReturnType<typeof processDocuments>>) => Promise<void>;
     /** The signed-in member who submitted the job (workspace on); shown as "by" on the Technical log. */
     member?: string;
     /** Where a completed run is saved for its person (tests replace it). */
@@ -109,6 +111,7 @@ export async function runJob(jobId: string, documents: DocumentInput[], client: 
         if (result.flagged.length > (deps.maxFlagged ?? MAX_FLAGGED)) { await call('fingence_processing_fail_job', { job: jobId, code: 'TOO_MANY_FLAGGED' }, deps); return 'FAILED'; }
         const done = await call<{ jobId?: string; error?: string }>('fingence_processing_finish_job', { job: jobId, run: run.data, result: { ...result, extractions } }, deps);
         if (!done?.jobId) return 'FAILED';
+        await deps.suggestions?.(context).catch(() => undefined);
         // The person's History: the documents and the bundle that reproduces this result. A save that fails never fails the job.
         if (deps.member && deps.organization) {
             const payload = await savedRunPayload(context, documents, { interpretations: interpretationsOf(context.documents), extractions, job: { id: jobId, processingId: context.processingId } }, new Date().toISOString());

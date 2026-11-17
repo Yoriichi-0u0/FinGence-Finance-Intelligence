@@ -110,7 +110,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
             <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
                 <section aria-label="Document as supplied" className={`min-w-0 overflow-hidden rounded-xl border border-[var(--border)] ${view === 'records' ? 'hidden lg:block' : ''}`}>
                     <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-1.5">
-                        <h3 className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Document as supplied</h3>
+                        <h3 className="text-[12px] font-semibold text-[var(--muted)]">Document as supplied</h3>
                         {drawn ? <div role="group" aria-label="Zoom" className="flex items-center gap-1">
                             <button type="button" className={zoomButton} aria-label="Zoom out" disabled={zoom <= ZOOMS[0]} onClick={() => setZoom(ZOOMS[Math.max(0, ZOOMS.indexOf(zoom) - 1)])}><ZoomOut aria-hidden="true" size={15} /></button>
                             <button type="button" className={`${zoomButton} w-14 text-xs font-semibold`} aria-label="Fit page width" onClick={() => setZoom(1)}>{Math.round(zoom * 100)}%</button>
@@ -126,7 +126,7 @@ export function DocumentEvidence({ context, inputs }: { context: ProcessingConte
                     {drawn ? <p className="border-t border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)] lg:hidden">Drag to move around the page. Tap a highlighted line to see its record.</p> : null}
                 </section>
                 <section aria-label="What FinGence read" className={`min-w-0 overflow-hidden rounded-xl border border-[var(--border)] ${view === 'document' ? 'hidden lg:block' : ''}`}>
-                    <h3 className="border-b border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Verified records</h3>
+                    <h3 className="border-b border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2.5 text-[12px] font-semibold text-[var(--muted)]">Verified records</h3>
                     <ol data-scroll className="thin-scrollbar max-h-[68vh] divide-y divide-[var(--border)] overflow-auto text-sm lg:max-h-[72vh]">
                         {rows.map(x => <li key={x.id} id={`rec-${doc.sha256.slice(0, 8)}-${x.line}`} tabIndex={0} onMouseEnter={() => setActive(x.line)} onFocus={() => setActive(x.line)} onClick={() => pick(x.line)} onKeyDown={e => { if (e.key === 'Enter') pick(x.line); }}
                             className={`cursor-pointer px-3 py-2.5 transition-colors ${active === x.line ? 'bg-[var(--brand-soft)] shadow-[inset_3px_0_0_var(--brand)]' : 'hover:bg-[var(--surface-subtle)]'}`}>

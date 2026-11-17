@@ -1,4 +1,5 @@
 'use client';
+import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
 import Link from 'next/link';
 import { useTechnicalDetail } from '@/components/workspace/context';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
@@ -24,9 +25,11 @@ import { MlChallenger } from './ml-forecast';
 import { useDemoProcessing } from './context';
 import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
 import { ConfidenceCard, CONFIDENCE_DEFINITION } from './confidence';
+import { HeadlineBand, NeedsYou, RoutineLine, type NeedsItem } from './signal';
 import { processingConfidence } from '@/lib/confidence';
+import { attentionCounts } from '@/lib/demo/attention';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
-import { Callout, DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
+import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
@@ -66,9 +69,8 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
     const checks = c.stages.flatMap(x => x.checks), passedChecks = checks.filter(k => k.passed).length;
     const matchedCount = r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT, rate = r.results.length ? Math.round((matchedCount / r.results.length) * 100) : 0;
     const days = useMemo(() => dailyCumulative(o.bankRows), [o.bankRows]), months = monthlyTotals(c);
-    const unexplained = o.resolution?.attention.length ?? c.quarantine.filter(q => q.kind === 'RECONCILIATION_EXCEPTION').length;
-    const flaggedAnomalies = ar?.flagged ?? o.anomalies.length, entries = o.resolution?.totals.entries ?? 0;
-    const unusedDocuments = c.quarantine.filter(q => q.kind === 'DOCUMENT' || q.kind === 'HISTORY').length;
+    const counts = attentionCounts(c), unexplained = counts.reconciliation, flaggedAnomalies = counts.anomalies, unusedDocuments = counts.documents;
+    const entries = o.resolution?.totals.entries ?? 0;
     const attention: Attention[] = [
         ...(unexplained ? [{ tone: 'warn' as const, title: `${unexplained} reconciliation item${unexplained === 1 ? '' : 's'} not explained`, detail: o.resolution ? `${money(s.currency, o.resolution.totals.unexplained.replace(/^-/, ''))} in total. Flagged for your technical team.` : 'Flagged for your technical team.', href: '/reconciliation' }] : []),
         ...(flaggedAnomalies ? [{ tone: 'warn' as const, title: `${flaggedAnomalies} unusual bank record${flaggedAnomalies === 1 ? '' : 's'} flagged`, detail: 'Your books could not settle them. Flagged for your technical team, not treated as fact.', href: '/anomalies' }] : []),
@@ -76,6 +78,16 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         ...(entries ? [{ tone: 'brand' as const, title: `${entries} correcting entr${entries === 1 ? 'y' : 'ies'} prepared for your books`, detail: 'Prepared from stated rules, not posted. Download them on Reconciliation.', href: '/reconciliation' }] : []),
     ];
     const warnings = attention.filter(a => a.tone === 'warn').length;
+    // Signal ledger level 1: only what a person must act on, loud and first.
+    const confidence = useMemo(() => processingConfidence(c), [c]);
+    const needs: NeedsItem[] = [
+        ...(flaggedAnomalies ? [{ level: 'attention' as const, count: String(flaggedAnomalies), title: `unusual bank record${flaggedAnomalies === 1 ? '' : 's'} flagged`, detail: 'Your books could not settle them.', href: '/anomalies', verb: 'Review' }] : []),
+        ...(confidence.status === 'MEASURED' && confidence.band === 'LOW' ? [{ level: 'attention' as const, count: `${confidence.percent}%`, title: 'Low confidence', detail: 'Do not rely on these figures yet.', href: '#card-confidence', verb: 'See why' }] : []),
+        ...(confidence.status === 'INCOMPLETE' ? [{ level: 'attention' as const, title: 'No confidence figure', detail: confidence.reason, href: '#card-confidence', verb: 'See why' }] : []),
+        ...(unexplained ? [{ level: 'caution' as const, count: String(unexplained), title: `reconciliation item${unexplained === 1 ? '' : 's'} not explained`, detail: o.resolution ? `${money(s.currency, o.resolution.totals.unexplained.replace(/^-/, ''))} in total.` : 'Flagged for your technical team.', href: '/reconciliation', verb: 'Review' }] : []),
+        ...(unusedDocuments ? [{ level: 'caution' as const, count: String(unusedDocuments), title: `document${unusedDocuments === 1 ? '' : 's'} set aside`, detail: 'See the reason on Data.', href: '/data', verb: 'See why' }] : []),
+        ...(confidence.status === 'MEASURED' && confidence.band === 'CHECK' ? [{ level: 'caution' as const, count: `${confidence.percent}%`, title: 'Check advised', detail: 'Most of the money is accounted for. Look at what fell short.', href: '#card-confidence', verb: 'See why' }] : []),
+    ];
     // One line per results page, for "Your results at a glance".
     const top = useMemo(() => { const by = new Map<string, { cents: bigint; n: number }>(); for (const row of o.bankRows) { const t = by.get(row.counterparty) ?? { cents: 0n, n: 0 }, v = toCents(row.signedAmount); by.set(row.counterparty, { cents: t.cents + (v < 0n ? -v : v), n: t.n + 1 }); } return [...by.entries()].sort((a, b) => (b[1].cents > a[1].cents ? 1 : b[1].cents < a[1].cents ? -1 : a[0].localeCompare(b[0])))[0] ?? null; }, [o.bankRows]);
     const tiles: GlanceTile[] = [
@@ -104,12 +116,14 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         close();
     };
     const cards: Record<CardId, ReactNode> = {
-        figures: <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Stat tone="brand" label="Cash in" value={money(s.currency, o.totals.credits)} detail={`${o.totals.creditRows} bank receipts`} />
-            <Stat tone="plain" label="Cash out" value={outflow(s.currency, o.totals.debits)} detail={`${o.totals.debitRows} bank payments`} />
-            <Stat tone="brand" label="Net movement" value={money(s.currency, o.totals.net)} detail="Cash in minus cash out" />
-            <Stat tone="good" label="Reconciled automatically" value={`${rate}%`} detail={`${matchedCount} of ${r.results.length} records matched${o.resolution ? ` · ${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved` : ''}`} />
-        </div>,
+        figures: <HeadlineBand
+            figures={[
+                { label: 'Cash in', value: money(s.currency, o.totals.credits), detail: `${o.totals.creditRows} bank receipts` },
+                { label: 'Cash out', value: outflow(s.currency, o.totals.debits), detail: `${o.totals.debitRows} bank payments` },
+                { label: 'Net movement', value: money(s.currency, o.totals.net), detail: 'Cash in minus cash out' },
+            ]}
+            reconciled={{ label: 'Reconciled automatically', percent: rate, detail: `${matchedCount} of ${r.results.length} records matched${o.resolution ? ` · ${o.resolution.totals.timing + o.resolution.totals.resolutions.ENTRY_PREPARED} differences resolved` : ''}` }}
+            report={{ href: '/reports?print=1', detail: `The ${periodLabel(s.period)} report is ready${warnings ? `, with the ${warnings} open item${warnings === 1 ? '' : 's'} marked` : ''}.` }} />,
         'cash-chart': months.length > 1
             ? <Panel className="h-full" title="Cash in and out by month" eyebrow={o.history.accepted ? 'Verified bank history' : 'Statement months'} action={<Link href="/analytics" className="text-xs font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Analytics</Link>}>
                 <div className="p-3 sm:p-4"><LineChart ariaLabel="Monthly bank cash in and cash out" labels={months.map(m => m.p.slice(2))} series={[{ label: 'Cash in', color: 'var(--chart-in)', values: months.map(m => Number(m.credits)) }, { label: 'Cash out', color: 'var(--chart-out)', values: months.map(m => -Number(m.debits)) }]} /></div>
@@ -141,7 +155,11 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         counterparties: <CounterpartiesCard currency={s.currency} rows={o.bankRows} />,
         'reconciliation-summary': <ReconciliationSummaryCard currency={s.currency} counts={r.counts} records={r.results.length} resolution={o.resolution} />,
         'last-runs': <LastRunsCard />,
-        confidence: <ConfidenceCard context={c} className="shadow-[var(--shadow-panel)]" />,
+        // High confidence is routine, so it steps back to one line; anything lower keeps the full card (and is listed under Needs you).
+        confidence: confidence.status === 'MEASURED' && confidence.band === 'HIGH'
+            ? <RoutineLine label="Processing confidence" items={[<>Processing confidence <b className="font-semibold text-[var(--ink)]">{confidence.percent}%</b> High confidence</>, `${passedChecks} of ${checks.length} checks passed`, ...(unusedDocuments ? [] : ['No documents set aside'])]}
+                more={<details className="group text-[14px]"><summary className="flex min-h-11 cursor-pointer items-center font-semibold text-[var(--brand-ink)]">How is this measured?</summary><p className="max-w-md pb-2 text-[var(--muted-strong)]">{CONFIDENCE_DEFINITION}</p></details>} />
+            : <ConfidenceCard context={c} className="shadow-[var(--shadow-panel)]" />,
         'at-a-glance': <AtAGlanceCard tiles={tiles} report={{ detail: `Management summary for ${s.businessName}, ${periodLabel(s.period)}: every figure, the reconciliation statement, flagged items and the processing confidence.` }} />,
     };
     const visible = offered(shown, dashboard.admin).filter(x => x.visible), spans = cardSpans(visible.map(x => x.id));
@@ -152,9 +170,10 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
                 <button ref={customise} type="button" className={button} disabled={!dashboard.ready || dashboard.failed} onClick={() => { setStatus(''); setDraft(dashboard.layout); }}><SlidersHorizontal aria-hidden="true" size={16} />Customise dashboard</button>
             </div>} />
         <SourceStrip context={c} />
+        {editing ? null : <NeedsYou items={needs} />}
         {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => { if (!saving) setDraft(d => d && update(d)); }} onDone={() => void done()} onCancel={close} /> : null}
         {!dashboard.ready ? <div aria-busy="true" aria-label="Loading your dashboard" className="min-h-[40vh]" />
-            : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} data-card={x.id} className={`grid min-w-0 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
+            : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} id={`card-${x.id}`} data-card={x.id} className={`grid min-w-0 scroll-mt-20 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
             : <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-8 text-center text-sm text-[var(--muted-strong)]">Every card is hidden. Use Customise dashboard to show them again.</p>}
         <p className="mt-4 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>
     </>;
@@ -192,14 +211,28 @@ function Reconciliation({ c }: { c: Ready }) {
     const outcomes = periods.length ? periods.flatMap(p => p.snapshot.results.map(x => ({ ...x, period: p.period }))) : r.results.map(x => ({ ...x, period: s.period }));
     const visible = outcomes.filter(x => filter === 'ALL' || (filter === 'EXCEPTIONS' ? !matched(x.status) : x.status === filter)), chosen = open === null ? null : visible[open];
     const statement = multi ? periods[month]?.statement : c.outputs.statement ?? periods[0]?.statement;
+    // Saved GPT matching suggestions (#121) are not switched on for hosted use yet, so the panel would only say
+    // "unavailable". Admins and Superadmins see it; Finance users see Reconciliation without it.
+    const technical = useTechnicalDetail(), unexplained = attentionCounts(c).reconciliation;
     return <>
         <PageHeader eyebrow={resultsEyebrow(s)} title="Reconciliation" description="Your bank statement matched against your books, with every difference explained or flagged." />
         <SourceStrip context={c} />
-        {c.outputs.resolution ? <div className="mb-5"><ReconciliationOutcomePanel outcome={c.outputs.resolution} /></div> : null}
-        <div className="mb-5 grid gap-3 sm:grid-cols-3"><Stat tone="brand" label="Bank cash movement" value={money(s.currency, r.cashMovement.bank)} detail={multi ? `${periods.length} reconciled months` : undefined} /><Stat tone="brand" label="Ledger cash movement" value={money(s.currency, r.cashMovement.ledger)} /><Stat tone={periods.every(p => p.statement.explained) ? 'good' : 'warn'} label="Bank − ledger difference" value={money(s.currency, r.cashMovement.signedDifference)} detail={periods.every(p => p.statement.explained) ? 'Explained by the reconciling items below' : 'Cause is not inferred'} /></div>
-        {c.outputs.notReconciled.length ? <p className="mb-5 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">Not reconciled, because only one document covers {c.outputs.notReconciled.length === 1 ? 'this month' : 'these months'}: {c.outputs.notReconciled.map(n => `${periodLabel(n.period)} (${n.side === 'BANK' ? 'bank statement only' : 'books only'}, ${n.records} records)`).join('; ')}. These records are shown, never matched against nothing.</p> : null}
-        {multi ? <div role="tablist" aria-label="Statement month" className="mb-3 flex flex-wrap items-center gap-2"><span className="mr-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Statement for</span>{periods.map((p, i) => <button key={p.period} type="button" role="tab" aria-selected={month === i} className={chip(month === i)} onClick={() => setMonth(i)}>{periodLabel(p.period)}</button>)}</div> : null}
+        <NeedsYou items={[
+            ...(unexplained ? [{ level: 'caution' as const, count: String(unexplained), title: `difference${unexplained === 1 ? '' : 's'} not explained`, detail: c.outputs.resolution ? `${money(s.currency, c.outputs.resolution.totals.unexplained.replace(/^-/, ''))} in total. Flagged for your technical team.` : 'Flagged for your technical team.', href: '#reconciliation-outcome', verb: 'See them' }] : []),
+            ...(c.outputs.notReconciled.length ? [{ level: 'caution' as const, count: String(c.outputs.notReconciled.length), title: `month${c.outputs.notReconciled.length === 1 ? '' : 's'} not reconciled`, detail: 'Only one document covers it, so nothing could be matched.', href: '#not-reconciled', verb: 'See why' }] : []),
+        ]} />
+        <div className="mb-5"><HeadlineBand
+            figures={[
+                { label: 'Bank cash movement', value: money(s.currency, r.cashMovement.bank), detail: multi ? `${periods.length} reconciled months` : 'From your bank statement' },
+                { label: 'Ledger cash movement', value: money(s.currency, r.cashMovement.ledger), detail: 'From your books' },
+                { label: 'Bank − ledger difference', value: money(s.currency, r.cashMovement.signedDifference), detail: periods.every(p => p.statement.explained) ? 'Explained by the reconciling items below' : 'Cause is not inferred' },
+            ]}
+            reconciled={{ label: 'Reconciled automatically', percent: r.results.length ? Math.round(((r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT) / r.results.length) * 100) : 0, detail: `${r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT} of ${r.results.length} records matched` }} /></div>
+        {c.outputs.resolution ? <div id="reconciliation-outcome" className="mb-5 scroll-mt-20"><ReconciliationOutcomePanel outcome={c.outputs.resolution} /></div> : null}
+        {c.outputs.notReconciled.length ? <p id="not-reconciled" className="mb-5 scroll-mt-20 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm">Not reconciled, because only one document covers {c.outputs.notReconciled.length === 1 ? 'this month' : 'these months'}: {c.outputs.notReconciled.map(n => `${periodLabel(n.period)} (${n.side === 'BANK' ? 'bank statement only' : 'books only'}, ${n.records} records)`).join('; ')}. These records are shown, never matched against nothing.</p> : null}
+        {multi ? <div role="tablist" aria-label="Statement month" className="mb-3 flex flex-wrap items-center gap-2"><span className="mr-1 text-xs font-semibold text-[var(--muted)]">Statement for</span>{periods.map((p, i) => <button key={p.period} type="button" role="tab" aria-selected={month === i} className={chip(month === i)} onClick={() => setMonth(i)}>{periodLabel(p.period)}</button>)}</div> : null}
         {statement ? <div className="mb-5"><ReconciliationStatementPanel statement={statement} /></div> : null}
+        {c.job ? <GPTSuggestions batchId={c.job.id} websiteJob /> : technical ? <GPTSuggestions batchId={c.processingId} /> : null}
         <h2 className="mb-3 mt-7 text-lg font-semibold tracking-[-0.02em]">Every record, matched</h2>
         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-7">{reconciliationStatuses.map(k => <button key={k} type="button" aria-pressed={filter === k} onClick={() => { setFilter(k); setPage(0); setOpen(null); }} className={`min-h-11 rounded-xl border p-3 text-left transition-colors ${filter === k ? 'border-[var(--brand)] bg-[var(--brand-soft)] shadow-[inset_0_0_0_1px_var(--brand)]' : 'border-[var(--border)] bg-[var(--surface)] hover:border-[var(--brand-line)]'} ${r.counts[k] ? '' : 'opacity-60'}`}><span className="block text-xs text-[var(--muted-strong)]">{STATUS_LABEL[k]}</span><span className="text-xl font-semibold tabular-nums">{r.counts[k]}</span></button>)}</div>
         <div className="mb-3 flex flex-wrap gap-2">{([['EXCEPTIONS', 'Matcher exceptions'], ['ALL', 'All outcomes']] as const).map(([k, label]) => <button key={k} type="button" className={chip(filter === k)} onClick={() => { setFilter(k); setPage(0); setOpen(null); }}>{label}</button>)}</div>
@@ -238,18 +271,35 @@ function Analytics({ c }: { c: Ready }) {
 function Anomalies({ c }: { c: Ready }) {
     const list = c.outputs.anomalies, ids = Object.keys(RULES) as RuleId[], ar = c.outputs.anomalyResolution;
     const resolved = ar?.items ?? list.map(x => ({ ...x, resolution: 'FLAGGED' as const, summary: x.findings.map(f => f.rationale).join(' '), rule: '', booked: null }));
-    const groups = [['FLAGGED', 'Flagged for your technical team'], ['CORROBORATED_BY_BOOKS', 'Confirmed by your books: no action needed']] as const;
+    const abs = (v: string) => { const n = toCents(v); return n < 0n ? -n : n; };
+    // Signal ledger: what needs a person first, most serious and largest at the top; what the books settled steps back.
+    const flagged = resolved.filter(x => x.resolution === 'FLAGGED').sort((a, b) => a.severity !== b.severity ? (a.severity === 'HIGH' ? -1 : 1) : abs(b.row.signedAmount) > abs(a.row.signedAmount) ? 1 : abs(b.row.signedAmount) < abs(a.row.signedAmount) ? -1 : 0);
+    const cleared = resolved.filter(x => x.resolution === 'CORROBORATED_BY_BOOKS');
+    const atStake = flagged.reduce((t, x) => t + abs(x.row.signedAmount), 0n);
+    const findings = (x: typeof resolved[number]) => <details className="mt-2 text-[13px] text-[var(--muted)]"><summary className="inline-flex min-h-10 cursor-pointer items-center gap-1 font-semibold text-[var(--brand-ink)]"><ChevronRight aria-hidden="true" size={14} className="disclosure-chevron transition-transform" />Rule findings</summary><p className="mt-1">{x.row.counterparty} · {x.row.description} · <span className="break-all">{x.row.rowId}</span></p><ul className="mt-1 space-y-1">{x.findings.map(f => <li key={f.ruleId}><strong>{RULES[f.ruleId].title}:</strong> {f.rationale}</li>)}</ul>{x.rule ? <p className="mt-1">Resolution rule: {x.rule}</p> : null}</details>;
     return <>
-        <PageHeader eyebrow={resultsEyebrow(c.scope)} title="Anomalies" description="Unusual bank records, each checked against your books. A finding is never a fraud conclusion." />
+        <PageHeader eyebrow={resultsEyebrow(c.scope)} title="Anomalies" description="Unusual bank records, each checked against your books. A finding is never a fraud conclusion."
+            actions={flagged.length ? <div className="sm:text-right"><p className="text-[14px] font-semibold text-[var(--muted-strong)]">Money at stake</p><p className="text-[28px] font-extrabold leading-tight tracking-[-0.03em] text-[var(--bad-ink)] tabular-nums sm:text-[34px]">{money(c.scope.currency, fromCents(atStake))}</p></div> : null} />
         <SourceStrip context={c} />
-        {ar ? <Callout role="status" tone={ar.flagged ? 'warn' : 'good'} className="mb-5">{ar.summary}</Callout> : null}
-        <div className="grid gap-3 sm:grid-cols-3"><Stat tone="brand" label="Unusual records found" value={`${list.length} of ${c.outputs.bankRows.length}`} detail="Rows with at least one rule finding" /><Stat tone="good" label="Confirmed by your books" value={String(ar?.corroborated ?? 0)} detail="Recorded in the ledger with the same amount" /><Stat tone={(ar?.flagged ?? list.length) ? 'warn' : 'good'} label="Flagged for attention" value={String(ar?.flagged ?? list.length)} detail="Sent to the technical team, not to Finance" /></div>
-        <div className="mt-5 grid min-w-0 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-            <Panel title="What FinGence found and did">{resolved.length ? groups.filter(([g]) => resolved.some(x => x.resolution === g)).map(([g, title]) => <section key={g} className="border-b border-[var(--border)] last:border-b-0">
-                <h3 className={`flex items-center gap-2 px-4 pt-4 text-sm font-semibold sm:px-5 ${g === 'FLAGGED' ? 'text-[var(--warn-ink)]' : 'text-[var(--good-ink)]'}`}>{g === 'FLAGGED' ? <Flag aria-hidden="true" size={15} /> : <ShieldCheck aria-hidden="true" size={15} />}{title}</h3>
-                <ul className="divide-y divide-[var(--border)]">{resolved.filter(x => x.resolution === g).map(x => <li key={x.row.rowId} className={`p-4 text-sm sm:px-5 ${g === 'FLAGGED' ? 'shadow-[inset_3px_0_0_var(--warn)]' : ''}`}><div className="flex flex-wrap items-center justify-between gap-2"><p className="font-semibold">{x.row.date} · <span className="break-all">{x.row.rowId}</span> · <span className="tabular-nums">{money(x.row.currency, x.row.signedAmount)}</span></p><DecisionBadge decision={g === 'FLAGGED' ? 'QUARANTINED' : 'AUTO_ACCEPTED'} label={g === 'FLAGGED' ? `${x.severity === 'HIGH' ? 'High' : 'Medium'} · flagged` : 'Confirmed by books'} /></div><p className="mt-1.5 leading-relaxed text-[var(--muted-strong)]">{x.summary}</p>
-                    <details className="mt-1.5 text-xs text-[var(--muted)]"><summary className="inline-flex min-h-8 cursor-pointer items-center gap-1 font-semibold text-[var(--brand-ink)]"><ChevronRight aria-hidden="true" size={13} className="disclosure-chevron transition-transform" />Rule findings</summary><p className="mt-1">{x.row.counterparty} · {x.row.description}</p><ul className="mt-1 space-y-1">{x.findings.map(f => <li key={f.ruleId}><strong>{RULES[f.ruleId].title}:</strong> {f.rationale}</li>)}</ul>{x.rule ? <p className="mt-1">Resolution rule: {x.rule}</p> : null}</details></li>)}</ul>
-            </section>) : <p className="p-5 text-sm">No rule produced a candidate for these records.</p>}</Panel>
+        <div className="grid min-w-0 gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+            <div className="min-w-0 space-y-5">
+                {flagged.length ? <section aria-labelledby="anomalies-flagged">
+                    <h2 id="anomalies-flagged" className="level-label mb-2.5 text-[var(--bad-ink)]">Needs you · {flagged.length} flagged</h2>
+                    <ol className="space-y-3">{flagged.map((x, i) => <li key={x.row.rowId} className={`rise-in rounded-[20px] bg-[var(--surface)] p-4 sm:p-5 ${x.severity === 'HIGH' ? 'shadow-[0_0_0_2px_var(--attention),0_18px_36px_-22px_rgb(196_42_74/0.6)]' : 'shadow-[0_0_0_1.5px_var(--caution),var(--shadow-panel)]'}`} style={{ animationDelay: `${i * 50}ms` }}>
+                        <div className="flex flex-wrap items-start gap-x-4 gap-y-2">
+                            <span className={`inline-flex min-h-7 shrink-0 items-center rounded-full px-3 text-[12px] font-extrabold uppercase tracking-[0.06em] text-[var(--on-solid)] ${x.severity === 'HIGH' ? 'bg-[var(--attention)]' : 'bg-[var(--caution)]'}`}>{x.severity === 'HIGH' ? 'High' : 'Medium'}</span>
+                            <div className="min-w-0 flex-[1_1_16rem]"><p className="text-[17px] font-bold leading-snug">{x.row.counterparty}</p><p className="text-[14px] text-[var(--muted-strong)]">{x.row.date}</p></div>
+                            <p className="ml-auto text-[24px] font-extrabold tracking-[-0.03em] tabular-nums sm:text-[28px]">{money(x.row.currency, x.row.signedAmount)}</p>
+                        </div>
+                        <p className="mt-2 text-[15px] leading-relaxed text-[var(--muted-strong)]">{x.summary}</p>
+                        {findings(x)}
+                    </li>)}</ol>
+                </section> : <RoutineLine label="Nothing flagged" items={[ar ? ar.summary : 'No rule produced a candidate for these records.']} />}
+                {resolved.length ? <RoutineLine label="Already settled" items={[`${list.length} of ${c.outputs.bankRows.length} records looked unusual`, `${cleared.length} confirmed by your books, no action needed`]} /> : null}
+                {cleared.length ? <details className="-mt-3 text-[14px]"><summary className="flex min-h-11 cursor-pointer items-center font-semibold text-[var(--brand-ink)]">Show the {cleared.length} settled</summary>
+                        <ul className="mb-2 divide-y divide-[var(--border)] rounded-xl bg-[var(--surface)] ring-1 ring-inset ring-[var(--border)]">{cleared.map(x => <li key={x.row.rowId} className="px-3 py-2.5"><p className="flex flex-wrap justify-between gap-2 text-[var(--ink)]"><span>{x.row.date} · {x.row.counterparty}</span><span className="tabular-nums">{money(x.row.currency, x.row.signedAmount)}</span></p><p className="text-[13px] text-[var(--muted)]">{x.summary}</p>{findings(x)}</li>)}</ul>
+                    </details> : null}
+            </div>
             <Panel title="Rules" eyebrow="How candidates are found"><ul className="space-y-3 p-4 text-xs sm:p-5">{ids.map(id => <li key={id}><p className="font-semibold">{RULES[id].title} · {list.filter(x => x.findings.some(f => f.ruleId === id)).length}</p><p className="text-[var(--muted)]">{RULES[id].basis}</p></li>)}{ar ? <li className="border-t border-[var(--border)] pt-3"><p className="font-semibold">How a finding is resolved</p><ul className="mt-1 list-disc space-y-1 pl-4 text-[var(--muted)]">{ar.rules.slice(1).map(r => <li key={r}>{r}</li>)}</ul></li> : null}</ul></Panel>
         </div>
     </>;
@@ -354,7 +404,7 @@ function Ask({ c }: { c: Ready }) {
                     <button type="button" aria-pressed={mode === 'AI'} className={chip(mode === 'AI')} onClick={() => setMode('AI')}><Sparkles aria-hidden="true" size={14} />AI-assisted (verified)</button>
                 </div> : null}
                 <form className="flex flex-col gap-2 sm:flex-row" onSubmit={e => { e.preventDefault(); ask(question); }}><label className="sr-only" htmlFor="demo-question">Question</label><input id="demo-question" className={`${field} min-h-12 min-w-0 flex-1 text-[15px]`} maxLength={MAX_QUESTION} value={question} onChange={e => setQuestion(e.target.value)} placeholder="Ask about this processing, for example: How many transactions were matched?" /><button className={primaryButton} disabled={!question.trim() || busy}><Send aria-hidden="true" size={16} />{busy ? 'Answering…' : 'Ask'}</button></form>
-                <div aria-label="Suggested questions" className="flex flex-wrap gap-2"><span className="w-full text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Try asking</span>{(aiMode ? aiSuggestions(c) : suggestions(facts)).map(q => <button key={q} type="button" className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2 text-left text-[13px] font-medium text-[var(--muted-strong)] transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)] hover:text-[var(--ink)] disabled:opacity-50" disabled={busy} onClick={() => ask(q)}>{q}</button>)}</div>
+                <div aria-label="Suggested questions" className="flex flex-wrap gap-2"><span className="w-full text-xs font-semibold text-[var(--muted)]">Try asking</span>{(aiMode ? aiSuggestions(c) : suggestions(facts)).map(q => <button key={q} type="button" className="min-h-10 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] px-3 py-2 text-left text-[13px] font-medium text-[var(--muted-strong)] transition-colors hover:border-[var(--brand-line)] hover:bg-[var(--brand-soft)] hover:text-[var(--ink)] disabled:opacity-50" disabled={busy} onClick={() => ask(q)}>{q}</button>)}</div>
             </div>
         </Panel>
         <section aria-label="Answers" className="mt-4 space-y-3">{items.map(item => <article key={item.key} className="panel-shadow rise-in rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm sm:p-5">

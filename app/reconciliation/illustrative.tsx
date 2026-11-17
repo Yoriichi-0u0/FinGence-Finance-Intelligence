@@ -1,4 +1,6 @@
 "use client";
+import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
+import { useTechnicalDetail } from '@/components/workspace/context';
 
 import { useMemo, useState } from "react";
 import {
@@ -34,6 +36,7 @@ export default function ReconciliationPage() {
   const [records, setRecords] = useState<ReconciliationRecord[]>(seededRecords);
   const [selectedId, setSelectedId] = useState(seededRecords[0].id);
   const [detailsVisible, setDetailsVisible] = useState(false);
+  const technical = useTechnicalDetail();
   const [message, setMessage] = useState<string | null>(null);
 
   const visibleRecords = useMemo(() => records.filter((record) => recordFitsTab(record, tab)), [records, tab]);
@@ -100,6 +103,8 @@ export default function ReconciliationPage() {
         </div>
       </Panel>
 
+      {/* Admins only: with no processed documents there is no saved GPT evidence to show a Finance user. */}
+      {technical ? <GPTSuggestions /> : null}
       <div className="mt-4 grid grid-cols-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-1 panel-shadow" role="tablist" aria-label="Reconciliation status">
         {tabs.map((item) => (
           <button
@@ -152,7 +157,7 @@ export default function ReconciliationPage() {
           <Panel>
             <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[1fr_auto_1fr] lg:items-center">
               <section aria-labelledby="ledger-record-title" className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-                <p id="ledger-record-title" className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">Ledger</p>
+                <p id="ledger-record-title" className="text-[12px] font-bold text-[var(--muted)]">Ledger</p>
                 <dl className="mt-4 space-y-3 text-sm">
                   <div className="flex items-center gap-2"><CalendarDays aria-hidden="true" size={16} className="text-[var(--muted)]" /> {selected.ledger.date}</div>
                   <div className="flex items-center gap-2 font-semibold"><FileText aria-hidden="true" size={16} className="text-[var(--muted)]" /> {selected.ledger.description}</div>
@@ -164,7 +169,7 @@ export default function ReconciliationPage() {
               <div className="mx-auto grid size-12 place-items-center rounded-full border border-[var(--border-strong)] bg-[var(--surface)] text-xs font-bold text-[var(--muted-strong)]">VS</div>
 
               <section aria-labelledby="bank-record-title" className="rounded-lg border border-[var(--border)] bg-[var(--surface-subtle)] p-4">
-                <p id="bank-record-title" className="text-[11px] font-bold uppercase tracking-[0.1em] text-[var(--muted)]">Bank</p>
+                <p id="bank-record-title" className="text-[12px] font-bold text-[var(--muted)]">Bank</p>
                 <dl className="mt-4 space-y-3 text-sm">
                   <div className="flex items-center gap-2"><CalendarDays aria-hidden="true" size={16} className="text-[var(--muted)]" /> {selected.bank.date}</div>
                   <div className="flex items-center gap-2 font-semibold"><Landmark aria-hidden="true" size={16} className="text-[var(--muted)]" /> {selected.bank.description}</div>

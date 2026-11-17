@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { DemoProcessingProvider } from "@/components/demo/context";
+import { DemoProcessingProvider, useDemoProcessing } from "@/components/demo/context";
+import { attentionCounts } from "@/lib/demo/attention";
 import { DemoBanner } from "@/components/demo/banner";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { atLeast, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
@@ -83,22 +84,35 @@ function Brand({ compact = false, rail = false }: { compact?: boolean; rail?: bo
 
 const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
 
+/** How many items on a page need a person, for its navigation badge: the same counts as the Overview's "Needs you". */
+function useNavBadges(): (href: string) => { count: number; tone: "attention" | "caution" } | null {
+  const { context } = useDemoProcessing();
+  const counts = attentionCounts(context);
+  return (href) => {
+    const count = href === "/anomalies" ? counts.anomalies : href === "/reconciliation" ? counts.reconciliation : href === "/data" ? counts.documents : 0;
+    return count ? { count, tone: href === "/anomalies" ? "attention" : "caution" } : null;
+  };
+}
+const BADGE = { attention: "bg-[var(--attention)]", caution: "bg-[var(--caution)]" };
+const needsLabel = (n: number) => `${n} need${n === 1 ? "s" : ""} you`;
+
 function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label: string; items: NavItem[]; pathname: string; onNavigate?: () => void; rail?: boolean }) {
+  const badgeFor = useNavBadges();
   if (!items.length) return null;
   return (
     <div>
-      {rail ? <p className="sr-only">{label}</p> : <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--rail-muted)]/80">{label}</p>}
+      {rail ? <p className="sr-only">{label}</p> : <p className="px-3 pb-1.5 text-[12px] font-semibold text-[var(--rail-muted)]/80">{label}</p>}
       <ul className="space-y-0.5">
         {items.map((item) => {
           const Icon = item.icon;
-          const active = isActive(pathname, item.href);
+          const active = isActive(pathname, item.href), badge = badgeFor(item.href);
           return (
             <li key={item.href}>
               <Link
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                aria-label={rail ? item.label : undefined}
+                aria-label={rail ? (badge ? `${item.label}, ${needsLabel(badge.count)}` : item.label) : undefined}
                 title={rail ? item.label : undefined}
                 className={`group relative flex min-h-10 items-center gap-3 rounded-xl text-[14px] font-medium transition-colors ${rail ? "justify-center px-0" : "px-3"} ${
                   active ? "bg-white/[0.09] text-white" : "text-[var(--rail-ink)]/80 hover:bg-white/[0.05] hover:text-white"
@@ -112,6 +126,10 @@ function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label:
                   className={active ? "text-[#93bdff]" : "text-[var(--rail-muted)] group-hover:text-white"}
                 />
                 {rail ? null : item.label}
+                {badge ? rail
+                  ? <span aria-hidden="true" className={`absolute right-1.5 top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[11px] font-bold text-white ring-2 ring-[var(--rail)] ${BADGE[badge.tone]}`}>{badge.count}</span>
+                  : <span className={`ml-auto grid h-6 min-w-6 place-items-center rounded-full px-1.5 text-[12px] font-bold tabular-nums text-white ${BADGE[badge.tone]}`}><span aria-hidden="true">{badge.count}</span><span className="sr-only">{needsLabel(badge.count)}</span></span>
+                  : null}
               </Link>
             </li>
           );
@@ -183,6 +201,7 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
 
 /** Phone navigation: the four most used pages in a bottom bar, and everything else behind "More". */
 function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDemo: boolean }) {
+  const badgeFor = useNavBadges();
   const pathname = usePathname();
   const items: NavItem[] = [
     { href: "/", label: "Overview", icon: House },
@@ -191,24 +210,34 @@ function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDem
     syntheticDemo ? { href: "/ask", label: "Ask", icon: MessageSquareText } : { href: "/reports", label: "Reports", icon: FileBarChart },
   ];
   const elsewhere = !items.some((item) => isActive(pathname, item.href));
+  // Pages behind More still count: its badge adds up what needs you there, in the louder tone if any is an anomaly.
+  const hidden = ["/anomalies", "/reconciliation", "/data"].filter((href) => !items.some((item) => item.href === href)).map(badgeFor).filter((b) => b !== null);
+  const more = hidden.length ? { count: hidden.reduce((n, b) => n + b.count, 0), tone: hidden.some((b) => b.tone === "attention") ? "attention" as const : "caution" as const } : null;
   return (
     <nav aria-label="Quick navigation" className="bar-material fixed inset-x-0 bottom-0 z-40 border-t border-[var(--border)] bg-[var(--surface)]/92 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden print:hidden">
       <ul className="mx-auto grid max-w-md grid-cols-5">
         {items.map((item) => {
           const Icon = item.icon;
-          const active = isActive(pathname, item.href);
+          const active = isActive(pathname, item.href), badge = badgeFor(item.href);
           return (
             <li key={item.href}>
               <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-[var(--brand)]" : "text-[var(--muted)]"}`}>
-                <Icon aria-hidden="true" size={20} strokeWidth={active ? 2.3 : 1.8} />
+                <span className="relative">
+                  <Icon aria-hidden="true" size={20} strokeWidth={active ? 2.3 : 1.8} />
+                  {badge ? <span aria-hidden="true" className={`absolute -right-3 -top-2 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[11px] font-bold text-white ring-2 ring-[var(--surface)] ${BADGE[badge.tone]}`}>{badge.count}</span> : null}
+                </span>
                 {item.label}
+                {badge ? <span className="sr-only">, {needsLabel(badge.count)}</span> : null}
               </Link>
             </li>
           );
         })}
         <li>
-          <button type="button" onClick={onMore} className={`flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${elsewhere ? "text-[var(--brand)]" : "text-[var(--muted)]"}`} aria-label="More pages">
-            <Ellipsis aria-hidden="true" size={20} />
+          <button type="button" onClick={onMore} className={`flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${elsewhere ? "text-[var(--brand)]" : "text-[var(--muted)]"}`} aria-label={more ? `More pages, ${needsLabel(more.count)}` : "More pages"}>
+            <span className="relative">
+              <Ellipsis aria-hidden="true" size={20} />
+              {more ? <span aria-hidden="true" className={`absolute -right-3 -top-2 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[11px] font-bold text-white ring-2 ring-[var(--surface)] ${BADGE[more.tone]}`}>{more.count}</span> : null}
+            </span>
             More
           </button>
         </li>

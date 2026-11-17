@@ -274,7 +274,7 @@ export default function AdministrationWorkspace() {
                       <>
                         <div className="thin-scrollbar hidden overflow-x-auto md:block">
                           <table className="w-full text-left text-sm">
-                            <thead className="bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                            <thead className="bg-[var(--surface-subtle)] text-[11px] text-[var(--muted)]">
                               <tr><th scope="col" className="px-4 py-3 font-semibold">Member</th><th scope="col" className="px-4 py-3 font-semibold">Role</th><th scope="col" className="px-4 py-3 font-semibold">Membership</th><th scope="col" className="px-4 py-3 font-semibold">Account</th><th scope="col" className="px-4 py-3 font-semibold">Sessions</th><th scope="col" className="px-4 py-3 font-semibold">Actions</th></tr>
                             </thead>
                             <tbody className="divide-y divide-[var(--border)]">
@@ -326,7 +326,7 @@ export default function AdministrationWorkspace() {
                     {!events?.length ? <EmptyState title="No audit events yet" description="Administration, sign-in and access-denial events for this organization appear here." /> : (
                       <div className="thin-scrollbar max-h-[28rem] overflow-auto">
                         <table className="w-full min-w-[640px] text-left text-sm">
-                          <thead className="sticky top-0 bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+                          <thead className="sticky top-0 bg-[var(--surface-subtle)] text-[11px] text-[var(--muted)]">
                             <tr><th scope="col" className="px-4 py-3 font-semibold">Time</th><th scope="col" className="px-4 py-3 font-semibold">Event</th><th scope="col" className="px-4 py-3 font-semibold">Outcome</th><th scope="col" className="px-4 py-3 font-semibold">Actor</th><th scope="col" className="px-4 py-3 font-semibold">Target</th></tr>
                           </thead>
                           <tbody className="divide-y divide-[var(--border)]">
@@ -376,7 +376,7 @@ function JobCounts({ jobs }: { jobs: { state: string; count: number }[] }) {
   if (!jobs.length) return <p className="text-sm text-[var(--muted)]">No processing operations recorded for this organization yet.</p>;
   return (
     <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-      {jobs.map(j => <div key={j.state} className="rounded-lg border border-[var(--border)] p-3"><dt className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{j.state}</dt><dd className="mt-1 text-xl font-semibold">{j.count}</dd></div>)}
+      {jobs.map(j => <div key={j.state} className="rounded-lg border border-[var(--border)] p-3"><dt className="text-[12px] font-semibold text-[var(--muted)]">{j.state}</dt><dd className="mt-1 text-xl font-semibold">{j.count}</dd></div>)}
     </dl>
   );
 }

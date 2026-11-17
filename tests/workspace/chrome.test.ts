@@ -50,9 +50,12 @@ describe('page chrome by role', async () => {
         expect(as('ADMIN', createElement(SourceStrip, { context }), 'FINANCE')).not.toContain(context.processingId);
     });
     it('signed in, the banner is status chips without the public-demo warning, and Data names the test version', () => {
-        const banner = as('FINANCE', createElement(DemoBanner));
+        const banner = as('ADMIN', createElement(DemoBanner));
         expect(banner).toContain('SAIC');
         expect(banner).not.toMatch(/public demo|no sign-in/i);
+        // Farish (15 Nov): for a Finance user the chips are noise, so with nothing to act on there is no banner at all.
+        expect(as('FINANCE', createElement(DemoBanner)).trim()).toBe('');
+        expect(as('ADMIN', createElement(DemoBanner), 'FINANCE').trim()).toBe('');
         const data = as('FINANCE', createElement(DemoDataWorkspace));
         expect(data).toContain('Test version for SAIC: use the sample documents or test files, not confidential records.');
         expect(data).not.toMatch(/Public prototype|Synthetic sample/);

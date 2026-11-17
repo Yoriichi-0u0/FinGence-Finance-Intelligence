@@ -110,7 +110,7 @@ export default function TransactionsPage() {
         {filteredTransactions.length ? (
           <div className="thin-scrollbar overflow-x-auto">
             <table className="w-full min-w-[1120px] text-left text-xs">
-              <thead className="bg-[var(--surface-subtle)] text-[10px] uppercase tracking-[0.08em] text-[var(--muted)]">
+              <thead className="bg-[var(--surface-subtle)] text-[10px] text-[var(--muted)]">
                 <tr>
                   {[
                     "Date",

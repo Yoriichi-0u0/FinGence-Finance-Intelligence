@@ -64,8 +64,10 @@ export function structuredCompletion(req: StructuredRequest): Promise<{ content:
     return withAiCall({ feature: req.feature, model: req.model }, note => completion(req, note));
 }
 async function completion(req: StructuredRequest, note: { keyLabel?: string | null }): Promise<{ content: unknown; receipt: ModelReceipt }> {
-    const keys = groqKeys();
-    if (!keys.length && !req.transport) throw new InterpreterUnavailable('NOT_CONFIGURED');
+    // AI06 owns key 3 exclusively. Other features retain the existing two-key policy.
+    const ai06 = req.feature === 'recon-suggest';
+    const keys = ai06 ? (process.env.GROQ_API_KEY3 ? [process.env.GROQ_API_KEY3] : []) : groqKeys();
+    if (!keys.length && (ai06 || !req.transport)) throw new InterpreterUnavailable('NOT_CONFIGURED');
     const body: Record<string, unknown> = {
         model: req.model, temperature: 0, max_completion_tokens: req.maxCompletionTokens,
         messages: [{ role: 'system', content: req.system }, { role: 'user', content: req.user }],
@@ -76,12 +78,12 @@ async function completion(req: StructuredRequest, note: { keyLabel?: string | nu
     let reply: Awaited<ReturnType<GroqTransport>>;
     // Requests alternate between the configured keys. A 429 is a refusal before processing (never billed), so it moves
     // once to each other key; any other outcome, billed or not, is final. At most one completion is ever produced.
-    const slots = keys.length ? keys : [''], first = rotation++ % slots.length, signal = AbortSignal.timeout(45_000);
+    const slots = keys.length ? keys : [''], first = ai06 ? 0 : rotation++ % slots.length, signal = AbortSignal.timeout(45_000);
     try {
         for (let attempt = 0; ; attempt++) {
             const slot = (first + attempt) % slots.length;
             // Which configured key answered (GROQ_API_KEY is key-1, GROQ_API_KEY2 is key-2); the key itself is never logged.
-            if (keys.length) note.keyLabel = `key-${slot + 1}`;
+            if (keys.length) note.keyLabel = ai06 ? 'key-3' : `key-${slot + 1}`;
             reply = await (req.transport ?? defaultTransport)(body, signal, slots[slot]);
             if (reply.status !== 429 || attempt === slots.length - 1) break;
         }

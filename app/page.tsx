@@ -221,7 +221,7 @@ function IllustrativeOverview() {
         <Panel title="Budget variance" className="xl:col-span-4">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[420px] text-left text-xs">
-              <thead className="bg-[var(--surface-subtle)] text-[11px] uppercase tracking-[0.08em] text-[var(--muted)]">
+              <thead className="bg-[var(--surface-subtle)] text-[11px] text-[var(--muted)]">
                 <tr>
                   <th className="px-4 py-2.5 font-semibold">Category</th>
                   <th className="px-3 py-2.5 text-right font-semibold">Budget</th>
