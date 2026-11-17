@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
-import { structuredCompletion, type GroqTransport } from '../../lib/server/ai/groq';
+import { groqConfiguredFor, structuredCompletion, type GroqTransport } from '../../lib/server/ai/groq';
 import { setAiCallSink, type AiCall } from '../../lib/ai-calls';
 import type { AiFeature } from '../../lib/ai-calls';
 
@@ -29,4 +29,11 @@ it('leaves the shared rotation and AI06 key 3 unchanged', async () => {
     await call(capture, 'finance-qa'); await call(capture, 'finance-chat'); await call(capture, 'recon-suggest'); await call(capture, 'finance-qa');
     expect(new Set([keys[0], keys[3]])).toEqual(new Set(['synthetic-one', 'synthetic-two']));
     expect(keys.slice(1, 3)).toEqual(['synthetic-four', 'synthetic-three']);
+});
+
+it('availability follows the key each feature needs (key 4 alone is enough for the Finance chatbot)', () => {
+    vi.stubEnv('GROQ_API_KEY', ''); vi.stubEnv('GROQ_API_KEY2', '');
+    expect([groqConfiguredFor('finance-chat'), groqConfiguredFor('finance-qa')]).toEqual([true, false]);
+    vi.stubEnv('GROQ_API_KEY', 'synthetic-one'); vi.stubEnv('GROQ_API_KEY4', '');
+    expect([groqConfiguredFor('finance-chat'), groqConfiguredFor('finance-qa')]).toEqual([false, true]);
 });

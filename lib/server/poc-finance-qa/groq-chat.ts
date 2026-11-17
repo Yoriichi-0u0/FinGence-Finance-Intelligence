@@ -6,9 +6,9 @@ import { route as questionRoute, MAX_QUESTION, type QaFacts } from '../../poc-fi
 import type { QaSelectionInput } from './service';
 import { RULES, type RuleId } from '../../poc-anomalies/detector';
 import { admit, budgetStore, clientAddress, type Admission } from '../ai/budget';
-import { GROQ_MODELS, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
+import { GROQ_MODELS, groqConfiguredFor, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
 /** The Finance chatbot runs on its own Groq key (GROQ_API_KEY4); see DEDICATED_GROQ_KEYS in lib/server/ai/groq.ts. */
-const dedicatedKeyConfigured = () => !!process.env.GROQ_API_KEY4;
+const dedicatedKeyConfigured = () => groqConfiguredFor('finance-chat');
 import { qaModel } from '../ai/grounded-qa';
 import { reasoningEffort } from '../ai/groq-interpreter';
 

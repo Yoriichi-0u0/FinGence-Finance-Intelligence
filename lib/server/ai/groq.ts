@@ -54,6 +54,11 @@ export const DEDICATED_GROQ_KEYS: Partial<Record<AiFeature, { env: string; label
     'finance-chat': { env: 'GROQ_API_KEY4', label: 'key-4' },
 };
 export const dedicatedKey = (feature: AiFeature) => DEDICATED_GROQ_KEYS[feature] ?? null;
+/** Whether a feature can make a call: its dedicated key when it has one, otherwise either shared key. */
+export function groqConfiguredFor(feature: AiFeature) {
+    const dedicated = dedicatedKey(feature);
+    return dedicated ? !!process.env[dedicated.env] : groqKeys().length > 0;
+}
 export function groqKeys(): string[] {
     return [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY2].filter((k): k is string => !!k);
 }

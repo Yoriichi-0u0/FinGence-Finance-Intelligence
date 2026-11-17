@@ -3,7 +3,7 @@ import { financeQaRuntime } from '../../../../../lib/server/poc-finance-qa/runti
 import { FinanceChatError, financeChatErrorExplanation } from '../../../../../lib/server/poc-finance-qa/groq-chat';
 import { localSessionCookieName } from '../../../../../lib/server/ai-ingestion/m2/session-cookie';
 import { budgetStore } from '../../../../../lib/server/ai/budget';
-import { groqKeys } from '../../../../../lib/server/ai/groq';
+import { groqConfiguredFor } from '../../../../../lib/server/ai/groq';
 import { qaModel } from '../../../../../lib/server/ai/grounded-qa';
 import { MAX_QUESTION } from '../../../../../lib/poc-finance-qa/answer';
 
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
         if (new Set(keys).size !== keys.length) return denied();
         if (action === 'chat-status' && keys.length === 1) {
             if (process.env.FINGENCE_POC_GROQ !== '1') return denied();
-            return Response.json({ groqAvailable: groqKeys().length > 0 && !!budgetStore(), model: qaModel() }, { headers });
+            return Response.json({ groqAvailable: groqConfiguredFor('finance-chat') && !!budgetStore(), model: qaModel() }, { headers });
         }
         const { questions } = await financeQaRuntime();
         if (action === 'sources' && keys.length === 1) return respond(await questions.sources(token(request)));
