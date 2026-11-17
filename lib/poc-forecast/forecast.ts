@@ -27,15 +27,15 @@ export type BusinessForecast = { version: typeof FORECAST_VERSION; currency: str
 
 const methods = Object.keys(METHODS) as Method[];
 /** Integer mean rounded half away from zero, to the cent. */
-function mean(values: bigint[]) {
+export function mean(values: bigint[]) {
     const sum = values.reduce((a, b) => a + b, 0n), n = BigInt(values.length), abs = sum < 0n ? -sum : sum, q = (2n * abs + n) / (2n * n);
     return sum < 0n ? -q : q;
 }
 /** Percentage with two decimals, rounded half up; null when the denominator is zero. */
-function percent(numerator: bigint, denominator: bigint) {
+export function percent(numerator: bigint, denominator: bigint) {
     return denominator === 0n ? null : (2n * 10000n * numerator + denominator) / (2n * denominator);
 }
-const basisPoints = (value: bigint | null) => value === null ? null : `${value < 0n ? '-' : ''}${(value < 0n ? -value : value) / 100n}.${((value < 0n ? -value : value) % 100n).toString().padStart(2, '0')}`;
+export const basisPoints = (value: bigint | null) => value === null ? null : `${value < 0n ? '-' : ''}${(value < 0n ? -value : value) / 100n}.${((value < 0n ? -value : value) % 100n).toString().padStart(2, '0')}`;
 export function nextPeriod(period: string) {
     const [y, m] = period.split('-').map(Number);
     return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;

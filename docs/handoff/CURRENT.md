@@ -62,6 +62,14 @@ Each signed-in person can show, hide and reorder the Overview cards. The layout 
 - **Page:** `/log`, "Technical log", in the Administration navigation. It has 7-day tiles, AI calls per day, a plain-language timeline with run and call detail, filters for feature, person, AI only and problems, and a CSV export. Operations keeps the controls; its Runs list moved here.
 - **Locally:** without a database, calls go to `.local/ai-calls/YYYY-MM-DD.jsonl`. `scripts/dev-store.mjs` applies v3 on every start.
 
+## Optional ML forecast challenger (MLForecast + XGBoost) — 7 November 2026
+
+`/forecasting` can show an experimental XGBoost forecast beside the unchanged deterministic baseline. Contract, setup and the demo-data result: [docs/architecture/ml-forecast-v1.md](../architecture/ml-forecast-v1.md).
+
+- **Off by default:** needs `FINGENCE_ML_FORECAST=1` and the local Python runtime in `requirements-ml.txt`; never enabled on Vercel. Without it the route is 404 and the page is as before.
+- **Never the primary forecast:** the baseline stays primary; both are scored in exact cents on the same months, and the challenger inherits all baseline refusals. Needs 12 consecutive months.
+- **Boundary:** only monthly totals in integer cents reach the worker (`scripts/ml_forecast.py`); its result is schema-validated twice and rejected unless its months line up with the baseline's.
+
 ## Document evidence view — 6 November 2026
 
 On the Data page, each processed document can be shown side by side with what FinGence read from it. See [docs/architecture/document-evidence-view-v1.md](../architecture/document-evidence-view-v1.md).
