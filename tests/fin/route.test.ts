@@ -18,7 +18,7 @@ describe('Fin gateway', () => {
         const r = await route();
         expect([(await r.GET()).status, (await r.POST(post(body))).status]).toEqual([404, 404]);
     });
-    it('makes one strict-schema call as the finance-chat feature, sending only words, page and scope', async () => {
+    it('makes one strict-schema call as the fin-assistant feature, sending only words, page and scope', async () => {
         const fetch = groq(200, completion(REPLY)); vi.stubGlobal('fetch', fetch);
         const res = await (await route()).POST(post(body));
         expect(res.status).toBe(200);

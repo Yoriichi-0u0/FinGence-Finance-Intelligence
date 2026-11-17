@@ -64,7 +64,7 @@ export function worstCaseFinUsd(req: FinRequest, model = qaModel()) {
 /** One bounded strict-schema call; the content is untrusted until `verifyFinReply` passes. */
 export async function finModel(req: FinRequest, options: { transport?: GroqTransport } = {}): Promise<{ content: unknown; receipt: ModelReceipt }> {
     return structuredCompletion({
-        feature: 'finance-chat', model: qaModel(), system: FIN_SYSTEM, user: finUserMessage(req), schemaName: 'fin_reply', schema,
+        feature: 'fin-assistant', model: qaModel(), system: FIN_SYSTEM, user: finUserMessage(req), schemaName: 'fin_reply', schema,
         maxCompletionTokens: MAX_COMPLETION_TOKENS, reasoningEffort: reasoningEffort(), transport: options.transport,
     });
 }
