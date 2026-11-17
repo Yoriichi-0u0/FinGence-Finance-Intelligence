@@ -8,6 +8,7 @@ import { GroundedAnswer } from '@/components/demo/grounded-answer';
 import { useDemoProcessing } from '@/components/demo/context';
 import { field, primaryButton } from '@/components/demo/shared';
 import { askGrounded, gatewayQaModel, type GroundedRun } from '@/lib/grounded-qa/client';
+import { preCheck } from '@/lib/grounded-qa/gates';
 import { catalogue, groundingIndex } from '@/lib/grounded-qa/tools';
 import { answerQuestion, type QaAnswer } from '@/lib/poc-finance-qa/answer';
 import { qaFacts } from '@/lib/demo/questions';
@@ -21,7 +22,7 @@ import { MAX_QUESTION } from '@/lib/grounded-qa/contracts';
  */
 export type FinMessage =
     | { id: number; role: 'user'; text: string }
-    | { id: number; role: 'fin'; text: string; links: FinPage[]; pending?: boolean; grounded?: GroundedRun | 'PENDING'; rule?: QaAnswer };
+    | { id: number; role: 'fin'; text: string; links: FinPage[]; pending?: boolean; grounded?: GroundedRun | 'PENDING'; rule?: QaAnswer; run?: { id: string; label: string } };
 
 const STORE = 'fingence-fin-v1', KEEP = 30;
 function load(): FinMessage[] {
@@ -97,11 +98,18 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
             if (verdict.decision === 'WITHHELD') { set({ pending: false, text: verdict.reason === 'NO_RUN' ? FIN_FALLBACK.noRun : FIN_FALLBACK.withheld, links: verdict.reason === 'NO_RUN' ? ['/data'] : [] }); return; }
             const reply = verdict.reply;
             if (reply.kind !== 'FINANCE' || !index || !reply.financeQuestion) { set({ pending: false, text: reply.reply, links: reply.links }); return; }
-            set({ pending: false, text: reply.reply, links: reply.links, grounded: 'PENDING' });
-            const grounded = await askGrounded(index, reply.financeQuestion, gatewayQaModel);
+            // The answer is tied to the run it was read from, so it is labelled if you switch runs while it is pending.
+            const cat = catalogue(index), source = { id: context?.processingId ?? '', label: `${cat.scope.businessName} · ${cat.scope.period} · ${cat.scope.currency}` };
+            set({ pending: false, text: reply.reply, links: reply.links, grounded: 'PENDING', run: source });
+            // FinGence's deterministic refusals apply to the user's own words too, so a rewrite can never erase one
+            // (for example "which supplier…" rewritten as "who…").
+            const refusedAsAsked = preCheck(text, cat.counterparties);
+            const grounded: GroundedRun = refusedAsAsked
+                ? { question: text, status: 'REFUSED', refusal: { reason: refusedAsAsked, by: 'PRE_CHECK' }, queries: [], planChecks: [], facts: [], verdict: null, receipts: [], error: null }
+                : await askGrounded(index, reply.financeQuestion, gatewayQaModel);
             set({ grounded, rule: grounded.status === 'ANSWERED' || !facts ? undefined : answerQuestion(facts, reply.financeQuestion) });
         } finally { setBusy(false); }
-    }, [ai, busy, facts, index, pathname, update]);
+    }, [ai, busy, context, facts, index, pathname, update]);
 
     const reset = useCallback(() => update(() => []), [update]);
     // Ctrl/⌘ K opens and closes Fin from anywhere; Escape closes it.
@@ -149,7 +157,7 @@ export function FinConversation({ compact = false }: { compact?: boolean }) {
                                 {m.links.length ? <p className="mt-2 flex flex-wrap gap-2">{m.links.map(href => <Link key={href} href={href} onClick={() => compact && fin.setOpen(pathname === href)} className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--brand-line)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--brand-ink)] hover:bg-[var(--brand-soft)]">{FIN_PAGES[href].label}<ArrowUpRight aria-hidden="true" size={13} /></Link>)}</p> : null}
                             </div>}
                         {m.grounded === 'PENDING' ? <p role="status" className="inline-flex items-center gap-2 text-xs text-[var(--muted)]"><LoaderCircle aria-hidden="true" size={13} className="animate-spin" />Reading the verified records…</p>
-                            : m.grounded ? <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3.5 text-sm"><GroundedAnswer run={m.grounded} fallback={m.rule ? 'Here is FinGence\'s fixed-rule answer instead.' : ''} /></div> : null}
+                            : m.grounded ? <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3.5 text-sm">{m.run && m.run.id !== demo.context?.processingId ? <p className="mb-2 rounded-lg bg-[var(--warn-soft)] px-2.5 py-1.5 text-xs text-[var(--warn-ink)]">From an earlier run: {m.run.label}. Your current figures may differ.</p> : null}<GroundedAnswer run={m.grounded} fallback={m.rule ? 'Here is FinGence\'s fixed-rule answer instead.' : ''} /></div> : null}
                         {m.rule ? <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3.5 text-sm"><p className="font-semibold">{m.rule.headline}</p><p className="mt-1 text-[var(--muted-strong)]">{m.rule.interpretation}</p></div> : null}
                     </div>
                 </div>)}
