@@ -47,3 +47,13 @@ it('shows proposal controls only when authorized and never claims an accounting 
  controls.review={...view,items:[{...view.items[0],decision:'APPROVE',canApprove:false,canReject:false}]};expect(render()).toContain('No financial posting');expect(render()).not.toContain('<button');
  controls.review=null;expect(render()).toBe('');
 });
+
+it.each(['GET','POST'] as const)('%s failures use the correct sanitized diagnostic stage',async method=>{
+ const logs=vi.spyOn(console,'error').mockImplementation(()=>{});
+ try{
+  const req=method==='POST'?request():new Request(`https://synthetic.invalid/?jobId=${jobId}`);
+  const result=await websiteGPTReview(req,{verify:verify('FINANCE'),store:()=>({reviewOperation:async()=>{throw Error('PRIVATE_SQL_AMOUNT_TOKEN');}})});
+  expect(result.status).toBe(503);expect(await result.text()).not.toContain('PRIVATE');
+  expect(logs.mock.calls).toEqual([[JSON.stringify({event:'AI06_GPT_DIAGNOSTIC',stage:method==='POST'?'REVIEW':'READ',reason:method==='POST'?'REVIEW_FAILED':'READ_FAILED'})]]);
+ }finally{logs.mockRestore();}
+});

@@ -9,6 +9,7 @@ import {generateWebsiteJobGPT,readWebsiteJobSuggestions,type Owner} from '../../
 import {transactionDatabase} from '../../lib/server/db/postgres';
 import {caller} from '../../lib/server/workspace/session';
 import {secretHash} from '../../lib/server/workspace/store';
+import {pairVerificationResult,financeGPTView} from '../../lib/gpt-evidence-view';
 import {processDocuments} from '../../lib/demo/pipeline';
 import type {GPTEvidenceView} from '../../lib/gpt-evidence-view';
 import {GPTSuggestionsView} from '../../components/reconciliation/gpt-suggestions';
@@ -110,6 +111,38 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   await store.save(f.owner,f.data);
   return {...f,b,l,payload:{ordinal:0,expectedEvidenceId:f.data.runs[0].evidenceId,requestId:randomUUID()}};
  }
+ it('persists valid plus four-day-failed generated pairs and permits approval only for the valid pair',async()=>{
+  const f=await job(),docs=['demo-bank-statement-2026-03.csv','demo-general-ledger-2026-03.csv'].map(name=>({name,bytes:new Uint8Array(readFileSync(`public/demo/${name}`)),provenance:'PUBLIC_SYNTHETIC_SAMPLE' as const}));
+  // Explicit synthetic post-rule contract fixture, not a claim the pinned pipeline leaves these pairs unresolved.
+  const context=await processDocuments(docs,undefined,undefined,{job:{id:f.owner.jobId,runner:'BACKEND_JOB_RUNNER'}}),bank=context.outputs.bank!,ledger=context.outputs.ledger!,resolution=context.outputs.resolution!;
+  const b1={...bank.rows[0],recordId:randomUUID(),row:1,sourceTransactionId:null,businessId:'synthetic-business',date:'2026-03-01',currency:'MYR',signedCents:'913721',reference:'INV-VALID'};
+  const l1={...ledger.rows[0],recordId:randomUUID(),row:1,sourceTransactionId:null,businessId:b1.businessId,date:b1.date,currency:b1.currency,signedCents:b1.signedCents,reference:b1.reference};
+  const b2={...b1,recordId:randomUUID(),row:2,date:'2026-03-12',signedCents:'782319',reference:'INV-FOUR-DAYS'},l2={...l1,recordId:randomUUID(),row:2,date:'2026-03-16',signedCents:b2.signedCents,reference:b2.reference};
+  bank.rows=[b1,b2];ledger.rows=[l1,l2];bank.sha256=f.data.runs[0].bankSha256;ledger.sha256=f.data.runs[0].ledgerSha256;bank.businessId=ledger.businessId=b1.businessId;bank.currency=ledger.currency=b1.currency;context.processingId=f.data.processingId;
+  resolution.sources.bank.sha256=bank.sha256;resolution.sources.ledger.sha256=ledger.sha256;resolution.scope.businessId=b1.businessId;resolution.scope.currency=b1.currency;
+  const template=resolution.periods[0].items[0];resolution.periods=resolution.periods.slice(0,1);
+  resolution.periods[0].items=[{...template,id:'first-final',resolution:'UNEXPLAINED',bankRecordId:b1.recordId,ledgerRecordIds:[l1.recordId],link:null,entryIds:[]},{...template,id:'second-final',resolution:'UNEXPLAINED',bankRecordId:b2.recordId,ledgerRecordIds:[l2.recordId],link:null,entryIds:[]}];
+  resolution.attention=[...resolution.periods[0].items];resolution.entries=[];
+  context.outputs.reconciliation!.results=resolution.attention.map(i=>({status:'AMOUNT_MISMATCH_REVIEW',bankRecordId:i.bankRecordId,ledgerRecordIds:i.ledgerRecordIds,reason:'Synthetic post-rule fixture',bankEvidenceIds:[],ledgerEvidenceIds:[]}));
+  const ingestion=(await admin.query('SELECT ingestion_run_id FROM fingence_processing.jobs WHERE id=$1',[f.owner.jobId])).rows[0].ingestion_run_id;
+  for(const [ordinal,role,source] of [[0,'BANK_STATEMENT',bank],[1,'GENERAL_LEDGER',ledger]] as const){
+   const document=(await admin.query("INSERT INTO fingence_ingestion.documents(run_id,ordinal,name,file_sha256,table_sha256,format,role,decision,reason,method) VALUES($1,$2,'synthetic.csv',$3,$3,'CSV',$4,'AUTO_ACCEPTED','Synthetic contract fixture','EXACT_SIGNATURE') RETURNING id",[ingestion,ordinal,source.sha256,role])).rows[0].id;
+   for(const row of source.rows)await admin.query('INSERT INTO fingence_ingestion.records(document_id,ordinal,record_id,business_id,transaction_date,currency,signed_cents,reference) VALUES($1,$2,$3,$4,$5,$6,$7,$8)',[document,row.row,row.recordId,row.businessId,row.date,row.currency,row.signedCents,row.reference]);
+  }
+  await admin.query('UPDATE fingence_processing.results SET reconciliation=$2 WHERE job_id=$1',[f.owner.jobId,JSON.stringify(resolution)]);
+  const before=(await admin.query('SELECT reconciliation FROM fingence_processing.results WHERE job_id=$1',[f.owner.jobId])).rows;
+  const complete=vi.fn(async()=>({content:{suggestions:[{bankId:b1.recordId,ledgerId:l1.recordId},{bankId:b2.recordId,ledgerId:l2.recordId}],abstentions:[]},receipt:{provider:'GROQ' as const,model:'openai/gpt-oss-120b',requestId:'synthetic',latencyMs:1,mode:'LIVE' as const,inputTokens:1,outputTokens:1,estimatedUsd:0}}));
+  await generateWebsiteJobGPT(context,f.owner,'synthetic',{store,complete,admission:async()=>({admitted:true,reservedMicros:0,settle:async()=>{}})});
+  const saved=(await store.read(f.owner))!;expect(complete).toHaveBeenCalledTimes(1);expect(saved.runs[0].items.map(pairVerificationResult)).toEqual(['PASS','FAIL']);
+  expect(saved.runs[0].items[1]).toMatchObject({outcome:'UNRESOLVED',reasons:['VERIFICATION_FAILED'],verification:{dateWithinSevenDays:false}});
+  expect(financeGPTView(saved).runs[0].items.map(i=>i.verificationResult)).toEqual(['PASS','FAIL']);
+  expect(await store.reviewOperation(f.owner,'READ')).toMatchObject({items:[{ordinal:0,canApprove:true},{ordinal:1,canApprove:false,canReject:true}]});
+  const payload={expectedEvidenceId:saved.runs[0].evidenceId,ordinal:1,requestId:randomUUID()};
+  await expect(store.reviewOperation(f.owner,'APPROVE',payload)).rejects.toThrow('GPT_SQL_ACCESS_DENIED');
+  await expect(store.reviewOperation(f.owner,'APPROVE',{...payload,ordinal:0,requestId:randomUUID()})).resolves.toMatchObject({decision:'APPROVE',financialOutcome:'UNRESOLVED',accountingEffect:'NONE'});
+  expect((await admin.query('SELECT reconciliation FROM fingence_processing.results WHERE job_id=$1',[f.owner.jobId])).rows).toEqual(before);
+  expect((await store.read(f.owner))!.runs[0].items.every(i=>i.outcome==='UNRESOLVED')).toBe(true);
+ });
  it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('%s: own proposal approval is audited and never changes accounting',async role=>{
   await admin.query('UPDATE fingence_workspace.members SET role=$1 WHERE id=$2',[role,memberId]);
   try{const f=await reviewFixture(),before=(await admin.query('SELECT reconciliation FROM fingence_processing.results WHERE job_id=$1',[f.owner.jobId])).rows;

@@ -11,7 +11,11 @@ export function useGPTReview(jobId?:string){
   const controller=new AbortController();active.current=controller;
   if(jobId)void fetch(`/api/reconciliation/website-gpt-review?jobId=${encodeURIComponent(jobId)}`,{credentials:'same-origin',cache:'no-store',signal:controller.signal})
    .then(async response=>{if(response.ok){const parsed=gptReviewView.safeParse(await response.json());if(parsed.success&&active.current===controller&&!controller.signal.aborted)setSaved({jobId:jobId!,value:parsed.data});}}).catch(()=>{});
-  return ()=>{controller.abort();};
+  return ()=>{
+   controller.abort();
+   // Release only the departing scope. A late POST must not disable or update the next job.
+   if(active.current===controller){pending.current=false;setBusy(false);setMessage('');}
+  };
  },[jobId]);
  const decide=async(ordinal:number,decision:'APPROVE'|'REJECT')=>{
   if(!review||!jobId||pending.current)return;

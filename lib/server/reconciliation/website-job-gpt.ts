@@ -100,7 +100,7 @@ export async function generateWebsiteJobGPT(context:ProcessingContext,owner:Owne
    const b=banks.find(r=>r.recordId===p.bankId),l=ledgers.find(r=>r.recordId===p.ledgerId);
    if(!b||!l||seenBank.has(p.bankId)||seenLedger.has(p.ledgerId))throw Error('INVALID_PAIR');
    seenBank.add(p.bankId);seenLedger.add(p.ledgerId);
-   const verified=verifyUnexplainedPair(context,finalScope,b,l,parsed.suggestions);if(!verified.passed)throw Error('UNSAFE_PAIR');
+   const verified=verifyUnexplainedPair(context,finalScope,b,l,parsed.suggestions);
    const checks=verified.checks;
    items.push({type:'SUGGESTION',ordinal:items.length,bankId:b.recordId,ledgerId:l.recordId,recordId:null,bankReference:b.reference,ledgerReference:l.reference,
     explanation:'Model-proposed pair checked independently against the committed job sources.',reasons:[Object.values(checks).includes(false)?'VERIFICATION_FAILED':'PAIR_CHECKS_PASSED'],verification:checks,score:null,outcome:'UNRESOLVED'});

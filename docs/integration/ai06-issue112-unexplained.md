@@ -21,7 +21,7 @@ The old `feature/ai-reconciliation-celester` commit contains no usable GPT imple
 | Reference and counterparty identity | Nonempty NFC-normalized, outer-trimmed exact references. Counterparty is **not exposed by CashSourceRow**, so no counterparty verification is claimed |
 | Source claims, unique financial partner and assignment | Model supplies IDs only; references come from source records; reject any financially plausible alternative across authoritative sources and reused proposed records |
 
-The new verifier has 26 boolean checks adapted to the website contract. They are not a claim that the research synthetic checks or unavailable counterparty check were executed. Missing/conflicting references, INV829/INV830 decoys, ambiguity, invalid dates/amounts and duplicate/unknown IDs fail independent verification. Unsafe proposals fail the attempt and are never saved as matching suggestions. Abstentions and omissions remain supported. Prompt data is explicitly untrusted, descriptions are excluded, strict JSON refuses extra approval/score fields. The shared JSON gateway parses provider JSON before AI06 sees it; raw duplicate-key detection is not claimed. Independent validation uses the resulting IDs, not model monetary assertions.
+The new verifier has 26 boolean checks adapted to the website contract. They are not a claim that the research synthetic checks or unavailable counterparty check were executed. Missing/conflicting references, INV829/INV830 decoys, ambiguity, invalid dates/amounts and duplicate/unknown IDs fail independent verification. Known, structurally valid proposed pairs are independently verified one by one. Failed pairs are saved with `VERIFICATION_FAILED`, all failed check evidence and `UNRESOLVED`; they appear under Verification Issues, cannot be approved, and do not cancel valid suggestions in the same response. Unknown IDs, duplicate assignments, malformed responses and invalid abstention structure still fail the entire attempt before any evidence is saved. The Finance projection and summary classify every false check as FAIL and require all 26 checks for the new policy to show PASS. Abstentions and omissions remain supported. Prompt data is explicitly untrusted, descriptions are excluded, strict JSON refuses extra approval/score fields. The shared JSON gateway parses provider JSON before AI06 sees it; raw duplicate-key detection is not claimed. Independent validation uses the resulting IDs, not model monetary assertions.
 
 ## Human review and accounting boundary
 
@@ -31,17 +31,19 @@ Review availability is discovered only after saved evidence loads, without calli
 
 The SQL function independently reauthorizes the session, active member, completed own job, ingestion lineage and immutable evidence. It locks the existing job row briefly to serialize review, checks expected evidence and source records, and rechecks final UNEXPLAINED scope for approval. Old evidence lacking the new verification policy can be rejected but cannot be approved. Unique per-item decisions and request keys make decisions immutable and replay-safe. Source fingerprint/record unique indexes prevent approving a source transaction twice across jobs. The audit insert and decision are in one transaction; audit failure rolls back the decision. Explicit identical retries return the original decision and append REPLAY audit. Changed replays/conflicting decisions return conflict. There is no automatic POST or uncertain-commit retry.
 
-## SQL approval and execution order — NOT executed on Production
+## SQL installed — do not rerun
 
-Review-only SQL SHA256: `a67e4898b76983fc8ab49024a2e15e80a36780c8b0f0285740cae9814c9d8459`.
+The owner confirmed installation in group Supabase `FinGence-Production`, project `zmtdozblpvtjniehwjrw`, main. The 17 November 2026 SQL Editor catalog inspection independently confirmed PostgreSQL 17.11 inside `BEGIN READ ONLY` / `ROLLBACK`:
 
-1. Review the new **additive** `supabase/sql/ai06-unexplained-review-approval.sql` and its checksum in the PR/report. Requires existing website storage/login and workspace/processing/ingestion contracts. Do not reinstall existing SQL or DB04 migration 005.
-2. Obtain separate owner approval for exactly two AI06 tables (`reviews`, `review_audit`), their constraints/indexes, forced RLS, immutable triggers and the new narrow `review(text,uuid,text,jsonb)` function. Only its EXECUTE is granted to the existing restricted runtime; no login/role creation or direct table grants. No existing function is replaced. The only access to teammate tables is authorization/source validation and a short completed-job row lock; their definitions and financial values are unchanged.
-3. Owner establishes recovery/backup policy and schedules a short deployment window; concurrent job/DDL locks can block execution. Apply once in one transaction only after approval. Stop on errors/uncertain commit; never retry automatically. No hosted SQL has been executed by this task.
-4. Run the catalog verification below, verify restricted-runtime calls with approved synthetic data and an authenticated own-job browser walkthrough. Do not enable additional users or change flags as part of this PR.
-5. Merge only after CI and required owner/teammate review. Until SQL is approved/applied and the authenticated walkthrough succeeds, issue #112 remains open. No Production success is asserted.
+- Installed `review()` body (normalized line endings) MD5 `d45ddaccc6a820cf1a987c94aec4af27` matches the reviewed function body, with the expected signature, postgres owner, SECURITY DEFINER and `search_path=pg_catalog`.
+- `reviews` and `review_audit` have forced RLS, immutable DELETE/UPDATE/TRUNCATE triggers and tenant-bound foreign keys. The request/item uniqueness, approved BANK/LEDGER source uniqueness and UNRESOLVED constraint are present.
+- The restricted login/runtime can execute `review()`. PUBLIC, anon and authenticated cannot. The login has no direct or column table privileges, inherits only the non-login runtime without admin option, and neither role has privileged flags.
 
-Recovery: a failed SQL transaction rolls back the additive objects. After a committed deployment, disable review access by reverting the AI06 application change through normal review. Preserve review/evidence/audit history; do not delete or overwrite it. Any privilege revocation or schema recovery requires separate owner approval. There are no accounting/source writes to reverse.
+Reviewed SQL file SHA256 remains `a67e4898b76983fc8ab49024a2e15e80a36780c8b0f0285740cae9814c9d8459`. Function-body equality and inspected catalog definitions are not a claim of a whole-file execution receipt. This review-fix task changes no SQL and performs no hosted inspection or writes. Do not reinstall this SQL, the storage/login SQL, or DB04 migration 005.
+
+Remaining acceptance: authenticate on the exact PR preview and test restricted-runtime own-job suggestions, failed verification, Approve/Reject, replay, durable audit and unchanged totals using authorized synthetic data. The previous attempt was blocked by Vercel's preview access gate for `jiaqi538`; saved decision/audit rows and authenticated Production behaviour were not verified. Keep issue #112 open. Required reviews, explicit merge authorization and security/build-owner triage still apply; no review request/reply/readiness change is authorized by the 18 November fix task.
+
+Recovery: preserve installed review/evidence/audit history. Any privilege or schema recovery requires separate owner approval. This integration records proposal review only; no accounting/source writes exist to reverse. The catalog-only SQL below is a reference for any separately authorized recheck, not an instruction to rerun installation.
 
 ```sql
 BEGIN READ ONLY;
@@ -77,3 +79,10 @@ Light Finance desktop, dark Admin desktop and Finance phone respectively:
 ![Synthetic Admin dark desktop](ai06-issue112/admin-dark-1440.png)
 
 ![Synthetic Finance mobile](ai06-issue112/finance-mobile-390.png)
+
+## Review corrections — 18 November 2026
+
+- Retain both valid and failed pair outcomes within one immutable attempt, without weakening any of the 26 checks. Failed pairs remain UNRESOLVED and cannot be approved by the unchanged installed SQL. Structural response errors still prevent saving the entire response.
+- Release a departing job's pending review state during effect cleanup. Late POST success/failure cannot disable buttons or overwrite the next job's state. Same-job duplicate prevention and explicit-retry idempotency keys are preserved.
+- Review POST failures use allowlisted `REVIEW` diagnostic metadata (`REVIEW_FAILED` for unclassified errors); GET remains `READ`. No internal errors, SQL, financial data or credentials reach clients/logs. Shared model/Technical logging remains unchanged.
+- Review-fix validation: 245 focused/regression tests and 42 native PostgreSQL tests passed with no failures/skips in their runs; the native mixed-outcome case saves both pairs and permits approval only for the valid pair, leaving accounting results unchanged. TypeScript/route generation, full lint and server boundaries passed. The 18 November build compiled and completed TypeScript/rendering, then again stopped with the shared Next.js `SecurityFatalError`; no dependency or security-check bypass was attempted. Final lint evidence is included in the local review correction report. No hosted acceptance or new Production success is claimed.
