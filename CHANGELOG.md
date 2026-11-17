@@ -14,6 +14,9 @@ the new version and its date.
 - AI06 GPT matching suggestions for unexplained reconciliation items, checked independently before they
   are shown and never changing a figure; owner-scoped role views and a categorised results table
   (#121, #122, #126, #129, #131, #132, #133).
+- Experimental XGBoost forecast shown beside the six-month baseline on Forecasting, scored on the same
+  backtest months; the baseline stays primary and the challenger runs only where its local worker is
+  enabled, never on Vercel (#89).
 - Changelog, pull request and issue templates, and a Definition of Done in `CONTRIBUTING.md` (#108, #115).
 
 ### Changed
