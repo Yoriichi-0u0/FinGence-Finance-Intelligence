@@ -360,15 +360,15 @@ function Reports({ c }: { c: Ready }) {
         const a = document.createElement('a'); a.href = url; a.download = `fingence-summary-${c.processingId}.json`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     return <>
-        <PageHeader eyebrow={resultsEyebrow(s)} title="Reports" description="Generate, review and revisit management reports from the processed data." actions={<div className="flex flex-wrap gap-2 print:hidden"><button type="button" className={button} onClick={download}><Download aria-hidden="true" size={16} />JSON evidence</button><button type="button" className={primaryButton} onClick={printReport}><Printer aria-hidden="true" size={16} />Print or save PDF</button></div>} />
+        <PageHeader eyebrow={resultsEyebrow(s)} title="Reports" actions={<div className="flex flex-wrap gap-2 print:hidden"><button type="button" className={button} onClick={download}><Download aria-hidden="true" size={16} />JSON evidence</button><button type="button" className={primaryButton} onClick={printReport}><Printer aria-hidden="true" size={16} />Print or save PDF</button></div>} />
         <SourceStrip context={c} />
         <div className="mt-6 border-b border-[var(--border)] print:hidden">
             <div role="tablist" aria-label="Report views" className="grid grid-cols-2 gap-2 sm:flex sm:gap-6">
-                <button ref={uploadedReportsTab} id="uploaded-reports-tab" role="tab" type="button" aria-selected={activeView === 'UPLOADED_REPORTS'} aria-controls="uploaded-reports-panel" tabIndex={activeView === 'UPLOADED_REPORTS' ? 0 : -1} onClick={() => setActiveView('UPLOADED_REPORTS')} onKeyDown={moveReportTab} className={`-mb-px min-h-16 border-b-2 px-3 py-3 text-left transition-colors sm:px-4 ${activeView === 'UPLOADED_REPORTS' ? 'border-[var(--brand)] text-[var(--ink)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'}`}>
-                    <span className="block text-sm font-semibold">Uploaded Data Reports</span><span className="mt-0.5 block text-[11px] font-medium">Current processed data</span>
+                <button ref={uploadedReportsTab} id="uploaded-reports-tab" role="tab" type="button" aria-selected={activeView === 'UPLOADED_REPORTS'} aria-controls="uploaded-reports-panel" tabIndex={activeView === 'UPLOADED_REPORTS' ? 0 : -1} onClick={() => setActiveView('UPLOADED_REPORTS')} onKeyDown={moveReportTab} className={`-mb-px min-h-12 border-b-2 px-3 py-3 text-left text-sm font-semibold transition-colors sm:px-4 ${activeView === 'UPLOADED_REPORTS' ? 'border-[var(--brand)] text-[var(--ink)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'}`}>
+                    Uploaded Data Reports
                 </button>
-                <button ref={reportLibraryTab} id="report-library-tab" role="tab" type="button" aria-selected={activeView === 'REPORT_LIBRARY'} aria-controls="report-library-panel" tabIndex={activeView === 'REPORT_LIBRARY' ? 0 : -1} onClick={() => setActiveView('REPORT_LIBRARY')} onKeyDown={moveReportTab} className={`-mb-px min-h-16 border-b-2 px-3 py-3 text-left transition-colors sm:px-4 ${activeView === 'REPORT_LIBRARY' ? 'border-[var(--brand)] text-[var(--ink)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'}`}>
-                    <span className="block text-sm font-semibold">Report Library</span><span className="mt-0.5 block text-[11px] font-medium">Saved browser records</span>
+                <button ref={reportLibraryTab} id="report-library-tab" role="tab" type="button" aria-selected={activeView === 'REPORT_LIBRARY'} aria-controls="report-library-panel" tabIndex={activeView === 'REPORT_LIBRARY' ? 0 : -1} onClick={() => setActiveView('REPORT_LIBRARY')} onKeyDown={moveReportTab} className={`-mb-px min-h-12 border-b-2 px-3 py-3 text-left text-sm font-semibold transition-colors sm:px-4 ${activeView === 'REPORT_LIBRARY' ? 'border-[var(--brand)] text-[var(--ink)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'}`}>
+                    Report Library
                 </button>
             </div>
         </div>
@@ -377,7 +377,6 @@ function Reports({ c }: { c: Ready }) {
                 <summary className="cursor-pointer list-none px-4 py-4 sm:px-5 [&::-webkit-details-marker]:hidden">
                     <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">Supporting evidence</span>
                     <span className="mt-1 block text-base font-semibold text-[var(--ink)]">Processing and reconciliation details</span>
-                    <span className="mt-1 block text-xs leading-5 text-[var(--muted)]">Open the current pipeline summary, source fingerprints, reconciliation statements, forecast, automated checks and limitations.</span>
                 </summary>
                 <div className="space-y-5 border-t border-[var(--border)] p-4 sm:p-5">
                     <AiCommentary key={c.processingId} context={c} onResult={run => setAccepted(run ? { processingId: c.processingId, run } : null)} />

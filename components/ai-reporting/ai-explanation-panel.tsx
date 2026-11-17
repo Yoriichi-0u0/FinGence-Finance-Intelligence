@@ -1,8 +1,6 @@
-import { AlertTriangle, FileCode2, Link2, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertTriangle, Link2, ShieldCheck, Sparkles } from "lucide-react";
 import {
   FINANCIAL_EXPLANATION_LIMITATION_TEXT,
-  FINANCIAL_EXPLANATION_PROMPT_SAMPLE,
-  FINANCIAL_EXPLANATION_PROMPT_VERSION,
   formatReportMoney,
   type ValidatedFinancialExplanation,
 } from "@/lib/ai-reporting";
@@ -21,7 +19,7 @@ export function AiExplanationPanel({ explanation }: { explanation: ValidatedFina
   return (
     <article
       data-testid="ai-explanation-panel"
-      className="mx-auto w-full max-w-[980px] overflow-hidden rounded-lg border border-violet-200 bg-white shadow-[0_18px_55px_rgb(76_29_149/0.10)]"
+      className="w-full overflow-hidden rounded-xl border border-violet-200 bg-white shadow-[0_18px_55px_rgb(76_29_149/0.10)]"
     >
       <header className="border-b border-violet-200 bg-violet-50 px-5 py-5 sm:px-8">
         <div className="flex gap-3">
@@ -30,8 +28,7 @@ export function AiExplanationPanel({ explanation }: { explanation: ValidatedFina
           </span>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700">AI-assisted report explanation</p>
-            <h2 className="mt-1 text-lg font-semibold tracking-[-0.02em]">AI management summary — requires review.</h2>
-            <p className="mt-1 text-xs leading-5 text-slate-600">The management summary is LLM-generated. The evidence cards below are created by FinGence from deterministic calculations, not written by the model. Nothing in this section is approved for publication.</p>
+            <h2 className="mt-1 text-lg font-semibold tracking-[-0.02em]">AI management summary</h2>
           </div>
         </div>
       </header>
@@ -90,37 +87,11 @@ export function AiExplanationPanel({ explanation }: { explanation: ValidatedFina
           <div className="flex gap-3">
             <ShieldCheck aria-hidden="true" className="mt-0.5 shrink-0 text-[var(--teal-dark)]" size={18} />
             <div>
-              <p className="font-semibold text-[var(--teal-dark)]">Structural checks passed; semantic review is still required.</p>
-              <p className="mt-1">FinGence checked the model-authored summary, then attached the evidence IDs, exact structured values, currency context and required caveats from its deterministic claim plan. These checks do not prove that every sentence is semantically entailed, and they do not authorize publication.</p>
-              <p className="mt-2 text-[10px] text-slate-500">Provider: {explanation.generation.provider} · Model: {explanation.generation.modelIdentifier} · Prompt: {explanation.generation.promptVersion}</p>
+              <p className="font-semibold text-[var(--teal-dark)]">Validation passed</p>
+              <p className="mt-1">Figures and evidence are application-generated. Human review is required before this explanation is used.</p>
             </div>
           </div>
         </section>
-
-        <section className="rounded-lg border-2 border-violet-300 bg-violet-50 p-4" aria-labelledby="prompt-sample-heading">
-          <div className="flex items-start gap-3">
-            <FileCode2 aria-hidden="true" className="mt-0.5 shrink-0 text-violet-700" size={19} />
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-violet-700">Prompt sample · used by the model</p>
-              <h3 id="prompt-sample-heading" className="mt-1 text-sm font-semibold text-slate-950">Safe wording examples inside the reporting prompt</h3>
-              <p className="mt-1 text-xs leading-5 text-slate-600">Source: <code className="rounded bg-white px-1.5 py-0.5 text-[11px] text-violet-800">lib/ai-reporting/prompts/financial-explanation.ts</code> · Version: <code>{FINANCIAL_EXPLANATION_PROMPT_VERSION}</code></p>
-              <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap rounded-md border border-violet-200 bg-slate-950 p-4 text-[11px] leading-5 text-violet-50">{FINANCIAL_EXPLANATION_PROMPT_SAMPLE}</pre>
-              <p className="mt-2 text-[11px] leading-5 text-slate-600">This excerpt is included in the real system prompt. At runtime, FinGence adds minimized evidence and a deterministic claim plan; it never adds the API key to the prompt.</p>
-            </div>
-          </div>
-        </section>
-
-        <details className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-5 text-slate-700">
-          <summary className="cursor-pointer font-semibold text-slate-900">How the prompt becomes checked reporting code</summary>
-          <ul className="mt-3 list-disc space-y-1 pl-5">
-            <li>The system prompt establishes the role, prohibited financial meanings, untrusted-data boundary and safe wording examples.</li>
-            <li><code>createFinancialExplanationRequest()</code> sends only minimized deterministic evidence for the selected report period, not raw uploaded rows.</li>
-            <li><code>createFinancialExplanationOutputPolicy()</code> chooses the permitted claim slots and the evidence attached to each slot.</li>
-            <li>The model writes only the management summary; FinGence creates the evidence-card wording and attaches exact decimal values, currency, evidence IDs and caveats.</li>
-            <li><code>validateFinancialExplanationOutput()</code> rejects unexpected fields, numeric prose and unsupported accounting or evaluative language.</li>
-            <li>The result remains a draft requiring human review; structural validation never authorizes publication.</li>
-          </ul>
-        </details>
       </div>
     </article>
   );
