@@ -14,13 +14,11 @@ import { answerQuestion, suggestions, MAX_QUESTION, type QaAnswer } from '@/lib/
 import { qaFacts } from '@/lib/demo/questions';
 import { askGrounded, gatewayQaModel, qaGatewayStatus, type GroundedRun, type QaGatewayStatus } from '@/lib/grounded-qa/client';
 import { groundingIndex } from '@/lib/grounded-qa/tools';
-import { renderedText } from '@/lib/grounded-qa/commentary';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 import { GroundedAnswer } from './grounded-answer';
 import { ReconciliationStatementPanel } from './reconciliation-statement';
 import { ReconciliationOutcomePanel } from './reconciliation-outcome';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
-import { AiCommentary } from './commentary';
 import { MlChallenger } from './ml-forecast';
 import { useDemoProcessing } from './context';
 import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
@@ -335,7 +333,6 @@ function Reports({ c }: { c: Ready }) {
         return () => clearTimeout(timer);
     }, []);
     const s = c.scope, rep = c.outputs.report, r = c.outputs.reconciliation, periods = c.outputs.periods.length ? c.outputs.periods : c.outputs.statement ? [{ period: s.period, statement: c.outputs.statement }] : [];
-    const [accepted, setAccepted] = useState<{ processingId: string; run: GroundedRun } | null>(null);
     function moveReportTab(event: KeyboardEvent<HTMLButtonElement>) {
         let next: 'UPLOADED_REPORTS' | 'REPORT_LIBRARY' | null = null;
         if (event.key === 'ArrowLeft' || event.key === 'Home') next = 'UPLOADED_REPORTS';
@@ -353,10 +350,7 @@ function Reports({ c }: { c: Ready }) {
         window.setTimeout(() => window.print(), 0);
     }
     function download() {
-        // An accepted AI commentary is included as rendered text with its citations and receipt; it is never a source of the figures.
-        const commentary = accepted?.processingId === c.processingId ? accepted.run : null;
-        const aiCommentary = commentary?.verdict?.sentences ? { model: commentary.receipts[0]?.model ?? null, sentences: renderedText(commentary.verdict.sentences), cites: commentary.verdict.cited.map(id => ({ id, label: commentary.facts.find(f => f.id === id)?.label ?? id })), receipts: commentary.receipts } : null;
-        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, processingConfidence: { ...confidence, definition: CONFIDENCE_DEFINITION }, ...(aiCommentary ? { aiCommentary } : {}), ...(c.outputs.statement ? { reconciliationStatement: c.outputs.statement } : {}), ...(c.outputs.periods.length > 1 ? { reconciliationStatements: c.outputs.periods.map(p => ({ period: p.period, statement: p.statement })) } : {}), ...(c.outputs.resolution ? { reconciliation: c.outputs.resolution } : {}), ...(c.outputs.anomalyResolution ? { anomalies: c.outputs.anomalyResolution } : {}), stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
+        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, processingConfidence: { ...confidence, definition: CONFIDENCE_DEFINITION }, ...(c.outputs.statement ? { reconciliationStatement: c.outputs.statement } : {}), ...(c.outputs.periods.length > 1 ? { reconciliationStatements: c.outputs.periods.map(p => ({ period: p.period, statement: p.statement })) } : {}), ...(c.outputs.resolution ? { reconciliation: c.outputs.resolution } : {}), ...(c.outputs.anomalyResolution ? { anomalies: c.outputs.anomalyResolution } : {}), stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
         const a = document.createElement('a'); a.href = url; a.download = `fingence-summary-${c.processingId}.json`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     return <>
@@ -379,7 +373,6 @@ function Reports({ c }: { c: Ready }) {
                     <span className="mt-1 block text-base font-semibold text-[var(--ink)]">Processing and reconciliation details</span>
                 </summary>
                 <div className="space-y-5 border-t border-[var(--border)] p-4 sm:p-5">
-                    <AiCommentary key={c.processingId} context={c} onResult={run => setAccepted(run ? { processingId: c.processingId, run } : null)} />
                     <Panel title={`Management summary · ${s.businessName} · ${periodLabel(s.period)}`} eyebrow={`${usesOwnDocuments(c) ? c.job ? 'Your documents, processed on the FinGence server' : 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
                         <div className="space-y-5 p-4 text-sm leading-relaxed sm:p-6 [&>section]:border-b [&>section]:border-[var(--border)] [&>section]:pb-5 [&>section:last-of-type]:border-0 [&_h3]:mb-1 [&_h3]:text-[13px] [&_h3]:uppercase [&_h3]:tracking-[0.08em] [&_h3]:text-[var(--brand-ink)]">
                 <section><h3 className="font-semibold">Processing confidence</h3><p>{confidence.status === 'MEASURED' ? <><strong className="tabular-nums">{confidence.percent}%</strong> ({confidence.band === 'HIGH' ? 'High' : confidence.band === 'CHECK' ? 'Check advised' : 'Low'}). {[...confidence.read.reasons, ...confidence.explained.reasons].length ? `Fell short: ${[...confidence.read.reasons, ...confidence.explained.reasons].join('; ')}.` : 'Every bank record was read reliably, checked and explained.'}</> : `Incomplete: ${confidence.reason}`}</p><p className="mt-1 text-xs">{CONFIDENCE_DEFINITION}</p></section>
