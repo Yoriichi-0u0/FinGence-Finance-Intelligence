@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { createConsentChat, DEMO_SESSION_COOKIE, explainChatError, GROUNDED_SYSTEM, type ChatPayload } from '../../lib/server/obsidian-demo/consent-chat';
 import type { VaultPassage } from '../../lib/server/obsidian-demo/vault';
@@ -17,6 +17,8 @@ const passage: VaultPassage = { title: 'Synthetic Summary', heading: 'Cash movem
 const reply = (answer: string, citations: number[], model = 'openai/gpt-oss-20b') => ({ status: 200, json: { id: 'fake-response', model, choices: [{ message: { content: JSON.stringify({ answer, citations }) } }], usage: { prompt_tokens: 20, completion_tokens: 10 } } });
 const allowed = async () => ({ admitted: true as const, reservedMicros: 1, settle: async () => undefined });
 const enableDemo = () => { vi.stubEnv('NODE_ENV', 'development'); vi.stubEnv('FINGENCE_OBSIDIAN_DEMO', '1'); vi.stubEnv('FINGENCE_POC_LOCAL', ''); vi.stubEnv('FINGENCE_M2_LOCAL', ''); vi.stubEnv('FINGENCE_M3_LOCAL', ''); vi.stubEnv('FINGENCE_M4_LOCAL', ''); vi.stubEnv('FINGENCE_M5_LOCAL', ''); vi.stubEnv('FINGENCE_AI_QA_MODEL', 'openai/gpt-oss-20b'); };
+// The Finance chatbot runs on its own Groq key 4 (a synthetic test value; calls use a mocked transport).
+beforeEach(() => { vi.stubEnv('GROQ_API_KEY4', 'synthetic-key-four'); });
 afterEach(() => vi.unstubAllEnvs());
 
 describe('consented Groq demo chat', () => {
@@ -175,7 +177,7 @@ describe('consented Groq demo chat', () => {
     });
 
     it('does not expose a fake Groq key in provider errors, API responses, or logs', async () => {
-        enableDemo(); const fakeKey = 'FAKE_GROQ_KEY_TEST_ONLY_NOT_A_CREDENTIAL_123456'; vi.stubEnv('GROQ_API_KEY', fakeKey);
+        enableDemo(); const fakeKey = 'FAKE_GROQ_KEY_TEST_ONLY_NOT_A_CREDENTIAL_123456'; vi.stubEnv('GROQ_API_KEY4', fakeKey);
         const logs: string[] = [];
         const log = vi.spyOn(console, 'log').mockImplementation((...args) => logs.push(args.join(' ')));
         const warn = vi.spyOn(console, 'warn').mockImplementation((...args) => logs.push(args.join(' ')));

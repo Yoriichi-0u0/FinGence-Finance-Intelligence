@@ -4,7 +4,9 @@ import { z } from 'zod';
 import { preCheck } from '../../grounded-qa/gates';
 import { route as deterministicQuestionRoute } from '../../poc-finance-qa/answer';
 import { admit, budgetStore, clientAddress, type Admission } from '../ai/budget';
-import { GROQ_MODELS, groqKeys, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
+import { GROQ_MODELS, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
+/** The Finance chatbot runs on its own Groq key (GROQ_API_KEY4); see DEDICATED_GROQ_KEYS in lib/server/ai/groq.ts. */
+const dedicatedKeyConfigured = () => !!process.env.GROQ_API_KEY4;
 import { qaModel } from '../ai/grounded-qa';
 import { reasoningEffort } from '../ai/groq-interpreter';
 import { assertObsidianDemoAccess, retrieveObsidianPassages, type VaultPassage } from './vault';
@@ -156,7 +158,7 @@ export function createConsentChat(options: {
         if (refusal) throw new Error(`QUESTION_REFUSED_${refusal}`);
         const model = qaModel();
         if (!GROQ_MODELS.includes(model)) throw new Error('GROQ_MODEL_UNAVAILABLE');
-        if (!groqKeys().length && !options.transport) throw new Error('GROQ_NOT_CONFIGURED');
+        if (!dedicatedKeyConfigured() && !options.transport) throw new Error('GROQ_NOT_CONFIGURED');
         const system = GROUNDED_SYSTEM, user = messageFor(saved.payload), promptChars = system.length + user.length + JSON.stringify(jsonSchema).length;
         const admitCall = options.admitCall ?? (input => admit(input, budgetStore()));
         const admission = await admitCall({ client: requestClient(request), worstCaseUsd: worstCaseCompletionUsd(promptChars, COMPLETION_TOKENS, model) });

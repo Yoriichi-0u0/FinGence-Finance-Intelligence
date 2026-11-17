@@ -6,7 +6,9 @@ import { route as questionRoute, MAX_QUESTION, type QaFacts } from '../../poc-fi
 import type { QaSelectionInput } from './service';
 import { RULES, type RuleId } from '../../poc-anomalies/detector';
 import { admit, budgetStore, clientAddress, type Admission } from '../ai/budget';
-import { GROQ_MODELS, groqKeys, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
+import { GROQ_MODELS, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from '../ai/groq';
+/** The Finance chatbot runs on its own Groq key (GROQ_API_KEY4); see DEDICATED_GROQ_KEYS in lib/server/ai/groq.ts. */
+const dedicatedKeyConfigured = () => !!process.env.GROQ_API_KEY4;
 import { qaModel } from '../ai/grounded-qa';
 import { reasoningEffort } from '../ai/groq-interpreter';
 
@@ -271,7 +273,7 @@ export function createFinanceGroqChat(options: Options) {
             if (refused) throw new FinanceChatError('QUESTION_REFUSED_' + refused);
             const model = qaModel();
             if (!GROQ_MODELS.includes(model)) throw new FinanceChatError('GROQ_MODEL_UNAVAILABLE', 503);
-            if (!groqKeys().length && !options.transport) throw new FinanceChatError('GROQ_NOT_CONFIGURED', 503);
+            if (!dedicatedKeyConfigured() && !options.transport) throw new FinanceChatError('GROQ_NOT_CONFIGURED', 503);
             const user = promptFor(latest);
             const system = FINANCE_CHAT_SYSTEM;
             const promptChars = system.length + user.length + JSON.stringify(jsonSchema).length;

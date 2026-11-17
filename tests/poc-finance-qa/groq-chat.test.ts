@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
 import { createHash } from 'node:crypto';
 import { createFinanceGroqChat, FINANCE_CHAT_SYSTEM, type FinanceChatPassage } from '../../lib/server/poc-finance-qa/groq-chat';
@@ -21,6 +21,8 @@ const fixture = (overrides: Partial<Parameters<typeof createFinanceGroqChat>[0]>
     admitCall: allowed,
     ...overrides,
 });
+// The Finance chatbot runs on its own Groq key 4 (a synthetic test value; calls use a mocked transport).
+beforeEach(() => { vi.stubEnv('GROQ_API_KEY4', 'synthetic-key-four'); });
 afterEach(() => vi.unstubAllEnvs());
 
 describe('Groq chat over verified uploaded-source summaries', () => {

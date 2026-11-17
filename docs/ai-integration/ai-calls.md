@@ -95,6 +95,20 @@ await withAiCall({ feature: 'finance-chat', model }, async note => {
 **Refused before any model call** (for example, your pre-check blocked the question):
 `await recordAiRefusal({ feature: 'finance-chat', model }, 'REFUSED_BEFORE_MODEL')`.
 
+## Your own Groq key
+
+Through `structuredCompletion` (`lib/server/ai/groq.ts`), most features share `GROQ_API_KEY` and `GROQ_API_KEY2` in rotation.
+A feature can own a key instead: add it to `DEDICATED_GROQ_KEYS` in that file. It then uses only that key, fails closed
+without it, and the Technical log shows the key's label (never the key).
+
+| Feature | Key | Log label |
+|---|---|---|
+| `recon-suggest` (AI06 matching suggestions, Celester) | `GROQ_API_KEY3` | `key-3` |
+| `finance-chat` (Finance chatbot, Jason) | `GROQ_API_KEY4` | `key-4` |
+
+Put the key in your local `.env` for local runs. On Vercel, the owner adds it as a Sensitive variable for
+Production and Preview, then redeploys.
+
 ## Who made the call
 
 - **FinGence routes:** the route sets the caller once, and every `withAiCall` inside it (however deep) is attributed to that person. Copy what `app/api/ai/ask/route.ts` does:
