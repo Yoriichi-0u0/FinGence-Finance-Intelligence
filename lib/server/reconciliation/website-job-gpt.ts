@@ -112,7 +112,7 @@ export async function generateWebsiteJobGPT(context:ProcessingContext,owner:Owne
   }
   // Every omitted candidate is explicitly withheld; no invented model explanation or score.
   for(const r of [...banks,...ledgers])if(!seenBank.has(r.recordId)&&!seenLedger.has(r.recordId))items.push({type:'ABSTENTION',ordinal:items.length,bankId:null,ledgerId:null,recordId:r.recordId,bankReference:null,ledgerReference:null,explanation:abstained.has(r.recordId)?'The model abstained for this record.':'No pair proposed for this record.',reasons:[abstained.has(r.recordId)?'MODEL_ABSTAINED':'NO_PAIR_PROPOSED'],verification:{},score:null,outcome:'UNRESOLVED'});
-  const data:GPTEvidenceView={version:'gpt-evidence-view/1',batchId:owner.jobId,processingId:context.processingId,runs:[{evidenceId:hash(JSON.stringify([owner,context.processingId,bank.sha256,ledger.sha256,promptVersion,raw])),model:shouldCall?model:'NOT_CALLED_NO_CANDIDATES',prompt:promptVersion,createdAt:new Date().toISOString(),bankSha256:bank.sha256,ledgerSha256:ledger.sha256,outcome:'UNRESOLVED',items}]};
+  const data:GPTEvidenceView={version:'gpt-evidence-view/1',batchId:owner.jobId,processingId:context.processingId,runs:[{evidenceId:hash(JSON.stringify([owner,context.processingId,bank.sha256,ledger.sha256,promptVersion,raw])),model:shouldCall?model:banks.length&&ledgers.length?'NOT_CALLED_INPUT_LIMIT':'NOT_CALLED_NO_CANDIDATES',prompt:promptVersion,createdAt:new Date().toISOString(),bankSha256:bank.sha256,ledgerSha256:ledger.sha256,outcome:'UNRESOLVED',items}]};
   await deps.store.audit(owner,'SAVE_INTENT');await deps.store.save(owner,data);
  }catch(error){
   reportWebsiteGPT('GENERATE',gptDiagnosticReason(error,'GENERATION_FAILED'));

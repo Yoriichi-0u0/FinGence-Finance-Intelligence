@@ -118,6 +118,7 @@ it('does not dispatch oversized record sets or oversized prompt bytes',async()=>
  const provider=complete({suggestions:[],abstentions:[]});c.outputs.bank!.rows[0].reference='x'.repeat(33000);
  await generateWebsiteJobGPT(c,owner,'synthetic',{store,admission,complete:provider});expect(provider).not.toHaveBeenCalled();
  expect((await store.read(owner))!.runs[0].items.every(i=>i.type==='ABSTENTION')).toBe(true);
+ expect((await store.read(owner))!.runs[0].model).toBe('NOT_CALLED_INPUT_LIMIT');
 });
 it('runs real synthetic pipeline -> isolated PostgreSQL job commit -> saved website evidence -> authorized API -> UI',async()=>{
  const db=await processingDatabase();
