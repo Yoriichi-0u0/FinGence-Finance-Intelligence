@@ -43,8 +43,12 @@ Add `financeChatHostedEnabled()` (for example in `lib/server/poc-finance-qa/host
 
 ```ts
 export const financeChatHostedEnabled = () =>
-    process.env.FINGENCE_FINANCE_CHAT === '1' && aiGatewayEnabled() && groqConfiguredFor('finance-chat') && !!budgetStore();
+    process.env.FINGENCE_FINANCE_CHAT === '1' && process.env.FINGENCE_AI_GATEWAY === '1'
+    && groqConfiguredFor('finance-chat') && !!budgetStore();
 ```
+
+Do not use `aiGatewayEnabled()` here: it also requires the shared `GROQ_API_KEY`, which your chat never uses. This check
+needs only your own key, `GROQ_API_KEY4` (`groqConfiguredFor` is in `lib/server/ai/groq.ts`).
 
 When it is false, the route returns 404 and the page shows only Fin. The owner turns it on, first on Preview, then on
 Production. Nothing changes for users until then.
