@@ -48,6 +48,25 @@ export function comparisonFacts(index: GroundingIndex): Omit<Fact, 'id' | 'query
 }
 
 /**
+ * What the reconciliation layer did with the matcher's exceptions: matched late or by amount, cleared as timing,
+ * resolved by a prepared correcting entry, or still unexplained. The matcher's own exception count is not what
+ * remains open, so the report states both, from the completed reconciliation.
+ */
+export function resolutionFacts(index: GroundingIndex): Omit<Fact, 'id' | 'query'>[] {
+    const o = index.context.outputs, res = o.resolution, rec = o.reconciliation;
+    if (!res || !rec) return [];
+    const n = res.totals.resolutions, exceptions = rec.results.filter(r => r.status !== 'MATCH_EXACT' && r.status !== 'MATCH_DATE_SHIFT').length;
+    return [{
+        label: 'Reconciliation outcome after FinGence\u2019s stated rules (exception items, not transactions)', primary: 'unexplained',
+        fields: {
+            matcherExceptions: count(exceptions), matchedLate: count(n.MATCHED_LATE + n.MATCHED_BY_AMOUNT), timingCleared: count(n.TIMING_CLEARED), timingNextStatement: count(n.TIMING_OPEN),
+            entriesPrepared: count(res.totals.entries), unexplained: count(n.UNEXPLAINED), unexplainedAmount: money(toCents(res.totals.unexplained), index.currency),
+        },
+        sources: [{ kind: 'RECONCILIATION', id: 'resolution' }],
+    }];
+}
+
+/**
  * Laid out like a listed company's quarterly or annual report (management discussion, financial review,
  * controls, matters for review, outlook), within what verified cash records can support: no profit, revenue or
  * balance-sheet claims. Sent as answer-stage questions, so each fits the gateway's question bound and passes its
@@ -56,9 +75,9 @@ export function comparisonFacts(index: GroundingIndex): Omit<Fact, 'id' | 'query
 export const AI_REPORT_SECTIONS: readonly AiReportSection[] = [
     {
         id: 'summary', title: 'Review of performance',
-        question: 'Open the review of performance in up to four short sentences: net cash movement with money in and out, its change from the preceding period of equal length if listed, how the bank compares with the books, and how many records are marked for review. State facts only, without proposing actions.',
+        question: 'Open the review of performance in up to four short sentences: net cash movement with money in and out, its change from the preceding period of equal length if listed, the bank against the books after the stated rules, and records marked for review. State facts only, without proposing actions.',
         queries: index => [{ tool: 'cash_summary', period: index.scope.period }, { tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }, { tool: 'anomalies', severity: 'ANY' }],
-        extra: comparisonFacts,
+        extra: index => [...comparisonFacts(index), ...resolutionFacts(index)],
     },
     {
         id: 'cash', title: 'Cash received and paid',
@@ -68,8 +87,9 @@ export const AI_REPORT_SECTIONS: readonly AiReportSection[] = [
     },
     {
         id: 'reconciliation', title: 'Reconciliation with the books',
-        question: 'Describe the reconciliation of the bank statement with the books in up to three short sentences, each citing at most three facts: the difference between bank and ledger movement, how many records matched, and how many open items remain.',
+        question: 'Describe the reconciliation of the bank statement with the books in up to three short sentences, each citing at most three facts: the bank and ledger difference, how many records matched, and how many matcher exceptions the stated rules resolved and how many remain unexplained.',
         queries: () => [{ tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }],
+        extra: resolutionFacts,
     },
     {
         id: 'review', title: 'Matters for review',

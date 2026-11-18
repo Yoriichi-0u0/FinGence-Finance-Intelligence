@@ -11,7 +11,7 @@ the new version and its date.
 ## [Unreleased]
 
 ### Added
-- AI report page (`/ai-report`): a quarterly or annual style cash report for any processed run, with a summary of results against the preceding period, five sections written by AI over verified facts (every figure filled in and checked by FinGence, or FinGence's own summary instead) and print to PDF; runs only on its own key `GROQ_API_KEY5`. Reports is unchanged.
+- AI report page (`/ai-report`): a quarterly or annual style cash report for any processed run, with a summary of results against the preceding period, five sections written by AI over verified facts (every figure filled in and checked by FinGence, or FinGence's own summary instead) and print to PDF; runs only on its own key `GROQ_API_KEY5`. Reports is unchanged (#145).
 - AI06 GPT matching suggestions for unexplained reconciliation items, checked independently before they
   are shown and never changing a figure; owner-scoped role views and a categorised results table
   (#121, #122, #126, #129, #131, #132, #133).

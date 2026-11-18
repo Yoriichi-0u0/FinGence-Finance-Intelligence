@@ -3,7 +3,7 @@ vi.mock('server-only', () => ({}));
 vi.mock('next/navigation', () => ({ usePathname: () => '/ai-report', useRouter: () => ({ push: () => undefined }) }));
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AI_REPORT_SECTIONS, comparisonFacts, groundedFeature, previousMonth, writeReportSection } from '../../lib/ai-report/sections';
+import { AI_REPORT_SECTIONS, comparisonFacts, groundedFeature, resolutionFacts, previousMonth, writeReportSection } from '../../lib/ai-report/sections';
 import { COMMENTARY_QUESTION, renderedText } from '../../lib/grounded-qa/commentary';
 import type { QaModel } from '../../lib/grounded-qa/client';
 import { askRequestSchema, MAX_FACTS, MAX_QUESTION, type AskRequest } from '../../lib/grounded-qa/contracts';
@@ -47,6 +47,13 @@ describe('AI report sections', () => {
         expect(q[0].fields).toMatchObject({ moneyIn: { cents: '7188227' }, moneyOut: { cents: '4761768' } });
         expect(q[3].fields).toMatchObject({ change: { cents: '-538751' }, changePercent: { kind: 'PERCENT', tenths: -222 } });
         for (const s of AI_REPORT_SECTIONS) expect(s.queries(qi).map(x => x.tool)).not.toContain('monthly_history');
+    });
+    it('states what the reconciliation rules resolved and what is still unexplained, not the matcher\u2019s exceptions as open', () => {
+        const fact = resolutionFacts(qi)[0], res = quarter.outputs.resolution!;
+        expect(fact.fields.unexplained).toEqual({ kind: 'COUNT', n: res.totals.resolutions.UNEXPLAINED });
+        expect((fact.fields.matcherExceptions as { n: number }).n).toBeGreaterThan(res.totals.resolutions.UNEXPLAINED);
+        expect(fact.fields.timingCleared).toEqual({ kind: 'COUNT', n: res.totals.resolutions.TIMING_CLEARED });
+        for (const id of ['summary', 'reconciliation'] as const) expect(AI_REPORT_SECTIONS.find(s => s.id === id)!.extra!(qi).map(f => f.label)).toContain(fact.label);
     });
     it('gives no comparison when the history does not cover the preceding months', () => {
         expect(comparisonFacts({ ...mi, history: mi.rows })).toEqual([]);
@@ -120,6 +127,9 @@ describe('AI report page', async () => {
         expect(text).toContain('Quarterly report · Q1 2026');
         expect(text).toContain('for the first quarter ended 31 March 2026');
         expect(text).toContain('Cash by month');
+        const unexplained = quarter.outputs.resolution!.totals.resolutions.UNEXPLAINED;
+        expect(text).toContain(`${unexplained} unexplained after rules`);
+        expect(text).not.toMatch(/\d+ remain open/);
     });
 });
 

@@ -124,7 +124,9 @@ export function AiReport({ c }: { c: Ready }) {
     useEffect(() => { let live = true; if (gateway) void qaGatewayStatus('ai-report').then(s => { if (live) setStatus(s); }); return () => { live = false; }; }, [gateway]);
 
     const s = c.scope, o = c.outputs, rep = o.report, r = o.reconciliation, cur = s.currency;
-    const matched = r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT, open = r.results.length - matched;
+    // The matcher's exceptions are not what remains open: the reconciliation layer resolves most by stated rules.
+    const matched = r.counts.MATCH_EXACT + r.counts.MATCH_DATE_SHIFT, exceptions = r.results.length - matched;
+    const unexplained = o.resolution ? o.resolution.totals.resolutions.UNEXPLAINED : exceptions, resolvedByRule = exceptions - unexplained;
     const rate = r.results.length ? Math.round((matched / r.results.length) * 1000) / 10 : 0;
     const months = useMemo(() => {
         const rows = o.history.accepted ? o.history.rows : s.months.length > 1 ? o.bankRows : [], list = o.history.accepted ? o.history.months : s.months.length > 1 ? s.months : [];
@@ -137,9 +139,9 @@ export function AiReport({ c }: { c: Ready }) {
     const forecast = rep.forecast, prior = useMemo(() => priorPeriod(c), [c]);
 
     const fallback: Record<AiReportSectionId, string> = {
-        summary: `In ${periodLabel(s.period)}, cash in was ${money(cur, rep.cash.credits)} and cash out ${outflow(cur, rep.cash.debits)}, a net movement of ${money(cur, rep.cash.net)}. ${matched} of ${r.results.length} records matched between the bank statement and the books, with ${open} open. ${flagged} bank record${flagged === 1 ? ' is' : 's are'} marked for a second look.${forecast.status === 'AVAILABLE' ? ` The next-month baseline is a net ${money(cur, forecast.net)}.` : ''}`,
+        summary: `In ${periodLabel(s.period)}, cash in was ${money(cur, rep.cash.credits)} and cash out ${outflow(cur, rep.cash.debits)}, a net movement of ${money(cur, rep.cash.net)}. ${matched} of ${r.results.length} records matched the books directly${o.resolution ? `; FinGence's stated rules resolved ${Math.max(0, resolvedByRule)} of the ${exceptions} exceptions and ${unexplained} remain${unexplained === 1 ? 's' : ''} unexplained` : `, with ${exceptions} exceptions`}. ${flagged} bank record${flagged === 1 ? ' is' : 's are'} marked for a second look.${forecast.status === 'AVAILABLE' ? ` The next-month baseline is a net ${money(cur, forecast.net)}.` : ''}`,
         cash: `Cash in was ${money(cur, rep.cash.credits)} across ${rep.cash.creditRows} receipts and cash out ${outflow(cur, rep.cash.debits)} across ${rep.cash.debitRows} payments.${into[0] ? ` The most money came from ${into[0].name} (${money(cur, fromCents(into[0].total))}).` : ''}${outOf[0] ? ` The most money went to ${outOf[0].name} (${money(cur, fromCents(outOf[0].total))}).` : ''}`,
-        reconciliation: `Bank movement of ${money(cur, r.cashMovement.bank)} against ledger movement of ${money(cur, r.cashMovement.ledger)} leaves a difference of ${money(cur, r.cashMovement.signedDifference)}. ${matched} records matched and ${open} remain open${o.resolution ? `; ${o.resolution.summary}` : '.'}`,
+        reconciliation: `Bank movement of ${money(cur, r.cashMovement.bank)} against ledger movement of ${money(cur, r.cashMovement.ledger)} leaves a difference of ${money(cur, r.cashMovement.signedDifference)}. ${matched} records matched directly and the matcher raised ${exceptions} exceptions${o.resolution ? `; after FinGence's stated rules, ${unexplained} remain${unexplained === 1 ? 's' : ''} unexplained. ${o.resolution.summary}` : '.'}`,
         review: resolution ? `${resolution.items.length} bank record${resolution.items.length === 1 ? ' was' : 's were'} marked by a rule: the books confirm ${confirmed}, and ${flagged} remain${flagged === 1 ? 's' : ''} open for a second look. A mark is a reason to review, not a finding.` : `${o.anomalies.length} bank record${o.anomalies.length === 1 ? ' is' : 's are'} marked for a second look. A mark is a reason to review, not a finding.`,
         outlook: forecast.status === 'AVAILABLE' ? `For ${periodLabel(forecast.period)}, the baseline is cash in ${money(cur, forecast.credits)} and cash out ${outflow(cur, forecast.debits)}, a net ${money(cur, forecast.net)}. It is an average of recent months, not a prediction.` : `No baseline is available: ${forecast.detail}`,
     };
@@ -192,7 +194,7 @@ export function AiReport({ c }: { c: Ready }) {
                 <Stat label="Cash in" value={money(cur, rep.cash.credits)} detail={`${rep.cash.creditRows} receipts`} tone="good" />
                 <Stat label="Cash out" value={outflow(cur, rep.cash.debits)} detail={`${rep.cash.debitRows} payments`} tone="warn" />
                 <Stat label="Net movement" value={money(cur, rep.cash.net)} detail="Cash in minus cash out" tone="brand" />
-                <Stat label="Matched with the books" value={`${rate}%`} detail={`${matched} of ${r.results.length} records`} tone={open ? 'warn' : 'good'} />
+                <Stat label="Matched with the books" value={`${rate}%`} detail={`${matched} of ${r.results.length} records directly${o.resolution ? ` · ${unexplained} unexplained after rules` : ''}`} tone={unexplained ? 'warn' : 'good'} />
             </div>
 
             {prior ? <section aria-labelledby="ai-report-highlights" className="border-b border-[var(--border)] pb-6">
