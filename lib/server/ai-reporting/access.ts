@@ -12,6 +12,21 @@ export function financialExplanationLocalEnabled(): boolean {
     && !process.env.VERCEL;
 }
 
+export function aiReportingHostedEnabled(): boolean {
+  return process.env.NODE_ENV === "production"
+    && process.env.VERCEL === "1"
+    && process.env.FINGENCE_AI_REPORTING_HOSTED === "1";
+}
+
+export function financialExplanationHostedEnabled(): boolean {
+  return aiReportingHostedEnabled()
+    && process.env.FINGENCE_AI_EXPLANATION_HOSTED === "1";
+}
+
+export function financialExplanationEnabled(): boolean {
+  return financialExplanationLocalEnabled() || financialExplanationHostedEnabled();
+}
+
 function loopbackRequestAllowed(request: Request): boolean {
   const url = new URL(request.url);
   if (!["localhost", "127.0.0.1", "[::1]"].includes(url.hostname)) return false;
@@ -28,12 +43,21 @@ function loopbackRequestAllowed(request: Request): boolean {
     && request.headers.get("sec-fetch-site") !== "cross-site";
 }
 
-/** Local-development isolation only; this is not production authentication. */
-export function aiReportingRequestAllowed(request: Request): boolean {
-  return aiReportingLocalEnabled() && loopbackRequestAllowed(request);
+function sameOriginHostedRequestAllowed(request: Request): boolean {
+  const url = new URL(request.url);
+  const origin = request.headers.get("origin");
+  return (!origin || origin === url.origin)
+    && request.headers.get("sec-fetch-site") !== "cross-site";
 }
 
-/** Additional opt-in boundary for real model dispatch. */
+/** Deployment-mode and same-origin boundary; workspace authorization remains in the route gate. */
+export function aiReportingRequestAllowed(request: Request): boolean {
+  return (aiReportingLocalEnabled() && loopbackRequestAllowed(request))
+    || (aiReportingHostedEnabled() && sameOriginHostedRequestAllowed(request));
+}
+
+/** Additional explicit opt-in boundary for real model dispatch. */
 export function financialExplanationRequestAllowed(request: Request): boolean {
-  return financialExplanationLocalEnabled() && loopbackRequestAllowed(request);
+  return (financialExplanationLocalEnabled() && loopbackRequestAllowed(request))
+    || (financialExplanationHostedEnabled() && sameOriginHostedRequestAllowed(request));
 }

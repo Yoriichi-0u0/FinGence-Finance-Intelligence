@@ -13,7 +13,7 @@ import {
 } from "../../ai-reporting/financial-explanation-validation";
 import { aiGatewayEnabled } from "../ai/groq-interpreter";
 import { portableJsonSchema, structuredCompletion } from "../ai/groq";
-import { financialExplanationLocalEnabled } from "./access";
+import { financialExplanationEnabled } from "./access";
 
 export const GROQ_FINANCIAL_EXPLANATION_MODEL = "openai/gpt-oss-20b" as const;
 const MAX_COMPLETION_TOKENS = 1_800;
@@ -78,7 +78,7 @@ export function financialExplanationProviderStatus(): FinancialExplanationProvid
   const ready = Boolean(
     providerConfigured
     && model
-    && financialExplanationLocalEnabled()
+    && financialExplanationEnabled()
     && aiGatewayEnabled()
     && dispatchAuthorized
     && freeTierConfirmed,

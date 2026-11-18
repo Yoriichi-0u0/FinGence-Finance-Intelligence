@@ -78,6 +78,21 @@ function configureGroq() {
   vi.stubEnv("GROQ_API_KEY", "synthetic-test-key-not-real");
 }
 
+function configureHostedGroq() {
+  vi.stubEnv("NODE_ENV", "production");
+  vi.stubEnv("VERCEL", "1");
+  vi.stubEnv("FINGENCE_AI_REPORTING_HOSTED", "1");
+  vi.stubEnv("FINGENCE_AI_EXPLANATION_HOSTED", "1");
+  vi.stubEnv("FINGENCE_AI_EXPLANATION_PROVIDER", "groq");
+  vi.stubEnv("FINGENCE_AI_EXPLANATION_MODEL", GROQ_FINANCIAL_EXPLANATION_MODEL);
+  vi.stubEnv("FINGENCE_AI_EXPLANATION_DISPATCH_AUTHORIZED", "1");
+  vi.stubEnv("FINGENCE_AI_EXPLANATION_GROQ_FREE_TIER_CONFIRMED", "1");
+  vi.stubEnv("FINGENCE_AI_GATEWAY", "1");
+  vi.stubEnv("GROQ_API_KEY", "synthetic-test-key-not-real");
+  vi.stubEnv("FINGENCE_AI_BUDGET_REST_URL", "https://synthetic-budget.invalid");
+  vi.stubEnv("FINGENCE_AI_BUDGET_REST_TOKEN", "synthetic-budget-token-not-real");
+}
+
 function validOutput(): FinancialExplanationModelOutput {
   return {
     promptVersion: FINANCIAL_EXPLANATION_PROMPT_VERSION,
@@ -148,6 +163,26 @@ describe("local AI explanation access boundary", () => {
     expect(await response.json()).toMatchObject({
       error: { code: "PROVIDER_UNAVAILABLE" },
     });
+  });
+});
+
+describe("hosted AI explanation access boundary", () => {
+  it("requires explicit hosted flags and same-origin requests", () => {
+    configureHostedGroq();
+    const sameOrigin = new Request("https://fingence.example/api/ai-reporting/explain", {
+      headers: { origin: "https://fingence.example", "sec-fetch-site": "same-origin" },
+    });
+    expect(aiReportingRequestAllowed(sameOrigin)).toBe(true);
+    expect(financialExplanationRequestAllowed(sameOrigin)).toBe(true);
+    expect(financialExplanationProviderStatus()).toMatchObject({ ready: true });
+
+    expect(financialExplanationRequestAllowed(new Request(
+      "https://fingence.example/api/ai-reporting/explain",
+      { headers: { origin: "https://attacker.example", "sec-fetch-site": "cross-site" } },
+    ))).toBe(false);
+
+    vi.stubEnv("FINGENCE_AI_EXPLANATION_HOSTED", "0");
+    expect(financialExplanationRequestAllowed(sameOrigin)).toBe(false);
   });
 });
 
