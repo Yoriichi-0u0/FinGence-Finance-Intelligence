@@ -3,7 +3,7 @@ vi.mock('server-only', () => ({}));
 vi.mock('next/navigation', () => ({ usePathname: () => '/ai-report', useRouter: () => ({ push: () => undefined }) }));
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AI_REPORT_SECTIONS, comparisonFacts, groundedFeature, resolutionFacts, previousMonth, writeReportSection } from '../../lib/ai-report/sections';
+import { AI_REPORT_SECTIONS, AI_REPORT_STORE, clearAiReportCache, comparisonFacts, groundedFeature, resolutionFacts, previousMonth, writeReportSection } from '../../lib/ai-report/sections';
 import { COMMENTARY_QUESTION, renderedText } from '../../lib/grounded-qa/commentary';
 import type { QaModel } from '../../lib/grounded-qa/client';
 import { askRequestSchema, MAX_FACTS, MAX_QUESTION, type AskRequest } from '../../lib/grounded-qa/contracts';
@@ -88,6 +88,19 @@ describe('AI report sections', () => {
     it('an unavailable model leaves the deterministic report', async () => {
         const run = await writeReportSection(mi, { async call() { throw new InterpreterUnavailable('NOT_CONFIGURED'); } }, 'outlook');
         expect(run).toMatchObject({ status: 'UNAVAILABLE', error: 'NOT_CONFIGURED', receipts: [] });
+    });
+    it('the tab\u2019s copy of a written report is removed with the results, and a missing store never throws', () => {
+        const store = new Map<string, string>([[AI_REPORT_STORE, '{"runs":{}}'], ['other', 'kept']]);
+        vi.stubGlobal('sessionStorage', { removeItem: (k: string) => store.delete(k) });
+        clearAiReportCache();
+        expect([...store.keys()]).toEqual(['other']);
+        vi.stubGlobal('sessionStorage', undefined);
+        expect(() => clearAiReportCache()).not.toThrow();
+        vi.unstubAllGlobals();
+    });
+    it('clearing, processing or reopening a run on Data clears the AI report too', async () => {
+        const source = (await import('node:fs')).readFileSync('components/demo/context.tsx', 'utf8');
+        expect(source.match(/clearAiReportCache\(\)/g)).toHaveLength(3);
     });
     it('the Technical log attributes the AI report to its own feature', () => {
         expect(AI_REPORT_SECTIONS.map(s => groundedFeature(s.question))).toEqual(Array(AI_REPORT_SECTIONS.length).fill('report-explain'));

@@ -13,6 +13,9 @@ import { toCents } from '../poc-anomalies/source';
 import type { GroundingIndex } from '../grounded-qa/tools';
 
 export const AI_REPORT_VERSION = 'fingence-ai-report-v1';
+/** The browser tab's copy of the written sections (facts and paragraphs). Cleared with the processing results. */
+export const AI_REPORT_STORE = 'fingence-ai-report-v1';
+export function clearAiReportCache() { try { sessionStorage.removeItem(AI_REPORT_STORE); } catch { /* storage unavailable: nothing was kept */ } }
 export type AiReportSectionId = 'summary' | 'cash' | 'reconciliation' | 'review' | 'outlook';
 
 export type AiReportSection = { id: AiReportSectionId; title: string; question: string; queries: (index: GroundingIndex) => ToolCall[]; extra?: (index: GroundingIndex) => Omit<Fact, 'id' | 'query'>[] };

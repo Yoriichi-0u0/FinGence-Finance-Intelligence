@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { CheckCircle2, CircleDashed, LoaderCircle, Printer, ShieldAlert, Sparkles } from 'lucide-react';
 import { LineChart } from '@/components/charts';
@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui';
 import { useDemoProcessing } from '@/components/demo/context';
 import { Stat, Table, button, money, outflow, periodLabel, primaryButton, resultsEyebrow, usesOwnDocuments } from '@/components/demo/shared';
 import { useTechnicalDetail } from '@/components/workspace/context';
-import { AI_REPORT_SECTIONS, AI_REPORT_VERSION, precedingMonths, writeReportSection, type AiReportSectionId } from '@/lib/ai-report/sections';
+import { AI_REPORT_SECTIONS, AI_REPORT_STORE, AI_REPORT_VERSION, precedingMonths, writeReportSection, type AiReportSectionId } from '@/lib/ai-report/sections';
 import { processingConfidence } from '@/lib/confidence';
 import { CONFIDENCE_DEFINITION } from '@/components/demo/confidence';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
@@ -25,15 +25,14 @@ type Writing = { section: AiReportSectionId | null; done: number; waiting: boole
 const RATE_WAIT_MS = 20_000, RATE_TRIES = 3;
 const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const STORE = 'fingence-ai-report-v1';
 function loadRuns(processingId: string): Runs {
     try {
-        const stored = JSON.parse(sessionStorage.getItem(STORE) ?? 'null') as { version?: string; processingId?: string; runs?: Runs } | null;
+        const stored = JSON.parse(sessionStorage.getItem(AI_REPORT_STORE) ?? 'null') as { version?: string; processingId?: string; runs?: Runs } | null;
         return stored?.version === AI_REPORT_VERSION && stored.processingId === processingId && stored.runs ? stored.runs : {};
     } catch { return {}; }
 }
 function saveRuns(processingId: string, runs: Runs) {
-    try { sessionStorage.setItem(STORE, JSON.stringify({ version: AI_REPORT_VERSION, processingId, runs })); } catch { /* storage unavailable: the paragraphs last for this page only */ }
+    try { sessionStorage.setItem(AI_REPORT_STORE, JSON.stringify({ version: AI_REPORT_VERSION, processingId, runs })); } catch { /* storage unavailable: the paragraphs last for this page only */ }
 }
 
 const abs = (v: bigint) => v < 0n ? -v : v;
@@ -118,6 +117,9 @@ export function AiReport({ c }: { c: Ready }) {
     const [status, setStatus] = useState<QaGatewayStatus>({ available: false });
     const [runs, setRuns] = useState<Runs>({});
     const [writing, setWriting] = useState<Writing | null>(null);
+    // Clearing or replacing the results unmounts this page: a report still being written must not save itself back.
+    const mounted = useRef(true);
+    useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
     const index = useMemo(() => groundingIndex(c), [c]), confidence = useMemo(() => processingConfidence(c), [c]);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of browser-only state after hydration
     useEffect(() => { setRuns(loadRuns(c.processingId)); }, [c.processingId]);
@@ -155,11 +157,14 @@ export function AiReport({ c }: { c: Ready }) {
         for (const section of AI_REPORT_SECTIONS) {
             setWriting({ section: section.id, done, waiting: false });
             let run = await writeReportSection(index, gatewayQaModel, section.id);
+            if (!mounted.current) return;
             for (let tries = 1; tries < RATE_TRIES && run.status === 'UNAVAILABLE' && run.error === 'RATE_LIMITED'; tries++) {
                 setWriting({ section: section.id, done, waiting: true });
                 await pause(RATE_WAIT_MS);
                 setWriting({ section: section.id, done, waiting: false });
+                if (!mounted.current) return;
                 run = await writeReportSection(index, gatewayQaModel, section.id);
+                if (!mounted.current) return;
             }
             next[section.id] = run;
             done++;

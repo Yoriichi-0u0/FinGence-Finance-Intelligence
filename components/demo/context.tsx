@@ -7,6 +7,7 @@ import { interpretationsOf } from '@/lib/document-ingestion/ingest';
 import { replayExtractor, type StoredExtraction } from '@/lib/processing/extractions';
 import { submitServerJob, type ServerProcessingState } from './server-jobs';
 import type { RestoreBundle } from '@/lib/history/saved-run';
+import { clearAiReportCache } from '@/lib/ai-report/sections';
 
 /**
  * Browser processing context for the demo. Only the input documents (and, for unfamiliar layouts, the
@@ -100,6 +101,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
     }, [enabled, restore]);
     const openSaved = useCallback(async (saved: { processedAt: string; documents: DocumentInput[]; bundle: RestoreBundle }, label: SavedRunLabel) => {
         const current = ++run.current;
+        clearAiReportCache();
         const stored: Stored = { processedAt: saved.processedAt, documents: saved.documents.map(d => ({ name: d.name, provenance: d.provenance, base64: toBase64(d.bytes) })), interpretations: saved.bundle.interpretations,
             ...(saved.bundle.job ? { job: saved.bundle.job, extractions: saved.bundle.extractions } : {}) };
         setContext(null); setInputs([]); setLiveStages([]); setError(null); setStatus('loading');
@@ -111,7 +113,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
     const process = useCallback(async (inputs: DocumentInput[]) => {
         // Clear first: a failed or abandoned run can never leave the previous documents' results on screen.
         const current = ++run.current;
-        writeStored(null); writeLabel(null); setSavedRun(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
+        writeStored(null); writeLabel(null); clearAiReportCache(); setSavedRun(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('processing');
         try {
             // If the server says AI is on but the browser's status check has not answered yet (a fast click after a
             // fresh load), wait for it, so an unfamiliar document is never processed without the interpreter by accident.
@@ -150,7 +152,7 @@ export function DemoProcessingProvider({ enabled, aiGateway = false, serverJobs 
             return null;
         }
     }, [ai, serverJobs]);
-    const clear = useCallback(() => { run.current++; writeStored(null); writeLabel(null); setSavedRun(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
+    const clear = useCallback(() => { run.current++; writeStored(null); writeLabel(null); clearAiReportCache(); setSavedRun(null); setContext(null); setInputs([]); setLiveStages([]); setProcessedAt(null); setError(null); setStatus('empty'); }, []);
     const value = useMemo(() => ({ enabled, status: enabled ? status : 'empty' as const, context: enabled ? context : null, liveStages, processedAt, persisted, error, process, clear, ai: enabled ? ai : null, aiWait, serverJobs: enabled && serverJobs, serverState: enabled ? serverState : null, inputs: enabled ? inputs : [], savedRun: enabled ? savedRun : null, openSaved }), [savedRun, openSaved, enabled, status, context, liveStages, processedAt, persisted, error, process, clear, ai, aiWait, serverJobs, serverState, inputs]);
     return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 }
