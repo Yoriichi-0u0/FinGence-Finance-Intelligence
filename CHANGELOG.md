@@ -35,7 +35,7 @@ the new version and its date.
   with counts on the navigation and fewer status chips for Finance users (#123, #124, #125).
 
 ### Fixed
-- AI report: a section stopped by FinGence's per-person limit of six AI calls a minute now waits and retries, like Groq's own rate limit, instead of showing "AI unavailable".
+- AI report: a section stopped by FinGence's per-person limit of six AI calls a minute now waits and retries, like Groq's own rate limit, instead of showing "AI unavailable" (#146).
 - AI06 evidence API no longer returns false "unavailable" errors; it uses its own Groq key and safe
   server-only diagnostics, honours the Finance preview, and polls until saved evidence is ready
   (#127, #128, #130).
