@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/ui';
 import { useDemoProcessing } from '@/components/demo/context';
 import { Stat, Table, button, money, outflow, periodLabel, primaryButton, resultsEyebrow, usesOwnDocuments } from '@/components/demo/shared';
 import { useTechnicalDetail } from '@/components/workspace/context';
-import { AI_REPORT_SECTIONS, AI_REPORT_STORE, AI_REPORT_VERSION, precedingMonths, writeReportSection, type AiReportSectionId } from '@/lib/ai-report/sections';
+import { AI_REPORT_SECTIONS, AI_REPORT_STORE, AI_REPORT_VERSION, precedingMonths, waitableLimit, writeReportSection, type AiReportSectionId } from '@/lib/ai-report/sections';
 import { processingConfidence } from '@/lib/confidence';
 import { CONFIDENCE_DEFINITION } from '@/components/demo/confidence';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
@@ -21,8 +21,8 @@ import { cashTotals, type BankTotals } from '@/lib/poc-insights/model';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
 type Runs = Partial<Record<AiReportSectionId, GroundedRun>>;
 type Writing = { section: AiReportSectionId | null; done: number; waiting: boolean };
-/** Groq's free tier allows a few thousand tokens a minute per key: a rate-limited section waits and is tried again. */
-const RATE_WAIT_MS = 20_000, RATE_TRIES = 3;
+/** A section stopped by a per-minute limit (Groq's, or FinGence's six calls a minute per person) waits and is tried again, for up to about a minute and a half. */
+const RATE_WAIT_MS = 25_000, RATE_TRIES = 4;
 const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 function loadRuns(processingId: string): Runs {
@@ -158,7 +158,7 @@ export function AiReport({ c }: { c: Ready }) {
             setWriting({ section: section.id, done, waiting: false });
             let run = await writeReportSection(index, gatewayQaModel, section.id);
             if (!mounted.current) return;
-            for (let tries = 1; tries < RATE_TRIES && run.status === 'UNAVAILABLE' && run.error === 'RATE_LIMITED'; tries++) {
+            for (let tries = 1; tries < RATE_TRIES && run.status === 'UNAVAILABLE' && waitableLimit(run.error); tries++) {
                 setWriting({ section: section.id, done, waiting: true });
                 await pause(RATE_WAIT_MS);
                 setWriting({ section: section.id, done, waiting: false });

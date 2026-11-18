@@ -3,7 +3,7 @@ vi.mock('server-only', () => ({}));
 vi.mock('next/navigation', () => ({ usePathname: () => '/ai-report', useRouter: () => ({ push: () => undefined }) }));
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { AI_REPORT_SECTIONS, AI_REPORT_STORE, clearAiReportCache, comparisonFacts, groundedFeature, resolutionFacts, previousMonth, writeReportSection } from '../../lib/ai-report/sections';
+import { AI_REPORT_SECTIONS, AI_REPORT_STORE, clearAiReportCache, comparisonFacts, groundedFeature, resolutionFacts, waitableLimit, previousMonth, writeReportSection } from '../../lib/ai-report/sections';
 import { COMMENTARY_QUESTION, renderedText } from '../../lib/grounded-qa/commentary';
 import type { QaModel } from '../../lib/grounded-qa/client';
 import { askRequestSchema, MAX_FACTS, MAX_QUESTION, type AskRequest } from '../../lib/grounded-qa/contracts';
@@ -84,6 +84,10 @@ describe('AI report sections', () => {
     ])('%s is withheld, so the report shows FinGence’s own summary', async (_, text) => {
         const run = await writeReportSection(mi, writes(req => [{ text, cites: [factId(req, /^Cash summary/)] }]), 'cash');
         expect(run.status).toBe('WITHHELD');
+    });
+    it('waits out per-minute limits (Groq\u2019s and FinGence\u2019s per person), never a daily limit', () => {
+        expect(['RATE_LIMITED', 'CLIENT_RATE_LIMITED'].map(waitableLimit)).toEqual([true, true]);
+        expect(['CLIENT_DAILY_LIMIT', 'DAILY_LIMIT', 'DAILY_BUDGET_EXHAUSTED', 'NOT_CONFIGURED', null].map(waitableLimit)).toEqual([false, false, false, false, false]);
     });
     it('an unavailable model leaves the deterministic report', async () => {
         const run = await writeReportSection(mi, { async call() { throw new InterpreterUnavailable('NOT_CONFIGURED'); } }, 'outlook');

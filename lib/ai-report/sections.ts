@@ -115,6 +115,12 @@ export function groundedFeature(question: string): AiFeature {
     return 'finance-qa';
 }
 
+/**
+ * Per-minute limits a section waits out: Groq's own rate limit, and FinGence's per-person limit (six AI calls a
+ * minute), which a five-section report with a provider retry can reach. Daily limits are not waited for.
+ */
+export const waitableLimit = (error: string | null) => error === 'RATE_LIMITED' || error === 'CLIENT_RATE_LIMITED';
+
 /** One section: one bounded call; a reply the provider rejected as malformed JSON is tried once more. */
 export async function writeReportSection(index: GroundingIndex, model: QaModel, id: AiReportSectionId): Promise<GroundedRun> {
     const section = AI_REPORT_SECTIONS.find(s => s.id === id)!, extra = section.extra?.(index) ?? [];
