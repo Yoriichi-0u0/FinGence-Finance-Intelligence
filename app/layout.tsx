@@ -10,6 +10,7 @@ import {aiGatewayEnabled} from "@/lib/server/ai/groq-interpreter";
 import {workspaceEnabled} from "@/lib/server/workspace/store";
 import {budgetStore} from "@/lib/server/ai/budget";
 import {managementEnabled, processingStore} from "@/lib/server/processing/store";
+import {aiReportingLocalEnabled} from "@/lib/server/ai-reporting/access";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,7 +54,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem("fingence-theme");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()` }} />
       </head>
       <body className="min-h-full">
-        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()} workspace={workspaceEnabled()}>{children}</AppShell>
+        <AppShell localFinancialConsumers={m3LocalEnabled()} localAdministration={m5LocalEnabled()} localReconciliation={pocLocalEnabled()} localAiReporting={aiReportingLocalEnabled()} syntheticDemo={syntheticDemoEnabled()} aiGateway={aiGatewayEnabled()} serverJobs={!!processingStore() && !!budgetStore()} management={managementEnabled()} workspace={workspaceEnabled()}>{children}</AppShell>
       </body>
     </html>
   );

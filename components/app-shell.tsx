@@ -51,6 +51,7 @@ const results: NavItem[] = [
   { href: "/anomalies", label: "Anomalies", icon: AlertTriangle },
   { href: "/reports", label: "Reports", icon: FileBarChart },
 ];
+const aiReportingItem: NavItem = { href: "/ai-reporting", label: "AI reporting lab", icon: FileBarChart };
 const navigation = [...workspace, ...results];
 // Local M5 only; the page itself enforces role-scoped access on the server.
 const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
@@ -138,9 +139,9 @@ function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label:
   );
 }
 
-type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; managementConsole?: boolean; serverJobs?: boolean };
+type ShellFlags = { localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; localAiReporting?: boolean; syntheticDemo?: boolean; managementConsole?: boolean; serverJobs?: boolean };
 
-function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void; rail?: boolean; onToggle?: () => void }) {
+function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, localAiReporting = false, syntheticDemo = false, managementConsole = false, serverJobs = false }: ShellFlags & { onNavigate?: () => void; rail?: boolean; onToggle?: () => void }) {
   const pathname = usePathname();
   // Navigation follows the role being viewed ("Switch view" may preview a lower one).
   const session = useWorkspace(), admin = atLeast(session.viewRole ?? undefined, "ADMIN");
@@ -166,7 +167,7 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
 
       <nav aria-label="Primary navigation" className={`thin-scrollbar relative min-h-0 flex-1 space-y-5 overflow-y-auto pb-4 ${rail ? "px-2" : "px-3"}`}>
         <NavGroup label="Workspace" items={session.enabled ? [...workspace, historyItem] : workspace} pathname={pathname} onNavigate={onNavigate} rail={rail} />
-        <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} rail={rail} />
+        <NavGroup label="Results" items={localAiReporting ? [...results, aiReportingItem] : results} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         {admin ? <NavGroup label="Administration" items={[teamItem, logItem, operationsItem]} pathname={pathname} onNavigate={onNavigate} rail={rail} /> : null}
@@ -253,12 +254,12 @@ function ShellPage({ pathname, children }: { pathname: string; children: React.R
   return <>{children}</>;
 }
 
-export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false, workspace: workspaceEnabled = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean; workspace?: boolean }) {
+export function AppShell({ children, localFinancialConsumers = false, localAdministration = false, localReconciliation = false, localAiReporting = false, syntheticDemo = false, aiGateway = false, serverJobs = false, management: managementConsole = false, workspace: workspaceEnabled = false }: { children: React.ReactNode; localFinancialConsumers?: boolean; localAdministration?: boolean; localReconciliation?: boolean; localAiReporting?: boolean; syntheticDemo?: boolean; aiGateway?: boolean; serverJobs?: boolean; management?: boolean; workspace?: boolean }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const sidebar = useSidebarLayout();
-  const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
-  const current = [...navigation, financeQuestions, administration, management, operationsItem, teamItem, logItem, historyItem].find((item) => isActive(pathname, item.href));
+  const flags = { localFinancialConsumers, localAdministration, localReconciliation, localAiReporting, syntheticDemo, managementConsole, serverJobs };
+  const current = [...navigation, ...(localAiReporting ? [aiReportingItem] : []), financeQuestions, administration, management, operationsItem, teamItem, logItem, historyItem].find((item) => isActive(pathname, item.href));
 
   // Signing in and joining stand on their own page, without the navigation a visitor cannot use yet.
   if (workspaceEnabled && (pathname === "/sign-in" || pathname === "/join")) return <WorkspaceProvider enabled><AuthLayout>{children}</AuthLayout></WorkspaceProvider>;
@@ -291,7 +292,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1480px] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-28 pt-5 sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
-          {["/sign-in", "/join", "/team", "/operations", "/log"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/chatbot"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
+          {["/sign-in", "/join", "/team", "/operations", "/log"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/chatbot"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !(localAiReporting && pathname.startsWith("/ai-reporting")) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link>
           </aside>}
           <ViewingAs />

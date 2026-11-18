@@ -2,7 +2,7 @@
 import GPTSuggestions from '@/components/reconciliation/gpt-suggestions';
 import Link from 'next/link';
 import { useTechnicalDetail } from '@/components/workspace/context';
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { AlertTriangle, ArrowRight, ChartNoAxesCombined, ChevronRight, Download, Flag, MessageSquareText, Printer, ReceiptText, RefreshCw, Search, Send, ShieldCheck, SlidersHorizontal, Sparkles, TrendingUp } from 'lucide-react';
 import { LineChart } from '@/components/charts';
 import { PageHeader, Panel } from '@/components/ui';
@@ -14,13 +14,11 @@ import { answerQuestion, suggestions, MAX_QUESTION, type QaAnswer } from '@/lib/
 import { qaFacts } from '@/lib/demo/questions';
 import { askGrounded, gatewayQaModel, qaGatewayStatus, type GroundedRun, type QaGatewayStatus } from '@/lib/grounded-qa/client';
 import { groundingIndex } from '@/lib/grounded-qa/tools';
-import { renderedText } from '@/lib/grounded-qa/commentary';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 import { GroundedAnswer } from './grounded-answer';
 import { ReconciliationStatementPanel } from './reconciliation-statement';
 import { ReconciliationOutcomePanel } from './reconciliation-outcome';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
-import { AiCommentary } from './commentary';
 import { MlChallenger } from './ml-forecast';
 import { useDemoProcessing } from './context';
 import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
@@ -30,6 +28,7 @@ import { processingConfidence } from '@/lib/confidence';
 import { attentionCounts } from '@/lib/demo/attention';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
+import { ConnectedDemoAiReport } from '@/components/ai-reporting/connected-demo-report';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
@@ -324,6 +323,9 @@ function Forecasting({ c }: { c: Ready }) {
 
 function Reports({ c }: { c: Ready }) {
     const technical = useTechnicalDetail(), confidence = useMemo(() => processingConfidence(c), [c]);
+    const { inputs, processedAt, ai } = useDemoProcessing();
+    const [activeView, setActiveView] = useState<'UPLOADED_REPORTS' | 'REPORT_LIBRARY'>('UPLOADED_REPORTS');
+    const uploadedReportsTab = useRef<HTMLButtonElement>(null), reportLibraryTab = useRef<HTMLButtonElement>(null);
     // "Download report" on the Overview opens /reports?print=1: the browser's Save as PDF dialog opens on the print-ready report.
     useEffect(() => {
         if (new URLSearchParams(window.location.search).get('print') !== '1') return;
@@ -331,20 +333,48 @@ function Reports({ c }: { c: Ready }) {
         return () => clearTimeout(timer);
     }, []);
     const s = c.scope, rep = c.outputs.report, r = c.outputs.reconciliation, periods = c.outputs.periods.length ? c.outputs.periods : c.outputs.statement ? [{ period: s.period, statement: c.outputs.statement }] : [];
-    const [accepted, setAccepted] = useState<{ processingId: string; run: GroundedRun } | null>(null);
+    function moveReportTab(event: KeyboardEvent<HTMLButtonElement>) {
+        let next: 'UPLOADED_REPORTS' | 'REPORT_LIBRARY' | null = null;
+        if (event.key === 'ArrowLeft' || event.key === 'Home') next = 'UPLOADED_REPORTS';
+        if (event.key === 'ArrowRight' || event.key === 'End') next = 'REPORT_LIBRARY';
+        if (!next) return;
+        event.preventDefault(); setActiveView(next);
+        (next === 'UPLOADED_REPORTS' ? uploadedReportsTab : reportLibraryTab).current?.focus();
+    }
+    function openUploadedReport() {
+        setActiveView('UPLOADED_REPORTS');
+        window.requestAnimationFrame(() => uploadedReportsTab.current?.focus());
+    }
+    function printReport() {
+        setActiveView('UPLOADED_REPORTS');
+        window.setTimeout(() => window.print(), 0);
+    }
     function download() {
-        // An accepted AI commentary is included as rendered text with its citations and receipt; it is never a source of the figures.
-        const commentary = accepted?.processingId === c.processingId ? accepted.run : null;
-        const aiCommentary = commentary?.verdict?.sentences ? { model: commentary.receipts[0]?.model ?? null, sentences: renderedText(commentary.verdict.sentences), cites: commentary.verdict.cited.map(id => ({ id, label: commentary.facts.find(f => f.id === id)?.label ?? id })), receipts: commentary.receipts } : null;
-        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, processingConfidence: { ...confidence, definition: CONFIDENCE_DEFINITION }, ...(aiCommentary ? { aiCommentary } : {}), ...(c.outputs.statement ? { reconciliationStatement: c.outputs.statement } : {}), ...(c.outputs.periods.length > 1 ? { reconciliationStatements: c.outputs.periods.map(p => ({ period: p.period, statement: p.statement })) } : {}), ...(c.outputs.resolution ? { reconciliation: c.outputs.resolution } : {}), ...(c.outputs.anomalyResolution ? { anomalies: c.outputs.anomalyResolution } : {}), stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
+        const url = URL.createObjectURL(new Blob([JSON.stringify({ ...rep, processingConfidence: { ...confidence, definition: CONFIDENCE_DEFINITION }, ...(c.outputs.statement ? { reconciliationStatement: c.outputs.statement } : {}), ...(c.outputs.periods.length > 1 ? { reconciliationStatements: c.outputs.periods.map(p => ({ period: p.period, statement: p.statement })) } : {}), ...(c.outputs.resolution ? { reconciliation: c.outputs.resolution } : {}), ...(c.outputs.anomalyResolution ? { anomalies: c.outputs.anomalyResolution } : {}), stages: c.stages.map(({ id, decision, summary, checks }) => ({ id, decision, summary, checks })), quarantine: c.quarantine }, null, 2)], { type: 'application/json' }));
         const a = document.createElement('a'); a.href = url; a.download = `fingence-summary-${c.processingId}.json`; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
     return <>
-        <PageHeader eyebrow={resultsEyebrow(s)} title="Reports" description="A management summary of the same figures, to print or keep." actions={<div className="flex flex-wrap gap-2 print:hidden"><button type="button" className={button} onClick={download}><Download aria-hidden="true" size={16} />JSON evidence</button><button type="button" className={primaryButton} onClick={() => window.print()}><Printer aria-hidden="true" size={16} />Print or save PDF</button></div>} />
+        <PageHeader eyebrow={resultsEyebrow(s)} title="Reports" actions={<div className="flex flex-wrap gap-2 print:hidden"><button type="button" className={button} onClick={download}><Download aria-hidden="true" size={16} />JSON evidence</button><button type="button" className={primaryButton} onClick={printReport}><Printer aria-hidden="true" size={16} />Print or save PDF</button></div>} />
         <SourceStrip context={c} />
-        <AiCommentary key={c.processingId} context={c} onResult={run => setAccepted(run ? { processingId: c.processingId, run } : null)} />
-        <Panel title={`Management summary · ${s.businessName} · ${periodLabel(s.period)}`} eyebrow={`${usesOwnDocuments(c) ? c.job ? 'Your documents, processed on the FinGence server' : 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
-            <div className="space-y-5 p-4 text-sm leading-relaxed sm:p-6 [&>section]:border-b [&>section]:border-[var(--border)] [&>section]:pb-5 [&>section:last-of-type]:border-0 [&_h3]:mb-1 [&_h3]:text-[13px] [&_h3]:uppercase [&_h3]:tracking-[0.08em] [&_h3]:text-[var(--brand-ink)]">
+        <div className="mt-6 border-b border-[var(--border)] print:hidden">
+            <div role="tablist" aria-label="Report views" className="grid grid-cols-2 gap-2 sm:flex sm:gap-6">
+                <button ref={uploadedReportsTab} id="uploaded-reports-tab" role="tab" type="button" aria-selected={activeView === 'UPLOADED_REPORTS'} aria-controls="uploaded-reports-panel" tabIndex={activeView === 'UPLOADED_REPORTS' ? 0 : -1} onClick={() => setActiveView('UPLOADED_REPORTS')} onKeyDown={moveReportTab} className={`-mb-px min-h-12 border-b-2 px-3 py-3 text-left text-sm font-semibold transition-colors sm:px-4 ${activeView === 'UPLOADED_REPORTS' ? 'border-[var(--brand)] text-[var(--ink)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'}`}>
+                    Uploaded Data Reports
+                </button>
+                <button ref={reportLibraryTab} id="report-library-tab" role="tab" type="button" aria-selected={activeView === 'REPORT_LIBRARY'} aria-controls="report-library-panel" tabIndex={activeView === 'REPORT_LIBRARY' ? 0 : -1} onClick={() => setActiveView('REPORT_LIBRARY')} onKeyDown={moveReportTab} className={`-mb-px min-h-12 border-b-2 px-3 py-3 text-left text-sm font-semibold transition-colors sm:px-4 ${activeView === 'REPORT_LIBRARY' ? 'border-[var(--brand)] text-[var(--ink)]' : 'border-transparent text-[var(--muted)] hover:border-[var(--border-strong)] hover:text-[var(--ink)]'}`}>
+                    Report Library
+                </button>
+            </div>
+        </div>
+        <ConnectedDemoAiReport key={c.processingId} context={c} inputs={inputs} processedAt={processedAt} providerProbeEnabled={Boolean(ai?.available)} activeView={activeView} onOpenSavedReport={openUploadedReport} supportingEvidence={
+            <details className="mt-8 rounded-2xl border border-[var(--border)] bg-[var(--surface-subtle)] print:hidden">
+                <summary className="cursor-pointer list-none px-4 py-4 sm:px-5 [&::-webkit-details-marker]:hidden">
+                    <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--brand-ink)]">Supporting evidence</span>
+                    <span className="mt-1 block text-base font-semibold text-[var(--ink)]">Processing and reconciliation details</span>
+                </summary>
+                <div className="space-y-5 border-t border-[var(--border)] p-4 sm:p-5">
+                    <Panel title={`Management summary · ${s.businessName} · ${periodLabel(s.period)}`} eyebrow={`${usesOwnDocuments(c) ? c.job ? 'Your documents, processed on the FinGence server' : 'Your documents, processed locally' : 'Fictional sample documents'} · not for financial publication`}>
+                        <div className="space-y-5 p-4 text-sm leading-relaxed sm:p-6 [&>section]:border-b [&>section]:border-[var(--border)] [&>section]:pb-5 [&>section:last-of-type]:border-0 [&_h3]:mb-1 [&_h3]:text-[13px] [&_h3]:uppercase [&_h3]:tracking-[0.08em] [&_h3]:text-[var(--brand-ink)]">
                 <section><h3 className="font-semibold">Processing confidence</h3><p>{confidence.status === 'MEASURED' ? <><strong className="tabular-nums">{confidence.percent}%</strong> ({confidence.band === 'HIGH' ? 'High' : confidence.band === 'CHECK' ? 'Check advised' : 'Low'}). {[...confidence.read.reasons, ...confidence.explained.reasons].length ? `Fell short: ${[...confidence.read.reasons, ...confidence.explained.reasons].join('; ')}.` : 'Every bank record was read reliably, checked and explained.'}</> : `Incomplete: ${confidence.reason}`}</p><p className="mt-1 text-xs">{CONFIDENCE_DEFINITION}</p></section>
                 <section><h3 className="font-semibold">Sources</h3><ul className="mt-1 space-y-1 text-xs">{rep.sources.map(x => <li key={x.sha256} className="break-all">{x.role.replace('_', ' ').toLowerCase()}: {x.name}{technical ? ` · SHA-256 ${x.sha256}` : ''}</li>)}</ul></section>
                 <section><h3 className="font-semibold">Bank cash movement</h3><p>Cash in {money(s.currency, rep.cash.credits)} ({rep.cash.creditRows} records); cash out {outflow(s.currency, rep.cash.debits)} ({rep.cash.debitRows}); net {money(s.currency, rep.cash.net)}. Not revenue, profit or a cash flow statement.</p></section>
@@ -356,8 +386,11 @@ function Reports({ c }: { c: Ready }) {
                 <section><h3 className="font-semibold">Verification</h3><p>{c.stages.filter(x => x.decision === 'AUTO_ACCEPTED').length} of {c.stages.length} stages auto-accepted after automated checks; {c.quarantine.length} items quarantined.</p></section>
                 <section><h3 className="font-semibold">Limitations</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-xs">{rep.limitations.map(l => <li key={l}>{l}</li>)}</ul></section>
                 {technical ? <p className="text-xs text-[var(--muted)]">Processing {c.processingId} · {c.version}</p> : null}
-            </div>
-        </Panel>
+                        </div>
+                    </Panel>
+                    </div>
+            </details>
+        } />
     </>;
 }
 
