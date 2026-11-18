@@ -41,9 +41,10 @@ export async function askGrounded(index: GroundingIndex, question: string, model
 }
 
 export type QaGatewayStatus = { available: true; model: string; sends: string } | { available: false };
-export async function qaGatewayStatus(): Promise<QaGatewayStatus> {
+/** `ai-report` asks whether the AI report's own key is set; the default is the shared Q&A gateway. */
+export async function qaGatewayStatus(purpose: 'qa' | 'ai-report' = 'qa'): Promise<QaGatewayStatus> {
     try {
-        const response = await fetch('/api/ai/ask', { cache: 'no-store' });
+        const response = await fetch(purpose === 'ai-report' ? '/api/ai/ask?for=ai-report' : '/api/ai/ask', { cache: 'no-store' });
         if (!response.ok) return { available: false };
         const body = await response.json() as { available?: unknown; model?: unknown; sends?: unknown };
         return body.available === true && typeof body.model === 'string' ? { available: true, model: body.model, sends: String(body.sends ?? '') } : { available: false };

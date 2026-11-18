@@ -52,6 +52,8 @@ const defaultTransport: GroqTransport = async (body, signal, key) => {
 export const DEDICATED_GROQ_KEYS: Partial<Record<AiFeature, { env: string; label: string }>> = {
     'recon-suggest': { env: 'GROQ_API_KEY3', label: 'key-3' },
     'finance-chat': { env: 'GROQ_API_KEY4', label: 'key-4' },
+    // The AI report (/ai-report) runs only on its own key; until it is set, the page shows FinGence's own summaries.
+    'report-explain': { env: 'GROQ_API_KEY5', label: 'key-5' },
 };
 export const dedicatedKey = (feature: AiFeature) => DEDICATED_GROQ_KEYS[feature] ?? null;
 /** Whether a feature can make a call: its dedicated key when it has one, otherwise either shared key. */

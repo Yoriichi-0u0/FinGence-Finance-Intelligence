@@ -3,7 +3,7 @@ import { answerSchema, planSchema, type AskRequest } from '../../grounded-qa/con
 import type { ModelReceipt } from '../../interpretation/contracts';
 import { DEFAULT_GROQ_MODEL, GROQ_MODELS, portableJsonSchema, structuredCompletion, worstCaseCompletionUsd, type GroqTransport } from './groq';
 import { reasoningEffort } from './groq-interpreter';
-import { COMMENTARY_QUESTION } from '../../grounded-qa/commentary';
+import { groundedFeature } from '../../ai-report/sections';
 
 export const QA_PROMPT_REVISION = 'grounded-qa-2';
 export function qaModel() {
@@ -75,8 +75,8 @@ export function worstCaseQaUsd(req: AskRequest, model = qaModel()) {
 /** One bounded call for one stage; the content is untrusted until the browser's gates pass. */
 export async function askModel(req: AskRequest, options: { model?: string; reasoningEffort?: 'low' | 'medium' | 'high'; transport?: GroqTransport } = {}): Promise<{ content: unknown; receipt: ModelReceipt; stage: AskRequest['stage'] }> {
     const model = options.model && GROQ_MODELS.includes(options.model) ? options.model : qaModel(), s = stage(req);
-    // The report's commentary is the same grounded call with a fixed question; the log tells the two apart.
-    const feature = req.question === COMMENTARY_QUESTION ? 'report-commentary' : 'finance-qa';
+    // The report commentary and the AI report are the same grounded call with fixed questions; the log tells them apart.
+    const feature = groundedFeature(req.question);
     const { content, receipt } = await structuredCompletion({ feature, model, ...s, reasoningEffort: options.reasoningEffort ?? reasoningEffort(), transport: options.transport });
     return { content, receipt, stage: req.stage };
 }

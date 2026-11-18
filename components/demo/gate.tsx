@@ -5,7 +5,7 @@ import { useDemoProcessing } from './context';
 import { DemoModule, isReady, type DemoView } from './modules';
 import { primaryButton } from './shared';
 
-const TITLES: Record<DemoView, string> = { overview: 'Overview', transactions: 'Transactions', reconciliation: 'Reconciliation', analytics: 'Analytics', anomalies: 'Anomalies', forecasting: 'Forecasting', reports: 'Reports', ask: 'Finance Q&A' };
+const TITLES: Record<DemoView, string> = { overview: 'Overview', transactions: 'Transactions', reconciliation: 'Reconciliation', analytics: 'Analytics', anomalies: 'Anomalies', forecasting: 'Forecasting', reports: 'Reports', 'ai-report': 'AI report', ask: 'Finance Q&A' };
 
 /**
  * Hosted and default local pages: the connected view of the current processing context, or a clear

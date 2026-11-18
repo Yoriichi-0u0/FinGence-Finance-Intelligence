@@ -20,7 +20,7 @@ CI enforces the rule: `tests/ai-calls/guard.test.ts` fails the build if a file c
    |---|---|---|
    | `finance-chat` | chatbot | Jason |
    | `recon-suggest` | reconciliation suggestions | Celester |
-   | `report-explain` | report explanation | Izzat |
+   | `report-explain` | AI report (`/ai-report`) | Yuen Kai |
    | `forecast-note` | forecast notes | Frederick |
 
 2. **Wrap the call.** `withAiCall(meta, run, judge?)` returns exactly what `run` returns.

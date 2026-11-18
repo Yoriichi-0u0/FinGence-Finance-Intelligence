@@ -17,6 +17,7 @@ import { groundingIndex } from '@/lib/grounded-qa/tools';
 import { renderedText } from '@/lib/grounded-qa/commentary';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 import { GroundedAnswer } from './grounded-answer';
+import { AiReport } from '@/components/ai-report/ai-report';
 import { ReconciliationStatementPanel } from './reconciliation-statement';
 import { ReconciliationOutcomePanel } from './reconciliation-outcome';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
@@ -31,7 +32,7 @@ import { attentionCounts } from '@/lib/demo/attention';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
 
-export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ask';
+export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ai-report' | 'ask';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
 export const isReady = (c: ProcessingContext | null): c is Ready => !!c?.scope && !!c.outputs.reconciliation && !!c.outputs.totals && !!c.outputs.forecast && !!c.outputs.report;
 
@@ -435,6 +436,7 @@ export function DemoModule({ view, context, layout }: { view: DemoView; context:
         case 'anomalies': return <Anomalies c={context} />;
         case 'forecasting': return <Forecasting c={context} />;
         case 'reports': return <Reports c={context} />;
+        case 'ai-report': return <AiReport c={context} />;
         case 'ask': return <Ask c={context} />;
     }
 }

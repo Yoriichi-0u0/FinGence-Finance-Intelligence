@@ -34,6 +34,7 @@ import {
   RefreshCw,
   ScrollText,
   ShieldCheck,
+  Sparkles,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -50,6 +51,7 @@ const results: NavItem[] = [
   { href: "/forecasting", label: "Forecasting", icon: TrendingUp },
   { href: "/anomalies", label: "Anomalies", icon: AlertTriangle },
   { href: "/reports", label: "Reports", icon: FileBarChart },
+  { href: "/ai-report", label: "AI report", icon: Sparkles },
 ];
 const navigation = [...workspace, ...results];
 // Local M5 only; the page itself enforces role-scoped access on the server.
