@@ -60,6 +60,15 @@ describe('page chrome by role', async () => {
         expect(data).toContain('Test version for SAIC: use the sample documents or test files, not confidential records.');
         expect(data).not.toMatch(/Public prototype|Synthetic sample/);
     });
+    it('while a signed-in session is still loading, nothing claims a public demo (UAT finding, 19 Nov)', () => {
+        const value = { enabled: true, loading: true, session: null, viewRole: null, setViewAs: () => undefined, ended: false, refresh: async () => null, signOut: async () => undefined };
+        const Provider = DemoProcessingProvider as (props: { enabled: boolean; children?: ReactNode }) => ReactNode;
+        const render = (child: ReactNode) => renderToStaticMarkup(createElement(WorkspaceContext.Provider, { value }, createElement(Provider, { enabled: true }, child))).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+        expect(render(createElement(DemoBanner)).trim()).toBe('');
+        const data = render(createElement(DemoDataWorkspace));
+        expect(data).toContain('Test version: use the sample documents or test files, not confidential records.');
+        expect(data).not.toMatch(/Public prototype|public demo/i);
+    });
     it('the account menu shows who is signed in and opens on demand', () => {
         const menu = as('ADMIN', createElement(AccountMenu));
         expect(menu).toContain('pat.lee@saic-test.invalid');

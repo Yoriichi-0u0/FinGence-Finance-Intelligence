@@ -35,6 +35,9 @@ the new version and its date.
   with counts on the navigation and fewer status chips for Finance users (#123, #124, #125).
 
 ### Fixed
+- Signed-in users no longer see a moment of "Public demo" and "Public prototype" wording while their session loads (UAT finding).
+- AI answers that say "decreased by" or "increased by" a negative amount (a double negative) are now withheld, like "lower by" (UAT finding).
+- AI report: the review-of-performance section asks for at most three facts a sentence, after its reply was rejected as malformed twice (UAT finding).
 - AI report: a section stopped by FinGence's per-person limit of six AI calls a minute now waits and retries, like Groq's own rate limit, instead of showing "AI unavailable" (#146).
 - AI06 evidence API no longer returns false "unavailable" errors; it uses its own Groq key and safe
   server-only diagnostics, honours the Finance preview, and polls until saved evidence is ready

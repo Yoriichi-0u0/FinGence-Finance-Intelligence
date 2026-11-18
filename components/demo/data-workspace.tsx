@@ -83,11 +83,11 @@ export default function DemoDataWorkspace() {
     return <>
         <PageHeader eyebrow="Data" title="Process documents" description="Choose a bank statement and a general ledger, process them once, and every page shows the checked results." />
         <Steps current={current} progress={status === 'processing' ? { done: stageDone, total: stages.length } : null} />
-        <section role="note" aria-label={workspace.session ? 'Test version data notice' : 'Public prototype data notice'} className="mb-6 overflow-hidden rounded-2xl border border-[var(--warn-line)] bg-[var(--warn-soft)] text-sm">
+        <section role="note" aria-label={workspace.session || workspace.enabled ? 'Test version data notice' : 'Public prototype data notice'} className="mb-6 overflow-hidden rounded-2xl border border-[var(--warn-line)] bg-[var(--warn-soft)] text-sm">
             <div className="flex gap-3 px-4 py-3">
                 <ShieldAlert aria-hidden="true" size={18} className="mt-0.5 shrink-0 text-[var(--warn)]" />
-                {workspace.session
-                    ? <p><strong>Test version for {workspace.session.organization.name}: use the sample documents or test files, not confidential records.</strong> The built-in samples are fictional.</p>
+                {workspace.session || workspace.enabled
+                    ? <p><strong>Test version{workspace.session ? ` for ${workspace.session.organization.name}` : ''}: use the sample documents or test files, not confidential records.</strong> The built-in samples are fictional.</p>
                     : <p><strong>Public prototype: do not submit confidential or real financial documents.</strong> The built-in sample documents are fictional.</p>}
             </div>
             <details className="group border-t border-[var(--warn-line)] bg-[var(--surface)]">
