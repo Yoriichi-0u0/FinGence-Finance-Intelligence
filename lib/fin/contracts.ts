@@ -27,6 +27,7 @@ export const FIN_PAGES = {
     '/forecasting': { label: 'Forecasting', about: 'a next-month cash baseline (an average of recent months, not a prediction), with an experimental challenger where enabled' },
     '/anomalies': { label: 'Anomalies', about: 'payments worth a second look; a candidate is a reason to review, never a finding' },
     '/reports': { label: 'Reports', about: 'the management report, ready to print or save as PDF' },
+    '/ai-report': { label: 'AI report', about: 'a quarterly or annual style report written by AI over the verified figures, every figure filled in and checked by FinGence' },
     '/chatbot': { label: 'Fin', about: 'a full-page conversation with Fin' },
     '/account': { label: 'Your account', about: 'who you are signed in as, and changing your own password' },
 } as const;

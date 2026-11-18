@@ -4,18 +4,24 @@ import { InterpreterUnavailable } from '@/lib/interpretation/contracts';
 import { admit, clientAddress } from '@/lib/server/ai/budget';
 import { askModel, qaModel, worstCaseQaUsd } from '@/lib/server/ai/grounded-qa';
 import { aiGatewayEnabled } from '@/lib/server/ai/groq-interpreter';
+import { groqConfiguredFor } from '@/lib/server/ai/groq';
 import { boundedJson, noStoreJson as json } from '@/lib/server/ai/request';
 import { aiCaller, processingGate } from '@/lib/server/workspace/session';
 import { recordAiRefusal, runAsCaller } from '@/lib/ai-calls';
-import { COMMENTARY_QUESTION } from '@/lib/grounded-qa/commentary';
+import { groundedFeature } from '@/lib/ai-report/sections';
 
 export const dynamic = 'force-dynamic';
 const MAX_BODY_BYTES = 32_000;
 const notFound = () => new Response('Not found', { status: 404 });
 
-/** Availability only; behind the same switch and budget as layout interpretation. */
-export async function GET() {
+/**
+ * Availability only; behind the same switch and budget as layout interpretation. `?for=ai-report` asks about the
+ * AI report, which runs only on its own key (GROQ_API_KEY5) and is unavailable until that key is set.
+ */
+export async function GET(request?: Request) {
     if (!aiGatewayEnabled()) return notFound();
+    const forReport = request ? new URL(request.url).searchParams.get('for') === 'ai-report' : false;
+    if (forReport && !groqConfiguredFor('report-explain')) return json({ available: false });
     return json({ available: true, provider: 'GROQ', model: qaModel(), sends: 'Your question, the list of counterparties and months, and then only the verified facts the chosen queries return; never the full records.' });
 }
 
@@ -41,7 +47,7 @@ async function answer(request: Request, body: unknown) {
     const names = parsed.data.stage === 'plan' ? parsed.data.catalogue.counterparties : [...new Set(parsed.data.facts.flatMap(f => Object.values(f.fields)))];
     const refusal = preCheck(parsed.data.question, names);
     if (refusal) {
-        await recordAiRefusal({ feature: parsed.data.question === COMMENTARY_QUESTION ? 'report-commentary' : 'finance-qa', model: qaModel() }, 'REFUSED_BEFORE_MODEL');
+        await recordAiRefusal({ feature: groundedFeature(parsed.data.question), model: qaModel() }, 'REFUSED_BEFORE_MODEL');
         return json({ code: 'REFUSED_BEFORE_MODEL', reason: refusal }, 422);
     }
     const admission = await admit({ client: clientAddress(request.headers), worstCaseUsd: worstCaseQaUsd(parsed.data) });
