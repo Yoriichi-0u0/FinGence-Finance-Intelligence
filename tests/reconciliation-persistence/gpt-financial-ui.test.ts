@@ -95,10 +95,20 @@ describe('AI06 financial matching table',()=>{
 });
 afterAll(()=>{if(process.env.AI06_UI_REVIEW!=='1')return;const dir='.local/reviews/ai06-table-ui';mkdirSync(dir,{recursive:true});const data=many();data.runs[0].items.push(...fixture().runs[0].items.slice(2));writeFileSync(`${dir}/data.json`,JSON.stringify(data));});
 
-it('shows Reject for an authorized NEEDS_REVIEW row, keeps Approve disabled and renders the saved decision',()=>{
+it('shows only compact Reject for an authorized NEEDS_REVIEW row and renders the saved decision',()=>{
  const data=fixture();data.runs[0].items=[data.runs[0].items[2]];
  const controls={review:{version:'website-gpt-review/1' as const,evidenceId:'a'.repeat(64),accountingEffect:'NONE' as const,items:[{ordinal:2,decision:'PENDING' as 'PENDING'|'REJECT',canApprove:false,canReject:true}]},busy:false,message:'',decide:vi.fn(async()=>{})};
  const render=()=>renderToStaticMarkup(createElement(GPTFinancialSummaryView,{data:financeGPTView(data),technical:false,reviewControls:controls,view:'SUGGESTED',onViewChange:()=>{}}));
- expect(render()).toMatch(/<button[^>]*disabled=""[^>]*>Approve suggestion/);expect(render()).toMatch(/<button(?![^>]* disabled=)[^>]*>Reject suggestion/);
- controls.review.items[0]={ordinal:2,decision:'REJECT',canApprove:false,canReject:false};expect(render()).toContain('Proposal rejected');expect(render()).not.toContain('Reject suggestion');expect(render()).toContain('Needs review');
+ expect(render()).not.toContain('>Approve</button>');expect(render()).toMatch(/<button(?![^>]* disabled=)[^>]*>Reject<\/button>/);
+ controls.review.items[0]={ordinal:2,decision:'REJECT',canApprove:false,canReject:false};expect(render()).toContain('Proposal rejected');expect(render()).not.toContain('>Reject</button>');expect(render()).toContain('Needs review');
+});
+
+it.each(['loading','generating','empty','unavailable','error'] as const)('shows the exact waiting and permanent-decision notices in %s',status=>{
+ const html=actual(fixture(),'FINANCE','FINANCE',{status});
+ expect(html).toContain('AI matching may take around 90 seconds. Please wait while your transactions are checked.');
+ expect(html).toContain('Rejecting a suggestion saves your decision permanently. It will not delete transactions or change financial totals.');
+ expect(html).not.toContain('>Approve</button>');expect(html).not.toContain('>Reject</button>');
+});
+it('retains both exact notices when suggestions are ready',()=>{
+ const html=actual();expect(html).toContain('AI matching may take around 90 seconds. Please wait while your transactions are checked.');expect(html).toContain('Rejecting a suggestion saves your decision permanently. It will not delete transactions or change financial totals.');
 });

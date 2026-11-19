@@ -41,8 +41,8 @@ it('reads only opaque review state and serves no-store responses',async()=>{
 });
 it('shows proposal controls only when authorized and never claims an accounting approval',()=>{
  const controls: GPTReviewControls={review:view,busy:false,message:'',decide:vi.fn()};
- const render=()=>renderToStaticMarkup(createElement(GPTReviewActions,{ordinal:0,controls}));
- expect(render()).toContain('Approve suggestion');expect(render()).not.toContain('disabled=');
+ const render=()=>renderToStaticMarkup(createElement(GPTReviewActions,{ordinal:0,controls,verified:true}));
+ expect(render()).toContain('>Approve</button>');expect(render()).not.toContain('disabled=');
  controls.busy=true;expect(render()).toContain('disabled=');controls.busy=false;
  controls.review={...view,items:[{...view.items[0],decision:'APPROVE',canApprove:false,canReject:false}]};expect(render()).toContain('No financial posting');expect(render()).not.toContain('<button');
  controls.review=null;expect(render()).toBe('');
@@ -56,4 +56,17 @@ it.each(['GET','POST'] as const)('%s failures use the correct sanitized diagnost
   expect(result.status).toBe(503);expect(await result.text()).not.toContain('PRIVATE');
   expect(logs.mock.calls).toEqual([[JSON.stringify({event:'AI06_GPT_DIAGNOSTIC',stage:method==='POST'?'REVIEW':'READ',reason:method==='POST'?'REVIEW_FAILED':'READ_FAILED'})]]);
  }finally{logs.mockRestore();}
+});
+
+it.each([
+ ['VERIFIED',true,true,true,'Approve'],
+ ['NEEDS_REVIEW',false,false,true,'Reject'],
+ ['unavailable approval',true,false,true,null],
+ ['unavailable rejection',false,false,false,null],
+] as const)('%s shows only its compact permitted action',(_name,verified,canApprove,canReject,label)=>{
+ const controls:GPTReviewControls={review:{...view,items:[{...view.items[0],canApprove,canReject}]},busy:false,message:'',decide:vi.fn()};
+ const html=renderToStaticMarkup(createElement(GPTReviewActions,{ordinal:0,controls,verified}));
+ if(label){expect(html.match(/<button/g)).toHaveLength(1);expect(html).toContain(`>${label}</button>`);expect(html).toContain('min-h-9');expect(html).toContain('px-3');expect(html).not.toContain(label==='Approve'?'>Reject</button>':'>Approve</button>');}
+ else expect(html).toBe('');
+ controls.busy=true;const busy=renderToStaticMarkup(createElement(GPTReviewActions,{ordinal:0,controls,verified}));if(label)expect(busy).toContain('disabled=""');
 });

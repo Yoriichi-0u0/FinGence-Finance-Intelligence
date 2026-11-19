@@ -71,7 +71,7 @@ export function GPTFinancialSummaryView({data,technical,reviewControls,view,onVi
  <div id={resultsId} className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)]">
  {rows.length?<Table stack={false} caption="AI06 matching results" columns={['Outcome','Bank Reference','Ledger Reference','AI Suggestion','Explanation']} rows={rows.map(item=>[
   outcomeCell(item,reviewControls?.review?.items.find(i=>i.ordinal===item.ordinal)?.decision),referenceCell(item,'bank'),referenceCell(item,'ledger'),
-  <div key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':'Needs review'}{reviewControls&&item.type==='SUGGESTION'&&<GPTReviewActions ordinal={item.ordinal} controls={reviewControls}/>}</div>,
+  <div key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':'Needs review'}{reviewControls&&item.type==='SUGGESTION'&&<GPTReviewActions ordinal={item.ordinal} controls={reviewControls} verified={verificationOf(item)==='PASS'}/>}</div>,
   <span key="explanation" className="[overflow-wrap:anywhere]">{explainGPTOutcome(item)}</span>,
  ])}/>:<p role="status" className="p-4 text-sm text-[var(--muted)]">{!itemsOf(data).length?'No saved outcomes.':view==='SUGGESTED'?'No suggestions.':'No results in this category.'}</p>}
  </div>

@@ -1,7 +1,6 @@
 "use client";
 import {useEffect,useRef,useState} from 'react';
 import {gptReviewView,gptReviewResult,type GPTReviewView} from '@/lib/gpt-review-view';
-import {button} from '@/components/demo/shared';
 /** Read-only discovery never starts generation. Missing approved SQL leaves actions unavailable. */
 export function useGPTReview(jobId?:string){
  const [saved,setSaved]=useState<{jobId:string;value:GPTReviewView}|null>(null),[busy,setBusy]=useState(false),[message,setMessage]=useState('');
@@ -41,11 +40,12 @@ export function useGPTReview(jobId?:string){
  return {review,busy,message,decide};
 }
 export type GPTReviewControls=ReturnType<typeof useGPTReview>;
-export function GPTReviewActions({ordinal,controls}:{ordinal:number;controls:GPTReviewControls}){
+export function GPTReviewActions({ordinal,controls,verified}:{ordinal:number;controls:GPTReviewControls;verified:boolean}){
  const item=controls.review?.items.find(i=>i.ordinal===ordinal);if(!item)return null;
  if(item.decision!=='PENDING')return <span className="block text-xs">Proposal {item.decision==='APPROVE'?'approved':'rejected'} · No financial posting</span>;
+ const decision=verified?'APPROVE':'REJECT';
+ if(verified?!item.canApprove:!item.canReject)return null;
  return <div className="mt-2 flex flex-wrap gap-2">
-  <button type="button" className={button} disabled={controls.busy||!item.canApprove} onClick={()=>void controls.decide(ordinal,'APPROVE')}>Approve suggestion</button>
-  <button type="button" className={button} disabled={controls.busy||!item.canReject} onClick={()=>void controls.decide(ordinal,'REJECT')}>Reject suggestion</button>
+  <button type="button" className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[var(--border-strong)] bg-[var(--surface)] px-3 py-1.5 text-xs font-semibold text-[var(--ink)] transition-colors hover:bg-[var(--surface-subtle)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--brand)] disabled:cursor-not-allowed disabled:opacity-50" disabled={controls.busy} onClick={()=>void controls.decide(ordinal,decision)}>{verified?'Approve':'Reject'}</button>
  </div>;
 }
