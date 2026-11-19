@@ -10,6 +10,9 @@ the new version and its date.
 
 ## [Unreleased]
 
+### Changed
+- AI06 explains verified suggestions, suggestions needing review, abstentions and permanent review decisions using the approved notices (#153).
+
 ### Added
 - AI06 users can reject their own suggestions needing review and restore the saved decision, while unverified approval stays blocked (#150; refs #112).
 - AI06 now shows safe review-only matching proposals without changing accounting entries, and prevents incomplete suggestions from being approved (#149; refs #112).
