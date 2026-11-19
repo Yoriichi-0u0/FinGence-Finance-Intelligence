@@ -38,3 +38,19 @@ it('still prevents duplicate clicks and reuses the request key for an explicit s
  const commands=fetcher.mock.calls.filter(([,init])=>init?.method==='POST').map(([,init])=>JSON.parse(String(init?.body)));
  expect(commands).toHaveLength(2);expect(commands[0].requestId).toBe(commands[1].requestId);expect(ReviewHarness(jobA).review!.items[0].decision).toBe('APPROVE');
 });
+
+it('NEEDS_REVIEW rejects once, blocks approval, updates status and restores the saved decision after remount',async()=>{
+ const pending={...view,items:[{...view.items[0],canApprove:false,canReject:true}]};let saved=false;
+ const fetcher=vi.fn<typeof fetch>(async(_input,init)=>{
+  if(init?.method==='POST'){expect(JSON.parse(String(init.body)).decision).toBe('REJECT');saved=true;return response('REJECT');}
+  return Response.json(saved?{...pending,items:[{...pending.items[0],decision:'REJECT',canReject:false}]}:pending);
+ });vi.stubGlobal('fetch',fetcher);
+ ReviewHarness(jobA);await flush();const ready=ReviewHarness(jobA);await ready.decide(0,'APPROVE');expect(fetcher.mock.calls.filter(([,i])=>i?.method==='POST')).toHaveLength(0);
+ await ready.decide(0,'REJECT');const decided=ReviewHarness(jobA);expect(decided.review!.items[0]).toMatchObject({decision:'REJECT',canApprove:false,canReject:false});expect(decided.message).toContain('Financial totals are unchanged');
+ await decided.decide(0,'REJECT');expect(fetcher.mock.calls.filter(([,i])=>i?.method==='POST')).toHaveLength(1);
+ hooks.cleanup?.();hooks.states=[];hooks.refs=[];hooks.deps=undefined;hooks.effect=undefined;hooks.cleanup=undefined;
+ ReviewHarness(jobA);await flush();expect(ReviewHarness(jobA).review!.items[0].decision).toBe('REJECT');
+});
+it('shows a sanitized error when saved review status cannot be loaded',async()=>{
+ vi.stubGlobal('fetch',vi.fn(async()=>new Response('',{status:503})));ReviewHarness(jobA);await flush();expect(ReviewHarness(jobA).message).toContain('review status is unavailable');expect(ReviewHarness(jobA).review).toBeNull();
+});

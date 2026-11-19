@@ -94,3 +94,11 @@ describe('AI06 financial matching table',()=>{
  });
 });
 afterAll(()=>{if(process.env.AI06_UI_REVIEW!=='1')return;const dir='.local/reviews/ai06-table-ui';mkdirSync(dir,{recursive:true});const data=many();data.runs[0].items.push(...fixture().runs[0].items.slice(2));writeFileSync(`${dir}/data.json`,JSON.stringify(data));});
+
+it('shows Reject for an authorized NEEDS_REVIEW row, keeps Approve disabled and renders the saved decision',()=>{
+ const data=fixture();data.runs[0].items=[data.runs[0].items[2]];
+ const controls={review:{version:'website-gpt-review/1' as const,evidenceId:'a'.repeat(64),accountingEffect:'NONE' as const,items:[{ordinal:2,decision:'PENDING' as 'PENDING'|'REJECT',canApprove:false,canReject:true}]},busy:false,message:'',decide:vi.fn(async()=>{})};
+ const render=()=>renderToStaticMarkup(createElement(GPTFinancialSummaryView,{data:financeGPTView(data),technical:false,reviewControls:controls,view:'SUGGESTED',onViewChange:()=>{}}));
+ expect(render()).toMatch(/<button[^>]*disabled=""[^>]*>Approve suggestion/);expect(render()).toMatch(/<button(?![^>]* disabled=)[^>]*>Reject suggestion/);
+ controls.review.items[0]={ordinal:2,decision:'REJECT',canApprove:false,canReject:false};expect(render()).toContain('Proposal rejected');expect(render()).not.toContain('Reject suggestion');expect(render()).toContain('Needs review');
+});

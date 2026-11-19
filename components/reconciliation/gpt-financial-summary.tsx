@@ -1,7 +1,7 @@
 "use client";
 import {useId,useState} from 'react';
 import {Table,button,chip} from '@/components/demo/shared';
-import {pairVerificationResult,gptSuggestionOutcome,type GPTDisplayView} from '@/lib/gpt-evidence-view';
+import {pairVerificationResult,type GPTDisplayView} from '@/lib/gpt-evidence-view';
 import {GPTReviewActions,type GPTReviewControls} from './gpt-review';
 
 type Item=GPTDisplayView['runs'][number]['items'][number];
@@ -47,10 +47,10 @@ function referenceCell(item:Item,side:'bank'|'ledger'){
  const reference=savedReference(side==='bank'?item.bankReference:item.ledgerReference),id=side==='bank'?item.bankId:item.ledgerId;
  return <strong className="font-semibold [overflow-wrap:anywhere]">{reference??id??'Not saved'}</strong>;
 }
-function outcomeCell(item:Item){
+function outcomeCell(item:Item,decision?:'PENDING'|'APPROVE'|'REJECT'){
  const result=verificationOf(item),passed=item.type==='SUGGESTION'&&result==='PASS';
  return <div className="space-y-1"><span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${passed?'bg-[var(--good-soft)] text-[var(--good-ink)]':item.type==='ABSTENTION'?'bg-[var(--surface-subtle)] text-[var(--muted-strong)]':'bg-[var(--warn-soft)] text-[var(--warn-ink)]'}`}>
- {item.type==='ABSTENTION'?'No Suggestion':passed?'Verified · Suggested Match':'Needs review'}</span><span className="block text-xs text-[var(--muted)]">Not Yet Approved</span></div>;
+ {item.type==='ABSTENTION'?'No Suggestion':passed?'Verified · Suggested Match':'Needs review'}</span><span className="block text-xs text-[var(--muted)]">{decision==='APPROVE'?'Proposal approved':decision==='REJECT'?'Proposal rejected':'Not Yet Approved'}</span></div>;
 }
 export function GPTFinancialSummary({data,technical,reviewControls}:{data:GPTDisplayView;technical:boolean;reviewControls?:GPTReviewControls}){
  const [view,setView]=useState<GPTOutcomeView>('SUGGESTED'),[page,setPage]=useState(1);
@@ -70,8 +70,8 @@ export function GPTFinancialSummaryView({data,technical,reviewControls,view,onVi
  </div>
  <div id={resultsId} className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)]">
  {rows.length?<Table stack={false} caption="AI06 matching results" columns={['Outcome','Bank Reference','Ledger Reference','AI Suggestion','Explanation']} rows={rows.map(item=>[
-  outcomeCell(item),referenceCell(item,'bank'),referenceCell(item,'ledger'),
-  <div key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':'Needs review'}{reviewControls&&gptSuggestionOutcome(item)==='VERIFIED'&&<GPTReviewActions ordinal={item.ordinal} controls={reviewControls}/>}</div>,
+  outcomeCell(item,reviewControls?.review?.items.find(i=>i.ordinal===item.ordinal)?.decision),referenceCell(item,'bank'),referenceCell(item,'ledger'),
+  <div key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':'Needs review'}{reviewControls&&item.type==='SUGGESTION'&&<GPTReviewActions ordinal={item.ordinal} controls={reviewControls}/>}</div>,
   <span key="explanation" className="[overflow-wrap:anywhere]">{explainGPTOutcome(item)}</span>,
  ])}/>:<p role="status" className="p-4 text-sm text-[var(--muted)]">{!itemsOf(data).length?'No saved outcomes.':view==='SUGGESTED'?'No suggestions.':'No results in this category.'}</p>}
  </div>

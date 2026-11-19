@@ -11,6 +11,7 @@ the new version and its date.
 ## [Unreleased]
 
 ### Added
+- AI06 users can reject their own suggestions needing review and restore the saved decision, while unverified approval stays blocked (refs #112).
 - AI06 now shows safe review-only matching proposals without changing accounting entries, and prevents incomplete suggestions from being approved (#149; refs #112).
 - AI report page (`/ai-report`): a quarterly or annual style cash report for any processed run, with a summary of results against the preceding period, five sections written by AI over verified facts (every figure filled in and checked by FinGence, or FinGence's own summary instead) and print to PDF; runs only on its own key `GROQ_API_KEY5`. Reports is unchanged (#145).
 - AI06 now considers only final unexplained transactions, preserves failed checks alongside valid suggestions, and supports audited proposal review without changing financial totals (#141).
