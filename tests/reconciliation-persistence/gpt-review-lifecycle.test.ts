@@ -13,10 +13,10 @@ import {useGPTReview} from '../../components/reconciliation/gpt-review';
 const jobA='00000000-0000-4000-8000-000000000001',jobB='00000000-0000-4000-8000-000000000002';
 const view={version:'website-gpt-review/1',evidenceId:'a'.repeat(64),accountingEffect:'NONE',items:[{ordinal:0,decision:'PENDING',canApprove:true,canReject:true}]};
 const response=(decision:'APPROVE'|'REJECT')=>Response.json({version:'website-gpt-review/1',ordinal:0,decision,financialOutcome:'UNRESOLVED',accountingEffect:'NONE'});
-function ReviewHarness(job:string){hooks.stateIndex=0;hooks.refIndex=0;const result=useGPTReview(job);if(hooks.effect){hooks.cleanup?.();const effect=hooks.effect;hooks.effect=undefined;hooks.cleanup=effect();}return result;}
+function ReviewHarness(job?:string,key=''){hooks.stateIndex=0;hooks.refIndex=0;const result=useGPTReview(job,key);if(hooks.effect){hooks.cleanup?.();const effect=hooks.effect;hooks.effect=undefined;hooks.cleanup=effect();}return result;}
 const flush=()=>new Promise<void>(resolve=>setImmediate(resolve));
 beforeEach(()=>{hooks.states=[];hooks.refs=[];hooks.stateIndex=0;hooks.refIndex=0;hooks.deps=undefined;hooks.effect=undefined;hooks.cleanup=undefined;});
-afterEach(()=>{hooks.cleanup?.();vi.unstubAllGlobals();});
+afterEach(()=>{hooks.cleanup?.();vi.unstubAllGlobals();vi.useRealTimers();});
 it.each(['resolve','reject'] as const)('job changes release buttons while the old POST is pending and later %ss',async completion=>{
  let resolveA!:(value:Response)=>void,rejectA!:(reason:Error)=>void,resolveB!:(value:Response)=>void;
  const old=new Promise<Response>((resolve,reject)=>{resolveA=resolve;rejectA=reject;}),next=new Promise<Response>(resolve=>{resolveB=resolve;});
@@ -52,5 +52,42 @@ it('NEEDS_REVIEW rejects once, blocks approval, updates status and restores the 
  ReviewHarness(jobA);await flush();expect(ReviewHarness(jobA).review!.items[0].decision).toBe('REJECT');
 });
 it('shows a sanitized error when saved review status cannot be loaded',async()=>{
- vi.stubGlobal('fetch',vi.fn(async()=>new Response('',{status:503})));ReviewHarness(jobA);await flush();expect(ReviewHarness(jobA).message).toContain('review status is unavailable');expect(ReviewHarness(jobA).review).toBeNull();
+ vi.stubGlobal('fetch',vi.fn(async()=>new Response('',{status:401})));ReviewHarness(jobA);await flush();expect(ReviewHarness(jobA).message).toContain('review status is unavailable');expect(ReviewHarness(jobA).review).toBeNull();
+});
+
+it('fetches permissions immediately when suggestions become ready and stays loading until authorization returns',async()=>{
+ let finish!:(value:Response)=>void;const waiting=new Promise<Response>(resolve=>{finish=resolve;});const fetcher=vi.fn<typeof fetch>(async()=>waiting);vi.stubGlobal('fetch',fetcher);
+ expect(ReviewHarness().loading).toBe(false);expect(fetcher).not.toHaveBeenCalled();
+ const first=ReviewHarness(jobA,'evidence-ready');expect(first.loading).toBe(true);expect(first.review).toBeNull();expect(fetcher).toHaveBeenCalledOnce();
+ await first.decide(0,'REJECT');expect(fetcher).toHaveBeenCalledOnce();
+ finish(Response.json(view));await flush();const ready=ReviewHarness(jobA,'evidence-ready');expect(ready.loading).toBe(false);expect(ready.review).not.toBeNull();
+ ReviewHarness(jobA,'evidence-ready');expect(fetcher).toHaveBeenCalledOnce();
+});
+it('aborts stale job reads and never displays their authorization on the next job',async()=>{
+ let finishA!:(value:Response)=>void,finishB!:(value:Response)=>void;
+ const a=new Promise<Response>(resolve=>{finishA=resolve;}),b=new Promise<Response>(resolve=>{finishB=resolve;});
+ const fetcher=vi.fn<typeof fetch>(async input=>String(input).includes(jobA)?a:b);vi.stubGlobal('fetch',fetcher);
+ ReviewHarness(jobA,'a');const next=ReviewHarness(jobB,'b');expect(next.review).toBeNull();expect(next.loading).toBe(true);expect((fetcher.mock.calls[0][1]?.signal as AbortSignal).aborted).toBe(true);
+ finishA(Response.json(view));await flush();expect(ReviewHarness(jobB,'b').review).toBeNull();
+ finishB(Response.json({...view,evidenceId:'b'.repeat(64)}));await flush();expect(ReviewHarness(jobB,'b').review!.evidenceId).toBe('b'.repeat(64));
+});
+it('invalidates stale same-job permission state when the saved-evidence readiness key changes',async()=>{
+ let finish!:(value:Response)=>void;const next=new Promise<Response>(resolve=>{finish=resolve;});let calls=0;
+ vi.stubGlobal('fetch',vi.fn(async()=>++calls===1?Response.json(view):next));ReviewHarness(jobA,'first');await flush();expect(ReviewHarness(jobA,'first').review).not.toBeNull();
+ const changed=ReviewHarness(jobA,'second');expect(changed.review).toBeNull();expect(changed.loading).toBe(true);expect(changed.message).toBe('');
+ finish(Response.json(view));await flush();expect(ReviewHarness(jobA,'second').loading).toBe(false);expect(calls).toBe(2);
+});
+it('recovers a transient empty review read without waiting for evidence polling or issuing a POST',async()=>{
+ vi.useFakeTimers({toFake:['setTimeout','clearTimeout']});let calls=0;const fetcher=vi.fn<typeof fetch>(async()=>++calls===1?new Response('',{status:404}):Response.json(view));vi.stubGlobal('fetch',fetcher);
+ ReviewHarness(jobA,'ready');await flush();expect(ReviewHarness(jobA,'ready').loading).toBe(true);expect(calls).toBe(1);
+ await vi.advanceTimersByTimeAsync(250);await flush();expect(ReviewHarness(jobA,'ready').review).not.toBeNull();expect(calls).toBe(2);expect(fetcher.mock.calls.every(([,init])=>init?.method!=='POST')).toBe(true);
+});
+it('does not retry authorization denial and bounds transient retries',async()=>{
+ vi.useFakeTimers({toFake:['setTimeout','clearTimeout']});const fetcher=vi.fn<typeof fetch>(async()=>new Response('',{status:401}));vi.stubGlobal('fetch',fetcher);
+ ReviewHarness(jobA,'denied');await flush();await vi.advanceTimersByTimeAsync(5000);expect(fetcher).toHaveBeenCalledOnce();expect(ReviewHarness(jobA,'denied').loading).toBe(false);expect(ReviewHarness(jobA,'denied').review).toBeNull();
+ fetcher.mockImplementation(async()=>new Response('',{status:503}));ReviewHarness(jobB,'retry');await flush();await vi.advanceTimersByTimeAsync(1250);await flush();expect(fetcher).toHaveBeenCalledTimes(4);expect(ReviewHarness(jobB,'retry').loading).toBe(false);
+});
+it('cancels a scheduled read retry when the job switches',async()=>{
+ vi.useFakeTimers({toFake:['setTimeout','clearTimeout']});const fetcher=vi.fn<typeof fetch>(async input=>String(input).includes(jobA)?new Response('',{status:404}):Response.json(view));vi.stubGlobal('fetch',fetcher);
+ ReviewHarness(jobA,'ready');await flush();ReviewHarness(jobB,'ready');await flush();await vi.advanceTimersByTimeAsync(5000);expect(fetcher.mock.calls.filter(([input])=>String(input).includes(jobA))).toHaveLength(1);
 });

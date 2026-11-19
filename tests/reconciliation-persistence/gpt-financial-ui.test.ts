@@ -112,3 +112,7 @@ it.each(['loading','generating','empty','unavailable','error'] as const)('shows 
 it('retains both exact notices when suggestions are ready',()=>{
  const html=actual();expect(html).toContain('AI matching may take around 90 seconds. Please wait while your transactions are checked.');expect(html).toContain('Rejecting a suggestion saves your decision permanently. It will not delete transactions or change financial totals.');
 });
+
+it('keeps compact status badges on one line on narrow tables',()=>{
+ const html=actual();expect(html).toContain('whitespace-nowrap rounded-full');expect(html).toContain('px-2.5 py-1 text-[11px]');expect(html).not.toContain('Verified · Suggested Match');
+});

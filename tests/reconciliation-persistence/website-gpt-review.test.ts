@@ -70,3 +70,10 @@ it.each([
  else expect(html).toBe('');
  controls.busy=true;const busy=renderToStaticMarkup(createElement(GPTReviewActions,{ordinal:0,controls,verified}));if(label)expect(busy).toContain('disabled=""');
 });
+
+it.each([true,false])('renders its action immediately but disabled while permissions load (verified=%s)',verified=>{
+ const decide=vi.fn(),controls:GPTReviewControls={review:null,busy:false,message:'',decide,loading:true};
+ const html=renderToStaticMarkup(createElement(GPTReviewActions,{ordinal:0,controls,verified}));
+ expect(html.match(/<button/g)).toHaveLength(1);expect(html).toContain('disabled=""');expect(html).toContain('aria-busy="true"');expect(html).toContain(verified?'>Approve</button>':'>Reject</button>');expect(decide).not.toHaveBeenCalled();
+ controls.loading=false;expect(renderToStaticMarkup(createElement(GPTReviewActions,{ordinal:0,controls,verified}))).toBe('');
+});
