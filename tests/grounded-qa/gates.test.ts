@@ -147,6 +147,14 @@ describe('answer gate withholds anything not grounded', () => {
         expect(failed(verifyAnswer(answered([{ text: 'The bank statement is lower than the ledger by {F1.difference}.', cites: ['F1'] }]), facts, q))).toEqual(['sign-wording']);
         expect(failed(verifyAnswer(answered([{ text: 'Bank cash movement minus ledger cash movement is {F1.difference}.', cites: ['F1'] }]), facts, q))).toEqual([]);
     });
+    it('withholds "decreased by" or "increased by" a negative amount, and keeps a signed "changed by" (live finding, AI report UAT)', async () => {
+        const { cat, facts } = await setup([{ tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }]);
+        const q = { question: 'What is the difference between the bank statement and the ledger?', catalogue: cat };
+        for (const verb of ['decreased', 'increased', 'fell', 'declined'])
+            expect(failed(verifyAnswer(answered([{ text: `The bank movement ${verb} by {F1.difference} against the ledger.`, cites: ['F1'] }]), facts, q))).toEqual(['sign-wording']);
+        expect(failed(verifyAnswer(answered([{ text: 'The difference between bank and ledger changed by {F1.difference}.', cites: ['F1'] }]), facts, q))).toEqual([]);
+        expect(failed(verifyAnswer(answered([{ text: 'Bank movement increased by {F1.bankMovement} in the period.', cites: ['F1'] }]), facts, q))).toEqual([]);
+    });
     it('keeps legitimate count idioms and rank words that match the cited fact', async () => {
         const { cat, facts } = await setup(TOP_OUT);
         const q = { question: 'Who did we pay the most?', catalogue: cat };

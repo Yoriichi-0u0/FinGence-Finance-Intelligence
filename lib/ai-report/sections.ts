@@ -78,7 +78,7 @@ export function resolutionFacts(index: GroundingIndex): Omit<Fact, 'id' | 'query
 export const AI_REPORT_SECTIONS: readonly AiReportSection[] = [
     {
         id: 'summary', title: 'Review of performance',
-        question: 'Open the review of performance in up to four short sentences: net cash movement with money in and out, its change from the preceding period of equal length if listed, the bank against the books after the stated rules, and records marked for review. State facts only, without proposing actions.',
+        question: 'Open the review of performance in up to four short sentences, each citing at most three facts: net cash movement with money in and out, its change from the preceding period if listed, the bank against the books after the rules, and records marked for review. State facts only.',
         queries: index => [{ tool: 'cash_summary', period: index.scope.period }, { tool: 'reconciliation', status: 'ALL_EXCEPTIONS' }, { tool: 'anomalies', severity: 'ANY' }],
         extra: index => [...comparisonFacts(index), ...resolutionFacts(index)],
     },

@@ -22,11 +22,12 @@ function Chip({ tone = 'plain', icon, title, children }: { tone?: keyof typeof T
  */
 export function DemoBanner() {
     const { status, context, savedRun, clear } = useDemoProcessing(), pathname = usePathname(), s = context?.scope;
-    const { session } = useWorkspace(), technical = useTechnicalDetail();
+    const { session, enabled: workspace, loading } = useWorkspace(), technical = useTechnicalDetail();
     // Only a model whose proposal was ACCEPTED shaped this processing; quarantined proposals did not.
     const aiModels = [...new Set(context?.documents.flatMap(d => d.interpretation?.decision === 'AUTO_ACCEPTED' && d.interpretation.receipt ? [d.interpretation.receipt.model] : []) ?? [])];
     const aiRejected = !aiModels.length && !!context?.documents.some(d => d.interpretation?.receipt);
-    if (pathname === '/management') return null;
+    // Signed-in workspace still loading its session: show nothing rather than a moment of public-demo wording.
+    if (pathname === '/management' || (workspace && loading && !session)) return null;
     const where = context?.job ? 'Processed on the FinGence server and re-checked in your browser' : 'Processed in your browser';
     const method = aiModels.length
         ? <Chip tone="brand" icon={<Sparkles aria-hidden="true" size={13} />} title={where}>{technical ? `AI layout (${aiModels.join(', ')} on Groq), checked by rules` : 'AI read the layout, rules checked every figure'}</Chip>
