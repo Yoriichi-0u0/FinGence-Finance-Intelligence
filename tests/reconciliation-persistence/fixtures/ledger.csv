@@ -1,0 +1,2 @@
+LedgerEntryID,BusinessID,PostingDate,CashAccount,Currency,LedgerReference,LedgerMemo,Counterparty,CashAccountDebitMYR,CashAccountCreditMYR,SignedCashMovementMYR,CategoryLabel
+GL-BUS-001-V2-00458,BUS-001,2026-03-01,1000-BANK,MYR,S5GWFDM1KYMJ,Pos Sales Settlement,POS Sales Settlement,6380.53,0.00,6380.53,Sales Revenue

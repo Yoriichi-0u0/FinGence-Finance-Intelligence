@@ -1,0 +1,1458 @@
+{
+  "date": "2026-11-03",
+  "branch": "feature/db04-ai06-group-integration",
+  "baseline": "943e0ef3e904fb5ba338cc3ba51ddc63dc7b20c9",
+  "projectRef": "zmtdozblpvtjniehwjrw",
+  "database": "postgres",
+  "hostedServerVersion": "17.11",
+  "sourceUncommitted": true,
+  "authorization": "EXISTING_FIXED_REGISTERED_BANK_LEDGER_ONLY",
+  "correction": {
+    "query": "SELECT * FROM fingence_db04_group_synthetic.issue_hosted_grant($1,$2,$3,$4,$5,clock_timestamp()+interval '30 seconds')",
+    "applicationParameters": 5,
+    "maximumSeconds": 30,
+    "hostedFunctionChanged": false,
+    "permissionsChanged": false
+  },
+  "security": {
+    "clientCertificateAndHostnameVerified": true,
+    "upstreamTls": [
+      {
+        "role": "db04_group_test_runtime",
+        "ssl": true,
+        "version": "TLSv1.3",
+        "cipher": "TLS_AES_256_GCM_SHA384"
+      },
+      {
+        "role": "db04_group_test_broker",
+        "ssl": true,
+        "version": "TLSv1.3",
+        "cipher": "TLS_AES_256_GCM_SHA384"
+      }
+    ],
+    "restrictedRolesVerified": true,
+    "forcedRlsTables": 11,
+    "connectionLimits": [
+      4,
+      2
+    ],
+    "admission": {
+      "projectRef": "zmtdozblpvtjniehwjrw",
+      "database": "postgres",
+      "processingId": "a15395c79e003c92d7e186d39da2d3cf9cc92c9a57c2f1ed5689defa013bb325",
+      "financialWrites": 0,
+      "checks": [
+        "RUNTIME_UNAUTHORIZED_READ_DENIED",
+        "BROKER_UNAUTHORIZED_READ_DENIED",
+        "DATABASE_CLOCK_ADMISSION_ACKNOWLEDGED",
+        "LIVE_FINANCE_PRINCIPAL_VERIFIED",
+        "PRIOR_PROCESSING_STATE_INSPECTED"
+      ],
+      "priorState": {
+        "jobs": 0,
+        "transactions": 0
+      },
+      "status": "PASS"
+    },
+    "provisioningStatus": "RESTRICTED_SYNTHETIC_VERIFIED"
+  },
+  "hosted": {
+    "environment": "GROUP_HOSTED",
+    "checks": [
+      {
+        "name": "REGISTERED_SOURCE_FINGERPRINTS",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "RUNTIME_RESTRICTED_AUTHENTICATION",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "RUNTIME_TLS",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "BROKER_RESTRICTED_AUTHENTICATION",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "BROKER_TLS",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "ELEVEN_FORCED_RLS_TABLES",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "NO_PUBLIC_FINANCIAL_GRANTS",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "NO_RUNTIME_FOUNDATION_ACCESS",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "NO_BROKER_FINANCIAL_ACCESS",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "NO_CAPABILITY_READ_DENIED",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "BACKEND_PROCESS_SUPPORTED",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "TWO_TRANSACTIONS_PERSISTED",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "EXACT_SOURCE_VALUES",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "SOURCE_LINEAGE_STORED",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "DETERMINISTIC_SUGGESTION",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "FUZZY_EVIDENCE",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "ACTUAL_E5_EVIDENCE",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "INDEPENDENT_VERIFICATION_STORED",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "FIVE_FINANCIAL_READ_MODELS",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "NO_AUTOMATIC_FINANCIAL_APPROVAL",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "DUPLICATE_REUSE",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "CONCURRENT_DUPLICATE_REUSE",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "RECONNECTED_BACKEND_RETRIEVAL",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      },
+      {
+        "name": "OTHER_ORGANIZATION_DENIED",
+        "expected": "PASS",
+        "actual": "PASS",
+        "status": "PASS",
+        "evidence": "scripts/db04-group/hosted-synthetic.mjs -> exerciseGroupSynthetic"
+      }
+    ],
+    "passed": 24,
+    "failed": 0,
+    "processingId": "a15395c79e003c92d7e186d39da2d3cf9cc92c9a57c2f1ed5689defa013bb325",
+    "exactNet": "6380.53",
+    "acknowledgedFinancialCommits": true,
+    "realProductionAuthenticationVerified": false
+  },
+  "local": {
+    "db04": {
+      "passed": 114,
+      "failed": 0,
+      "skipped": 0,
+      "total": 114,
+      "runnerSuccess": true
+    },
+    "nativePostgresTests": 43,
+    "remainingProject": {
+      "passed": 1201,
+      "failed": 52,
+      "skipped": 104,
+      "total": 1357,
+      "runnerSuccess": false
+    },
+    "combinedDisjoint": {
+      "passed": 1315,
+      "failed": 52,
+      "skipped": 104
+    },
+    "failures": [
+      {
+        "file": "ai-ingestion/budget.test.ts",
+        "test": "US$5 persistent application inference ceiling rejects corrupt ledgers and a symlinked ledger directory",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-i2/one-shot.test.ts",
+        "test": "durable one-shot reservation consumes the source-bound authorization once, including after a completed reservation",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-i2/one-shot.test.ts",
+        "test": "durable one-shot reservation rejects symlinked authorization files",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-i2/pipeline.test.ts",
+        "test": "offline I2 pipeline and provider boundary dispatches at most once with the same local authorization using an injected transport",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-i2/report.test.ts",
+        "test": "private evaluation reports creates parseable owner-only reports",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-i2/report.test.ts",
+        "test": "private evaluation reports rejects a symlinked private state directory",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-i2/report.test.ts",
+        "test": "private evaluation reports preflights and rejects an unsafe directory before any dispatch is attempted",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-03/quota.test.ts",
+        "test": "Proactive durable quota reservations fails closed on corrupt/symlink ledger or unbounded reservation",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-03/quota.test.ts",
+        "test": "Proactive durable quota reservations rejects a symlink ledger before reading or changing its target",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-03/quota.test.ts",
+        "test": "Proactive durable quota reservations rejects a symlink lock before reading or changing its target",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-03/quota.test.ts",
+        "test": "Proactive durable quota reservations rejects a symlink directory before reading or changing its target",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-02/extraction.test.ts",
+        "test": "0.2 source integrity and extraction boundary does not discard unrepresented financial text inside a table's outer boundary",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/authorization.test.ts",
+        "test": "retains a durable unknown/crash fence across service instances and clears only acknowledged own completion",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/authorization.test.ts",
+        "test": "rejects symlinked or public authorization files",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/authorization.test.ts",
+        "test": "blocks unresolved shared quota before constructing a dispatch",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "connects an actual injected provider through verification/persistence to M3 report and answer with recorded origin",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "never accepts unsafe fabricated model output or substitutes a recorded success",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "never accepts unsafe null model output or substitutes a recorded success",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "never accepts unsafe incomplete model output or substitutes a recorded success",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "never accepts unsafe malformed model output or substitutes a recorded success",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "keeps unknown dispatch unresolved across new service instances and never dispatches the same attempt twice",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "fails a genuine request before transport when no separately authorized owner grant exists",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "rejects a mismatched receipt without accepting or replaying financial output",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m4/pipeline.test.ts",
+        "test": "does not deliver inference metadata or unknown investigation when durable audit fails",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/local-db.test.ts",
+        "test": "local file-backed synthetic database survives a close and reopen without changing financial records",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/local-db.test.ts",
+        "test": "local file-backed synthetic database rejects symlink database directories and paths outside the local workspace",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "local V2 HTTP boundary runs a registered synthetic source, then prevents another capability from retrieving it",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "recovers a committed operation after the POST response is lost without processing it twice",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "survives a database restart and never processes a duplicate operation",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "fences a never-received operation and rejects a delayed submission",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "does not reveal another tenant's operation or allow cancellation",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "retains the PERSISTENCE_FAILED classification in durable operation status",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "retains the COMMIT_OUTCOME_UNKNOWN classification in durable operation status",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "retains the ROLLBACK_UNCONFIRMED classification in durable operation status",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "retains the UNCLASSIFIED_FAILURE classification in durable operation status",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "recovers the actual committed result after a lost response without another execution",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "recovers the actual committed result after a truncated response without another execution",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "keeps an interrupted claimed operation unresolved after database restart",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-v2-i1/route.test.ts",
+        "test": "classifies a rejected non-synthetic upload as a known pre-commit failure",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report persists accepted, rejected and warnings without C1 conversion; calculations cite the stored rows",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report quarantines unknown fields without summing unresolved records or inflating source coverage",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report rejects unregistered uploaded content and never accepts browser verification claims",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report unsupported conventions and fabricated header references fail the unchanged verifier",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report denies cross-organization enumeration and direct Data API roles",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report requires current unexpired sessions and active version-bound Finance membership",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report blocks result delivery when durable read auditing fails",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report atomically rolls back batch, ownership and success audit on a persistence failure",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "V2 M2 actual extraction → verification → tenant persistence → exact report recovers a committed operation after acknowledgement loss without dispatching or persisting twice",
+        "status": "FAIL"
+      },
+      {
+        "file": "ai-ingestion-m2/pipeline.test.ts",
+        "test": "cannot mislabel an offline adapter receipt as genuine inference",
+        "status": "FAIL"
+      },
+      {
+        "file": "ingestion/fixture-integrity.test.ts",
+        "test": "published C3-I0 fixture byte integrity preserves the published size and SHA-256 of public/samples/ingestion/expected.json",
+        "status": "FAIL"
+      },
+      {
+        "file": "ingestion/handoff.test.ts",
+        "test": "matches the checked synthetic evidence example to the real export and independent fixture expectations",
+        "status": "FAIL"
+      },
+      {
+        "file": "tenant-admin-m5/legacy-route.test.ts",
+        "test": "legacy M3 management endpoints delegate to M5 enforcement an account suspended through the new endpoint loses legacy financial access immediately",
+        "status": "FAIL"
+      }
+    ],
+    "checks": [
+      {
+        "file": "reconciliation-persistence/backend.test.ts",
+        "name": "requires an explicit trusted admission instead of constructing personal or synthetic identity",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/backend.test.ts",
+        "name": "rejects absent or invalid source registration without falling back to PoC sources (undefined)",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/backend.test.ts",
+        "name": "rejects absent or invalid source registration without falling back to PoC sources ({})",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/backend.test.ts",
+        "name": "rejects absent or invalid source registration without falling back to PoC sources ({\"bank\":\"unverified\",\"ledger\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"})",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/backend.test.ts",
+        "name": "rejects absent or invalid source registration without falling back to PoC sources ({\"bank\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"ledger\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"})",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/backend.test.ts",
+        "name": "denies processing and retrieval before touching persistence when admission rejects",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/backend.test.ts",
+        "name": "lets the authority own context and capability cleanup even when processing is unsupported",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/e5-local.test.ts",
+        "name": "executes pinned offline E5 without financial acceptance or frozen evaluation",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/financial-views.test.ts",
+        "name": "derives source-bound analytics, unavailable forecast and report from one context",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/financial-views.test.ts",
+        "name": "preserves exact cents above JS safe-integer range and does not sum ledger amounts",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/financial-views.test.ts",
+        "name": "calculates outflow magnitude and net with existing exact cash arithmetic",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/financial-views.test.ts",
+        "name": "preserves totals larger than the individual-source amount bound",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/financial-views.test.ts",
+        "name": "rejects changed scope, fingerprints and rejected or contradictory financial records",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/financial-views.test.ts",
+        "name": "rejects financial summaries from another processing/report context at the dashboard boundary",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY installs four closed foundation tables and eleven forced-RLS reconciliation tables",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY denies public, broker and runtime foundation access and prevents privileged runtime memberships",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY reuses DB02 grouped persistence with exact decimals and NULLs in the owned synthetic lab only",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY persists approved source identities, deterministic/fuzzy evidence and independent unresolved outcomes",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY uses database-time admission with application clock offset 0 ms",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY uses database-time admission with application clock offset 86400000 ms",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY uses database-time admission with application clock offset -86400000 ms",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY enforces the unchanged database deadline boundary: clock_timestamp()+interval '30 seconds'",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY enforces the unchanged database deadline boundary: clock_timestamp()+interval '31 seconds'",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY enforces the unchanged database deadline boundary: clock_timestamp()-interval '1 second'",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY stores actual pinned offline E5 rankings and independent verification via the backend",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY reuses duplicate jobs concurrently and retrieves identical five read models after reconnect",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY enforces cross-organization denial and empty direct runtime reads without a capability",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY rolls back accepted financial inserts if their final atomic audit fails",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY keeps immutable verification history and rejects expired or revoked grants",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY rejects rerun or conflicting installation without changing existing data",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY runs the same restricted synthetic scenario intended for separately approved hosted execution",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY rolls back every new object when existing default ACLs would expose newly created tables",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-package.native.test.ts",
+        "name": "reviewed group package: disposable PostgreSQL ONLY restores the complete synthetic package into a separate owned cluster and verifies exact rows/security metadata",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "binds synthetic runtime to exact group project/database/login and verified TLS",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "accepts only the pinned Session pooler project and runtime role",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "accepts only the pinned Session pooler project and broker role",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "rejects missing URLs and unsupported parameters (0)",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "rejects missing URLs and unsupported parameters (1)",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "rejects missing URLs and unsupported parameters (2)",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "rejects missing URLs and unsupported parameters (3)",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "cannot instantiate synthetic admission for normal deployed application execution",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "rejects arbitrary broker queries without sending them to a database",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "rejects the former caller-supplied expiry query before database dispatch",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/group-target.test.ts",
+        "name": "refuses hosted processing without private exact owner approval before loading credentials",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime composes team admission with persistence and five scoped read models without a route",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime connects trusted ingestion outputs through persistence, ranking, independent verification and retrieval",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime independently verifies persisted candidates concurrently and returns immutable snapshots",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime rolls back verification evidence when the atomic read audit fails",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime persists actual offline E5 rankings as unresolved evidence",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime persists fuzzy proposal evidence without changing deterministic decisions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime applies additive migrations and exercises a nonowner, nonbypass login",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime persists and reads exact financial rows, source fingerprints and independent evidence",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime recreates the connection pool/service and retains the same records",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime round-trips exact amounts above the JavaScript safe integer boundary",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime serializes concurrent repeated requests and writes exactly one complete result",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime reuses fingerprints and records while a new versioned policy creates a separate processing context",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime rolls back all accepted results when the final atomic audit INSERT fails",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime rejects invalid records before any accepted writes and preserves NULL as invalid",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime denies cross-organization service reads and independently enforces RLS",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime does not leak a pooled session claim outside its transaction",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime binds audit actors to the authenticated session even within the same organization",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime denies technical, revoked, expired, inactive and version-stale sessions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime enforces M5 suspension when the optional local lifecycle table exists",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime fences immutable evidence and denies unneeded table/DDL privileges",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime enforces unique records, typed source linkage, exact amounts and transaction FKs",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime refuses a verified decision with missing financial checks",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime persists unresolved evidence and append-only human annotations without clearing suggestions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/native.postgres.test.ts",
+        "name": "DB04/AI06 native disposable PostgreSQL with restricted runtime retains unknown commit outcomes without automatic retry",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract verifies exact source facts and preserves original decimal literals",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract hashes bytes, organization and versioned policy; names do not alter processing identity",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract requires registered bytes, rather than a browser role or source hash claim",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract rejects conflicting and unsupported schema signatures even for registered bytes",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract excludes rejected financial rows with  amount",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract excludes rejected financial rows with NULL amount",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract excludes rejected financial rows with NaN amount",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract excludes rejected financial rows with Infinity amount",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract excludes rejected financial rows with 1.001 amount",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract checks source accounting direction independently of amount magnitudes",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract refuses to clear matching amounts with contradictory counterparties",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract keeps the two-day research window explicit and versioned",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract keeps duplicate, group and partial evidence unresolved",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/processing.test.ts",
+        "name": "versioned trusted synthetic cash-source contract refuses source scope conflicts and inconsistent raw accounting sides",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "records independent financial eligibility without implying financial approval",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative signed_amount contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative currency contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative signed_amount contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative date_basis contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative sha256 contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative status contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative organization_id contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "rejects authoritative processing_id contradictions",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "does not trust forged model financial values or source lineage",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "checks raw accounting directions and dates without substituting date meanings",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "retains missing records, unknown algorithms and group proposals as unresolved",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "detects duplicate pairs and competing bank/ledger candidates across algorithms",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/proposal-verification.test.ts",
+        "name": "protects deterministic assignments without modifying them or choosing a higher score",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/ranking.test.ts",
+        "name": "preserves exact amounts and original date basis while leaving fuzzy scores unapproved",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/ranking.test.ts",
+        "name": "rejects incompatible dates, financial evidence and duplicate records",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/ranking.test.ts",
+        "name": "keeps ambiguous candidates unassigned and excludes unequal money",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/ranking.test.ts",
+        "name": "retains the research counterparty contradiction guard",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "accepts verified cash output only with exact registered bytes and original row provenance",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects missing or changed sha256 evidence",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects missing or changed sourceId evidence",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects missing or changed filename evidence",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects invented canonical signedCents",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects invented canonical recordId",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects invented canonical date",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects invented canonical row",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects conflicting roles and unregistered raw content",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "never infers a role from a filename and rejects duplicate source roles",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "rejects individually valid documents whose financial scopes conflict",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "does not cast C1 VALID labels or V2 acceptance into trusted roles",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "does not cast C1 WARNING labels or V2 acceptance into trusted roles",
+        "status": "passed"
+      },
+      {
+        "file": "reconciliation-persistence/trusted-ingestion.test.ts",
+        "name": "does not cast C1 REJECTED labels or V2 acceptance into trusted roles",
+        "status": "passed"
+      }
+    ],
+    "unchangedMainComparison": {
+      "commit": "cb5db46",
+      "method": "isolated git archive; no main checkout or source changes",
+      "totals": {
+        "passed": 1201,
+        "failed": 52,
+        "skipped": 104,
+        "total": 1357,
+        "runnerSuccess": false
+      },
+      "reproducedFailures": [
+        {
+          "file": "ai-ingestion/budget.test.ts",
+          "test": "US$5 persistent application inference ceiling rejects corrupt ledgers and a symlinked ledger directory",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-i2/one-shot.test.ts",
+          "test": "durable one-shot reservation consumes the source-bound authorization once, including after a completed reservation",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-i2/one-shot.test.ts",
+          "test": "durable one-shot reservation rejects symlinked authorization files",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-i2/pipeline.test.ts",
+          "test": "offline I2 pipeline and provider boundary dispatches at most once with the same local authorization using an injected transport",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports creates parseable owner-only reports",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports rejects a symlinked private state directory",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "test": "private evaluation reports preflights and rejects an unsafe directory before any dispatch is attempted",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations fails closed on corrupt/symlink ledger or unbounded reservation",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink ledger before reading or changing its target",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink lock before reading or changing its target",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "test": "Proactive durable quota reservations rejects a symlink directory before reading or changing its target",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-02/extraction.test.ts",
+          "test": "0.2 source integrity and extraction boundary does not discard unrepresented financial text inside a table's outer boundary",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "retains a durable unknown/crash fence across service instances and clears only acknowledged own completion",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "rejects symlinked or public authorization files",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "test": "blocks unresolved shared quota before constructing a dispatch",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "connects an actual injected provider through verification/persistence to M3 report and answer with recorded origin",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "never accepts unsafe fabricated model output or substitutes a recorded success",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "never accepts unsafe null model output or substitutes a recorded success",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "never accepts unsafe incomplete model output or substitutes a recorded success",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "never accepts unsafe malformed model output or substitutes a recorded success",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "keeps unknown dispatch unresolved across new service instances and never dispatches the same attempt twice",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "fails a genuine request before transport when no separately authorized owner grant exists",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "rejects a mismatched receipt without accepting or replaying financial output",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "test": "does not deliver inference metadata or unknown investigation when durable audit fails",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/local-db.test.ts",
+          "test": "local file-backed synthetic database survives a close and reopen without changing financial records",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/local-db.test.ts",
+          "test": "local file-backed synthetic database rejects symlink database directories and paths outside the local workspace",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "local V2 HTTP boundary runs a registered synthetic source, then prevents another capability from retrieving it",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers a committed operation after the POST response is lost without processing it twice",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "survives a database restart and never processes a duplicate operation",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "fences a never-received operation and rejects a delayed submission",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "does not reveal another tenant's operation or allow cancellation",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the PERSISTENCE_FAILED classification in durable operation status",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the COMMIT_OUTCOME_UNKNOWN classification in durable operation status",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the ROLLBACK_UNCONFIRMED classification in durable operation status",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "retains the UNCLASSIFIED_FAILURE classification in durable operation status",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers the actual committed result after a lost response without another execution",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "recovers the actual committed result after a truncated response without another execution",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "keeps an interrupted claimed operation unresolved after database restart",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "test": "classifies a rejected non-synthetic upload as a known pre-commit failure",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report persists accepted, rejected and warnings without C1 conversion; calculations cite the stored rows",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report quarantines unknown fields without summing unresolved records or inflating source coverage",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report rejects unregistered uploaded content and never accepts browser verification claims",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report unsupported conventions and fabricated header references fail the unchanged verifier",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report denies cross-organization enumeration and direct Data API roles",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report requires current unexpired sessions and active version-bound Finance membership",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report blocks result delivery when durable read auditing fails",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report atomically rolls back batch, ownership and success audit on a persistence failure",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "V2 M2 actual extraction → verification → tenant persistence → exact report recovers a committed operation after acknowledgement loss without dispatching or persisting twice",
+          "status": "FAIL"
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "test": "cannot mislabel an offline adapter receipt as genuine inference",
+          "status": "FAIL"
+        },
+        {
+          "file": "ingestion/fixture-integrity.test.ts",
+          "test": "published C3-I0 fixture byte integrity preserves the published size and SHA-256 of public/samples/ingestion/expected.json",
+          "status": "FAIL"
+        },
+        {
+          "file": "ingestion/handoff.test.ts",
+          "test": "matches the checked synthetic evidence example to the real export and independent fixture expectations",
+          "status": "FAIL"
+        },
+        {
+          "file": "tenant-admin-m5/legacy-route.test.ts",
+          "test": "legacy M3 management endpoints delegate to M5 enforcement an account suspended through the new endpoint loses legacy financial access immediately",
+          "status": "FAIL"
+        }
+      ],
+      "failuresNotReproducedInExport": [],
+      "baselineOnlyFailures": [],
+      "failedSourceFilesUnchanged": [
+        {
+          "file": "ai-ingestion/budget.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-i2/one-shot.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-i2/pipeline.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-i2/report.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-03/quota.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-02/extraction.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-m4/authorization.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-m4/pipeline.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-v2-i1/local-db.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-v2-i1/route.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ai-ingestion-m2/pipeline.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ingestion/fixture-integrity.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "ingestion/handoff.test.ts",
+          "normalizedSourceEqualsMain": true
+        },
+        {
+          "file": "tenant-admin-m5/legacy-route.test.ts",
+          "normalizedSourceEqualsMain": true
+        }
+      ]
+    }
+  },
+  "staticChecks": {
+    "typeScript": "PASS",
+    "nextTypeGeneration": "PASS",
+    "scopedLint": "PASS",
+    "serverBoundary": "PASS",
+    "diffWhitespace": "PASS"
+  },
+  "scope": {
+    "migrationsExecuted": false,
+    "seedExecuted": false,
+    "passwordOrRoleChanges": false,
+    "sslSettingChangedByAgent": false,
+    "publicFoundationRecordsModified": false,
+    "realProductionAuthenticationVerified": false,
+    "realIngestionIntegrated": false,
+    "hostedRecoveryVerified": false,
+    "commitCreated": false,
+    "pushed": false
+  },
+  "historicalDiagnostics": [
+    {
+      "status": "STOPPED",
+      "code": "25006",
+      "reason": "Inspection-only READ ONLY transaction was incompatible with principal row locks; fixed diagnostic only; no financial mutation"
+    },
+    {
+      "status": "STOPPED",
+      "code": "08P01",
+      "reason": "Private diagnostic placeholder mismatch; fixed diagnostic only; no financial mutation"
+    }
+  ]
+}
