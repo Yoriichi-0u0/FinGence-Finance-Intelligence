@@ -103,14 +103,21 @@ it('shows only compact Reject for an authorized NEEDS_REVIEW row and renders the
  controls.review.items[0]={ordinal:2,decision:'REJECT',canApprove:false,canReject:false};expect(render()).toContain('Proposal rejected');expect(render()).not.toContain('>Reject</button>');expect(render()).toContain('Needs review');
 });
 
-it.each(['loading','generating','empty','unavailable','error'] as const)('shows the exact waiting and permanent-decision notices in %s',status=>{
+const approvedNotices=[
+ 'AI matching may take around 90 seconds. Please wait while your transactions are checked.',
+ 'VERIFIED: The suggestion passed all required verification checks. You can click Approve to accept the suggested match.',
+ 'NEEDS REVIEW: The suggestion did not pass all verification checks. Approve is unavailable because there is not enough evidence to confirm the match. You can only click Reject if you do not accept the suggestion.',
+ 'NO SUGGESTION: The AI could not identify a suitable match. No action is required.',
+ 'IMPORTANT: Approving or rejecting a suggestion permanently saves your decision. It does not delete transactions or automatically change financial totals.',
+];
+it.each(['loading','generating','empty','unavailable','error'] as const)('shows all exact approved notices in %s',status=>{
  const html=actual(fixture(),'FINANCE','FINANCE',{status});
- expect(html).toContain('AI matching may take around 90 seconds. Please wait while your transactions are checked.');
- expect(html).toContain('Rejecting a suggestion saves your decision permanently. It will not delete transactions or change financial totals.');
+ for(const notice of approvedNotices)expect(html).toContain(notice);
+ expect(html).not.toContain('Rejecting a suggestion saves your decision permanently.');
  expect(html).not.toContain('>Approve</button>');expect(html).not.toContain('>Reject</button>');
 });
-it('retains both exact notices when suggestions are ready',()=>{
- const html=actual();expect(html).toContain('AI matching may take around 90 seconds. Please wait while your transactions are checked.');expect(html).toContain('Rejecting a suggestion saves your decision permanently. It will not delete transactions or change financial totals.');
+it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('retains all exact approved notices for ready %s results',role=>{
+ const html=actual(fixture(),role,role);for(const notice of approvedNotices)expect(html).toContain(notice);
 });
 
 it('keeps compact status badges on one line on narrow tables',()=>{
