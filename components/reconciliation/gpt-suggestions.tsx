@@ -54,7 +54,8 @@ export function GPTSuggestionsView({state:input,reviewControls}:{state:GPTEviden
 const stateJob=(value?:string)=>!!value&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
 function EvidenceLoader({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){
  const [state,setState]=useState<GPTEvidenceState>({status:batchId?'loading':'unavailable'});
- const reviewControls=useGPTReview(state.status==='ready'&&websiteJob&&stateJob(batchId)?batchId:undefined);
+ const readinessKey=state.status==='ready'?JSON.stringify(state.data.runs.map(r=>[r.createdAt,r.items.map(i=>[i.ordinal,i.type])])):'';
+ const reviewControls=useGPTReview(state.status==='ready'&&websiteJob&&stateJob(batchId)?batchId:undefined,readinessKey);
  useEffect(()=>{if(!batchId)return;return watchGPTEvidence(batchId,websiteJob,setState);},[batchId,websiteJob]);
  return <GPTSuggestionsView state={state} reviewControls={websiteJob?reviewControls:undefined}/>;
 }

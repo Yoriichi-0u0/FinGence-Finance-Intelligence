@@ -49,8 +49,8 @@ function referenceCell(item:Item,side:'bank'|'ledger'){
 }
 function outcomeCell(item:Item,decision?:'PENDING'|'APPROVE'|'REJECT'){
  const result=verificationOf(item),passed=item.type==='SUGGESTION'&&result==='PASS';
- return <div className="space-y-1"><span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${passed?'bg-[var(--good-soft)] text-[var(--good-ink)]':item.type==='ABSTENTION'?'bg-[var(--surface-subtle)] text-[var(--muted-strong)]':'bg-[var(--warn-soft)] text-[var(--warn-ink)]'}`}>
- {item.type==='ABSTENTION'?'No Suggestion':passed?'Verified · Suggested Match':'Needs review'}</span><span className="block text-xs text-[var(--muted)]">{decision==='APPROVE'?'Proposal approved':decision==='REJECT'?'Proposal rejected':'Not Yet Approved'}</span></div>;
+ return <div className="space-y-1"><span className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-semibold leading-none ${passed?'bg-[var(--good-soft)] text-[var(--good-ink)]':item.type==='ABSTENTION'?'bg-[var(--surface-subtle)] text-[var(--muted-strong)]':'bg-[var(--warn-soft)] text-[var(--warn-ink)]'}`}>
+ {item.type==='ABSTENTION'?'No Suggestion':passed?'Verified':'Needs review'}</span><span className="block text-xs text-[var(--muted)]">{decision==='APPROVE'?'Proposal approved':decision==='REJECT'?'Proposal rejected':'Not Yet Approved'}</span></div>;
 }
 export function GPTFinancialSummary({data,technical,reviewControls}:{data:GPTDisplayView;technical:boolean;reviewControls?:GPTReviewControls}){
  const [view,setView]=useState<GPTOutcomeView>('SUGGESTED'),[page,setPage]=useState(1);
