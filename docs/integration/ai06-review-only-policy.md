@@ -72,6 +72,8 @@ Reviewed installed SQL file remains SHA256 a67e4898b76983fc8ab49024a2e15e80a3678
 
 ## Minimal rejection follow-up — Issue #112
 
+PR: https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/150
+
 Only application rejection eligibility and existing table controls change. Approval matching/verifier/prompt policy remains unchanged. The table displays the existing controls for suggestions: SQL-backed VERIFIED permissions remain available; NEEDS_REVIEW has disabled Approve and enabled Reject for its authorized owner. After saving, the outcome cell and action area show Proposal approved/rejected; the independent matching outcome remains unchanged and financial outcome remains UNRESOLVED. Failed review loading/submission shows sanitized messages; duplicate clicks and explicit retry keys retain existing protection. A fresh API read restores immutable saved decisions.
 
 No SQL migration is needed. Installed review() already permits REJECT on owned SUGGESTION items without the APPROVE verification gate. It binds reviewer member_id/organization_id from the verified session, records created_at, serializes the job, writes the decision and review_audit atomically, returns accountingEffect NONE and prevents changing a prior decision. RLS, grants, approval checks and historical data are untouched. Never rerun the installed SQL for this application change.
