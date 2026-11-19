@@ -1,5 +1,7 @@
 # AI06 proposal-only review overlay — Issue #112
 
+PR: https://github.com/Yoriichi-0u0/FinGence-Finance-Intelligence/pull/149
+
 ## Behavior and eligibility
 
 The unchanged ingestion and reconciliation pipeline remains authoritative. This change never edits its original classifications, correcting entries, reports or totals. It adds an AI06-only candidate overlay, not a financial match or a new ingestion contract.
