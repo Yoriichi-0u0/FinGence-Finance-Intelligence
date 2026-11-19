@@ -8,11 +8,11 @@ const reasons=[
  'GPT_JOB_DENIED','GPT_SESSION_DENIED','GPT_SQL_ACCESS_DENIED','GPT_SQL_CONTRACT_MISSING','GPT_SQL_DUPLICATE','GPT_SQL_FAILED',
  'DATABASE_CONFIGURATION','DATABASE_UNAVAILABLE','PERSISTENCE_FAILED','COMMIT_OUTCOME_UNKNOWN','ROLLBACK_UNCONFIRMED',
  'DB_TLS_FAILED','DB_AUTH_FAILED','DB_NETWORK_FAILED','DB_CONNECT_FAILED','DB_POOL_ERROR',
- 'STORAGE_UNAVAILABLE','SESSION_SERVICE_UNAVAILABLE','SESSION_VERIFICATION_FAILED','READ_FAILED','GENERATION_FAILED',
+ 'STORAGE_UNAVAILABLE','SESSION_SERVICE_UNAVAILABLE','SESSION_VERIFICATION_FAILED','READ_FAILED','REVIEW_FAILED','GENERATION_FAILED',
  'GPT_GATEWAY_DISABLED','GPT_KEY3_MISSING','GPT_BUDGET_UNAVAILABLE',
 ] as const;
 export type GPTDiagnosticReason=typeof reasons[number];
-export type GPTDiagnosticStage='CONFIG'|'POOL'|'RUNTIME'|'OPERATE'|'VALIDATE'|'SESSION'|'READ'|'GENERATE';
+export type GPTDiagnosticStage='CONFIG'|'POOL'|'RUNTIME'|'OPERATE'|'VALIDATE'|'SESSION'|'READ'|'REVIEW'|'GENERATE';
 /** Extends the existing safe persistence error so its code survives transaction rollback. */
 export class WebsiteGPTError extends PersistenceError{
  constructor(readonly reason:GPTDiagnosticReason){super('PERSISTENCE_FAILED');this.message=reason;}
@@ -23,7 +23,7 @@ export function gptDiagnosticReason(error:unknown,fallback:GPTDiagnosticReason):
 }
 /** Strict allowlist only: never error objects, messages, SQL, subjects, payloads or secrets. */
 export function reportWebsiteGPT(stage:GPTDiagnosticStage,reason:GPTDiagnosticReason){
- if(!reasons.includes(reason)||!['CONFIG','POOL','RUNTIME','OPERATE','VALIDATE','SESSION','READ','GENERATE'].includes(stage))return;
+ if(!reasons.includes(reason)||!['CONFIG','POOL','RUNTIME','OPERATE','VALIDATE','SESSION','READ','REVIEW','GENERATE'].includes(stage))return;
  try{console.error(JSON.stringify({event:'AI06_GPT_DIAGNOSTIC',stage,reason}));}catch{/* Observability is separate from mandatory durable SQL auditing. */}
 }
 export function websiteGPTConnectReason(error:unknown):GPTDiagnosticReason{
