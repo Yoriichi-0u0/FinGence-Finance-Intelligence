@@ -10,7 +10,12 @@ export function useGPTReview(jobId?:string){
  useEffect(()=>{
   const controller=new AbortController();active.current=controller;
   if(jobId)void fetch(`/api/reconciliation/website-gpt-review?jobId=${encodeURIComponent(jobId)}`,{credentials:'same-origin',cache:'no-store',signal:controller.signal})
-   .then(async response=>{if(response.ok){const parsed=gptReviewView.safeParse(await response.json());if(parsed.success&&active.current===controller&&!controller.signal.aborted)setSaved({jobId:jobId!,value:parsed.data});}}).catch(()=>{});
+   .then(async response=>{
+    const parsed=response.ok?gptReviewView.safeParse(await response.json()):null;
+    if(active.current!==controller||controller.signal.aborted)return;
+    if(parsed?.success){setSaved({jobId:jobId!,value:parsed.data});setMessage('');}
+    else setMessage('Saved review status is unavailable. No decision can be confirmed.');
+   }).catch(()=>{if(active.current===controller&&!controller.signal.aborted)setMessage('Saved review status is unavailable. No decision can be confirmed.');});
   return ()=>{
    controller.abort();
    // Release only the departing scope. A late POST must not disable or update the next job.

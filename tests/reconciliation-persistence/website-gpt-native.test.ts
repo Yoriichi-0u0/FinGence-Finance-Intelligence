@@ -9,6 +9,7 @@ import {generateWebsiteJobGPT,readWebsiteJobSuggestions,type Owner} from '../../
 import {transactionDatabase} from '../../lib/server/db/postgres';
 import {caller} from '../../lib/server/workspace/session';
 import {secretHash} from '../../lib/server/workspace/store';
+import {gptReviewView} from '../../lib/gpt-review-view';
 import {pairVerificationResult,financeGPTView} from '../../lib/gpt-evidence-view';
 import {createJob,runJob} from '../../lib/server/processing/jobs';
 import {websiteGPTReview} from '../../lib/server/reconciliation/website-gpt-review';
@@ -140,7 +141,7 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   const saved=(await store.read(f.owner))!;expect(complete).toHaveBeenCalledTimes(1);expect(saved.runs[0].items.map(pairVerificationResult)).toEqual(['PASS','FAIL']);
   expect(saved.runs[0].items[1]).toMatchObject({outcome:'UNRESOLVED',reasons:['VERIFICATION_FAILED'],verification:{dateWithinSevenDays:false}});
   expect(financeGPTView(saved).runs[0].items.map(i=>i.verificationResult)).toEqual(['PASS','FAIL']);
-  expect(await store.reviewOperation(f.owner,'READ')).toMatchObject({items:[{ordinal:0,canApprove:true},{ordinal:1,canApprove:false,canReject:false}]});
+  expect(await store.reviewOperation(f.owner,'READ')).toMatchObject({items:[{ordinal:0,canApprove:true},{ordinal:1,canApprove:false,canReject:true}]});
   const payload={expectedEvidenceId:saved.runs[0].evidenceId,ordinal:1,requestId:randomUUID()};
   await expect(store.reviewOperation(f.owner,'APPROVE',payload)).rejects.toThrow('GPT_JOB_DENIED');
   await expect(store.reviewOperation(f.owner,'APPROVE',{...payload,ordinal:0,requestId:randomUUID()})).resolves.toMatchObject({decision:'APPROVE',financialOutcome:'UNRESOLVED',accountingEffect:'NONE'});
@@ -185,7 +186,7 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   // Immutable evidence cannot be changed, even for a test: create a legacy item via its original save contract instead.
   if(mode==='legacy'){
    const legacy=await admitted();legacy.data.runs[0].items=[{...f.data.runs[0].items[0],verification:{equalSignedCents:true,sameCurrency:true,dateWithinSevenDays:true}}];await store.save(legacy.owner,legacy.data);
-   expect(await store.reviewOperation(legacy.owner,'READ')).toMatchObject({items:[{canApprove:false,canReject:false}]});
+   expect(await store.reviewOperation(legacy.owner,'READ')).toMatchObject({items:[{canApprove:false,canReject:true}]});
    await expect(store.reviewOperation(legacy.owner,'APPROVE',{...f.payload,expectedEvidenceId:legacy.data.runs[0].evidenceId})).rejects.toThrow();return;
   }
   await expect(store.reviewOperation(f.owner,'APPROVE',f.payload)).rejects.toThrow();
@@ -286,7 +287,7 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
   expect(renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data}}))).toContain('No suggestions.');
   expect(complete).toHaveBeenCalledOnce();
  });
- it('real CSV job pipeline saves NEEDS_REVIEW through the shared gateway and denies manipulated review POSTs',async()=>{
+ it('real CSV job pipeline saves NEEDS_REVIEW, rejects it once through the API and still denies approval',async()=>{
   const docs=['bank','ledger'].map(name=>({name:`${name}.csv`,bytes:new Uint8Array(readFileSync(`tests/reconciliation-persistence/fixtures/ai06-reference-link/${name}.csv`)),provenance:'PUBLIC_SYNTHETIC_SAMPLE' as const}));
   const verify=(headers:Headers)=>caller(headers,{url:'http://127.0.0.1:55487',key:'synthetic'},async(_input,init)=>Response.json((await admin.query('SELECT public.fingence_workspace_principal($1) value',[JSON.parse(String(init?.body)).p_token_hash])).rows[0].value));
   const who=await verify(new Headers({cookie:`fingence_session=${token}`}));if(who.kind!=='SIGNED_IN')throw Error('synthetic session missing');
@@ -307,15 +308,26 @@ describe.skipIf(!url)('AI06 disposable native PostgreSQL',()=>{
    expect(outcome).toBe('COMPLETED');expect(before).not.toBe('');expect(after).toBe(before);expect(model).toHaveBeenCalledTimes(1);expect(log).toHaveBeenCalledOnce();
    const saved=(await store.read(owner))!,item=saved.runs[0].items[0];expect(item).toMatchObject({outcome:'UNRESOLVED',verification:{proposalPolicy:'website-review-only/2',finalUnexplained:false,referenceAgreement:false}});expect(pairVerificationResult(item)).toBe('FAIL');
    const response=await readWebsiteJobSuggestions(new Request(`http://localhost/?jobId=${owner.jobId}`,{headers:{cookie:`fingence_session=${token}`}}),{store,verify});expect(response.status).toBe(200);const view=await response.json();
-   const html=renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data:view}}));expect(html).toContain('Needs review');expect(html).toContain('SETTLEMENT-INV829');expect(html).not.toContain('Approve suggestion');
+   const controls={review:gptReviewView.parse(await store.reviewOperation(owner,'READ')),busy:false,message:'',decide:async()=>{}};
+   const html=renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data:view},reviewControls:controls}));expect(html).toContain('Needs review');expect(html).toContain('SETTLEMENT-INV829');expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Approve suggestion/);expect(html).toMatch(/<button(?![^>]* disabled=)[^>]*>Reject suggestion/);
    mkdirSync('.local/reviews/review-overlay',{recursive:true});writeFileSync('.local/reviews/review-overlay/needs-review-finance.html',`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="app.css"></head><body style="padding:24px"><p>Synthetic real-pipeline PostgreSQL evidence · model transport mocked</p>${html}</body></html>`);
-   expect(await store.reviewOperation(owner,'READ')).toMatchObject({items:[{canApprove:false,canReject:false}]});
+   expect(await store.reviewOperation(owner,'READ')).toMatchObject({items:[{canApprove:false,canReject:true}]});
    const financialBefore=(await admin.query('SELECT reconciliation FROM fingence_processing.results WHERE job_id=$1',[owner.jobId])).rows;
-   for(const decision of ['APPROVE','REJECT']){
-    const response=await websiteGPTReview(new Request(`http://localhost/?jobId=${owner.jobId}`,{method:'POST',headers:{cookie:`fingence_session=${token}`,'Content-Type':'application/json',origin:'http://localhost',host:'localhost','sec-fetch-site':'same-origin'},body:JSON.stringify({decision,ordinal:item.ordinal,requestId:randomUUID(),expectedEvidenceId:saved.runs[0].evidenceId})}),{store:()=>store,verify});expect(response.status).toBe(404);
-   }
+   const requestId=randomUUID();
+   const post=(decision:'APPROVE'|'REJECT',id=requestId)=>websiteGPTReview(new Request(`http://localhost/?jobId=${owner.jobId}`,{method:'POST',headers:{cookie:`fingence_session=${token}`,'Content-Type':'application/json',origin:'http://localhost',host:'localhost','sec-fetch-site':'same-origin'},body:JSON.stringify({decision,ordinal:item.ordinal,requestId:id,expectedEvidenceId:saved.runs[0].evidenceId})}),{store:()=>store,verify});
+   expect((await post('APPROVE')).status).toBe(404);
+   const rejected=await Promise.all([post('REJECT'),post('REJECT')]);expect(rejected.map(r=>r.status)).toEqual([200,200]);
+   expect(await rejected[0].json()).toMatchObject({decision:'REJECT',financialOutcome:'UNRESOLVED',accountingEffect:'NONE'});
+   expect((await post('REJECT',randomUUID())).status).toBe(409);
+   const fresh=await store.reviewOperation(owner,'READ');expect(fresh).toMatchObject({items:[{decision:'REJECT',canApprove:false,canReject:false}]});
+   const refreshed=renderToStaticMarkup(createElement(GPTSuggestionsView,{state:{status:'ready',data:view},reviewControls:{...controls,review:gptReviewView.parse(fresh)}}));expect(refreshed).toContain('Proposal rejected');expect(refreshed).not.toContain('Reject suggestion');
+   const decisions=(await admin.query('SELECT member_id,organization_id,decision,created_at,outcome FROM fingence_gpt_website.reviews WHERE job_id=$1',[owner.jobId])).rows;
+   expect(decisions).toHaveLength(1);expect(decisions[0]).toMatchObject({member_id:memberId,organization_id:organizationId,decision:'REJECT',outcome:'UNRESOLVED'});expect(decisions[0].created_at).toBeInstanceOf(Date);
+   const audit=(await admin.query('SELECT action,member_id,created_at FROM fingence_gpt_website.review_audit WHERE job_id=$1',[owner.jobId])).rows;
+   expect(audit.filter(r=>r.action==='REJECT')).toHaveLength(1);expect(audit.filter(r=>r.action==='REPLAY')).toHaveLength(1);expect(audit.every(r=>r.member_id===memberId&&r.created_at instanceof Date)).toBe(true);
+   expect(await store.read(owner)).toEqual(saved);
    await expect(runtime.query('SELECT fingence_gpt_website.review($1,$2,$3,$4)',[tokenHash,owner.jobId,'APPROVE',JSON.stringify({ordinal:item.ordinal,requestId:randomUUID(),expectedEvidenceId:saved.runs[0].evidenceId})])).rejects.toMatchObject({code:'42501'});
-   expect((await admin.query('SELECT 1 FROM fingence_gpt_website.reviews WHERE job_id=$1',[owner.jobId])).rowCount).toBe(0);
+   expect((await admin.query('SELECT 1 FROM fingence_gpt_website.reviews WHERE job_id=$1',[owner.jobId])).rowCount).toBe(1);
    expect((await admin.query('SELECT reconciliation FROM fingence_processing.results WHERE job_id=$1',[owner.jobId])).rows).toEqual(financialBefore);
    expect((await admin.query("SELECT 1 FROM fingence_gpt_website.audit WHERE job_id=$1 AND action='SAVED'",[owner.jobId])).rowCount).toBe(1);
   }finally{setAiCallSink(null);vi.unstubAllEnvs();}

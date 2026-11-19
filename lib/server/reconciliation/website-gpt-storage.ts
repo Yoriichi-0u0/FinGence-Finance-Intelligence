@@ -97,9 +97,10 @@ export class PostgresWebsiteGPTStore implements WebsiteGPTStore{
  async reviewOperation(owner:Owner,action:'READ'|'APPROVE'|'REJECT',payload:unknown=null){
   const evidence=await this.read(owner);
   const eligible=(ordinal:unknown)=>evidence?.runs[0].items.filter(i=>i.ordinal===ordinal&&i.verification.proposalPolicy==='website-unexplained/1'&&gptSuggestionOutcome(i)==='VERIFIED').length===1;
-  if(action!=='READ'&&!eligible((payload as {ordinal?:unknown}|null)?.ordinal))throw new WebsiteGPTError('GPT_JOB_DENIED');
+  const rejectable=(ordinal:unknown)=>evidence?.runs[0].items.filter(i=>i.ordinal===ordinal&&i.type==='SUGGESTION').length===1;
+  if(action!=='READ'&&!(action==='APPROVE'?eligible:rejectable)((payload as {ordinal?:unknown}|null)?.ordinal))throw new WebsiteGPTError('GPT_JOB_DENIED');
   const result=await this.call(owner,action,payload,'review');
-  if(action==='READ'&&result&&typeof result==='object'&&'items' in result&&Array.isArray(result.items))return {...result,items:result.items.map(i=>({...i,canApprove:i.canApprove&&eligible(i.ordinal),canReject:i.canReject&&eligible(i.ordinal)}))};
+  if(action==='READ'&&result&&typeof result==='object'&&'items' in result&&Array.isArray(result.items))return {...result,items:result.items.map(i=>({...i,canApprove:i.canApprove&&eligible(i.ordinal),canReject:i.canReject&&rejectable(i.ordinal)}))};
   return result;
  }
  async claim(owner:Owner){const value=await this.call(owner,'CLAIM');if(typeof value!=='boolean')throw new WebsiteGPTError('GPT_CLAIM_INVALID');return value;}
