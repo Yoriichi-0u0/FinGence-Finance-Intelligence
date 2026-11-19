@@ -108,7 +108,8 @@ it.each(['decoy','missing-reference','ambiguous','date','topology'] as const)('r
  if(mode==='date')l.date='2026-03-31';
  if(mode==='topology'){const next=c.outputs.ledger!.rows[1];c.outputs.resolution!.periods[0].items[0].ledgerRecordIds.push(next.recordId);}
  await generateWebsiteJobGPT(c,owner,'synthetic',{store,admission,complete:complete({suggestions:[ids()],abstentions:[]})});
- const item=(await store.read(owner))!.runs[0].items[0];expect(item.reasons).toEqual(['VERIFICATION_FAILED']);expect(item.outcome).toBe('UNRESOLVED');expect(pairVerificationResult(item)).toBe('FAIL');
+ const saved=(await store.read(owner))!;if(mode==='ambiguous'||mode==='topology'){expect(saved.runs[0].items.every(i=>i.type==='ABSTENTION')).toBe(true);return;}
+ const item=saved.runs[0].items[0];expect(item.reasons).toEqual(['VERIFICATION_FAILED']);expect(item.outcome).toBe('UNRESOLVED');expect(pairVerificationResult(item)).toBe('FAIL');
 });
 it.each(['four-day-date','invalid-reference','decoy'] as const)('preserves a valid pair alongside failed %s evidence',async mode=>{
  const b={...c.outputs.bank!.rows[0],recordId:'synthetic-bank-2',row:987,sourceTransactionId:null,signedCents:'782319',date:'2026-03-12',reference:'INV829'};
@@ -123,9 +124,9 @@ it.each(['four-day-date','invalid-reference','decoy'] as const)('preserves a val
  expect(items.every(i=>i.outcome==='UNRESOLVED')).toBe(true);expect(items.map(i=>Object.values(i.verification).filter(v=>typeof v==='boolean').length)).toEqual([26,26]);
  expect(items[1].verification).toMatchObject(mode==='four-day-date'?{dateWithinSevenDays:false}:{referenceAgreement:false});
  expect(financeGPTView(data).runs[0].items.map(i=>i.verificationResult)).toEqual(['PASS','FAIL']);
- expect(selectGPTOutcomes(data,'SUGGESTED')).toEqual([items[0]]);expect(summarizeGPTSuggestions(data)).toMatchObject({verified:1,needsReview:1});
+ expect(selectGPTOutcomes(data,'SUGGESTED')).toEqual(items);expect(summarizeGPTSuggestions(data)).toMatchObject({verified:1,needsReview:1});
  const html=renderToStaticMarkup(createElement(GPTFinancialSummaryView,{data,technical:false,view:'ALL',onViewChange:()=>{}}));
- expect(html).toContain('Verification Issues');expect(html).toContain('One or more saved matching checks failed');expect(html).toContain('INV829');
+ expect(html).toContain('Needs Review');expect(html).toContain('One or more saved matching checks failed');expect(html).toContain('INV829');
  expect(await readFile(join(dir,'audit.jsonl'),'utf8')).not.toContain('FAILED');
 });
 it('still discards the whole response when a valid pair precedes an unknown ID',async()=>{

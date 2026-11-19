@@ -4,7 +4,7 @@ import {Pool} from 'pg';
 import {transactionDatabase,serverPoolConfig,type TransactionDatabase} from '../db/postgres';
 import {WebsiteGPTError,gptDiagnosticReason,reportWebsiteGPT,websiteGPTConnectReason,websiteGPTSqlError} from './website-gpt-diagnostics';
 import type {Owner,WebsiteGPTStore} from './website-job-gpt';
-import type {GPTEvidenceView} from '../../gpt-evidence-view';
+import {gptSuggestionOutcome,type GPTEvidenceView} from '../../gpt-evidence-view';
 
 export const WEBSITE_GPT_STORAGE_CONTRACT='website-gpt/1';
 const project='zmtdozblpvtjniehwjrw',login='fingence_ai06_website_login';
@@ -35,12 +35,13 @@ const nullable=z.string().max(1000).nullable();
 const evidence=z.object({version:z.literal('gpt-evidence-view/1'),batchId:z.uuid(),processingId:z.string().regex(/^[a-f0-9]{8,64}$/),runs:z.array(z.object({
  evidenceId:z.string().regex(/^[a-f0-9]{64}$/),model:z.string().max(160),prompt:z.literal('website-job-gpt/1'),createdAt:z.iso.datetime(),
  bankSha256:z.string().regex(/^[a-f0-9]{64}$/),ledgerSha256:z.string().regex(/^[a-f0-9]{64}$/),outcome:z.literal('UNRESOLVED'),
- items:z.array(z.object({type:z.enum(['SUGGESTION','ABSTENTION']),ordinal:z.number().int().min(0).max(99),bankId:nullable,ledgerId:nullable,recordId:nullable,
+ items:z.array(z.object({suggestionState:z.enum(['VERIFIED','NEEDS_REVIEW','NO_SUGGESTION']).optional(),type:z.enum(['SUGGESTION','ABSTENTION']),ordinal:z.number().int().min(0).max(99),bankId:nullable,ledgerId:nullable,recordId:nullable,
  bankReference:nullable,ledgerReference:nullable,explanation:z.string().max(2000),reasons:z.array(z.string().max(120)).max(16),verification:z.record(z.string(),z.unknown()),score:z.null(),outcome:z.literal('UNRESOLVED')}).strict()).max(100),
 }).strict()).length(1)}).strict();
 export function checkedWebsiteEvidence(value:unknown,jobId:string):GPTEvidenceView{
  const parsed=evidence.safeParse(value);if(!parsed.success)throw new WebsiteGPTError('GPT_EVIDENCE_INVALID');
- const result=parsed.data;if(result.batchId!==jobId||Buffer.byteLength(JSON.stringify(result))>256000)throw new WebsiteGPTError('GPT_EVIDENCE_INVALID');
+ const result=parsed.data;if(result.runs.some(r=>r.items.some(i=>i.suggestionState!==undefined&&i.suggestionState!==gptSuggestionOutcome(i))))throw new WebsiteGPTError('GPT_EVIDENCE_INVALID');
+ if(result.batchId!==jobId||Buffer.byteLength(JSON.stringify(result))>256000)throw new WebsiteGPTError('GPT_EVIDENCE_INVALID');
  return result;
 }
 /** No direct table privileges. The reviewed narrow SQL API revalidates session + stored job on every operation. */
@@ -93,7 +94,14 @@ export class PostgresWebsiteGPTStore implements WebsiteGPTStore{
    return body.value;
   });
  }
- async reviewOperation(owner:Owner,action:'READ'|'APPROVE'|'REJECT',payload:unknown=null){return this.call(owner,action,payload,'review');}
+ async reviewOperation(owner:Owner,action:'READ'|'APPROVE'|'REJECT',payload:unknown=null){
+  const evidence=await this.read(owner);
+  const eligible=(ordinal:unknown)=>evidence?.runs[0].items.filter(i=>i.ordinal===ordinal&&i.verification.proposalPolicy==='website-unexplained/1'&&gptSuggestionOutcome(i)==='VERIFIED').length===1;
+  if(action!=='READ'&&!eligible((payload as {ordinal?:unknown}|null)?.ordinal))throw new WebsiteGPTError('GPT_JOB_DENIED');
+  const result=await this.call(owner,action,payload,'review');
+  if(action==='READ'&&result&&typeof result==='object'&&'items' in result&&Array.isArray(result.items))return {...result,items:result.items.map(i=>({...i,canApprove:i.canApprove&&eligible(i.ordinal),canReject:i.canReject&&eligible(i.ordinal)}))};
+  return result;
+ }
  async claim(owner:Owner){const value=await this.call(owner,'CLAIM');if(typeof value!=='boolean')throw new WebsiteGPTError('GPT_CLAIM_INVALID');return value;}
  async audit(owner:Owner,action:'START'|'SAVE_INTENT'|'FAILED'|'READ'){if(await this.call(owner,action)!==true)throw new WebsiteGPTError('GPT_AUDIT_INVALID');}
  async save(owner:Owner,data:GPTEvidenceView){if(await this.call(owner,'SAVE',checkedWebsiteEvidence(data,owner.jobId))!==true)throw new WebsiteGPTError('GPT_SAVE_INVALID');}

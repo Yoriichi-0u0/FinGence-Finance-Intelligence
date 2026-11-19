@@ -1,7 +1,7 @@
 "use client";
 import {useId,useState} from 'react';
 import {Table,button,chip} from '@/components/demo/shared';
-import {pairVerificationResult,type GPTDisplayView} from '@/lib/gpt-evidence-view';
+import {pairVerificationResult,gptSuggestionOutcome,type GPTDisplayView} from '@/lib/gpt-evidence-view';
 import {GPTReviewActions,type GPTReviewControls} from './gpt-review';
 
 type Item=GPTDisplayView['runs'][number]['items'][number];
@@ -19,7 +19,7 @@ export function selectGPTOutcomes(data:GPTDisplayView,view:GPTOutcomeView){
  return itemsOf(data).filter(item=>{
   if(view==='ALL')return true;
   if(view==='NONE')return item.type==='ABSTENTION';
-  if(item.type!=='SUGGESTION'||verificationOf(item)!=='PASS')return false;
+  if(item.type!=='SUGGESTION')return false;
   return view==='SUGGESTED'||referenceCategory(item)===view;
  });
 }
@@ -40,7 +40,7 @@ export function explainGPTOutcome(item:Item){
  }
  const pair=`${description(item,'bank')} and ${description(item,'ledger')}`,result=verificationOf(item);
  if(result==='PASS')return `All matching checks passed for ${pair}.`;
- if(result==='FAIL')return `One or more saved matching checks failed for ${pair}. This suggestion needs review.`;
+ if(result==='FAIL')return `One or more saved matching checks failed for ${pair}. Needs review; approval is unavailable.${item.reasons.includes('REVIEW_REFERENCE_NOT_VERIFIED')?' Reference identity is not verified.':''}${item.reasons.includes('REVIEW_ORIGINAL_ACCOUNTING_RETAINED')?' Existing accounting entries are retained; these records are not both final unexplained items.':''} Original entries and totals are unchanged.`;
  return `Saved matching checks are unavailable for ${pair}. This suggestion has not been verified.`;
 }
 function referenceCell(item:Item,side:'bank'|'ledger'){
@@ -50,7 +50,7 @@ function referenceCell(item:Item,side:'bank'|'ledger'){
 function outcomeCell(item:Item){
  const result=verificationOf(item),passed=item.type==='SUGGESTION'&&result==='PASS';
  return <div className="space-y-1"><span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${passed?'bg-[var(--good-soft)] text-[var(--good-ink)]':item.type==='ABSTENTION'?'bg-[var(--surface-subtle)] text-[var(--muted-strong)]':'bg-[var(--warn-soft)] text-[var(--warn-ink)]'}`}>
- {item.type==='ABSTENTION'?'No Suggestion':passed?'Suggested Match':result==='FAIL'?'Verification Issue':'Verification Unavailable'}</span><span className="block text-xs text-[var(--muted)]">Not Yet Approved</span></div>;
+ {item.type==='ABSTENTION'?'No Suggestion':passed?'Verified · Suggested Match':'Needs review'}</span><span className="block text-xs text-[var(--muted)]">Not Yet Approved</span></div>;
 }
 export function GPTFinancialSummary({data,technical,reviewControls}:{data:GPTDisplayView;technical:boolean;reviewControls?:GPTReviewControls}){
  const [view,setView]=useState<GPTOutcomeView>('SUGGESTED'),[page,setPage]=useState(1);
@@ -62,7 +62,7 @@ export function GPTFinancialSummaryView({data,technical,reviewControls,view,onVi
  return <>
  {reviewControls?.message&&<p role="status">{reviewControls.message}</p>}
  <dl aria-label="Saved matching summary" className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3">
- {[[summary.verified,'Verified Suggestions'],[summary.withoutSuggestions,'No Match Suggested'],...(summary.needsReview?[[summary.needsReview,'Verification Issues']]:[])].map(([count,label])=><div key={label} className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
+ {[[summary.verified,'Verified Suggestions'],[summary.withoutSuggestions,'No Match Suggested'],...(summary.needsReview?[[summary.needsReview,'Needs Review']]:[])].map(([count,label])=><div key={label} className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
  <dt className="text-xs font-medium text-[var(--muted)]">{label}</dt><dd className="mt-1 text-2xl font-semibold tabular-nums">{count}</dd></div>)}
  </dl>
  <div role="group" aria-label="Matching result categories" className="flex min-w-0 flex-wrap gap-2">
@@ -71,9 +71,9 @@ export function GPTFinancialSummaryView({data,technical,reviewControls,view,onVi
  <div id={resultsId} className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)]">
  {rows.length?<Table stack={false} caption="AI06 matching results" columns={['Outcome','Bank Reference','Ledger Reference','AI Suggestion','Explanation']} rows={rows.map(item=>[
   outcomeCell(item),referenceCell(item,'bank'),referenceCell(item,'ledger'),
-  <div key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':verificationOf(item)==='FAIL'?'Suggestion needs review':'Suggestion not verified'}{reviewControls&&item.type==='SUGGESTION'&&<GPTReviewActions ordinal={item.ordinal} controls={reviewControls}/>}</div>,
+  <div key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':'Needs review'}{reviewControls&&gptSuggestionOutcome(item)==='VERIFIED'&&<GPTReviewActions ordinal={item.ordinal} controls={reviewControls}/>}</div>,
   <span key="explanation" className="[overflow-wrap:anywhere]">{explainGPTOutcome(item)}</span>,
- ])}/>:<p role="status" className="p-4 text-sm text-[var(--muted)]">{!itemsOf(data).length?'No saved outcomes.':view==='SUGGESTED'?'No verified suggestions.':'No results in this category.'}</p>}
+ ])}/>:<p role="status" className="p-4 text-sm text-[var(--muted)]">{!itemsOf(data).length?'No saved outcomes.':view==='SUGGESTED'?'No suggestions.':'No results in this category.'}</p>}
  </div>
  <nav aria-label="Matching results pagination" className="flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--muted)]">
  <p role="status" aria-atomic="true">{visible.length?start+1:0}-{start+rows.length} of {visible.length} results · Page {current} of {pages}</p>

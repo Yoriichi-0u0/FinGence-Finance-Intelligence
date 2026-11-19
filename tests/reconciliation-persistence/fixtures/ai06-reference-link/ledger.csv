@@ -1,0 +1,2 @@
+LedgerEntryID,BusinessID,PostingDate,CashAccount,Currency,LedgerReference,LedgerMemo,Counterparty,CashAccountDebitMYR,CashAccountCreditMYR,SignedCashMovementMYR,CategoryLabel
+LEDGER-SYNTHETIC-112,DEMO-001,2026-03-11,1000-BANK,MYR,INV829,Synthetic settlement INV829,Synthetic customer,9137.21,0.00,9137.21,Sales receipts
