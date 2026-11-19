@@ -2,7 +2,7 @@ import 'server-only';
 import type {ProcessingContext} from '../../demo/pipeline';
 import type {CashSourceRow} from '../../poc-reconciliation/contracts';
 export const UNEXPLAINED_POLICY='website-unexplained/1';
-export type CandidateScope={banks:CashSourceRow[];ledgers:CashSourceRow[];bankAll:CashSourceRow[];ledgerAll:CashSourceRow[];blocked:Set<string>;topology:Set<string>};
+export type CandidateScope={banks:CashSourceRow[];ledgers:CashSourceRow[];bankAll:CashSourceRow[];ledgerAll:CashSourceRow[];blocked:Set<string>;topology:Set<string>;approvalScope?:CandidateScope};
 const canonicalDay=(value:string)=>{
  if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return null;
  const time=Date.parse(value+'T00:00:00Z');return Number.isFinite(time)&&new Date(time).toISOString().slice(0,10)===value?time/86400000:null;
@@ -35,20 +35,42 @@ export function finalUnexplainedScope(context:ProcessingContext):CandidateScope|
 }
 /** Independent source/identity checks adapted from the old 26-check synthetic verifier, not its research schema. */
 export function verifyUnexplainedPair(context:ProcessingContext,scope:CandidateScope,b:CashSourceRow,l:CashSourceRow,proposals:ReadonlyArray<{bankId:string;ledgerId:string}>=[{bankId:b.recordId,ledgerId:l.recordId}]){
+ const approval=scope.approvalScope??scope;
  const bank=context.outputs.bank!,ledger=context.outputs.ledger!,bd=canonicalDay(b.date),ld=canonicalDay(l.date);
  const plausible=(x:CashSourceRow,y:CashSourceRow)=>cents(x.signedCents)&&cents(y.signedCents)&&x.signedCents===y.signedCents&&x.currency===y.currency
   &&canonicalDay(x.date)!==null&&canonicalDay(y.date)!==null&&Math.abs(canonicalDay(x.date)!-canonicalDay(y.date)!)<=2;
  const checks={policy:'website-pair-verifier/1',proposalPolicy:UNEXPLAINED_POLICY,
   authoritativeRecordIds:scope.banks.includes(b)&&scope.ledgers.includes(l),pairTopology:!scope.topology.has(b.recordId)&&!scope.topology.has(l.recordId),
-  uniqueSourceIdentities:unique(bank.rows)&&unique(ledger.rows),finalUnexplained:!scope.blocked.has(b.recordId)&&!scope.blocked.has(l.recordId),
+  uniqueSourceIdentities:unique(bank.rows)&&unique(ledger.rows),finalUnexplained:!approval.blocked.has(b.recordId)&&!approval.blocked.has(l.recordId),
   distinctRoles:b.recordId!==l.recordId&&bank.kind==='bank'&&ledger.kind==='ledger',
-  bankSourceIdentity:b.sourceId===bank.sourceId,bankSourceFingerprint:/^[a-f0-9]{64}$/.test(bank.sha256),bankEligibility:scope.banks.includes(b),
+  bankSourceIdentity:b.sourceId===bank.sourceId,bankSourceFingerprint:/^[a-f0-9]{64}$/.test(bank.sha256),bankEligibility:approval.banks.includes(b),
   bankTransactionIdentity:b.sourceTransactionId===null||b.sourceTransactionId.length>0,bankMonetaryBasis:cents(b.signedCents),bankDateBasis:bd!==null,
-  ledgerSourceIdentity:l.sourceId===ledger.sourceId,ledgerSourceFingerprint:/^[a-f0-9]{64}$/.test(ledger.sha256),ledgerEligibility:scope.ledgers.includes(l),
+  ledgerSourceIdentity:l.sourceId===ledger.sourceId,ledgerSourceFingerprint:/^[a-f0-9]{64}$/.test(ledger.sha256),ledgerEligibility:approval.ledgers.includes(l),
   ledgerTransactionIdentity:l.sourceTransactionId===null||l.sourceTransactionId.length>0,ledgerMonetaryBasis:cents(l.signedCents),ledgerDateBasis:ld!==null,
   equalSignedCents:cents(b.signedCents)&&cents(l.signedCents)&&BigInt(b.signedCents)===BigInt(l.signedCents),sameCurrency:b.currency===l.currency&&b.currency===bank.currency,
   sameDirection:cents(b.signedCents)&&cents(l.signedCents)&&b.signedCents.startsWith('-')===l.signedCents.startsWith('-'),dateWithinSevenDays:bd!==null&&ld!==null&&Math.abs(bd-ld)<=2,
   referenceAgreement:!!identity(b.reference)&&identity(b.reference)===identity(l.reference),businessScope:b.businessId===bank.businessId&&l.businessId===ledger.businessId,
   authoritativeReferences:identity(b.reference)!==null&&identity(l.reference)!==null,uniqueFinancialPartner:!scope.ledgerAll.some(r=>r!==l&&plausible(b,r))&&!scope.bankAll.some(r=>r!==b&&plausible(r,l)),uniqueAssignment:proposals.filter(p=>p.bankId===b.recordId||p.ledgerId===l.recordId).length===1};
+ if(scope.approvalScope&&(!approval.banks.includes(b)||!approval.ledgers.includes(l))){checks.policy='website-pair-verifier/2';checks.proposalPolicy='website-review-only/2';}
  return {checks,passed:Object.values(checks).every(value=>value!==false)};
+}
+
+/** Proposal-only overlay: never changes the deterministic classifications, entries or blocked approval scope. */
+export function websiteReviewCandidateScope(context:ProcessingContext):CandidateScope|null{
+ const strict=finalUnexplainedScope(context);if(!strict)return null;
+ const {bank,ledger,resolution}=context.outputs;
+ const items=resolution!.periods.flatMap(p=>p.items),allowed=new Set<string>();
+ for(const i of items){
+  if(i.link!==null||i.ledgerRecordIds.length>1)continue;
+  if(i.resolution==='UNEXPLAINED'||i.resolution==='ENTRY_PREPARED'&&['RECEIPT_NOT_IN_LEDGER','PAYMENT_NOT_IN_LEDGER'].includes(i.category)
+   ||i.resolution==='MATCHED_BY_AMOUNT'&&i.category==='REFERENCE_ONLY'){
+   if(i.bankRecordId)allowed.add(i.bankRecordId);for(const id of i.ledgerRecordIds)allowed.add(id);
+  }
+ }
+ const matched=new Set(context.outputs.reconciliation!.results.filter(r=>['MATCH_EXACT','MATCH_DATE_SHIFT','AMBIGUOUS_DUPLICATE_LEDGER'].includes(r.status)).flatMap(r=>[...(r.bankRecordId?[r.bankRecordId]:[]),...r.ledgerRecordIds]));
+ const safe=(r:CashSourceRow)=>allowed.has(r.recordId)&&!matched.has(r.recordId)&&!!identity(r.reference)&&cents(r.signedCents)&&canonicalDay(r.date)!==null;
+ const plausible=(b:CashSourceRow,l:CashSourceRow)=>canonicalDay(b.date)!==null&&canonicalDay(l.date)!==null&&b.signedCents===l.signedCents&&b.currency===l.currency&&b.businessId===l.businessId&&Math.abs(canonicalDay(b.date)!-canonicalDay(l.date)!)<=2;
+ const bs=bank!.rows.filter(safe),ls=ledger!.rows.filter(safe);
+ const pair=(b:CashSourceRow,l:CashSourceRow)=>plausible(b,l)&&ledger!.rows.filter(x=>plausible(b,x)).length===1&&bank!.rows.filter(x=>plausible(x,l)).length===1;
+ return {...strict,approvalScope:strict,banks:[...new Set([...strict.banks.filter(b=>!matched.has(b.recordId)&&!strict.topology.has(b.recordId)&&ledger!.rows.filter(l=>plausible(b,l)).length<=1),...bs.filter(b=>ls.some(l=>pair(b,l)))])],ledgers:[...new Set([...strict.ledgers.filter(l=>!matched.has(l.recordId)&&!strict.topology.has(l.recordId)&&bank!.rows.filter(b=>plausible(b,l)).length<=1),...ls.filter(l=>bs.some(b=>pair(b,l)))])]};
 }
