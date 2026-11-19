@@ -3,6 +3,7 @@ import {useEffect,useState} from 'react';
 import {Panel} from '@/components/ui';
 import {financeGPTView,type GPTDisplayView} from '@/lib/gpt-evidence-view';
 import {GPTFinancialSummary} from './gpt-financial-summary';
+import {useGPTReview,type GPTReviewControls} from './gpt-review';
 import {useTechnicalDetail} from '@/components/workspace/context';
 export type GPTEvidenceState={status:'loading'|'generating'|'empty'|'unavailable'|'error'}|{status:'ready';data:GPTDisplayView};
 export async function loadGPTEvidence(batchId:string,signal:AbortSignal,transport:typeof fetch=fetch,websiteJob=false):Promise<GPTEvidenceState>{
@@ -37,20 +38,22 @@ export function watchGPTEvidence(batchId:string,websiteJob:boolean,onState:(stat
  void read();
  return stop;
 }
-export function GPTSuggestionsView({state:input}:{state:GPTEvidenceState}){
+export function GPTSuggestionsView({state:input,reviewControls}:{state:GPTEvidenceState;reviewControls?:GPTReviewControls}){
  const technical=useTechnicalDetail();
  // Preview only reduces presentation. The API still authorizes using the real server session role.
  const state=input.status==='ready'&&!technical&&input.data.version==='gpt-evidence-view/1'
   ?{...input,data:financeGPTView(input.data)}:input;
  return <div className="my-4 min-w-0"><Panel title="GPT Matching Suggestions"><div className="min-w-0 space-y-5 p-4 text-sm sm:p-5">
  {state.status!=='ready'?<p className="rounded-xl bg-[var(--surface-subtle)] p-4" role={state.status==='error'?'alert':'status'}>
- {state.status==='loading'?'Loading saved suggestions...':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved suggestions are available.':state.status==='unavailable'?'Saved suggestions are unavailable. Please contact your administrator if this continues.':'Suggestions could not be loaded. No results are shown.'}</p>:<GPTFinancialSummary data={state.data} technical={technical}/>}
+ {state.status==='loading'?'Loading saved suggestions...':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved suggestions are available.':state.status==='unavailable'?'Saved suggestions are unavailable. Please contact your administrator if this continues.':'Suggestions could not be loaded. No results are shown.'}</p>:<GPTFinancialSummary data={state.data} technical={technical} reviewControls={reviewControls}/>}
  </div></Panel></div>;
 }
 
+const stateJob=(value?:string)=>!!value&&/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(value);
 function EvidenceLoader({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){
  const [state,setState]=useState<GPTEvidenceState>({status:batchId?'loading':'unavailable'});
+ const reviewControls=useGPTReview(state.status==='ready'&&websiteJob&&stateJob(batchId)?batchId:undefined);
  useEffect(()=>{if(!batchId)return;return watchGPTEvidence(batchId,websiteJob,setState);},[batchId,websiteJob]);
- return <GPTSuggestionsView state={state}/>;
+ return <GPTSuggestionsView state={state} reviewControls={websiteJob?reviewControls:undefined}/>;
 }
 export default function GPTSuggestions({batchId,websiteJob=false}:{batchId?:string;websiteJob?:boolean}){return <EvidenceLoader key={`${websiteJob}:${batchId??'unavailable'}`} batchId={batchId} websiteJob={websiteJob}/>;}

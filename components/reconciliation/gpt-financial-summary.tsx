@@ -2,6 +2,8 @@
 import {useId,useState} from 'react';
 import {Table,button,chip} from '@/components/demo/shared';
 import {pairVerificationResult,type GPTDisplayView} from '@/lib/gpt-evidence-view';
+import {GPTReviewActions,type GPTReviewControls} from './gpt-review';
+
 type Item=GPTDisplayView['runs'][number]['items'][number];
 export type GPTOutcomeView='SUGGESTED'|'SAME'|'DIFFERENT'|'NONE'|'ALL';
 const categories:ReadonlyArray<readonly [GPTOutcomeView,string]>=[['SUGGESTED','Suggested Matches'],['SAME','Same Reference'],['DIFFERENT','Different Reference'],['NONE','No Suggestion'],['ALL','All Outcomes']];
@@ -50,14 +52,15 @@ function outcomeCell(item:Item){
  return <div className="space-y-1"><span className={`inline-block rounded-full px-2 py-1 text-xs font-semibold ${passed?'bg-[var(--good-soft)] text-[var(--good-ink)]':item.type==='ABSTENTION'?'bg-[var(--surface-subtle)] text-[var(--muted-strong)]':'bg-[var(--warn-soft)] text-[var(--warn-ink)]'}`}>
  {item.type==='ABSTENTION'?'No Suggestion':passed?'Suggested Match':result==='FAIL'?'Verification Issue':'Verification Unavailable'}</span><span className="block text-xs text-[var(--muted)]">Not Yet Approved</span></div>;
 }
-export function GPTFinancialSummary({data,technical}:{data:GPTDisplayView;technical:boolean}){
+export function GPTFinancialSummary({data,technical,reviewControls}:{data:GPTDisplayView;technical:boolean;reviewControls?:GPTReviewControls}){
  const [view,setView]=useState<GPTOutcomeView>('SUGGESTED'),[page,setPage]=useState(1);
- return <GPTFinancialSummaryView data={data} technical={technical} view={view} page={page} onPageChange={setPage} onViewChange={next=>{setView(next);setPage(1);}}/>;
+ return <GPTFinancialSummaryView data={data} technical={technical} reviewControls={reviewControls} view={view} page={page} onPageChange={setPage} onViewChange={next=>{setView(next);setPage(1);}}/>;
 }
-export function GPTFinancialSummaryView({data,technical,view,onViewChange,page=1,onPageChange=()=>{}}:{data:GPTDisplayView;technical:boolean;view:GPTOutcomeView;onViewChange:(view:GPTOutcomeView)=>void;page?:number;onPageChange?:(page:number)=>void}){
+export function GPTFinancialSummaryView({data,technical,reviewControls,view,onViewChange,page=1,onPageChange=()=>{}}:{data:GPTDisplayView;technical:boolean;reviewControls?:GPTReviewControls;view:GPTOutcomeView;onViewChange:(view:GPTOutcomeView)=>void;page?:number;onPageChange?:(page:number)=>void}){
  const summary=summarizeGPTSuggestions(data),resultsId=useId(),visible=selectGPTOutcomes(data,view);
  const pages=Math.max(1,Math.ceil(visible.length/PAGE_SIZE)),current=Math.max(1,Math.min(page,pages)),start=(current-1)*PAGE_SIZE,rows=visible.slice(start,start+PAGE_SIZE);
  return <>
+ {reviewControls?.message&&<p role="status">{reviewControls.message}</p>}
  <dl aria-label="Saved matching summary" className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3">
  {[[summary.verified,'Verified Suggestions'],[summary.withoutSuggestions,'No Match Suggested'],...(summary.needsReview?[[summary.needsReview,'Verification Issues']]:[])].map(([count,label])=><div key={label} className="min-w-0 rounded-xl border border-[var(--border)] bg-[var(--surface-subtle)] p-3">
  <dt className="text-xs font-medium text-[var(--muted)]">{label}</dt><dd className="mt-1 text-2xl font-semibold tabular-nums">{count}</dd></div>)}
@@ -68,7 +71,7 @@ export function GPTFinancialSummaryView({data,technical,view,onViewChange,page=1
  <div id={resultsId} className="min-w-0 overflow-hidden rounded-xl border border-[var(--border)]">
  {rows.length?<Table stack={false} caption="AI06 matching results" columns={['Outcome','Bank Reference','Ledger Reference','AI Suggestion','Explanation']} rows={rows.map(item=>[
   outcomeCell(item),referenceCell(item,'bank'),referenceCell(item,'ledger'),
-  <span key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':verificationOf(item)==='FAIL'?'Suggestion needs review':'Suggestion not verified'}</span>,
+  <div key="suggestion" className="[overflow-wrap:anywhere]">{item.type==='ABSTENTION'?'No match suggested':verificationOf(item)==='PASS'?'Bank → Ledger match':verificationOf(item)==='FAIL'?'Suggestion needs review':'Suggestion not verified'}{reviewControls&&item.type==='SUGGESTION'&&<GPTReviewActions ordinal={item.ordinal} controls={reviewControls}/>}</div>,
   <span key="explanation" className="[overflow-wrap:anywhere]">{explainGPTOutcome(item)}</span>,
  ])}/>:<p role="status" className="p-4 text-sm text-[var(--muted)]">{!itemsOf(data).length?'No saved outcomes.':view==='SUGGESTED'?'No verified suggestions.':'No results in this category.'}</p>}
  </div>
