@@ -45,7 +45,10 @@ export function GPTSuggestionsView({state:input,reviewControls}:{state:GPTEviden
   ?{...input,data:financeGPTView(input.data)}:input;
  return <div className="my-4 min-w-0"><Panel title="GPT Matching Suggestions"><div className="min-w-0 space-y-5 p-4 text-sm sm:p-5">
  <p className="text-xs leading-relaxed text-[var(--muted)]">AI matching may take around 90 seconds. Please wait while your transactions are checked.</p>
- <p className="text-xs leading-relaxed text-[var(--muted)]">Rejecting a suggestion saves your decision permanently. It will not delete transactions or change financial totals.</p>
+ <p className="text-xs leading-relaxed text-[var(--muted)]">VERIFIED: The suggestion passed all required verification checks. You can click Approve to accept the suggested match.</p>
+ <p className="text-xs leading-relaxed text-[var(--muted)]">NEEDS REVIEW: The suggestion did not pass all verification checks. Approve is unavailable because there is not enough evidence to confirm the match. You can only click Reject if you do not accept the suggestion.</p>
+ <p className="text-xs leading-relaxed text-[var(--muted)]">NO SUGGESTION: The AI could not identify a suitable match. No action is required.</p>
+ <p className="text-xs leading-relaxed text-[var(--muted)]">IMPORTANT: Approving or rejecting a suggestion permanently saves your decision. It does not delete transactions or automatically change financial totals.</p>
  {state.status!=='ready'?<p className="rounded-xl bg-[var(--surface-subtle)] p-4" role={state.status==='error'?'alert':'status'}>
  {state.status==='loading'?'Loading saved suggestions...':state.status==='generating'?'Generating GPT suggestions...':state.status==='empty'?'No saved suggestions are available.':state.status==='unavailable'?'Saved suggestions are unavailable. Please contact your administrator if this continues.':'Suggestions could not be loaded. No results are shown.'}</p>:<GPTFinancialSummary data={state.data} technical={technical} reviewControls={reviewControls}/>}
  </div></Panel></div>;
