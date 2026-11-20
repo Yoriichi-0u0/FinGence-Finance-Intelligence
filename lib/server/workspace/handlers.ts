@@ -239,7 +239,8 @@ export async function uat(request: Request, deps: Deps) {
     const result = await rpc('fingence_workspace_uat', { p_token_hash: who.tokenHash }, deps.store, deps.transport);
     return result.ok ? json(result.value) : fail(result.error);
 }
-const uatBody = z.object({ answers: answersSchema, submit: z.boolean().optional() }).strict();
+// order: the open page's random ID and its save counter, so an older save from the same page cannot replace a newer one.
+const uatBody = z.object({ answers: answersSchema, submit: z.boolean().optional(), order: z.object({ page: z.string().regex(/^[A-Za-z0-9_-]{8,40}$/), seq: z.number().int().min(0).max(2_000_000_000) }).strict() }).strict();
 /** Any signed-in member: save their own answers as they go; { submit: true } also marks them submitted. */
 export async function uatChange(request: Request, deps: Deps, version = appVersion()) {
     if (!deps.store) return notFound();
@@ -249,7 +250,7 @@ export async function uatChange(request: Request, deps: Deps, version = appVersi
     if (!body.success) return json({ code: 'INVALID_ANSWERS' }, 400);
     const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
     if ('refusal' in who) return refuse(who.refusal);
-    const result = await rpc('fingence_workspace_save_uat', { p_token_hash: who.tokenHash, p_answers: body.data.answers, p_submit: body.data.submit === true, p_version: version }, deps.store, deps.transport);
+    const result = await rpc('fingence_workspace_save_uat', { p_token_hash: who.tokenHash, p_answers: body.data.answers, p_submit: body.data.submit === true, p_version: version, p_page: body.data.order.page, p_seq: body.data.order.seq }, deps.store, deps.transport);
     if (result.ok) return json(result.value);
     return result.error === 'INVALID_ANSWERS' ? json({ code: 'INVALID_ANSWERS' }, 400) : fail(result.error);
 }

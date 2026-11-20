@@ -52,10 +52,14 @@ function MyChecklist({ admin }: { admin: boolean }) {
     const [state, setState] = useState<SaveState>('idle'), [savedAt, setSavedAt] = useState<string | null>(null), [submittedAt, setSubmittedAt] = useState<string | null>(null);
     const [open, setOpen] = useState<Set<number>>(new Set()), [problem, setProblem] = useState<string | null>(null), [device, setDevice] = useState('');
     const latest = useRef<UatAnswers | null>(null), dirty = useRef(false), timer = useRef<ReturnType<typeof setTimeout> | null>(null), chain = useRef(Promise.resolve());
+    // This page's saves, in the order they were made: the database keeps the newest even if an older one arrives last.
+    const page = useRef(''), seq = useRef(0);
 
     const payload = useCallback((submit: boolean) => {
         const device = describeDevice(navigator.userAgent, window.innerWidth);
-        return JSON.stringify({ answers: { ...latest.current!, context: { device } }, ...(submit ? { submit: true } : {}) });
+        if (!page.current) page.current = crypto.randomUUID().replace(/-/g, '');
+        seq.current += 1;
+        return JSON.stringify({ answers: { ...latest.current!, context: { device } }, order: { page: page.current, seq: seq.current }, ...(submit ? { submit: true } : {}) });
     }, []);
     const save = useCallback((submit = false) => {
         if (timer.current) { clearTimeout(timer.current); timer.current = null; }
@@ -86,14 +90,18 @@ function MyChecklist({ admin }: { admin: boolean }) {
             setOpen(new Set(UAT_TASKS.filter(t => !loaded.tasks[t.id]).map(t => t.id)));
             setDevice(describeDevice(navigator.userAgent, window.innerWidth));
         })();
-        // Leaving the page (or the site) with unsaved typing still saves it.
-        const flush = () => {
+        // Leaving with unsaved typing still saves it. Moving to another FinGence page keeps this script running, so that save
+        // waits behind any save in flight; closing the tab cannot wait, so it goes at once, and its higher order number keeps
+        // an older save that lands after it from replacing it.
+        const send = () => fetch('/api/workspace/uat', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: payload(false), keepalive: true }).then(() => undefined, () => undefined);
+        const leaving = (now: boolean) => {
             if (!dirty.current || !latest.current) return;
             dirty.current = false;
-            void fetch('/api/workspace/uat', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: payload(false), keepalive: true }).catch(() => undefined);
+            if (now) void send(); else chain.current = chain.current.then(send);
         };
-        window.addEventListener('pagehide', flush);
-        return () => { gone = true; window.removeEventListener('pagehide', flush); if (timer.current) clearTimeout(timer.current); flush(); };
+        const onPageHide = () => leaving(true);
+        window.addEventListener('pagehide', onPageHide);
+        return () => { gone = true; window.removeEventListener('pagehide', onPageHide); if (timer.current) clearTimeout(timer.current); leaving(false); };
     }, [payload]);
 
     const change = (next: UatAnswers, now = false) => {

@@ -48,8 +48,15 @@ create table if not exists fingence_workspace.uat_results (
     -- The FinGence version the answers were last saved against (the deployment's commit), for tying a finding to a build.
     app_version text not null check (app_version ~ '^[0-9a-z.-]{1,40}$'),
     submitted_at timestamptz,
-    updated_at timestamptz not null default now()
+    updated_at timestamptz not null default now(),
+    -- Save order within one open checklist page: the page's random ID and its save counter. Saves from one page can reach
+    -- the database out of order (an autosave still in flight, then the save sent on leaving the page), so an older one
+    -- from the same page never replaces a newer one. A different page (another tab, device or visit) always saves.
+    client_page text not null default '' check (client_page ~ '^[A-Za-z0-9_-]{0,40}$'),
+    client_seq integer not null default 0 check (client_seq >= 0)
 );
+alter table fingence_workspace.uat_results add column if not exists client_page text not null default '' check (client_page ~ '^[A-Za-z0-9_-]{0,40}$');
+alter table fingence_workspace.uat_results add column if not exists client_seq integer not null default 0 check (client_seq >= 0);
 create index if not exists uat_results_organization on fingence_workspace.uat_results (organization_id, updated_at desc);
 alter table fingence_workspace.uat_results enable row level security;
 alter table fingence_workspace.uat_results force row level security;
@@ -67,7 +74,9 @@ begin
 end $$;
 
 -- Any signed-in member: save their own answers; p_submit also marks them submitted (they stay editable afterwards).
-create or replace function public.fingence_workspace_save_uat(p_token_hash text, p_answers jsonb, p_submit boolean, p_version text) returns jsonb
+-- p_page and p_seq order the saves of one open page: an older save from the same page changes nothing ("stale").
+drop function if exists public.fingence_workspace_save_uat(text, jsonb, boolean, text);
+create or replace function public.fingence_workspace_save_uat(p_token_hash text, p_answers jsonb, p_submit boolean, p_version text, p_page text, p_seq integer) returns jsonb
 language plpgsql security definer set search_path = '' as $$
 declare a record; r fingence_workspace.uat_results;
 begin
@@ -75,11 +84,18 @@ begin
     if not found or fingence_workspace.rank(a.role) < 1 then return jsonb_build_object('error', 'FORBIDDEN'); end if;
     if not fingence_workspace.valid_uat(p_answers) or pg_column_size(p_answers) > 200000 then return jsonb_build_object('error', 'INVALID_ANSWERS'); end if;
     if p_version is null or p_version !~ '^[0-9a-z.-]{1,40}$' then return jsonb_build_object('error', 'INVALID_ANSWERS'); end if;
-    insert into fingence_workspace.uat_results (member_id, organization_id, answers, app_version, submitted_at)
-    values (a.member_id, a.organization_id, p_answers, p_version, case when p_submit then now() end)
+    if p_page is null or p_page !~ '^[A-Za-z0-9_-]{8,40}$' or p_seq is null or p_seq < 0 then return jsonb_build_object('error', 'INVALID_ANSWERS'); end if;
+    insert into fingence_workspace.uat_results (member_id, organization_id, answers, app_version, submitted_at, client_page, client_seq)
+    values (a.member_id, a.organization_id, p_answers, p_version, case when p_submit then now() end, p_page, p_seq)
     on conflict (member_id) do update set answers = excluded.answers, app_version = excluded.app_version,
-        submitted_at = coalesce(case when p_submit then now() end, fingence_workspace.uat_results.submitted_at), updated_at = now()
+        submitted_at = coalesce(case when p_submit then now() end, fingence_workspace.uat_results.submitted_at), updated_at = now(),
+        client_page = excluded.client_page, client_seq = excluded.client_seq
+    where not (fingence_workspace.uat_results.client_page = excluded.client_page and fingence_workspace.uat_results.client_seq > excluded.client_seq)
     returning * into r;
+    if not found then
+        select * into r from fingence_workspace.uat_results where member_id = a.member_id;
+        return jsonb_build_object('ok', true, 'stale', true, 'submittedAt', r.submitted_at, 'updatedAt', r.updated_at);
+    end if;
     return jsonb_build_object('ok', true, 'submittedAt', r.submitted_at, 'updatedAt', r.updated_at);
 end $$;
 
@@ -97,7 +113,7 @@ begin
 end $$;
 
 do $$ declare f text; begin
-    foreach f in array array['fingence_workspace_uat(text)', 'fingence_workspace_save_uat(text, jsonb, boolean, text)', 'fingence_workspace_uat_results(text)'] loop
+    foreach f in array array['fingence_workspace_uat(text)', 'fingence_workspace_save_uat(text, jsonb, boolean, text, text, integer)', 'fingence_workspace_uat_results(text)'] loop
         execute format('revoke execute on function public.%s from public, anon, authenticated', f);
         execute format('grant execute on function public.%s to service_role', f);
     end loop;

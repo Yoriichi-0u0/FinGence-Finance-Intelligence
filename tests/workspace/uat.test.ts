@@ -22,8 +22,9 @@ const cookieOf = (res: Response) => res.headers.get('set-cookie')!.split(';')[0]
 async function redeem(code: string) { return cookieOf(await h.join(req('/api/workspace/join', undefined, { code, password: 'correct horse battery' }, 'POST'), deps)); }
 async function invite(by: string, email: string, role: string) { return (await (await h.teamChange(req('/api/workspace/team', by, { action: 'invite', email, role }, 'POST'), deps)).json()).code as string; }
 const load = async (cookie?: string) => { const res = await h.uat(req('/api/workspace/uat', cookie), deps); return [res.status, await res.json()] as const; };
-const save = async (cookie: string | undefined, answers: unknown, submit?: boolean, version = 'abc1234') => {
-    const res = await h.uatChange(req('/api/workspace/uat', cookie, { answers, ...(submit === undefined ? {} : { submit }) }), deps, version);
+let seq = 0;
+const save = async (cookie: string | undefined, answers: unknown, submit?: boolean, version = 'abc1234', order: { page: string; seq: number } = { page: 'test-page-0001', seq: ++seq }) => {
+    const res = await h.uatChange(req('/api/workspace/uat', cookie, { answers, order, ...(submit === undefined ? {} : { submit }) }), deps, version);
     return [res.status, await res.json()] as const;
 };
 const results = async (cookie?: string) => { const res = await h.uatResults(req('/api/workspace/uat/results', cookie), deps); return [res.status, await res.json()] as const; };
@@ -76,10 +77,27 @@ describe('Testing checklist: each tester keeps their own answers', () => {
         const { rows: args } = await db.query<{ name: string; args: string }>(
             "select p.proname name, pg_get_function_identity_arguments(p.oid) args from pg_proc p where p.proname like 'fingence_workspace%uat%' order by 1");
         expect(args).toEqual([
-            { name: 'fingence_workspace_save_uat', args: 'p_token_hash text, p_answers jsonb, p_submit boolean, p_version text' },
+            { name: 'fingence_workspace_save_uat', args: 'p_token_hash text, p_answers jsonb, p_submit boolean, p_version text, p_page text, p_seq integer' },
             { name: 'fingence_workspace_uat', args: 'p_token_hash text' },
             { name: 'fingence_workspace_uat_results', args: 'p_token_hash text' },
         ]);
+    });
+});
+
+describe('Testing checklist: saves from one page keep their order', () => {
+    it('an older save from the same page that arrives last changes nothing; another page always saves', async () => {
+        const newer = setTask(passTwo, 4, { result: 'PASS', note: 'Typed just before leaving the page' });
+        expect((await save(finance, newer, undefined, 'abc1234', { page: 'tab-one-0001', seq: 7 }))[1]).toMatchObject({ ok: true });
+        // The autosave of seconds earlier, still in flight, reaches the database after the save sent on leaving.
+        expect((await save(finance, passTwo, undefined, 'abc1234', { page: 'tab-one-0001', seq: 6 }))[1]).toMatchObject({ ok: true, stale: true });
+        expect((await load(finance))[1].answers.tasks['4'].note).toBe('Typed just before leaving the page');
+        // The same tester on another device or a later visit starts a new page, whose first save counts.
+        expect((await save(finance, passTwo, undefined, 'abc1234', { page: 'tab-two-0001', seq: 1 }))[1].stale).toBeUndefined();
+        expect((await load(finance))[1].answers.tasks['4']).toBeUndefined();
+    });
+    it('a save without its order is refused', async () => {
+        const res = await h.uatChange(req('/api/workspace/uat', finance, { answers: passTwo }), deps);
+        expect(res.status).toBe(400);
     });
 });
 
@@ -109,7 +127,7 @@ describe('Testing checklist: only the strict answer shape is stored', () => {
         await expect(db.query("insert into fingence_workspace.uat_results (member_id, organization_id, answers, app_version) select id, organization_id, '{\"v\":1,\"tasks\":{},\"overall\":{},\"context\":{},\"x\":1}', 'local' from fingence_workspace.members limit 1")).rejects.toThrow(/uat_results_answers_shape/);
     });
     it('a cross-site request and an oversized body are refused before the store is asked', async () => {
-        const cross = await h.uatChange(req('/api/workspace/uat', finance, { answers: passTwo }, 'PUT', { origin: 'https://evil.example' }), deps);
+        const cross = await h.uatChange(req('/api/workspace/uat', finance, { answers: passTwo, order: { page: 'test-page-0001', seq: 999 } }, 'PUT', { origin: 'https://evil.example' }), deps);
         expect(cross.status).toBe(403);
         const huge = await h.uatChange(req('/api/workspace/uat', finance, { answers: { ...passTwo, padding: 'x'.repeat(210_000) } }), deps);
         expect(huge.status).toBe(413);
@@ -126,7 +144,7 @@ describe('Testing checklist: everyone\'s results are for Admins and Superadmins 
     it('an Admin sees every tester in the organization with their role, answers and status, newest first', async () => {
         const [status, out] = await results(admin);
         expect(status).toBe(200);
-        expect(out.testers.map((t: { email: string }) => t.email)).toEqual(['finance2@example.invalid', 'finance@saic.example']);
+        expect(out.testers.map((t: { email: string }) => t.email)).toEqual(['finance@saic.example', 'finance2@example.invalid']);
         const first = out.testers.find((t: { email: string }) => t.email === 'finance@saic.example');
         expect(first).toMatchObject({ role: 'FINANCE', active: true, mine: false, appVersion: 'abc1234', submittedAt: expect.any(String), answers: { tasks: { 2: { result: 'ISSUE', severity: 'WORKAROUND' } } } });
         expect(out.testers.find((t: { email: string }) => t.email === 'finance2@example.invalid').submittedAt).toBeNull();
