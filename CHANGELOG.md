@@ -42,6 +42,7 @@ the new version and its date.
   with counts on the navigation and fewer status chips for Finance users (#123, #124, #125).
 
 ### Fixed
+- Testing checklist task 1 now asks testers to sign in with the account they were given, not an invitation code (#156).
 - Testing checklist: answers still being saved when a tester closes or reloads the tab are no longer lost (#155).
 - Signed-in users no longer see a moment of "Public demo" and "Public prototype" wording while their session loads (UAT finding, #147).
 - AI answers that say "decreased by" or "increased by" a negative amount (a double negative) are now withheld, like "lower by" (UAT finding, #147).
