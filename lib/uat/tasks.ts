@@ -10,9 +10,9 @@ export type UatTask = { id: number; title: string; steps: string[]; expected: st
 
 export const UAT_TASKS: UatTask[] = [
     { id: 1, title: 'Sign in', links: [],
-        steps: ['Open the live site and choose **I have a code**.', 'Enter your invitation code, choose a password and continue.', 'Sign out from the account menu (your initials, bottom left), then sign in again with your email and password. Your answers here are kept.'],
-        expected: 'You land on Overview, and the account menu shows your name and role.',
-        question: 'Was anything about joining or signing in unclear?' },
+        steps: ['Open the live site and sign in with the account email and password the FinGence team gave you.', 'Sign out from the account menu (your initials, bottom left), then sign in again. Your answers here are kept.'],
+        expected: 'You land on Overview, and the account menu shows your email and role.',
+        question: 'Was anything about signing in unclear?' },
     { id: 2, title: 'Process the sample documents', links: [{ href: '/data', label: 'Open Data' }],
         steps: ['Open **Data** and choose **Sample documents** (one month, March 2026, MYR).', 'Look at the preview of each document, then choose **Process Financial Documents**.', 'In step 3, look at the confidence card and at what FinGence read beside each document.'],
         expected: 'Processing finishes in under a minute; the results show a confidence percentage with a band (High, Check advised or Low) and the four headline figures.',
