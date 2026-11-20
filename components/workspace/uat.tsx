@@ -10,6 +10,12 @@ import {
 } from '@/lib/uat/tasks';
 import { atLeast, plainMessage, ROLE_LABEL, useWorkspace } from './context';
 
+/**
+ * Saves answers. Within the browser's 64 KB limit for requests that outlive the page, the request is sent so that it
+ * completes even if the tab closes meanwhile; a larger one (long notes) is sent normally.
+ */
+const put = (body: string) => fetch('/api/workspace/uat', { method: 'PUT', headers: { 'content-type': 'application/json' }, body, keepalive: new Blob([body]).size < 60_000 });
+
 type Saved = { answers: UatAnswers | null; submittedAt: string | null; updatedAt: string | null };
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
@@ -54,6 +60,8 @@ function MyChecklist({ admin }: { admin: boolean }) {
     const latest = useRef<UatAnswers | null>(null), dirty = useRef(false), timer = useRef<ReturnType<typeof setTimeout> | null>(null), chain = useRef(Promise.resolve());
     // This page's saves, in the order they were made: the database keeps the newest even if an older one arrives last.
     const page = useRef(''), seq = useRef(0);
+    // Saves sent but not yet confirmed: closing the tab can cancel them, so leaving re-sends the latest answers.
+    const inFlight = useRef(0);
 
     const payload = useCallback((submit: boolean) => {
         const device = describeDevice(navigator.userAgent, window.innerWidth);
@@ -68,9 +76,10 @@ function MyChecklist({ admin }: { admin: boolean }) {
         // One save at a time, always with the latest answers.
         chain.current = chain.current.then(async () => {
             const body = payload(submit);
-            dirty.current = false; setState('saving');
-            const res = await fetch('/api/workspace/uat', { method: 'PUT', headers: { 'content-type': 'application/json' }, body }).catch(() => null);
+            dirty.current = false; setState('saving'); inFlight.current += 1;
+            const res = await put(body).catch(() => null);
             const out = await res?.json().catch(() => null) as { submittedAt: string | null; updatedAt: string } | null;
+            inFlight.current -= 1;
             if (!res?.ok || !out) { dirty.current = true; setState('error'); return; }
             ok = true; setState('saved'); setSavedAt(out.updatedAt); setSubmittedAt(out.submittedAt);
         });
@@ -93,9 +102,10 @@ function MyChecklist({ admin }: { admin: boolean }) {
         // Leaving with unsaved typing still saves it. Moving to another FinGence page keeps this script running, so that save
         // waits behind any save in flight; closing the tab cannot wait, so it goes at once, and its higher order number keeps
         // an older save that lands after it from replacing it.
-        const send = () => fetch('/api/workspace/uat', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: payload(false), keepalive: true }).then(() => undefined, () => undefined);
+        // A save still unconfirmed when the tab closes may be cancelled with it, so closing re-sends the latest answers too.
+        const send = () => put(payload(false)).then(() => undefined, () => undefined);
         const leaving = (now: boolean) => {
-            if (!dirty.current || !latest.current) return;
+            if (!latest.current || !(dirty.current || (now && inFlight.current > 0))) return;
             dirty.current = false;
             if (now) void send(); else chain.current = chain.current.then(send);
         };
