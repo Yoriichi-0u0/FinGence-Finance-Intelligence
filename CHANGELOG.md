@@ -14,6 +14,7 @@ the new version and its date.
 - AI06 explains verified suggestions, suggestions needing review, abstentions and permanent review decisions using the approved notices (#153).
 
 ### Added
+- **Testing checklist** (`/uat`) for SAIC's acceptance testing: every signed-in tester works through the UAT tasks and records a result, kind, severity and note per task, saved as they go; Admins and Superadmins see everyone's results, the sign-off criteria and the open issues, and download them as a CSV with testers numbered rather than named. Needs `workspace-v8-uat.sql` on Production first (#154).
 - AI06 users can reject their own suggestions needing review and restore the saved decision, while unverified approval stays blocked (#150; refs #112).
 - AI06 now shows safe review-only matching proposals without changing accounting entries, and prevents incomplete suggestions from being approved (#149; refs #112).
 - AI report page (`/ai-report`): a quarterly or annual style cash report for any processed run, with a summary of results against the preceding period, five sections written by AI over verified facts (every figure filled in and checked by FinGence, or FinGence's own summary instead) and print to PDF; runs only on its own key `GROQ_API_KEY5`. Reports is unchanged (#145).

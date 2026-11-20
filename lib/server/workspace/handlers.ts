@@ -2,6 +2,7 @@ import 'server-only';
 import { z } from 'zod';
 import { runPayloadSchema } from '../../document-ingestion/run-payload';
 import { layoutSchema } from '../../dashboard/layout';
+import { answersSchema } from '../../uat/tasks';
 import { boundedJson, noStoreJson as json, sameOrigin } from '../ai/request';
 import { hashPassword, passwordAcceptable, verifyPassword } from './password';
 import { attemptAllowed, caller, clearedCookie, requireRole, SESSION_HOURS, sessionCookie } from './session';
@@ -222,4 +223,41 @@ export async function preferencesChange(request: Request, deps: Deps) {
     const result = await rpc('fingence_workspace_save_preferences', { p_token_hash: who.tokenHash, p_dashboard: body.data.dashboard }, deps.store, deps.transport);
     if (result.ok) return json(result.value);
     return result.error === 'INVALID_LAYOUT' ? json({ code: 'INVALID_LAYOUT' }, 400) : fail(result.error);
+}
+
+/** The deployment the answers were saved against: Vercel's commit, or "local" off Vercel. */
+export const appVersion = (env: Record<string, string | undefined> = process.env) => {
+    const sha = env.VERCEL_GIT_COMMIT_SHA?.toLowerCase();
+    return sha && /^[0-9a-f]{7,40}$/.test(sha) ? sha.slice(0, 7) : 'local';
+};
+
+/** Any signed-in member: their own Testing checklist answers (UAT), or nulls before they start. */
+export async function uat(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const result = await rpc('fingence_workspace_uat', { p_token_hash: who.tokenHash }, deps.store, deps.transport);
+    return result.ok ? json(result.value) : fail(result.error);
+}
+const uatBody = z.object({ answers: answersSchema, submit: z.boolean().optional() }).strict();
+/** Any signed-in member: save their own answers as they go; { submit: true } also marks them submitted. */
+export async function uatChange(request: Request, deps: Deps, version = appVersion()) {
+    if (!deps.store) return notFound();
+    const read = await boundedJson(request, 200_000);
+    if ('refusal' in read) return read.refusal;
+    const body = uatBody.safeParse(read.body);
+    if (!body.success) return json({ code: 'INVALID_ANSWERS' }, 400);
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const result = await rpc('fingence_workspace_save_uat', { p_token_hash: who.tokenHash, p_answers: body.data.answers, p_submit: body.data.submit === true, p_version: version }, deps.store, deps.transport);
+    if (result.ok) return json(result.value);
+    return result.error === 'INVALID_ANSWERS' ? json({ code: 'INVALID_ANSWERS' }, 400) : fail(result.error);
+}
+/** Admin and above: every tester's answers in their organization, to follow progress and triage issues. */
+export async function uatResults(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    const who = await requireRole(request.headers, 'ADMIN', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const result = await rpc('fingence_workspace_uat_results', { p_token_hash: who.tokenHash }, deps.store, deps.transport);
+    return result.ok ? json(result.value) : fail(result.error);
 }

@@ -40,6 +40,9 @@ FinGence-Production Supabase project (v1 applied on 4 November with 0 organizati
   random values, stored only as SHA-256.
 - **Changing a password:** any member can change their own on `/account` (`workspace-v7-password.sql`). The current
   password is verified on the server and rate-limited; every other session of theirs ends, and the change is audited.
+- **Testing checklist (UAT):** each member records their own answers to the acceptance-testing tasks on `/uat`
+  (`workspace-v8-uat.sql`, one strict JSON shape checked in the browser, server and database); Admins and Superadmins read
+  everyone's in their organization. Not audited, like dashboard preferences.
 - **Sessions:** HttpOnly, SameSite=Lax cookie, Secure in production, 12 hours. A role change, turning access off or
   ending a session takes effect on the next request.
 - **Attempts:** sign-in and join are limited to 10 a minute per client and 30 an hour per email.

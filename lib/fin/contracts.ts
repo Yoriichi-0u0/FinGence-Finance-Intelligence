@@ -29,6 +29,7 @@ export const FIN_PAGES = {
     '/reports': { label: 'Reports', about: 'the management report, ready to print or save as PDF' },
     '/ai-report': { label: 'AI report', about: 'a quarterly or annual style report written by AI over the verified figures, every figure filled in and checked by FinGence' },
     '/chatbot': { label: 'Fin', about: 'a full-page conversation with Fin' },
+    '/uat': { label: 'Testing checklist', about: 'the acceptance-testing tasks, where you record how each one went and submit your results' },
     '/account': { label: 'Your account', about: 'who you are signed in as, and changing your own password' },
 } as const;
 export type FinPage = keyof typeof FIN_PAGES;
