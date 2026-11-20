@@ -62,6 +62,8 @@ function MyChecklist({ admin }: { admin: boolean }) {
     const page = useRef(''), seq = useRef(0);
     // Saves sent but not yet confirmed: closing the tab can cancel them, so leaving re-sends the latest answers.
     const inFlight = useRef(0);
+    // A submit sent but not yet confirmed: a re-send on closing the tab must submit too, or it would replace the submit.
+    const submitting = useRef(false);
 
     const payload = useCallback((submit: boolean) => {
         const device = describeDevice(navigator.userAgent, window.innerWidth);
@@ -73,6 +75,8 @@ function MyChecklist({ admin }: { admin: boolean }) {
         if (timer.current) { clearTimeout(timer.current); timer.current = null; }
         if (!latest.current) return Promise.resolve(false);
         let ok = false;
+        // Marked as soon as it is asked for: a submit still queued behind another save counts as pending too.
+        if (submit) submitting.current = true;
         // One save at a time, always with the latest answers.
         chain.current = chain.current.then(async () => {
             const body = payload(submit);
@@ -80,6 +84,7 @@ function MyChecklist({ admin }: { admin: boolean }) {
             const res = await put(body).catch(() => null);
             const out = await res?.json().catch(() => null) as { submittedAt: string | null; updatedAt: string } | null;
             inFlight.current -= 1;
+            if (submit) submitting.current = false;
             if (!res?.ok || !out) { dirty.current = true; setState('error'); return; }
             ok = true; setState('saved'); setSavedAt(out.updatedAt); setSubmittedAt(out.submittedAt);
         });
@@ -103,7 +108,7 @@ function MyChecklist({ admin }: { admin: boolean }) {
         // waits behind any save in flight; closing the tab cannot wait, so it goes at once, and its higher order number keeps
         // an older save that lands after it from replacing it.
         // A save still unconfirmed when the tab closes may be cancelled with it, so closing re-sends the latest answers too.
-        const send = () => put(payload(false)).then(() => undefined, () => undefined);
+        const send = () => put(payload(submitting.current)).then(() => undefined, () => undefined);
         const leaving = (now: boolean) => {
             if (!latest.current || !(dirty.current || (now && inFlight.current > 0))) return;
             dirty.current = false;
