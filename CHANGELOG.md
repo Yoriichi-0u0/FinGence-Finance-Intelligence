@@ -42,6 +42,7 @@ the new version and its date.
   with counts on the navigation and fewer status chips for Finance users (#123, #124, #125).
 
 ### Fixed
+- Testing checklist: answers still being saved when a tester closes or reloads the tab are no longer lost (#155).
 - Signed-in users no longer see a moment of "Public demo" and "Public prototype" wording while their session loads (UAT finding, #147).
 - AI answers that say "decreased by" or "increased by" a negative amount (a double negative) are now withheld, like "lower by" (UAT finding, #147).
 - AI report: the review-of-performance section asks for at most three facts a sentence, after its reply was rejected as malformed twice (UAT finding, #147).
