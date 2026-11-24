@@ -15,7 +15,9 @@ import type { CashSourceRow, FinancePoCReconciliationV1, ReconciliationStatus } 
 export const STATEMENT_VERSION = 'fingence-reconciliation-statement-v1';
 export const ITEM_CATEGORIES = ['DEPOSIT_IN_TRANSIT', 'UNPRESENTED_CHEQUE', 'BANK_CHARGE_NOT_IN_LEDGER', 'RECEIPT_NOT_IN_LEDGER', 'PAYMENT_NOT_IN_LEDGER', 'LEDGER_AMOUNT_ERROR', 'DUPLICATE_LEDGER_POSTING', 'REFERENCE_ONLY', 'UNEXPLAINED',
     // Assigned only by the reconciliation layer (lib/reconciliation), which links exceptions across days and months.
-    'LATE_MATCH', 'PAYMENT_IN_TRANSIT', 'LEDGER_POSTED_LATE', 'CLEARED_PRIOR_PERIOD_ITEM'] as const;
+    'LATE_MATCH', 'PAYMENT_IN_TRANSIT', 'LEDGER_POSTED_LATE', 'CLEARED_PRIOR_PERIOD_ITEM',
+    // One transaction the bank shows more than once under the same reference, recorded once in the ledger.
+    'DUPLICATE_BANK_MATCHED', 'DUPLICATE_BANK_PAYMENT', 'DUPLICATE_BANK_RECEIPT'] as const;
 export type ItemCategory = typeof ITEM_CATEGORIES[number];
 export const CATEGORY_LABEL: Record<ItemCategory, string> = {
     DEPOSIT_IN_TRANSIT: 'Deposit in transit', UNPRESENTED_CHEQUE: 'Unpresented cheque', BANK_CHARGE_NOT_IN_LEDGER: 'Bank charge not in the ledger',
@@ -23,6 +25,7 @@ export const CATEGORY_LABEL: Record<ItemCategory, string> = {
     DUPLICATE_LEDGER_POSTING: 'Duplicate ledger posting', REFERENCE_ONLY: 'Reference differs (no amount effect)', UNEXPLAINED: 'Unexplained',
     LATE_MATCH: 'Matched, recorded days apart', PAYMENT_IN_TRANSIT: 'Payment not yet cleared by the bank', LEDGER_POSTED_LATE: 'Recorded in the ledger in a later month',
     CLEARED_PRIOR_PERIOD_ITEM: 'Clears an item from an earlier month',
+    DUPLICATE_BANK_MATCHED: 'Matched (the bank shows it more than once)', DUPLICATE_BANK_PAYMENT: 'Duplicate payment on the bank statement', DUPLICATE_BANK_RECEIPT: 'Duplicate receipt on the bank statement',
 };
 /** Days at the end of the period within which an unbanked ledger receipt is treated as in transit. */
 export const IN_TRANSIT_DAYS = 3;
@@ -54,8 +57,9 @@ export const signed = (c: bigint) => (c < 0n ? '-' : '') + fromCents(c < 0n ? -c
 export const money = (c: bigint, currency: string) => `${c < 0n ? '−' : ''}${currency} ${groupDigits(fromCents(c < 0n ? -c : c))}`;
 
 /**
- * Which of several identical ledger copies of one bank record FinGence keeps: the posting date closest to the bank
- * date, then the lowest record ID. The others are reversed. Deterministic, so no human choice is needed.
+ * Which of several identical copies of one record on the other side FinGence keeps: the date closest to that record's
+ * date, then the lowest record ID. Used for ledger copies of one bank record (the others are reversed) and for bank
+ * copies of one ledger entry (the others are duplicates). Deterministic, so no human choice is needed.
  */
 export function duplicateChoice(bank: CashSourceRow, ledger: CashSourceRow[]): { kept: CashSourceRow; reversed: CashSourceRow[] } {
     const gap = (r: CashSourceRow) => Math.abs(Date.parse(r.date) - Date.parse(bank.date));
@@ -63,10 +67,44 @@ export function duplicateChoice(bank: CashSourceRow, ledger: CashSourceRow[]): {
     return { kept, reversed: reversed.sort((a, b) => a.recordId.localeCompare(b.recordId)) };
 }
 
-function classify(r: FinancePoCReconciliationV1['results'][number], bank: CashSourceRow | undefined, ledger: CashSourceRow[], period: string, currency: string): Omit<StatementItem, 'effect' | 'status' | 'bankRecordId' | 'ledgerRecordIds'> {
+/**
+ * The matcher gives every bank record of an ambiguous reference group the same ledger candidates, so when the bank shows
+ * a reference more than once those ledger records appear in several results. Each is listed on one statement item only:
+ * - one ledger entry and identical bank amounts: one transaction the bank shows more than once. The bank copy chosen
+ *   by `duplicateChoice` is its match; every other copy is a duplicate the ledger lacks;
+ * - anything else: no pairing is safe. The ledger records go on the first bank record's item, and all stay unexplained.
+ */
+type SharedRole = { role: 'KEPT' | 'DUPLICATE'; kept: CashSourceRow; ledger: CashSourceRow; copies: CashSourceRow[] } | { role: 'SHARED'; ledger: CashSourceRow[] };
+function sharedCandidates(snapshot: FinancePoCReconciliationV1, bankRows: Map<string, CashSourceRow>, ledgerRows: Map<string, CashSourceRow>): Map<string, SharedRole> {
+    const groups = new Map<string, string[]>();
+    for (const r of snapshot.results) if (r.status === 'AMBIGUOUS_DUPLICATE_LEDGER' && r.bankRecordId && r.ledgerRecordIds.length)
+        groups.set(r.ledgerRecordIds.join('|'), [...(groups.get(r.ledgerRecordIds.join('|')) ?? []), r.bankRecordId]);
+    const roles = new Map<string, SharedRole>();
+    for (const [key, ids] of groups) {
+        if (ids.length < 2) continue;
+        const banks = ids.map(id => bankRows.get(id)).filter((x): x is CashSourceRow => !!x).sort((a, b) => a.recordId.localeCompare(b.recordId));
+        const ledger = key.split('|').map(id => ledgerRows.get(id)).filter((x): x is CashSourceRow => !!x);
+        if (banks.length !== ids.length) continue;
+        if (ledger.length === 1 && banks.every(b => b.signedCents === ledger[0].signedCents)) {
+            const { kept } = duplicateChoice(ledger[0], banks);
+            for (const b of banks) roles.set(b.recordId, { role: b === kept ? 'KEPT' : 'DUPLICATE', kept, ledger: ledger[0], copies: banks });
+        } else banks.forEach((b, i) => roles.set(b.recordId, { role: 'SHARED', ledger: i ? [] : ledger }));
+    }
+    return roles;
+}
+
+function classify(r: FinancePoCReconciliationV1['results'][number], bank: CashSourceRow | undefined, ledger: CashSourceRow[], period: string, currency: string, shared?: SharedRole): Omit<StatementItem, 'effect' | 'status' | 'bankRecordId' | 'ledgerRecordIds'> {
     const b = bank ? BigInt(bank.signedCents) : 0n, l = ledger.map(x => BigInt(x.signedCents)), row = bank ?? ledger[0];
     const base = { date: row?.date ?? '', reference: row?.reference ?? '', description: row?.description ?? '', note: null as string | null };
     const unexplained = (rule: string) => ({ ...base, category: 'UNEXPLAINED' as const, side: 'NONE' as const, adjustment: '0.00', rule });
+    if (shared?.role === 'SHARED') return unexplained('Several bank records share the same ledger candidates, which are not one identical transaction: no pairing is safe.');
+    if (shared) {
+        const note = `Bank records ${shared.copies.map(x => x.recordId).join(', ')} carry the same reference and amount; the ledger records it once (${shared.ledger.recordId}). ${shared.kept.recordId} is its match (date closest to the ledger entry, then lowest ID); ${shared.copies.filter(x => x !== shared.kept).map(x => x.recordId).join(', ')} ${shared.copies.length === 2 ? 'is a duplicate' : 'are duplicates'}.`;
+        if (shared.role === 'KEPT') return { ...base, category: 'DUPLICATE_BANK_MATCHED', side: 'NONE', adjustment: '0.00', note, rule: 'One of several identical bank records under the reference of a single ledger entry: the copy closest to the ledger date is its match.' };
+        return b > 0n
+            ? { ...base, category: 'DUPLICATE_BANK_RECEIPT', side: 'LEDGER', adjustment: signed(b), note, rule: 'Bank credit repeating another bank record that the single ledger entry already matches: the ledger needs the second receipt, to be refunded.' }
+            : { ...base, category: 'DUPLICATE_BANK_PAYMENT', side: 'LEDGER', adjustment: signed(b), note, rule: 'Bank debit repeating another bank record that the single ledger entry already matches: the ledger needs the second payment, to be recovered.' };
+    }
     switch (r.status) {
         case 'LEDGER_ONLY': {
             const v = l[0] ?? 0n, day = Number(base.date.slice(8, 10));
@@ -102,10 +140,13 @@ function classify(r: FinancePoCReconciliationV1['results'][number], bank: CashSo
 export function buildStatement(snapshot: FinancePoCReconciliationV1): ReconciliationStatement {
     const { period, currency } = snapshot.scope;
     const bankRows = new Map(snapshot.rows.bank.map(r => [r.recordId, r])), ledgerRows = new Map(snapshot.rows.ledger.map(r => [r.recordId, r]));
+    const shared = sharedCandidates(snapshot, bankRows, ledgerRows);
     const items: StatementItem[] = snapshot.results.filter(r => !MATCHED.has(r.status)).map(r => {
-        const bank = r.bankRecordId ? bankRows.get(r.bankRecordId) : undefined, ledger = r.ledgerRecordIds.map(id => ledgerRows.get(id)).filter((x): x is CashSourceRow => !!x);
+        const bank = r.bankRecordId ? bankRows.get(r.bankRecordId) : undefined, role = r.bankRecordId ? shared.get(r.bankRecordId) : undefined;
+        // A ledger record several bank records share is listed (and counted) on one item only.
+        const ledger = !role ? r.ledgerRecordIds.map(id => ledgerRows.get(id)).filter((x): x is CashSourceRow => !!x) : role.role === 'SHARED' ? role.ledger : role.role === 'KEPT' ? [role.ledger] : [];
         const effect = (bank ? BigInt(bank.signedCents) : 0n) - sum(ledger.map(x => BigInt(x.signedCents)));
-        return { ...classify(r, bank, ledger, period, currency), status: r.status, effect: signed(effect), bankRecordId: r.bankRecordId, ledgerRecordIds: r.ledgerRecordIds };
+        return { ...classify(r, bank, ledger, period, currency, role), status: r.status, effect: signed(effect), bankRecordId: r.bankRecordId, ledgerRecordIds: role ? ledger.map(x => x.recordId) : r.ledgerRecordIds };
     });
     return assembleStatement(snapshot, items);
 }
@@ -127,11 +168,13 @@ export function assembleStatement(snapshot: FinancePoCReconciliationV1, items: S
         const bank = r.bankRecordId ? bankRows.get(r.bankRecordId) : undefined;
         return bank && BigInt(bank.signedCents) === sum(r.ledgerRecordIds.map(id => BigInt(ledgerRows.get(id)?.signedCents ?? '0')));
     });
-    const listed = new Set(items.flatMap(i => [i.bankRecordId, ...i.ledgerRecordIds]).filter(Boolean));
-    const exceptionIds = snapshot.results.filter(r => !MATCHED.has(r.status)).flatMap(r => [r.bankRecordId, ...r.ledgerRecordIds]).filter(Boolean);
+    // Every record the matcher left open is on exactly one item: none missing, none listed twice.
+    const ids = (r: { bankRecordId: string | null; ledgerRecordIds: string[] }) => [...(r.bankRecordId ? [`B:${r.bankRecordId}`] : []), ...r.ledgerRecordIds.map(id => `L:${id}`)];
+    const itemIds = items.flatMap(ids), listed = new Set(itemIds);
+    const exceptionIds = new Set(snapshot.results.filter(r => !MATCHED.has(r.status)).flatMap(ids));
     const checks: StatementCheck[] = [
         { id: 'effects', label: 'Exceptions account for the whole difference', passed: matchedEqual && effects === difference, detail: `${items.length} exceptions add up to ${money(effects, currency)}; recorded difference ${money(difference, currency)}` },
-        { id: 'listed', label: 'Every exception record appears exactly once', passed: listed.size === exceptionIds.length && exceptionIds.every(id => listed.has(id!)), detail: `${listed.size} records` },
+        { id: 'listed', label: 'Every exception record appears exactly once', passed: itemIds.length === listed.size && listed.size === exceptionIds.size && [...exceptionIds].every(id => listed.has(id)), detail: `${listed.size} records` },
         { id: 'adjusted', label: 'Adjusted bank − adjusted ledger equals the unexplained remainder', passed: adjustedBank - adjustedLedger === unexplained, detail: `${money(adjustedBank, currency)} − ${money(adjustedLedger, currency)} = ${money(adjustedBank - adjustedLedger, currency)}; unexplained ${money(unexplained, currency)}` },
     ];
     return {

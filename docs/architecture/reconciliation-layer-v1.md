@@ -39,6 +39,7 @@ entriesCsv(entries): string                // correcting entries as CSV; formula
 ## How it works
 
 1. **Each month goes through the unchanged matcher.** A match needs a unique reference, currency and signed amount within two days. `buildStatement` then classifies the open exceptions (deposit in transit, unpresented cheque, bank charge, missing receipt or payment, amount error, duplicate, reference-only).
+   - **A reference the bank shows more than once.** The matcher never clears any of those bank records and gives each the same ledger candidates. When there is one ledger entry and every bank copy has its amount, it is one transaction the bank shows more than once: the copy dated closest to the ledger entry, then the lowest ID, is its match (`DUPLICATE_BANK_MATCHED`), and each other copy is a duplicate the ledger lacks (`DUPLICATE_BANK_PAYMENT` or `DUPLICATE_BANK_RECEIPT`). In any other shared case, the ledger records go on the first bank record's item and every item stays unexplained. Either way, each ledger record is listed and counted once.
 2. **Exceptions are linked across days and months.** Two single open records, one on each side, are linked when they have the same non-empty reference and signed cents, fall inside the clearing window, and each is the other's only candidate.
    - Clearing windows: receipts within 7 days, payments within 45 days, and ledger bookings within 7 days after the bank.
    - Every candidate pair is found before any is used, so record order cannot create a link.
@@ -48,10 +49,10 @@ entriesCsv(entries): string                // correcting entries as CSV; formula
 | Resolution | Rule | Statement category |
 | --- | --- | --- |
 | `MATCHED_LATE` | Linked within the same month, more than two days apart | `LATE_MATCH` (no effect) |
-| `MATCHED_BY_AMOUNT` | Same date and amount, unique on both sides, references differ | `REFERENCE_ONLY` (no effect) |
+| `MATCHED_BY_AMOUNT` | Same date and amount, unique on both sides, references differ; or the bank copy matched to a ledger entry the bank shows more than once | `REFERENCE_ONLY` or `DUPLICATE_BANK_MATCHED` (no effect) |
 | `TIMING_CLEARED` | Linked across months | Earlier month: `DEPOSIT_IN_TRANSIT`, `UNPRESENTED_CHEQUE`, `PAYMENT_IN_TRANSIT` or `LEDGER_POSTED_LATE`. Later month: `CLEARED_PRIOR_PERIOD_ITEM` |
 | `TIMING_OPEN` | Deposit in transit or unpresented cheque whose clearing window runs past the last bank statement supplied | Unchanged |
-| `ENTRY_PREPARED` | Bank charge, receipt or payment missing from the ledger, a ledger amount error, or a duplicate ledger posting | Unchanged; balanced correcting entries are prepared |
+| `ENTRY_PREPARED` | Bank charge, receipt or payment missing from the ledger, a ledger amount error, a duplicate ledger posting, or a duplicate bank payment or receipt | Unchanged; balanced correcting entries are prepared |
 | `UNEXPLAINED` | No rule applies, or an item that should have cleared within its window on the statements supplied did not | `UNEXPLAINED` (full effect kept) |
 
 **Correcting entries** are double-entry lines against `Cash at bank (1000-BANK)`:
@@ -63,6 +64,8 @@ entriesCsv(entries): string                // correcting entries as CSV; formula
 | Payment not in the ledger | Payments to be identified | Cash at bank |
 | Ledger amount error | A correction of the original entry | |
 | Duplicate posting | A reversal of every extra copy | |
+| Duplicate bank payment | Duplicate payments to be recovered | Cash at bank |
+| Duplicate bank receipt | Cash at bank | Duplicate receipts to be refunded |
 
 For a duplicate, the copy kept is the one with the posting date closest to the bank record, then the lowest ID (`duplicateChoice`); no human choice is needed. Entries are **prepared for the books and never posted** to any accounting system.
 
