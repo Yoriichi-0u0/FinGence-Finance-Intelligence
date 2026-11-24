@@ -7,6 +7,7 @@ import { useState } from "react";
 import { DemoProcessingProvider, useDemoProcessing } from "@/components/demo/context";
 import { attentionCounts } from "@/lib/demo/attention";
 import { DemoBanner } from "@/components/demo/banner";
+import { FinDock, FinProvider } from "@/components/fin/fin";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { atLeast, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
 import { OutsideView, ViewingAs } from "@/components/workspace/view-switch";
@@ -19,6 +20,7 @@ import {
   LogIn,
   Users,
   ChartNoAxesCombined,
+  ClipboardCheck,
   Ellipsis,
   Database,
   FileBarChart,
@@ -33,6 +35,7 @@ import {
   RefreshCw,
   ScrollText,
   ShieldCheck,
+  Sparkles,
   TrendingUp,
   X,
 } from "lucide-react";
@@ -49,14 +52,13 @@ const results: NavItem[] = [
   { href: "/forecasting", label: "Forecasting", icon: TrendingUp },
   { href: "/anomalies", label: "Anomalies", icon: AlertTriangle },
   { href: "/reports", label: "Reports", icon: FileBarChart },
+  { href: "/ai-report", label: "AI report", icon: Sparkles },
 ];
 const navigation = [...workspace, ...results];
 // Local M5 only; the page itself enforces role-scoped access on the server.
 const administration = { href: "/admin", label: "Administration", icon: ShieldCheck };
 // Local combined PoC only; the page and API are absent elsewhere.
-const financeQuestions = { href: "/finance-questions", label: "Finance questions", icon: MessageSquareText };
-// Browser-only synthetic demo: rule-based answers over the current processing context.
-const demoQuestions = { href: "/ask", label: "Finance Q&A", icon: MessageSquareText };
+const financeQuestions = { href: "/chatbot", label: "Ask Fin", icon: MessageSquareText };
 // Management (Technical): server processing jobs, flagged items and the pause switch; absent unless the server enables it.
 const management = { href: "/management", label: "Management", icon: Gauge };
 // Hosted workspace (SAIC only): every role uses the finance pages; Admins and Superadmins also get Team and Operations.
@@ -65,6 +67,8 @@ const teamItem: NavItem = { href: "/team", label: "Team", icon: Users };
 const logItem: NavItem = { href: "/log", label: "Technical log", icon: ScrollText };
 // Signed in: every run a person processed, saved with its documents.
 const historyItem: NavItem = { href: "/history", label: "History", icon: History };
+// Signed in, during acceptance testing: the tasks, where each tester records what happened.
+const uatItem: NavItem = { href: "/uat", label: "Testing checklist", icon: ClipboardCheck };
 
 function Brand({ compact = false, rail = false }: { compact?: boolean; rail?: boolean }) {
   return (
@@ -145,7 +149,7 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
   const pathname = usePathname();
   // Navigation follows the role being viewed ("Switch view" may preview a lower one).
   const session = useWorkspace(), admin = atLeast(session.viewRole ?? undefined, "ADMIN");
-  const ask = [...(localReconciliation ? [financeQuestions] : []), ...(syntheticDemo ? [demoQuestions] : [])];
+  const ask = localReconciliation || syntheticDemo ? [financeQuestions] : [];
   const technical = [...(localAdministration ? [administration] : []), ...(managementConsole ? [management] : [])];
 
   return (
@@ -166,7 +170,7 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
       </div>
 
       <nav aria-label="Primary navigation" className={`thin-scrollbar relative min-h-0 flex-1 space-y-5 overflow-y-auto pb-4 ${rail ? "px-2" : "px-3"}`}>
-        <NavGroup label="Workspace" items={session.enabled ? [...workspace, historyItem] : workspace} pathname={pathname} onNavigate={onNavigate} rail={rail} />
+        <NavGroup label="Workspace" items={session.enabled ? [...workspace, historyItem, uatItem] : workspace} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Results" items={results} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Ask" items={ask} pathname={pathname} onNavigate={onNavigate} rail={rail} />
         <NavGroup label="Technical team" items={technical} pathname={pathname} onNavigate={onNavigate} rail={rail} />
@@ -200,14 +204,14 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
 }
 
 /** Phone navigation: the four most used pages in a bottom bar, and everything else behind "More". */
-function BottomBar({ onMore, syntheticDemo }: { onMore: () => void; syntheticDemo: boolean }) {
+function BottomBar({ onMore, chatbotAvailable }: { onMore: () => void; chatbotAvailable: boolean }) {
   const badgeFor = useNavBadges();
   const pathname = usePathname();
   const items: NavItem[] = [
     { href: "/", label: "Overview", icon: House },
     { href: "/data", label: "Data", icon: Database },
     { href: "/reconciliation", label: "Reconcile", icon: RefreshCw },
-    syntheticDemo ? { href: "/ask", label: "Ask", icon: MessageSquareText } : { href: "/reports", label: "Reports", icon: FileBarChart },
+    chatbotAvailable ? { href: "/chatbot", label: "Chat", icon: MessageSquareText } : { href: "/reports", label: "Reports", icon: FileBarChart },
   ];
   const elsewhere = !items.some((item) => isActive(pathname, item.href));
   // Pages behind More still count: its badge adds up what needs you there, in the louder tone if any is an anomaly.
@@ -259,7 +263,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   const pathname = usePathname();
   const sidebar = useSidebarLayout();
   const flags = { localFinancialConsumers, localAdministration, localReconciliation, syntheticDemo, managementConsole, serverJobs };
-  const current = [...navigation, financeQuestions, demoQuestions, administration, management, operationsItem, teamItem, logItem, historyItem].find((item) => isActive(pathname, item.href));
+  const current = [...navigation, financeQuestions, administration, management, operationsItem, teamItem, logItem, historyItem, uatItem].find((item) => isActive(pathname, item.href));
 
   // Signing in and joining stand on their own page, without the navigation a visitor cannot use yet.
   if (workspaceEnabled && (pathname === "/sign-in" || pathname === "/join")) return <WorkspaceProvider enabled><AuthLayout>{children}</AuthLayout></WorkspaceProvider>;
@@ -267,6 +271,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
   return (
     <WorkspaceProvider enabled={workspaceEnabled}>
     <DemoProcessingProvider enabled={syntheticDemo} aiGateway={aiGateway} serverJobs={serverJobs}>
+    <FinProvider>
     <div className="min-h-dvh bg-[var(--canvas)] lg:grid lg:grid-cols-[var(--sidebar)_minmax(0,1fr)] print:block" style={{ "--sidebar": `${sidebar.shown}px` } as React.CSSProperties}>
       <aside className="sticky top-0 z-30 hidden h-dvh lg:block print:hidden">
         <Sidebar {...flags} rail={sidebar.collapsed} onToggle={sidebar.toggle} />
@@ -291,7 +296,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1480px] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-28 pt-5 sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">
-          {["/sign-in", "/join", "/team", "/operations", "/log"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/finance-questions"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
+          {["/sign-in", "/join", "/team", "/operations", "/log"].includes(pathname) ? null : syntheticDemo ? <DemoBanner /> : !(localReconciliation && ["/reconciliation", "/forecasting", "/chatbot"].includes(pathname)) && !(localFinancialConsumers && ["/transactions", "/analytics", "/reports"].includes(pathname)) && !(localAdministration && ["/admin", "/enroll", "/anomalies"].includes(pathname)) && !pathname.startsWith("/data") && pathname !== "/ai-ingestion" && pathname !== "/management" && pathname !== "/ai-ingestion/live" && pathname !== "/ai-ingestion/v2-i1" && pathname !== "/ai-ingestion/synthetic-financial" && <aside className="mb-5 rounded-xl border border-[var(--warn-line)] bg-[var(--warn-soft)] p-4 text-sm text-[var(--warn-ink)]" aria-label="Illustrative page notice">
             <strong>Illustrative prototype page.</strong> Values and interactions here use example data, not your uploaded financial records. <Link href="/data" className="font-semibold underline">Open Data for the live ingestion → C1 → analytics workflow.</Link>
           </aside>}
           <ViewingAs />
@@ -299,7 +304,8 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </main>
       </div>
 
-      <BottomBar onMore={() => setMobileOpen(true)} syntheticDemo={syntheticDemo} />
+      <BottomBar onMore={() => setMobileOpen(true)} chatbotAvailable={syntheticDemo || localReconciliation} />
+      {syntheticDemo ? <FinDock /> : null}
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
@@ -323,6 +329,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
         </div>
       ) : null}
     </div>
+    </FinProvider>
     </DemoProcessingProvider>
     </WorkspaceProvider>
   );

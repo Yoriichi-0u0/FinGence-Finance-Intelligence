@@ -88,7 +88,7 @@ export function createPocFinanceQa(db: TransactionDatabase) {
         const facts: QaFacts = {
             selection: { sourceId: source.id, fileName: source.fileName, sha256: source.sha256, ...sel },
             businesses: projection.options.map(o => o.businessId), periods: projection.periods, totals: projection.totals, series: projection.series,
-            candidates: candidates.filter(c => inScope(c.row)).map(c => ({ rowId: c.row.rowId, severity: c.severity, rules: c.findings.map(f => f.ruleId), review: reviews.get(c.row.rowId) ?? 'OPEN' })),
+            candidates: candidates.filter(c => inScope(c.row)).map(c => ({ rowId: c.row.rowId, severity: c.severity, rules: c.findings.map(f => f.ruleId), review: reviews.get(c.row.rowId) ?? 'OPEN', findingDetails: c.findings.map(f => ({ ruleId: f.ruleId, rationale: f.rationale })) })),
             reconciliation, reconciliationReviews,
             forecast, pooled: pooled && { businesses: peers.length, backtest: pooled },
         };
@@ -110,6 +110,13 @@ export function createPocFinanceQa(db: TransactionDatabase) {
             await audit(tx, p, 'financial_record.read', 'success', built.context.source.id);
             return built.context;
         }),
+        /** Internal Groq chat use only: recompute verified facts in the same authorized, audited read. */
+        factsForChat: (token: string, input: QaSelectionInput) => finance(token, 'poc-finance-chat', async (tx, p): Promise<{ status: 'OK'; facts: QaFacts } | QaRefused> => {
+            const built = await context(tx, p, input);
+            if (!built) { await audit(tx, p, 'financial_record.read', 'failure', 'poc-finance-chat'); return refused(); }
+            await audit(tx, p, 'financial_record.read', 'success', built.context.source.id);
+            return { status: 'OK', facts: built.facts };
+        }),
         /** Answers one question for the server-resolved selection. The question never selects data. */
         ask: (token: string, input: QaSelectionInput, question: string) => finance(token, 'poc-finance-questions', async (tx, p): Promise<QaResult | QaRefused> => {
             const built = typeof question === 'string' && question.trim() && question.length <= MAX_QUESTION ? await context(tx, p, input) : null;
@@ -119,3 +126,4 @@ export function createPocFinanceQa(db: TransactionDatabase) {
         }),
     };
 }
+

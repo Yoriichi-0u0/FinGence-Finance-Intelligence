@@ -1,0 +1,2 @@
+BankTransactionID,BusinessID,BusinessName,AccountNumber,Currency,ValueDate,StatementMonth,BankReference,BankDescription,BankDirection,BankAmountMYR,SignedCashMovementMYR,Counterparty,SourceTransactionID
+BANK-SYNTHETIC-112,DEMO-001,Rimba Demo Kitchen (Synthetic),****0000,MYR,2026-03-10,2026-03,SETTLEMENT-INV829,Synthetic settlement INV829,Credit,9137.21,9137.21,Synthetic customer,SYNTHETIC-112

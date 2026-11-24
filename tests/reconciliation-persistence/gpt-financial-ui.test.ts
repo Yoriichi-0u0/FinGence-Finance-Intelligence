@@ -26,10 +26,10 @@ const rowCount=(html:string)=>(html.match(/<tbody>.*?<\/tbody>/)?.[0].match(/<tr
 describe('AI06 financial matching table',()=>{
  it('renders five semantic columns with bold saved references and no cards or row action',()=>{
   const html=actual();for(const label of ['Outcome','Bank Reference','Ledger Reference','AI Suggestion','Explanation'])expect(html).toContain(label);
-  expect(html).toContain('<table');expect(html).toMatch(/<strong[^>]*>INV-101<\/strong>/);expect(rowCount(html)).toBe(2);expect(html).not.toContain('<article');expect(html).not.toMatch(/<tr[^>]*(onclick|role="button"|tabindex)/i);
+  expect(html).toContain('<table');expect(html).toMatch(/<strong[^>]*>INV-101<\/strong>/);expect(rowCount(html)).toBe(4);expect(html).not.toContain('<article');expect(html).not.toMatch(/<tr[^>]*(onclick|role="button"|tabindex)/i);
   expect(html).toContain('hover:bg-[var(--surface-subtle)]');expect(html).toContain('transition-colors');
  });
- it.each([['SUGGESTED',[0,1]],['SAME',[0]],['DIFFERENT',[1]],['NONE',[4]],['ALL',[0,1,2,3,4]]] as const)('%s selects only the intended saved outcomes', (view,ordinals)=>{
+ it.each([['SUGGESTED',[0,1,2,3]],['SAME',[0,2,3]],['DIFFERENT',[1]],['NONE',[4]],['ALL',[0,1,2,3,4]]] as const)('%s selects only the intended saved outcomes', (view,ordinals)=>{
   expect(selectGPTOutcomes(fixture(),view).map(item=>item.ordinal)).toEqual(ordinals);
  });
  it('compares actual references case-sensitively after trimming; never classifies missing references by IDs',()=>{
@@ -37,10 +37,10 @@ describe('AI06 financial matching table',()=>{
   expect(referenceCategory({...pair,ledgerReference:'inv-101'})).toBe('DIFFERENT');
   for(const ref of [null,'',' '])expect(referenceCategory({...pair,bankReference:ref,bankId:'same',ledgerId:'same'})).toBe('MISSING');
  });
- it('keeps failed and unavailable checks out of all passed categories even when their references match',()=>{
+ it('shows failed and unavailable outcomes as review needs without claiming matching checks passed',()=>{
   const data=fixture();data.runs[0].items=data.runs[0].items.slice(2,4);
-  for(const view of ['SUGGESTED','SAME','DIFFERENT'] as const)expect(selectGPTOutcomes(data,view)).toHaveLength(0);
-  const html=render(data,'ALL');expect(html).toContain('Verification Issue');expect(html).toContain('Verification Unavailable');expect(html).not.toContain('All matching checks passed');
+  expect(selectGPTOutcomes(data,'SUGGESTED')).toHaveLength(2);expect(selectGPTOutcomes(data,'SAME')).toHaveLength(2);expect(selectGPTOutcomes(data,'DIFFERENT')).toHaveLength(0);
+  const html=render(data,'ALL');expect(html).toContain('Needs review');expect(html).toContain('Saved matching checks are unavailable');expect(html).not.toContain('All matching checks passed');
  });
  it('uses record IDs only when saved references are absent and never guesses an abstention source side',()=>{
   const data=fixture();data.runs[0].items[0].bankReference=null;data.runs[0].items[0].ledgerReference=' ';
@@ -58,7 +58,7 @@ describe('AI06 financial matching table',()=>{
   expect(summarizeGPTSuggestions(fixture())).toEqual({suggestions:4,verified:2,needsReview:2,withoutSuggestions:1});
   const counters=render().match(/<dl aria-label="Saved matching summary".*?<\/dl>/)?.[0];
   for(const view of ['SAME','DIFFERENT','NONE','ALL'] as const)expect(render(fixture(),view).match(/<dl aria-label="Saved matching summary".*?<\/dl>/)?.[0]).toBe(counters);
-  expect(counters).toContain('Verification Issues');expect(render(many())).not.toContain('Verification Issues');expect(render(many())).toContain('No Match Suggested');
+  expect(counters).toContain('Needs Review');expect(render(many())).not.toContain('Needs Review');expect(render(many())).toContain('No Match Suggested');
  });
  it.each([1,2,3])('paginates page %s at ten rows with accurate totals',page=>{
   const html=render(many(),'SUGGESTED',page);expect(rowCount(html)).toBe(page===3?3:10);expect(html).toContain(`${(page-1)*10+1}-${Math.min(page*10,23)} of 23 results`);
@@ -86,7 +86,7 @@ describe('AI06 financial matching table',()=>{
   expect(html).toContain('&lt;script&gt;');expect(html).not.toContain('<script>');expect(html).not.toContain('Invented financial claim');
  });
  it('keeps evidence immutable and missing/unknown checks unverified',()=>{
-  const data=fixture(),before=JSON.stringify(data);data.runs[0].items[0].verification.policy='unknown';expect(selectGPTOutcomes(data,'SUGGESTED').map(x=>x.ordinal)).toEqual([1]);
+  const data=fixture(),before=JSON.stringify(data);data.runs[0].items[0].verification.policy='unknown';expect(selectGPTOutcomes(data,'SUGGESTED').map(x=>x.ordinal)).toEqual([0,1,2,3]);
   data.runs[0].items[0].verification.policy='website-pair-verifier/1';for(const view of ['SUGGESTED','SAME','DIFFERENT','NONE','ALL'] as const)render(data,view);expect(JSON.stringify(data)).toBe(before);
  });
  it.each(['loading','generating','empty','unavailable','error'] as const)('handles %s without stale results or manual refresh controls',status=>{
@@ -94,3 +94,32 @@ describe('AI06 financial matching table',()=>{
  });
 });
 afterAll(()=>{if(process.env.AI06_UI_REVIEW!=='1')return;const dir='.local/reviews/ai06-table-ui';mkdirSync(dir,{recursive:true});const data=many();data.runs[0].items.push(...fixture().runs[0].items.slice(2));writeFileSync(`${dir}/data.json`,JSON.stringify(data));});
+
+it('shows only compact Reject for an authorized NEEDS_REVIEW row and renders the saved decision',()=>{
+ const data=fixture();data.runs[0].items=[data.runs[0].items[2]];
+ const controls={review:{version:'website-gpt-review/1' as const,evidenceId:'a'.repeat(64),accountingEffect:'NONE' as const,items:[{ordinal:2,decision:'PENDING' as 'PENDING'|'REJECT',canApprove:false,canReject:true}]},busy:false,message:'',decide:vi.fn(async()=>{})};
+ const render=()=>renderToStaticMarkup(createElement(GPTFinancialSummaryView,{data:financeGPTView(data),technical:false,reviewControls:controls,view:'SUGGESTED',onViewChange:()=>{}}));
+ expect(render()).not.toContain('>Approve</button>');expect(render()).toMatch(/<button(?![^>]* disabled=)[^>]*>Reject<\/button>/);
+ controls.review.items[0]={ordinal:2,decision:'REJECT',canApprove:false,canReject:false};expect(render()).toContain('Proposal rejected');expect(render()).not.toContain('>Reject</button>');expect(render()).toContain('Needs review');
+});
+
+const approvedNotices=[
+ 'AI matching may take around 90 seconds. Please wait while your transactions are checked.',
+ 'VERIFIED: The suggestion passed all required verification checks. You can click Approve to accept the suggested match.',
+ 'NEEDS REVIEW: The suggestion did not pass all verification checks. Approve is unavailable because there is not enough evidence to confirm the match. You can only click Reject if you do not accept the suggestion.',
+ 'NO SUGGESTION: The AI could not identify a suitable match. No action is required.',
+ 'IMPORTANT: Approving or rejecting a suggestion permanently saves your decision. It does not delete transactions or automatically change financial totals.',
+];
+it.each(['loading','generating','empty','unavailable','error'] as const)('shows all exact approved notices in %s',status=>{
+ const html=actual(fixture(),'FINANCE','FINANCE',{status});
+ for(const notice of approvedNotices)expect(html).toContain(notice);
+ expect(html).not.toContain('Rejecting a suggestion saves your decision permanently.');
+ expect(html).not.toContain('>Approve</button>');expect(html).not.toContain('>Reject</button>');
+});
+it.each(['FINANCE','ADMIN','SUPERADMIN'] as const)('retains all exact approved notices for ready %s results',role=>{
+ const html=actual(fixture(),role,role);for(const notice of approvedNotices)expect(html).toContain(notice);
+});
+
+it('keeps compact status badges on one line on narrow tables',()=>{
+ const html=actual();expect(html).toContain('whitespace-nowrap rounded-full');expect(html).toContain('px-2.5 py-1 text-[11px]');expect(html).not.toContain('Verified · Suggested Match');
+});

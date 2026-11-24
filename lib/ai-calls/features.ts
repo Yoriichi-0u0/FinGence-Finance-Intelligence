@@ -10,8 +10,9 @@ export const AI_FEATURES = {
     'ai03-proposal': { label: 'Ingestion experiment (increment 03)', owner: 'Yuen Kai' },
     'ingestion-proposal': { label: 'Ingestion experiment (OpenAI)', owner: 'Yuen Kai' },
     'finance-chat': { label: 'Finance chatbot', owner: 'Jason' },
+    'fin-assistant': { label: 'Fin assistant', owner: 'Yuen Kai' },
     'recon-suggest': { label: 'Reconciliation suggestions', owner: 'Celester' },
-    'report-explain': { label: 'Report explanation', owner: 'Izzat' },
+    'report-explain': { label: 'AI report', owner: 'Yuen Kai' },
     'forecast-note': { label: 'Forecast notes', owner: 'Frederick' },
 } as const satisfies Record<string, { label: string; owner: string }>;
 export type AiFeature = keyof typeof AI_FEATURES;

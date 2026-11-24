@@ -1,0 +1,29 @@
+name: Bug
+description: Something in FinGence does not work as it should
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: page
+    attributes:
+      label: Page and role
+      description: For example "Reconciliation, as Finance user".
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open Data\n2. Process the sample\n3. …"
+  - type: input
+    id: version
+    attributes:
+      label: Environment
+      description: Production, a preview link, or local; browser and device.
+  - type: markdown
+    attributes:
+      value: "Do not paste passwords, API keys or the contents of real financial documents."

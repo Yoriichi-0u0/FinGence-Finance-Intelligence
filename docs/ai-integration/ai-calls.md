@@ -20,7 +20,7 @@ CI enforces the rule: `tests/ai-calls/guard.test.ts` fails the build if a file c
    |---|---|---|
    | `finance-chat` | chatbot | Jason |
    | `recon-suggest` | reconciliation suggestions | Celester |
-   | `report-explain` | report explanation | Izzat |
+   | `report-explain` | AI report (`/ai-report`) | Yuen Kai |
    | `forecast-note` | forecast notes | Frederick |
 
 2. **Wrap the call.** `withAiCall(meta, run, judge?)` returns exactly what `run` returns.
@@ -94,6 +94,20 @@ await withAiCall({ feature: 'finance-chat', model }, async note => {
 
 **Refused before any model call** (for example, your pre-check blocked the question):
 `await recordAiRefusal({ feature: 'finance-chat', model }, 'REFUSED_BEFORE_MODEL')`.
+
+## Your own Groq key
+
+Through `structuredCompletion` (`lib/server/ai/groq.ts`), most features share `GROQ_API_KEY` and `GROQ_API_KEY2` in rotation.
+A feature can own a key instead: add it to `DEDICATED_GROQ_KEYS` in that file. It then uses only that key, fails closed
+without it, and the Technical log shows the key's label (never the key).
+
+| Feature | Key | Log label |
+|---|---|---|
+| `recon-suggest` (AI06 matching suggestions, Celester) | `GROQ_API_KEY3` | `key-3` |
+| `finance-chat` (Finance chatbot, Jason) | `GROQ_API_KEY4` | `key-4` |
+
+Put the key in your local `.env` for local runs. On Vercel, the owner adds it as a Sensitive variable for
+Production and Preview, then redeploys.
 
 ## Who made the call
 

@@ -195,7 +195,13 @@ export function verifyAnswer(raw: unknown, facts: Fact[], ctx: { question: strin
     // 5c. A comparison stated with a negative amount reads as a double negative ("lower than the ledger by −MYR 2,692.92").
     const COMPARISON = /\b(lower|higher|less|more|greater|smaller|below|above|exceed\w*|short\w*|behind|ahead)\b/i;
     const negative = (s: { text: string }) => [...s.text.matchAll(PLACEHOLDER)].some(([, id, field]) => { const v = byId.get(id) ? fieldOf(byId.get(id)!, field) : derivedById.get(id)?.value; return v?.kind === 'MONEY' && v.cents.startsWith('-'); });
-    const signWording = answer.sentences.flatMap((s, i) => COMPARISON.test(free[i]) && negative(s) ? [`sentence ${i + 1}: "${free[i].match(COMPARISON)![0]}" with a negative amount`] : []);
+    // A direction verb followed by "by" and a negative amount ("decreased by −MYR 10,813.01") is the same double negative.
+    const DIRECTION_BY = /\b(decreas\w*|increas\w*|declin\w*|fell|fall\w*|dropp?\w*|rose|ris(?:e|es|en|ing)|grew|grow\w*|reduc\w*|went (?:up|down))\s+by\s+\{(F\d{1,2}|D[1-4])(?:\.([A-Za-z]{1,24}))?\}/gi;
+    const negativeValue = (id: string, field: string | undefined) => { const v = byId.get(id) ? fieldOf(byId.get(id)!, field) : derivedById.get(id)?.value; return v?.kind === 'MONEY' && v.cents.startsWith('-'); };
+    const signWording = answer.sentences.flatMap((s, i) => [
+        ...(COMPARISON.test(free[i]) && negative(s) ? [`sentence ${i + 1}: "${free[i].match(COMPARISON)![0]}" with a negative amount`] : []),
+        ...[...s.text.matchAll(DIRECTION_BY)].filter(([, , id, field]) => negativeValue(id, field)).map(([, verb]) => `sentence ${i + 1}: "${verb} by" with a negative amount`),
+    ]);
     if (!gate('sign-wording', 'Comparisons are not stated with a negative amount', signWording)) return result('WITHHELD');
 
     // 5d. How an anomaly was resolved is a fact, not wording: a sentence that calls a record flagged (or unconfirmed) may
