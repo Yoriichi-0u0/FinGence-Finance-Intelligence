@@ -1,0 +1,618 @@
+LedgerEntryID,BusinessID,PostingDate,CashAccount,Currency,LedgerReference,LedgerMemo,Counterparty,CashAccountDebitMYR,CashAccountCreditMYR,SignedCashMovementMYR,CategoryLabel
+GL-FY-0001,DEMO-003,2025-01-02,1000-BANK,MYR,ALEYDG39U8RS,Showroom card terminal settlement,Showroom Card Settlement,2859.61,0.00,2859.61,Sales receipts
+GL-FY-0002,DEMO-003,2025-01-04,1000-BANK,MYR,8K7DP5QFMJ97,Showroom card terminal settlement,Showroom Card Settlement,1705.94,0.00,1705.94,Sales receipts
+GL-FY-0003,DEMO-003,2025-01-04,1000-BANK,MYR,MMY6VZYB4GL7,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5248.09,-5248.09,Materials
+GL-FY-0004,DEMO-003,2025-01-04,1000-BANK,MYR,SYHCMYBA9ZNB,Online marketplace payout,Online Marketplace Payout,3819.89,0.00,3819.89,Sales receipts
+GL-FY-0005,DEMO-003,2025-01-05,1000-BANK,MYR,7MJB8BV2N4GN,Showroom card terminal settlement,Showroom Card Settlement,1373.16,0.00,1373.16,Sales receipts
+GL-FY-0006,DEMO-003,2025-01-05,1000-BANK,MYR,EGXV32KJFSC7,Delivery charges,Rapid Demo Logistics,0.00,428.96,-428.96,Delivery
+GL-FY-0007,DEMO-003,2025-01-06,1000-BANK,MYR,AFMRCNGXEZJY,Fittings and hardware,Selangor Demo Hardware,0.00,1083.73,-1083.73,Materials
+GL-FY-0008,DEMO-003,2025-01-06,1000-BANK,MYR,R7998X65M7WL,Showroom card terminal settlement,Showroom Card Settlement,3102.93,0.00,3102.93,Sales receipts
+GL-FY-0009,DEMO-003,2025-01-08,1000-BANK,MYR,5FMCUGHSDRYK,Online marketplace payout,Online Marketplace Payout,3598.84,0.00,3598.84,Sales receipts
+GL-FY-0010,DEMO-003,2025-01-08,1000-BANK,MYR,6HNL2M7EL2P9,Hotel furniture invoice receipt,Mutiara Demo Hotels,15326.44,0.00,15326.44,Trade receipts
+GL-FY-0011,DEMO-003,2025-01-08,1000-BANK,MYR,7JWFX4KFLYJS,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13825.24,0.00,13825.24,Trade receipts
+GL-FY-0012,DEMO-003,2025-01-08,1000-BANK,MYR,ZT8C97UK8793,Showroom card terminal settlement,Showroom Card Settlement,1567.25,0.00,1567.25,Sales receipts
+GL-FY-0013,DEMO-003,2025-01-09,1000-BANK,MYR,9SVABQENU75J,Showroom card terminal settlement,Showroom Card Settlement,2292.75,0.00,2292.75,Sales receipts
+GL-FY-0014,DEMO-003,2025-01-09,1000-BANK,MYR,KG7FVNY6PRQU,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4542.06,-4542.06,Materials
+GL-FY-0015,DEMO-003,2025-01-11,1000-BANK,MYR,9PRHSGX4FNPA,Showroom card terminal settlement,Showroom Card Settlement,2022.79,0.00,2022.79,Sales receipts
+GL-FY-0016,DEMO-003,2025-01-11,1000-BANK,MYR,F3GDFSAVSXDR,Delivery charges,Rapid Demo Logistics,0.00,703.32,-703.32,Delivery
+GL-FY-0017,DEMO-003,2025-01-12,1000-BANK,MYR,KQPH2QHGH2SW,Online marketplace payout,Online Marketplace Payout,2584.71,0.00,2584.71,Sales receipts
+GL-FY-0018,DEMO-003,2025-01-12,1000-BANK,MYR,V2ND939H4FJR,Showroom card terminal settlement,Showroom Card Settlement,2504.85,0.00,2504.85,Sales receipts
+GL-FY-0019,DEMO-003,2025-01-13,1000-BANK,MYR,ZF2X2TWGZ4CU,Showroom card terminal settlement,Showroom Card Settlement,2130.06,0.00,2130.06,Sales receipts
+GL-FY-0020,DEMO-003,2025-01-14,1000-BANK,MYR,6PEZK9J4UWMX,Statutory contributions,EPF SOCSO Contributions,0.00,5139.25,-5139.25,Payroll
+GL-FY-0021,DEMO-003,2025-01-14,1000-BANK,MYR,FUEAVXH32XX8,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8819.35,-8819.35,Materials
+GL-FY-0022,DEMO-003,2025-01-14,1000-BANK,MYR,FUVT6FLV8G7T,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0023,DEMO-003,2025-01-14,1000-BANK,MYR,MZ7E2BQVJ8YG,Electricity and water,Demo Power Utilities,0.00,2494.43,-2494.43,Utilities
+GL-FY-0024,DEMO-003,2025-01-14,1000-BANK,MYR,TVLZV73HXW3V,Monthly payroll transfer,Staff Payroll,0.00,38764.32,-38764.32,Payroll
+GL-FY-0025,DEMO-003,2025-01-14,1000-BANK,MYR,U6W9KRVXVHL8,Fittings and hardware,Selangor Demo Hardware,0.00,1909.25,-1909.25,Materials
+GL-FY-0026,DEMO-003,2025-01-14,1000-BANK,MYR,VE9K2PJPB92U,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0027,DEMO-003,2025-01-15,1000-BANK,MYR,GMKFVWY98QN2,Annual business insurance premium,Perisai Demo Insurance,0.00,14800.00,-14800.00,Insurance
+GL-FY-0028,DEMO-003,2025-01-15,1000-BANK,MYR,JVKLSNGBUG9K,Showroom card terminal settlement,Showroom Card Settlement,3009.14,0.00,3009.14,Sales receipts
+GL-FY-0029,DEMO-003,2025-01-16,1000-BANK,MYR,LSDAWA7923MJ,Online marketplace payout,Online Marketplace Payout,3525.60,0.00,3525.60,Sales receipts
+GL-FY-0030,DEMO-003,2025-01-16,1000-BANK,MYR,R92VN8KRCBZ2,Showroom card terminal settlement,Showroom Card Settlement,1347.57,0.00,1347.57,Sales receipts
+GL-FY-0031,DEMO-003,2025-01-17,1000-BANK,MYR,9GG8MW6K9JQM,Showroom card terminal settlement,Showroom Card Settlement,1369.89,0.00,1369.89,Sales receipts
+GL-FY-0032,DEMO-003,2025-01-17,1000-BANK,MYR,W39W6EAU55QQ,Delivery charges,Rapid Demo Logistics,0.00,472.35,-472.35,Delivery
+GL-FY-0033,DEMO-003,2025-01-19,1000-BANK,MYR,6NT7BAGHFX5N,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4517.06,-4517.06,Materials
+GL-FY-0034,DEMO-003,2025-01-19,1000-BANK,MYR,MAYDMY6HZRJ5,Showroom card terminal settlement,Showroom Card Settlement,1318.98,0.00,1318.98,Sales receipts
+GL-FY-0035,DEMO-003,2025-01-20,1000-BANK,MYR,4YGJKURYBTCH,Showroom card terminal settlement,Showroom Card Settlement,2981.21,0.00,2981.21,Sales receipts
+GL-FY-0036,DEMO-003,2025-01-20,1000-BANK,MYR,5KBAN44LM4PY,Hotel furniture invoice receipt,Mutiara Demo Hotels,12700.41,0.00,12700.41,Trade receipts
+GL-FY-0037,DEMO-003,2025-01-20,1000-BANK,MYR,83R8XN5Y68VB,Office fit-out invoice receipt,Sinar Demo Office Fitouts,12792.18,0.00,12792.18,Trade receipts
+GL-FY-0038,DEMO-003,2025-01-20,1000-BANK,MYR,MYAXYV5LQCGF,Online marketplace payout,Online Marketplace Payout,2971.61,0.00,2971.61,Sales receipts
+GL-FY-0039,DEMO-003,2025-01-22,1000-BANK,MYR,5Q9K8JGN6WHB,Fittings and hardware,Selangor Demo Hardware,0.00,1259.37,-1259.37,Materials
+GL-FY-0040,DEMO-003,2025-01-22,1000-BANK,MYR,UNQCRMPJ9CFR,Showroom card terminal settlement,Showroom Card Settlement,2921.74,0.00,2921.74,Sales receipts
+GL-FY-0041,DEMO-003,2025-01-23,1000-BANK,MYR,A786D9N4ZB6V,Showroom card terminal settlement,Showroom Card Settlement,2804.11,0.00,2804.11,Sales receipts
+GL-FY-0042,DEMO-003,2025-01-23,1000-BANK,MYR,PDXXRFB86E3F,Delivery charges,Rapid Demo Logistics,0.00,417.34,-417.34,Delivery
+GL-FY-0043,DEMO-003,2025-01-24,1000-BANK,MYR,5HNRGGD58HXW,Online marketplace payout,Online Marketplace Payout,3848.28,0.00,3848.28,Sales receipts
+GL-FY-0044,DEMO-003,2025-01-24,1000-BANK,MYR,A49QWFHLZRU4,Showroom card terminal settlement,Showroom Card Settlement,2977.16,0.00,2977.16,Sales receipts
+GL-FY-0045,DEMO-003,2025-01-24,1000-BANK,MYR,MA4YWKSRT5L2,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5306.03,-5306.03,Materials
+GL-FY-0046,DEMO-003,2025-01-26,1000-BANK,MYR,BFUN49S583XG,Showroom card terminal settlement,Showroom Card Settlement,1816.16,0.00,1816.16,Sales receipts
+GL-FY-0047,DEMO-003,2025-02-02,1000-BANK,MYR,J6HHHCLVGEXM,Showroom card terminal settlement,Showroom Card Settlement,2212.85,0.00,2212.85,Sales receipts
+GL-FY-0048,DEMO-003,2025-02-03,1000-BANK,MYR,5NKTAMLPCQ7G,Online marketplace payout,Online Marketplace Payout,4545.93,0.00,4545.93,Sales receipts
+GL-FY-0049,DEMO-003,2025-02-03,1000-BANK,MYR,KZWUCALAQXS9,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6405.87,-6405.87,Materials
+GL-FY-0050,DEMO-003,2025-02-03,1000-BANK,MYR,ZHV4PDBF2Z2U,Showroom card terminal settlement,Showroom Card Settlement,2702.12,0.00,2702.12,Sales receipts
+GL-FY-0051,DEMO-003,2025-02-04,1000-BANK,MYR,9MXYVQP2CY77,Delivery charges,Rapid Demo Logistics,0.00,404.08,-404.08,Delivery
+GL-FY-0052,DEMO-003,2025-02-04,1000-BANK,MYR,DFN36JDRRPA2,Showroom card terminal settlement,Showroom Card Settlement,2385.75,0.00,2385.75,Sales receipts
+GL-FY-0053,DEMO-003,2025-02-05,1000-BANK,MYR,YW8AZ6P77TND,Showroom card terminal settlement,Showroom Card Settlement,1935.01,0.00,1935.01,Sales receipts
+GL-FY-0054,DEMO-003,2025-02-06,1000-BANK,MYR,5G79HDKUR3QV,Fittings and hardware,Selangor Demo Hardware,0.00,835.53,-835.53,Materials
+GL-FY-0055,DEMO-003,2025-02-06,1000-BANK,MYR,CXK6VYQU675S,Showroom card terminal settlement,Showroom Card Settlement,2349.15,0.00,2349.15,Sales receipts
+GL-FY-0056,DEMO-003,2025-02-06,1000-BANK,MYR,FR9KTD5YLZRF,Online marketplace payout,Online Marketplace Payout,2505.57,0.00,2505.57,Sales receipts
+GL-FY-0057,DEMO-003,2025-02-07,1000-BANK,MYR,6U7KVYD2YRSD,Showroom card terminal settlement,Showroom Card Settlement,2498.25,0.00,2498.25,Sales receipts
+GL-FY-0058,DEMO-003,2025-02-07,1000-BANK,MYR,RGV5EYXVDRFH,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8808.25,-8808.25,Materials
+GL-FY-0059,DEMO-003,2025-02-08,1000-BANK,MYR,2TUSV5D82XKV,Hotel furniture invoice receipt,Mutiara Demo Hotels,13173.75,0.00,13173.75,Trade receipts
+GL-FY-0060,DEMO-003,2025-02-08,1000-BANK,MYR,YQPCTDTY7HU2,Office fit-out invoice receipt,Sinar Demo Office Fitouts,11420.86,0.00,11420.86,Trade receipts
+GL-FY-0061,DEMO-003,2025-02-09,1000-BANK,MYR,4RDZFEAVWJA5,Online marketplace payout,Online Marketplace Payout,4643.49,0.00,4643.49,Sales receipts
+GL-FY-0062,DEMO-003,2025-02-09,1000-BANK,MYR,9J5FXGKHNKJ4,Showroom card terminal settlement,Showroom Card Settlement,1500.64,0.00,1500.64,Sales receipts
+GL-FY-0063,DEMO-003,2025-02-09,1000-BANK,MYR,L32CHR2BJ4U9,Delivery charges,Rapid Demo Logistics,0.00,348.76,-348.76,Delivery
+GL-FY-0064,DEMO-003,2025-02-10,1000-BANK,MYR,7R9K6X2DB2Q3,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5098.04,-5098.04,Materials
+GL-FY-0065,DEMO-003,2025-02-10,1000-BANK,MYR,CHYLXB4D5AGH,Showroom card terminal settlement,Showroom Card Settlement,2258.17,0.00,2258.17,Sales receipts
+GL-FY-0066,DEMO-003,2025-02-11,1000-BANK,MYR,6GJPMJYEVE5F,Showroom card terminal settlement,Showroom Card Settlement,2583.50,0.00,2583.50,Sales receipts
+GL-FY-0067,DEMO-003,2025-02-12,1000-BANK,MYR,JYT8Y25LBRRY,Showroom card terminal settlement,Showroom Card Settlement,2038.73,0.00,2038.73,Sales receipts
+GL-FY-0068,DEMO-003,2025-02-12,1000-BANK,MYR,ZC2AZKKJQM98,Online marketplace payout,Online Marketplace Payout,2018.25,0.00,2018.25,Sales receipts
+GL-FY-0069,DEMO-003,2025-02-13,1000-BANK,MYR,VJU2PRXHLKL4,Showroom card terminal settlement,Showroom Card Settlement,2467.16,0.00,2467.16,Sales receipts
+GL-FY-0070,DEMO-003,2025-02-14,1000-BANK,MYR,4VWVJ46DFH9J,Fittings and hardware,Selangor Demo Hardware,0.00,1948.80,-1948.80,Materials
+GL-FY-0071,DEMO-003,2025-02-14,1000-BANK,MYR,7L8WQU7NE23L,Monthly payroll transfer,Staff Payroll,0.00,38097.72,-38097.72,Payroll
+GL-FY-0072,DEMO-003,2025-02-14,1000-BANK,MYR,CAQGD2U7PXXD,Showroom card terminal settlement,Showroom Card Settlement,1293.29,0.00,1293.29,Sales receipts
+GL-FY-0073,DEMO-003,2025-02-14,1000-BANK,MYR,K9U87W8BNYKT,Statutory contributions,EPF SOCSO Contributions,0.00,5143.62,-5143.62,Payroll
+GL-FY-0074,DEMO-003,2025-02-14,1000-BANK,MYR,KUCQQDARJ5P4,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0075,DEMO-003,2025-02-14,1000-BANK,MYR,SKWN9L5G2YKS,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0076,DEMO-003,2025-02-14,1000-BANK,MYR,W9TG59W4GUH8,Delivery charges,Rapid Demo Logistics,0.00,771.48,-771.48,Delivery
+GL-FY-0077,DEMO-003,2025-02-14,1000-BANK,MYR,WNVF7STA49P7,Electricity and water,Demo Power Utilities,0.00,2039.97,-2039.97,Utilities
+GL-FY-0078,DEMO-003,2025-02-14,1000-BANK,MYR,ZHPFVCTL4VH9,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4688.52,-4688.52,Materials
+GL-FY-0079,DEMO-003,2025-02-15,1000-BANK,MYR,MATJVXQ5BNHJ,Showroom card terminal settlement,Showroom Card Settlement,3165.43,0.00,3165.43,Sales receipts
+GL-FY-0080,DEMO-003,2025-02-16,1000-BANK,MYR,8BJ7AMZAFEBC,Showroom card terminal settlement,Showroom Card Settlement,2670.98,0.00,2670.98,Sales receipts
+GL-FY-0081,DEMO-003,2025-02-16,1000-BANK,MYR,9DK9LCHCAUV5,Online marketplace payout,Online Marketplace Payout,3809.36,0.00,3809.36,Sales receipts
+GL-FY-0082,DEMO-003,2025-02-17,1000-BANK,MYR,EAT9SWG6WQJC,Showroom card terminal settlement,Showroom Card Settlement,2723.14,0.00,2723.14,Sales receipts
+GL-FY-0083,DEMO-003,2025-02-18,1000-BANK,MYR,AUWXQJXBKYVE,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7514.97,-7514.97,Materials
+GL-FY-0084,DEMO-003,2025-02-18,1000-BANK,MYR,VJVWKCN4UGXG,Showroom card terminal settlement,Showroom Card Settlement,2569.25,0.00,2569.25,Sales receipts
+GL-FY-0085,DEMO-003,2025-02-19,1000-BANK,MYR,MARRD7YQSEKA,Delivery charges,Rapid Demo Logistics,0.00,350.48,-350.48,Delivery
+GL-FY-0086,DEMO-003,2025-02-19,1000-BANK,MYR,PC3A4TV7PWAF,Online marketplace payout,Online Marketplace Payout,4499.09,0.00,4499.09,Sales receipts
+GL-FY-0087,DEMO-003,2025-02-19,1000-BANK,MYR,PMRLVJQ5YPTA,Showroom card terminal settlement,Showroom Card Settlement,2011.92,0.00,2011.92,Sales receipts
+GL-FY-0088,DEMO-003,2025-02-20,1000-BANK,MYR,JT65U96K3WL3,Office fit-out invoice receipt,Sinar Demo Office Fitouts,11834.68,0.00,11834.68,Trade receipts
+GL-FY-0089,DEMO-003,2025-02-20,1000-BANK,MYR,NJ6U2GNVDRW6,Hotel furniture invoice receipt,Mutiara Demo Hotels,17685.54,0.00,17685.54,Trade receipts
+GL-FY-0090,DEMO-003,2025-02-21,1000-BANK,MYR,8C65N9ZJFABL,Showroom card terminal settlement,Showroom Card Settlement,1641.17,0.00,1641.17,Sales receipts
+GL-FY-0091,DEMO-003,2025-02-21,1000-BANK,MYR,JZR7UZUZZYBM,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7071.28,-7071.28,Materials
+GL-FY-0092,DEMO-003,2025-02-22,1000-BANK,MYR,239KM78ZLCN8,Fittings and hardware,Selangor Demo Hardware,0.00,984.04,-984.04,Materials
+GL-FY-0093,DEMO-003,2025-02-22,1000-BANK,MYR,5MBGYHFBD6RA,Online marketplace payout,Online Marketplace Payout,4369.04,0.00,4369.04,Sales receipts
+GL-FY-0094,DEMO-003,2025-02-22,1000-BANK,MYR,JMWMGMY2QX2W,Showroom card terminal settlement,Showroom Card Settlement,2619.30,0.00,2619.30,Sales receipts
+GL-FY-0095,DEMO-003,2025-02-23,1000-BANK,MYR,KHP46Q5KHJRL,Showroom card terminal settlement,Showroom Card Settlement,2138.93,0.00,2138.93,Sales receipts
+GL-FY-0096,DEMO-003,2025-02-24,1000-BANK,MYR,2ZDMPDCE2VDJ,Showroom card terminal settlement,Showroom Card Settlement,1879.02,0.00,1879.02,Sales receipts
+GL-FY-0097,DEMO-003,2025-02-24,1000-BANK,MYR,WNV6JV8X83HX,Delivery charges,Rapid Demo Logistics,0.00,410.06,-410.06,Delivery
+GL-FY-0098,DEMO-003,2025-02-25,1000-BANK,MYR,B3MVX9FJ4XRH,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7578.45,-7578.45,Materials
+GL-FY-0099,DEMO-003,2025-02-25,1000-BANK,MYR,KLGF5XXBHD5A,Online marketplace payout,Online Marketplace Payout,3935.34,0.00,3935.34,Sales receipts
+GL-FY-0100,DEMO-003,2025-02-25,1000-BANK,MYR,MGKKZZ8RW87J,Showroom card terminal settlement,Showroom Card Settlement,2640.89,0.00,2640.89,Sales receipts
+GL-FY-0101,DEMO-003,2025-02-26,1000-BANK,MYR,FVE54FS4G6YC,Showroom card terminal settlement,Showroom Card Settlement,2491.27,0.00,2491.27,Sales receipts
+GL-FY-0102,DEMO-003,2025-02-27,1000-BANK,MYR,T26CDPLZNJKW,Sales and service tax payment,SST Payment,0.00,8545.31,-8545.31,Taxes
+GL-FY-0103,DEMO-003,2025-03-02,1000-BANK,MYR,FWDWHJKAKSAL,Showroom card terminal settlement,Showroom Card Settlement,1296.35,0.00,1296.35,Sales receipts
+GL-FY-0104,DEMO-003,2025-03-03,1000-BANK,MYR,3A9E2W54DY4H,Online marketplace payout,Online Marketplace Payout,3504.89,0.00,3504.89,Sales receipts
+GL-FY-0105,DEMO-003,2025-03-03,1000-BANK,MYR,P44PJFXMQBZY,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7158.87,-7158.87,Materials
+GL-FY-0106,DEMO-003,2025-03-03,1000-BANK,MYR,VFKRTWWDRACX,Showroom card terminal settlement,Showroom Card Settlement,2522.97,0.00,2522.97,Sales receipts
+GL-FY-0107,DEMO-003,2025-03-03,1000-BANK,MYR,YRPY3DY99SCE,Delivery charges,Rapid Demo Logistics,0.00,684.50,-684.50,Delivery
+GL-FY-0108,DEMO-003,2025-03-04,1000-BANK,MYR,FFVPY8SNYYXK,Showroom card terminal settlement,Showroom Card Settlement,2117.70,0.00,2117.70,Sales receipts
+GL-FY-0109,DEMO-003,2025-03-04,1000-BANK,MYR,NXDDJT2NYE3H,Delivery charges,Rapid Demo Logistics,0.00,415.18,-415.18,Delivery
+GL-FY-0110,DEMO-003,2025-03-05,1000-BANK,MYR,4TVYXC4VLRS4,Showroom card terminal settlement,Showroom Card Settlement,3145.44,0.00,3145.44,Sales receipts
+GL-FY-0111,DEMO-003,2025-03-06,1000-BANK,MYR,2MLMKA5HUXYA,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5675.39,-5675.39,Materials
+GL-FY-0112,DEMO-003,2025-03-06,1000-BANK,MYR,6VBL6WWBAKHU,Fittings and hardware,Selangor Demo Hardware,0.00,1948.20,-1948.20,Materials
+GL-FY-0113,DEMO-003,2025-03-06,1000-BANK,MYR,MQCBVVMTZDME,Online marketplace payout,Online Marketplace Payout,3057.26,0.00,3057.26,Sales receipts
+GL-FY-0114,DEMO-003,2025-03-06,1000-BANK,MYR,Z7BZYQ35LZ54,Showroom card terminal settlement,Showroom Card Settlement,3163.64,0.00,3163.64,Sales receipts
+GL-FY-0115,DEMO-003,2025-03-07,1000-BANK,MYR,ABGKQF5J5HRZ,Showroom card terminal settlement,Showroom Card Settlement,2173.41,0.00,2173.41,Sales receipts
+GL-FY-0116,DEMO-003,2025-03-08,1000-BANK,MYR,7JE93TLXCFK6,Online marketplace payout,Online Marketplace Payout,4098.64,0.00,4098.64,Sales receipts
+GL-FY-0117,DEMO-003,2025-03-08,1000-BANK,MYR,BBGA84AQD2DF,Showroom card terminal settlement,Showroom Card Settlement,3177.85,0.00,3177.85,Sales receipts
+GL-FY-0118,DEMO-003,2025-03-08,1000-BANK,MYR,JBHSF4PRTJEH,Showroom card terminal settlement,Showroom Card Settlement,1314.03,0.00,1314.03,Sales receipts
+GL-FY-0119,DEMO-003,2025-03-08,1000-BANK,MYR,L7AKSSMU2CTU,Office fit-out invoice receipt,Sinar Demo Office Fitouts,12786.81,0.00,12786.81,Trade receipts
+GL-FY-0120,DEMO-003,2025-03-08,1000-BANK,MYR,QLL599XZSDDP,Hotel furniture invoice receipt,Mutiara Demo Hotels,16360.77,0.00,16360.77,Trade receipts
+GL-FY-0121,DEMO-003,2025-03-08,1000-BANK,MYR,ZW9L2KL8D4R9,Delivery charges,Rapid Demo Logistics,0.00,393.60,-393.60,Delivery
+GL-FY-0122,DEMO-003,2025-03-09,1000-BANK,MYR,4832XBYNQJLN,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7796.70,-7796.70,Materials
+GL-FY-0123,DEMO-003,2025-03-09,1000-BANK,MYR,NAHU27YH74DZ,Showroom card terminal settlement,Showroom Card Settlement,3045.68,0.00,3045.68,Sales receipts
+GL-FY-0124,DEMO-003,2025-03-10,1000-BANK,MYR,ZP5QEZVQJBP2,Showroom card terminal settlement,Showroom Card Settlement,2700.66,0.00,2700.66,Sales receipts
+GL-FY-0125,DEMO-003,2025-03-11,1000-BANK,MYR,E6N93GY7JX57,Showroom card terminal settlement,Showroom Card Settlement,2482.38,0.00,2482.38,Sales receipts
+GL-FY-0126,DEMO-003,2025-03-11,1000-BANK,MYR,LXBPA7KABJHM,Online marketplace payout,Online Marketplace Payout,4250.74,0.00,4250.74,Sales receipts
+GL-FY-0127,DEMO-003,2025-03-12,1000-BANK,MYR,5R2ZSZZH6XCQ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5897.98,-5897.98,Materials
+GL-FY-0128,DEMO-003,2025-03-12,1000-BANK,MYR,GCKGCPEA7S6U,Delivery charges,Rapid Demo Logistics,0.00,370.56,-370.56,Delivery
+GL-FY-0129,DEMO-003,2025-03-12,1000-BANK,MYR,XQRBW7SV468F,Showroom card terminal settlement,Showroom Card Settlement,1713.17,0.00,1713.17,Sales receipts
+GL-FY-0130,DEMO-003,2025-03-13,1000-BANK,MYR,EPW6F37GFFEV,Showroom card terminal settlement,Showroom Card Settlement,2068.50,0.00,2068.50,Sales receipts
+GL-FY-0131,DEMO-003,2025-03-14,1000-BANK,MYR,7J9EFGAL3KLS,Electricity and water,Demo Power Utilities,0.00,2454.52,-2454.52,Utilities
+GL-FY-0132,DEMO-003,2025-03-14,1000-BANK,MYR,ACSPATS9TAFJ,Fittings and hardware,Selangor Demo Hardware,0.00,839.80,-839.80,Materials
+GL-FY-0133,DEMO-003,2025-03-14,1000-BANK,MYR,HW7TKR3GU7EL,Monthly payroll transfer,Staff Payroll,0.00,38400.90,-38400.90,Payroll
+GL-FY-0134,DEMO-003,2025-03-14,1000-BANK,MYR,QQ583K8P94QQ,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0135,DEMO-003,2025-03-14,1000-BANK,MYR,SRZDE6YDPPAA,Online marketplace payout,Online Marketplace Payout,2482.49,0.00,2482.49,Sales receipts
+GL-FY-0136,DEMO-003,2025-03-14,1000-BANK,MYR,V62FEKRYDD7N,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0137,DEMO-003,2025-03-14,1000-BANK,MYR,VY72U65XNFSD,Statutory contributions,EPF SOCSO Contributions,0.00,5028.31,-5028.31,Payroll
+GL-FY-0138,DEMO-003,2025-03-14,1000-BANK,MYR,YGHLHK48DXRG,Showroom card terminal settlement,Showroom Card Settlement,2420.11,0.00,2420.11,Sales receipts
+GL-FY-0139,DEMO-003,2025-03-15,1000-BANK,MYR,PN48B2S7TTP3,Showroom card terminal settlement,Showroom Card Settlement,2457.81,0.00,2457.81,Sales receipts
+GL-FY-0140,DEMO-003,2025-03-16,1000-BANK,MYR,7D8U8J3UBERX,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4511.30,-4511.30,Materials
+GL-FY-0141,DEMO-003,2025-03-16,1000-BANK,MYR,WVMP8CFKTS98,Showroom card terminal settlement,Showroom Card Settlement,1297.46,0.00,1297.46,Sales receipts
+GL-FY-0142,DEMO-003,2025-03-16,1000-BANK,MYR,ZAS86X9VMT5Q,Delivery charges,Rapid Demo Logistics,0.00,421.95,-421.95,Delivery
+GL-FY-0143,DEMO-003,2025-03-17,1000-BANK,MYR,5S4B2KTC96ZR,Showroom card terminal settlement,Showroom Card Settlement,2288.15,0.00,2288.15,Sales receipts
+GL-FY-0144,DEMO-003,2025-03-17,1000-BANK,MYR,LDAVX6N4X2PB,Online marketplace payout,Online Marketplace Payout,2300.97,0.00,2300.97,Sales receipts
+GL-FY-0145,DEMO-003,2025-03-18,1000-BANK,MYR,NU4LJFKDGL4Z,Showroom card terminal settlement,Showroom Card Settlement,1861.78,0.00,1861.78,Sales receipts
+GL-FY-0146,DEMO-003,2025-03-19,1000-BANK,MYR,J5LDMXURPV8E,Showroom card terminal settlement,Showroom Card Settlement,2360.01,0.00,2360.01,Sales receipts
+GL-FY-0147,DEMO-003,2025-03-19,1000-BANK,MYR,ZAER7H42U75B,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7524.43,-7524.43,Materials
+GL-FY-0148,DEMO-003,2025-03-20,1000-BANK,MYR,ASX5BFTY4Y87,Showroom card terminal settlement,Showroom Card Settlement,2578.69,0.00,2578.69,Sales receipts
+GL-FY-0149,DEMO-003,2025-03-20,1000-BANK,MYR,BTTCAVUF5PSH,Online marketplace payout,Online Marketplace Payout,2116.20,0.00,2116.20,Sales receipts
+GL-FY-0150,DEMO-003,2025-03-20,1000-BANK,MYR,BYKG2USK3NRC,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13859.55,0.00,13859.55,Trade receipts
+GL-FY-0151,DEMO-003,2025-03-20,1000-BANK,MYR,E5NHU8BMJU27,Hotel furniture invoice receipt,Mutiara Demo Hotels,15879.24,0.00,15879.24,Trade receipts
+GL-FY-0152,DEMO-003,2025-03-20,1000-BANK,MYR,HQNA7D5A8KHV,Delivery charges,Rapid Demo Logistics,0.00,838.93,-838.93,Delivery
+GL-FY-0153,DEMO-003,2025-03-20,1000-BANK,MYR,SW7ECDVKAJQB,Showroom card terminal settlement,Showroom Card Settlement,2467.06,0.00,2467.06,Sales receipts
+GL-FY-0154,DEMO-003,2025-03-21,1000-BANK,MYR,49XMLDT42B9Q,Showroom card terminal settlement,Showroom Card Settlement,2990.76,0.00,2990.76,Sales receipts
+GL-FY-0155,DEMO-003,2025-03-22,1000-BANK,MYR,5XS37DA57ZBR,Online marketplace payout,Online Marketplace Payout,3454.86,0.00,3454.86,Sales receipts
+GL-FY-0156,DEMO-003,2025-03-22,1000-BANK,MYR,CFCZMC44B5SR,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7414.07,-7414.07,Materials
+GL-FY-0157,DEMO-003,2025-03-22,1000-BANK,MYR,NXC29P3RUQTQ,Showroom card terminal settlement,Showroom Card Settlement,1477.73,0.00,1477.73,Sales receipts
+GL-FY-0158,DEMO-003,2025-03-22,1000-BANK,MYR,X9UGLFWPAUGZ,Fittings and hardware,Selangor Demo Hardware,0.00,1520.28,-1520.28,Materials
+GL-FY-0159,DEMO-003,2025-03-23,1000-BANK,MYR,C2Y77QKRQAMR,Showroom card terminal settlement,Showroom Card Settlement,3140.38,0.00,3140.38,Sales receipts
+GL-FY-0160,DEMO-003,2025-03-24,1000-BANK,MYR,9XPLZNP2PUKE,Delivery charges,Rapid Demo Logistics,0.00,688.26,-688.26,Delivery
+GL-FY-0161,DEMO-003,2025-03-24,1000-BANK,MYR,N3FLMZWUF4TG,Showroom card terminal settlement,Showroom Card Settlement,2571.30,0.00,2571.30,Sales receipts
+GL-FY-0162,DEMO-003,2025-03-25,1000-BANK,MYR,BME3DGJG9THW,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7647.58,-7647.58,Materials
+GL-FY-0163,DEMO-003,2025-03-25,1000-BANK,MYR,EA67FU23HGCB,Showroom card terminal settlement,Showroom Card Settlement,1526.44,0.00,1526.44,Sales receipts
+GL-FY-0164,DEMO-003,2025-03-25,1000-BANK,MYR,KJUAV8U4U4JY,Online marketplace payout,Online Marketplace Payout,3910.00,0.00,3910.00,Sales receipts
+GL-FY-0165,DEMO-003,2025-03-26,1000-BANK,MYR,B9VC84BXVLGM,Showroom card terminal settlement,Showroom Card Settlement,1219.85,0.00,1219.85,Sales receipts
+GL-FY-0166,DEMO-003,2025-03-31,1000-BANK,MYR,TWZVK8UPDSF6,Showroom card terminal settlement,Showroom Card Settlement,2140.60,0.00,2140.60,Sales receipts
+GL-FY-0167,DEMO-003,2025-04-02,1000-BANK,MYR,DB44RQQM6RW3,Showroom card terminal settlement,Showroom Card Settlement,2080.41,0.00,2080.41,Sales receipts
+GL-FY-0168,DEMO-003,2025-04-04,1000-BANK,MYR,N5BK8AFPRSFS,Showroom card terminal settlement,Showroom Card Settlement,3066.10,0.00,3066.10,Sales receipts
+GL-FY-0169,DEMO-003,2025-04-04,1000-BANK,MYR,ZLHFWEH67VVV,Online marketplace payout,Online Marketplace Payout,3592.21,0.00,3592.21,Sales receipts
+GL-FY-0170,DEMO-003,2025-04-05,1000-BANK,MYR,YRA3WFYG3CKP,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8986.65,-8986.65,Materials
+GL-FY-0171,DEMO-003,2025-04-06,1000-BANK,MYR,KYGHGARTS8H4,Fittings and hardware,Selangor Demo Hardware,0.00,1808.40,-1808.40,Materials
+GL-FY-0172,DEMO-003,2025-04-06,1000-BANK,MYR,SMKFP26A5XDG,Showroom card terminal settlement,Showroom Card Settlement,2512.76,0.00,2512.76,Sales receipts
+GL-FY-0173,DEMO-003,2025-04-06,1000-BANK,MYR,UNWMFEVWRDVA,Delivery charges,Rapid Demo Logistics,0.00,831.19,-831.19,Delivery
+GL-FY-0174,DEMO-003,2025-04-08,1000-BANK,MYR,GT2MSKNGJ58Q,Hotel furniture invoice receipt,Mutiara Demo Hotels,13234.47,0.00,13234.47,Trade receipts
+GL-FY-0175,DEMO-003,2025-04-08,1000-BANK,MYR,JE5VGCD9PANX,Showroom card terminal settlement,Showroom Card Settlement,1320.59,0.00,1320.59,Sales receipts
+GL-FY-0176,DEMO-003,2025-04-08,1000-BANK,MYR,XVKVTV4XS74U,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13036.63,0.00,13036.63,Trade receipts
+GL-FY-0177,DEMO-003,2025-04-09,1000-BANK,MYR,6RQXQ8CHPPDQ,Online marketplace payout,Online Marketplace Payout,4565.79,0.00,4565.79,Sales receipts
+GL-FY-0178,DEMO-003,2025-04-10,1000-BANK,MYR,4RPJJRWXWBN8,Showroom card terminal settlement,Showroom Card Settlement,1997.38,0.00,1997.38,Sales receipts
+GL-FY-0179,DEMO-003,2025-04-11,1000-BANK,MYR,6AQD2TTDJEXV,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7691.64,-7691.64,Materials
+GL-FY-0180,DEMO-003,2025-04-11,1000-BANK,MYR,JXK6S7WK9F2C,Showroom card terminal settlement,Showroom Card Settlement,1603.96,0.00,1603.96,Sales receipts
+GL-FY-0181,DEMO-003,2025-04-13,1000-BANK,MYR,7HYUB2VBPMHE,Showroom card terminal settlement,Showroom Card Settlement,1938.43,0.00,1938.43,Sales receipts
+GL-FY-0182,DEMO-003,2025-04-14,1000-BANK,MYR,4Y3HSX4BPHKR,Delivery charges,Rapid Demo Logistics,0.00,777.41,-777.41,Delivery
+GL-FY-0183,DEMO-003,2025-04-14,1000-BANK,MYR,6XNN553JAEHK,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0184,DEMO-003,2025-04-14,1000-BANK,MYR,9QWAANPSH5G4,Electricity and water,Demo Power Utilities,0.00,2065.22,-2065.22,Utilities
+GL-FY-0185,DEMO-003,2025-04-14,1000-BANK,MYR,DP3BWPE5MTLX,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0186,DEMO-003,2025-04-14,1000-BANK,MYR,HX7TRRMJZS4U,Statutory contributions,EPF SOCSO Contributions,0.00,5245.41,-5245.41,Payroll
+GL-FY-0187,DEMO-003,2025-04-14,1000-BANK,MYR,MGVJZASZJ7YD,Hotel furniture invoice receipt,Mutiara Demo Hotels,13860.00,0.00,13860.00,Trade receipts
+GL-FY-0188,DEMO-003,2025-04-14,1000-BANK,MYR,VVTDCHBRAVGE,Monthly payroll transfer,Staff Payroll,0.00,39222.78,-39222.78,Payroll
+GL-FY-0189,DEMO-003,2025-04-14,1000-BANK,MYR,YREB8ETPS5WN,Online marketplace payout,Online Marketplace Payout,4735.98,0.00,4735.98,Sales receipts
+GL-FY-0190,DEMO-003,2025-04-14,1000-BANK,MYR,YV8L4448YNJ5,Fittings and hardware,Selangor Demo Hardware,0.00,1176.76,-1176.76,Materials
+GL-FY-0191,DEMO-003,2025-04-15,1000-BANK,MYR,WE8LW3WHVQT8,Showroom card terminal settlement,Showroom Card Settlement,3008.18,0.00,3008.18,Sales receipts
+GL-FY-0192,DEMO-003,2025-04-17,1000-BANK,MYR,EUSMX34X865N,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4938.82,-4938.82,Materials
+GL-FY-0193,DEMO-003,2025-04-17,1000-BANK,MYR,W6K2Q2LUWSDZ,Showroom card terminal settlement,Showroom Card Settlement,3051.06,0.00,3051.06,Sales receipts
+GL-FY-0194,DEMO-003,2025-04-18,1000-BANK,MYR,PZX4LXEZ3XMN,Showroom card terminal settlement,Showroom Card Settlement,2817.45,0.00,2817.45,Sales receipts
+GL-FY-0195,DEMO-003,2025-04-19,1000-BANK,MYR,MU3KP7VMTTXN,Online marketplace payout,Online Marketplace Payout,2879.02,0.00,2879.02,Sales receipts
+GL-FY-0196,DEMO-003,2025-04-20,1000-BANK,MYR,6N3GH5ZWQE8V,Hotel furniture invoice receipt,Mutiara Demo Hotels,15090.89,0.00,15090.89,Trade receipts
+GL-FY-0197,DEMO-003,2025-04-20,1000-BANK,MYR,GFB33C2KKRB4,Office fit-out invoice receipt,Sinar Demo Office Fitouts,10158.46,0.00,10158.46,Trade receipts
+GL-FY-0198,DEMO-003,2025-04-20,1000-BANK,MYR,KTDRXGFJVRXR,Showroom card terminal settlement,Showroom Card Settlement,2518.73,0.00,2518.73,Sales receipts
+GL-FY-0199,DEMO-003,2025-04-22,1000-BANK,MYR,PFYZBXXM33UT,Fittings and hardware,Selangor Demo Hardware,0.00,1235.84,-1235.84,Materials
+GL-FY-0200,DEMO-003,2025-04-22,1000-BANK,MYR,TG25EL3BP9SJ,Delivery charges,Rapid Demo Logistics,0.00,736.99,-736.99,Delivery
+GL-FY-0201,DEMO-003,2025-04-22,1000-BANK,MYR,YAWJYWLN8GPH,Showroom card terminal settlement,Showroom Card Settlement,2133.44,0.00,2133.44,Sales receipts
+GL-FY-0202,DEMO-003,2025-04-23,1000-BANK,MYR,KZ8AZSTDNUW7,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7902.55,-7902.55,Materials
+GL-FY-0203,DEMO-003,2025-04-24,1000-BANK,MYR,H5L4PG7HPHVC,Showroom card terminal settlement,Showroom Card Settlement,2061.33,0.00,2061.33,Sales receipts
+GL-FY-0204,DEMO-003,2025-04-24,1000-BANK,MYR,MHKFJUJJHFBD,Online marketplace payout,Online Marketplace Payout,3906.85,0.00,3906.85,Sales receipts
+GL-FY-0205,DEMO-003,2025-04-26,1000-BANK,MYR,PVPQ9RB3LLF7,Showroom card terminal settlement,Showroom Card Settlement,1608.63,0.00,1608.63,Sales receipts
+GL-FY-0206,DEMO-003,2025-04-27,1000-BANK,MYR,J7B47PUAPUDG,Sales and service tax payment,SST Payment,0.00,7750.64,-7750.64,Taxes
+GL-FY-0207,DEMO-003,2025-05-02,1000-BANK,MYR,3EY93SK84J2A,Showroom card terminal settlement,Showroom Card Settlement,1286.10,0.00,1286.10,Sales receipts
+GL-FY-0208,DEMO-003,2025-05-04,1000-BANK,MYR,8MZ2HQYMFT84,Online marketplace payout,Online Marketplace Payout,3466.03,0.00,3466.03,Sales receipts
+GL-FY-0209,DEMO-003,2025-05-04,1000-BANK,MYR,TJGALUSN5VE9,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7211.39,-7211.39,Materials
+GL-FY-0210,DEMO-003,2025-05-04,1000-BANK,MYR,W9ZXHDC2B7EL,Showroom card terminal settlement,Showroom Card Settlement,1929.70,0.00,1929.70,Sales receipts
+GL-FY-0211,DEMO-003,2025-05-05,1000-BANK,MYR,DDQRWY4L6JM6,Showroom card terminal settlement,Showroom Card Settlement,2835.55,0.00,2835.55,Sales receipts
+GL-FY-0212,DEMO-003,2025-05-05,1000-BANK,MYR,VT7MA5YFVAE8,Delivery charges,Rapid Demo Logistics,0.00,309.87,-309.87,Delivery
+GL-FY-0213,DEMO-003,2025-05-06,1000-BANK,MYR,WQNCUUGKRKCW,Fittings and hardware,Selangor Demo Hardware,0.00,1333.70,-1333.70,Materials
+GL-FY-0214,DEMO-003,2025-05-07,1000-BANK,MYR,PZURPX57AXZL,Showroom card terminal settlement,Showroom Card Settlement,2710.12,0.00,2710.12,Sales receipts
+GL-FY-0215,DEMO-003,2025-05-08,1000-BANK,MYR,7GVPLLQLVRFE,Hotel furniture invoice receipt,Mutiara Demo Hotels,16118.35,0.00,16118.35,Trade receipts
+GL-FY-0216,DEMO-003,2025-05-08,1000-BANK,MYR,DAETPASASQXK,Office fit-out invoice receipt,Sinar Demo Office Fitouts,11278.05,0.00,11278.05,Trade receipts
+GL-FY-0217,DEMO-003,2025-05-09,1000-BANK,MYR,3GMKGN44N9CZ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5255.02,-5255.02,Materials
+GL-FY-0218,DEMO-003,2025-05-09,1000-BANK,MYR,4HHRJYU898Q7,Showroom card terminal settlement,Showroom Card Settlement,2315.06,0.00,2315.06,Sales receipts
+GL-FY-0219,DEMO-003,2025-05-09,1000-BANK,MYR,M2UPB8ZU7FJA,Online marketplace payout,Online Marketplace Payout,2636.17,0.00,2636.17,Sales receipts
+GL-FY-0220,DEMO-003,2025-05-10,1000-BANK,MYR,V4L8WRRXZVWH,Showroom card terminal settlement,Showroom Card Settlement,2480.54,0.00,2480.54,Sales receipts
+GL-FY-0221,DEMO-003,2025-05-11,1000-BANK,MYR,9NSGVCEXGCBH,Delivery charges,Rapid Demo Logistics,0.00,385.75,-385.75,Delivery
+GL-FY-0222,DEMO-003,2025-05-12,1000-BANK,MYR,TB9CMFWUTTYR,Showroom card terminal settlement,Showroom Card Settlement,1266.30,0.00,1266.30,Sales receipts
+GL-FY-0223,DEMO-003,2025-05-13,1000-BANK,MYR,H67GRBBSY4RT,Showroom card terminal settlement,Showroom Card Settlement,2018.15,0.00,2018.15,Sales receipts
+GL-FY-0224,DEMO-003,2025-05-13,1000-BANK,MYR,KE6CV2GAFDHM,Fittings and hardware,Selangor Demo Hardware,0.00,1684.20,-1684.20,Materials
+GL-FY-0225,DEMO-003,2025-05-14,1000-BANK,MYR,42MEQPE8GXY2,Online marketplace payout,Online Marketplace Payout,3025.69,0.00,3025.69,Sales receipts
+GL-FY-0226,DEMO-003,2025-05-14,1000-BANK,MYR,8L7XPRVFCRX6,Monthly payroll transfer,Staff Payroll,0.00,38577.23,-38577.23,Payroll
+GL-FY-0227,DEMO-003,2025-05-14,1000-BANK,MYR,9LJ92E7YF7HQ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6342.92,-6342.92,Materials
+GL-FY-0228,DEMO-003,2025-05-14,1000-BANK,MYR,A355NKUK3HAX,Fittings and hardware,Selangor Demo Hardware,0.00,951.49,-951.49,Materials
+GL-FY-0229,DEMO-003,2025-05-14,1000-BANK,MYR,BYCT27B46ZT5,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0230,DEMO-003,2025-05-14,1000-BANK,MYR,N8J2ZW4MD23B,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0231,DEMO-003,2025-05-14,1000-BANK,MYR,UE4ZXA7FQQB4,Electricity and water,Demo Power Utilities,0.00,2669.49,-2669.49,Utilities
+GL-FY-0232,DEMO-003,2025-05-14,1000-BANK,MYR,ZHTAVAWBTVCG,Statutory contributions,EPF SOCSO Contributions,0.00,5199.20,-5199.20,Payroll
+GL-FY-0233,DEMO-003,2025-05-15,1000-BANK,MYR,GD6HFYAW947H,Showroom card terminal settlement,Showroom Card Settlement,1935.43,0.00,1935.43,Sales receipts
+GL-FY-0234,DEMO-003,2025-05-16,1000-BANK,MYR,9FYLZWJ9KPK7,Showroom card terminal settlement,Showroom Card Settlement,1626.27,0.00,1626.27,Sales receipts
+GL-FY-0235,DEMO-003,2025-05-17,1000-BANK,MYR,6PRJG994N9QE,Delivery charges,Rapid Demo Logistics,0.00,562.30,-562.30,Delivery
+GL-FY-0236,DEMO-003,2025-05-18,1000-BANK,MYR,53XFZKRQF82B,Showroom card terminal settlement,Showroom Card Settlement,1240.83,0.00,1240.83,Sales receipts
+GL-FY-0237,DEMO-003,2025-05-19,1000-BANK,MYR,HHP2746GX48N,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6794.45,-6794.45,Materials
+GL-FY-0238,DEMO-003,2025-05-19,1000-BANK,MYR,RS6PCN5H6HJX,Showroom card terminal settlement,Showroom Card Settlement,1692.31,0.00,1692.31,Sales receipts
+GL-FY-0239,DEMO-003,2025-05-19,1000-BANK,MYR,RYT7WVAJWM4N,Online marketplace payout,Online Marketplace Payout,2994.02,0.00,2994.02,Sales receipts
+GL-FY-0240,DEMO-003,2025-05-20,1000-BANK,MYR,MXWVVRQYAXXX,Office fit-out invoice receipt,Sinar Demo Office Fitouts,9391.17,0.00,9391.17,Trade receipts
+GL-FY-0241,DEMO-003,2025-05-20,1000-BANK,MYR,S8J98JVBHWM3,Hotel furniture invoice receipt,Mutiara Demo Hotels,13473.33,0.00,13473.33,Trade receipts
+GL-FY-0242,DEMO-003,2025-05-21,1000-BANK,MYR,5FLZ5988BZRA,Showroom card terminal settlement,Showroom Card Settlement,1517.27,0.00,1517.27,Sales receipts
+GL-FY-0243,DEMO-003,2025-05-22,1000-BANK,MYR,6X3A2N7KWTQD,Fittings and hardware,Selangor Demo Hardware,0.00,1092.14,-1092.14,Materials
+GL-FY-0244,DEMO-003,2025-05-23,1000-BANK,MYR,9LF47MAKBGGQ,Showroom card terminal settlement,Showroom Card Settlement,2322.68,0.00,2322.68,Sales receipts
+GL-FY-0245,DEMO-003,2025-05-23,1000-BANK,MYR,EZUBLB9ZDUET,Delivery charges,Rapid Demo Logistics,0.00,697.43,-697.43,Delivery
+GL-FY-0246,DEMO-003,2025-05-24,1000-BANK,MYR,K5WYMM7A38T9,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8245.24,-8245.24,Materials
+GL-FY-0247,DEMO-003,2025-05-24,1000-BANK,MYR,LY997P2JFYFY,Online marketplace payout,Online Marketplace Payout,2157.18,0.00,2157.18,Sales receipts
+GL-FY-0248,DEMO-003,2025-05-24,1000-BANK,MYR,X8WDGCA3LT3Z,Showroom card terminal settlement,Showroom Card Settlement,3155.28,0.00,3155.28,Sales receipts
+GL-FY-0249,DEMO-003,2025-05-26,1000-BANK,MYR,HFQ23K4QSB2E,Showroom card terminal settlement,Showroom Card Settlement,1796.46,0.00,1796.46,Sales receipts
+GL-FY-0250,DEMO-003,2025-05-26,1000-BANK,MYR,VFYMUXCBH4SW,Cheque 004118 to Kayu Demo Timber Supplies,Kayu Demo Timber Supplies,0.00,7124.00,-7124.00,Materials
+GL-FY-0251,DEMO-003,2025-06-02,1000-BANK,MYR,XS8KNRWEDXD9,Showroom card terminal settlement,Showroom Card Settlement,2011.11,0.00,2011.11,Sales receipts
+GL-FY-0252,DEMO-003,2025-06-04,1000-BANK,MYR,K9P539FQX52J,Showroom card terminal settlement,Showroom Card Settlement,1884.97,0.00,1884.97,Sales receipts
+GL-FY-0253,DEMO-003,2025-06-04,1000-BANK,MYR,LC8REY8UNJN2,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8558.92,-8558.92,Materials
+GL-FY-0254,DEMO-003,2025-06-04,1000-BANK,MYR,MUHMPKBZ2JU3,Online marketplace payout,Online Marketplace Payout,4206.80,0.00,4206.80,Sales receipts
+GL-FY-0255,DEMO-003,2025-06-05,1000-BANK,MYR,J49YSFNL2KQS,Delivery charges,Rapid Demo Logistics,0.00,716.35,-716.35,Delivery
+GL-FY-0256,DEMO-003,2025-06-05,1000-BANK,MYR,V9D3LAG4N8RZ,Showroom card terminal settlement,Showroom Card Settlement,3179.70,0.00,3179.70,Sales receipts
+GL-FY-0257,DEMO-003,2025-06-06,1000-BANK,MYR,8PXJN8P7FDE5,Fittings and hardware,Selangor Demo Hardware,0.00,1657.19,-1657.19,Materials
+GL-FY-0258,DEMO-003,2025-06-07,1000-BANK,MYR,ESQNFA2GUEH8,Showroom card terminal settlement,Showroom Card Settlement,2820.34,0.00,2820.34,Sales receipts
+GL-FY-0259,DEMO-003,2025-06-08,1000-BANK,MYR,5L6R9C6Z3W4Z,Hotel furniture invoice receipt,Mutiara Demo Hotels,15640.28,0.00,15640.28,Trade receipts
+GL-FY-0260,DEMO-003,2025-06-08,1000-BANK,MYR,95Z2H4EKPLDS,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13897.33,0.00,13897.33,Trade receipts
+GL-FY-0261,DEMO-003,2025-06-09,1000-BANK,MYR,3CXZ9YP3LAAJ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4849.07,-4849.07,Materials
+GL-FY-0262,DEMO-003,2025-06-09,1000-BANK,MYR,F7L8C9VZQP5Z,Showroom card terminal settlement,Showroom Card Settlement,3099.97,0.00,3099.97,Sales receipts
+GL-FY-0263,DEMO-003,2025-06-09,1000-BANK,MYR,Y73KKVQCZHAA,Online marketplace payout,Online Marketplace Payout,4716.07,0.00,4716.07,Sales receipts
+GL-FY-0264,DEMO-003,2025-06-10,1000-BANK,MYR,NME9HN4X75KU,Showroom card terminal settlement,Showroom Card Settlement,1936.86,0.00,1936.86,Sales receipts
+GL-FY-0265,DEMO-003,2025-06-11,1000-BANK,MYR,53UPD8TFCM3P,Delivery charges,Rapid Demo Logistics,0.00,328.55,-328.55,Delivery
+GL-FY-0266,DEMO-003,2025-06-12,1000-BANK,MYR,77M5FBMHUB8X,Showroom card terminal settlement,Showroom Card Settlement,1259.43,0.00,1259.43,Sales receipts
+GL-FY-0267,DEMO-003,2025-06-13,1000-BANK,MYR,CPPJLM9FKWXR,Showroom card terminal settlement,Showroom Card Settlement,2130.73,0.00,2130.73,Sales receipts
+GL-FY-0268,DEMO-003,2025-06-14,1000-BANK,MYR,4NKNCZQ5WS8B,Statutory contributions,EPF SOCSO Contributions,0.00,5026.00,-5026.00,Payroll
+GL-FY-0269,DEMO-003,2025-06-14,1000-BANK,MYR,6TY8X82RC922,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0270,DEMO-003,2025-06-14,1000-BANK,MYR,8YMW6WGFC3QK,Fittings and hardware,Selangor Demo Hardware,0.00,1066.74,-1066.74,Materials
+GL-FY-0271,DEMO-003,2025-06-14,1000-BANK,MYR,G55VV3XWLRKM,Electricity and water,Demo Power Utilities,0.00,2346.82,-2346.82,Utilities
+GL-FY-0272,DEMO-003,2025-06-14,1000-BANK,MYR,LRK64GFMUNWT,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0273,DEMO-003,2025-06-14,1000-BANK,MYR,NSBSNTL4ZDRN,Online marketplace payout,Online Marketplace Payout,2637.05,0.00,2637.05,Sales receipts
+GL-FY-0274,DEMO-003,2025-06-14,1000-BANK,MYR,VH4A4Y26NNC2,Monthly payroll transfer,Staff Payroll,0.00,38673.02,-38673.02,Payroll
+GL-FY-0275,DEMO-003,2025-06-14,1000-BANK,MYR,VHKHSD7QN69B,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5216.48,-5216.48,Materials
+GL-FY-0276,DEMO-003,2025-06-15,1000-BANK,MYR,4BLDVFGSPFA5,Showroom card terminal settlement,Showroom Card Settlement,3197.30,0.00,3197.30,Sales receipts
+GL-FY-0277,DEMO-003,2025-06-16,1000-BANK,MYR,SJNDTZEW7VD5,Showroom card terminal settlement,Showroom Card Settlement,2056.89,0.00,2056.89,Sales receipts
+GL-FY-0278,DEMO-003,2025-06-17,1000-BANK,MYR,GSA3LS54QCFU,Delivery charges,Rapid Demo Logistics,0.00,306.11,-306.11,Delivery
+GL-FY-0279,DEMO-003,2025-06-18,1000-BANK,MYR,2A262UFDQ9D5,Showroom card terminal settlement,Showroom Card Settlement,2364.83,0.00,2364.83,Sales receipts
+GL-FY-0280,DEMO-003,2025-06-19,1000-BANK,MYR,7TDTXUHTY5PQ,Showroom card terminal settlement,Showroom Card Settlement,1568.36,0.00,1568.36,Sales receipts
+GL-FY-0281,DEMO-003,2025-06-19,1000-BANK,MYR,7ULWNX8NKBVN,Online marketplace payout,Online Marketplace Payout,3405.70,0.00,3405.70,Sales receipts
+GL-FY-0282,DEMO-003,2025-06-19,1000-BANK,MYR,L4D7N5862X96,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8385.72,-8385.72,Materials
+GL-FY-0283,DEMO-003,2025-06-20,1000-BANK,MYR,QHPYF37LE5JF,Hotel furniture invoice receipt,Mutiara Demo Hotels,16415.37,0.00,16415.37,Trade receipts
+GL-FY-0284,DEMO-003,2025-06-20,1000-BANK,MYR,RG2TM79BYSHK,Office fit-out invoice receipt,Sinar Demo Office Fitouts,8927.96,0.00,8927.96,Trade receipts
+GL-FY-0285,DEMO-003,2025-06-21,1000-BANK,MYR,CHPGL777ERU7,Showroom card terminal settlement,Showroom Card Settlement,1582.61,0.00,1582.61,Sales receipts
+GL-FY-0286,DEMO-003,2025-06-22,1000-BANK,MYR,FGMH2DLMQ8JZ,Fittings and hardware,Selangor Demo Hardware,0.00,1181.51,-1181.51,Materials
+GL-FY-0287,DEMO-003,2025-06-23,1000-BANK,MYR,GJHN8X6FLTJT,Delivery charges,Rapid Demo Logistics,0.00,735.87,-735.87,Delivery
+GL-FY-0288,DEMO-003,2025-06-23,1000-BANK,MYR,TRVJMLGBCWSN,Showroom card terminal settlement,Showroom Card Settlement,2111.14,0.00,2111.14,Sales receipts
+GL-FY-0289,DEMO-003,2025-06-24,1000-BANK,MYR,H9P6Y7UCMBXZ,Showroom card terminal settlement,Showroom Card Settlement,1219.70,0.00,1219.70,Sales receipts
+GL-FY-0290,DEMO-003,2025-06-24,1000-BANK,MYR,K5VMATHG6DLP,Online marketplace payout,Online Marketplace Payout,2318.18,0.00,2318.18,Sales receipts
+GL-FY-0291,DEMO-003,2025-06-24,1000-BANK,MYR,L3RSRRWRZMKE,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6176.81,-6176.81,Materials
+GL-FY-0292,DEMO-003,2025-06-26,1000-BANK,MYR,CPZQNMUEST6X,Showroom card terminal settlement,Showroom Card Settlement,1246.55,0.00,1246.55,Sales receipts
+GL-FY-0293,DEMO-003,2025-06-27,1000-BANK,MYR,HGR9UFZZF6W3,Sales and service tax payment,SST Payment,0.00,8750.04,-8750.04,Taxes
+GL-FY-0294,DEMO-003,2025-06-30,1000-BANK,MYR,AQ3UYUKMNL8E,Showroom card terminal settlement,Showroom Card Settlement,1875.30,0.00,1875.30,Sales receipts
+GL-FY-0295,DEMO-003,2025-07-02,1000-BANK,MYR,AZXGZJMYR5P9,Showroom card terminal settlement,Showroom Card Settlement,2325.58,0.00,2325.58,Sales receipts
+GL-FY-0296,DEMO-003,2025-07-04,1000-BANK,MYR,BQEEYVLGZFCB,Online marketplace payout,Online Marketplace Payout,2893.11,0.00,2893.11,Sales receipts
+GL-FY-0297,DEMO-003,2025-07-04,1000-BANK,MYR,D4VXMMTNZBA2,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4801.36,-4801.36,Materials
+GL-FY-0298,DEMO-003,2025-07-04,1000-BANK,MYR,Q7DX36G2FBKT,Showroom card terminal settlement,Showroom Card Settlement,3185.81,0.00,3185.81,Sales receipts
+GL-FY-0299,DEMO-003,2025-07-05,1000-BANK,MYR,5E8A3LFVMRMN,Showroom card terminal settlement,Showroom Card Settlement,2683.92,0.00,2683.92,Sales receipts
+GL-FY-0300,DEMO-003,2025-07-05,1000-BANK,MYR,GHDA46R8FXUB,Delivery charges,Rapid Demo Logistics,0.00,463.68,-463.68,Delivery
+GL-FY-0301,DEMO-003,2025-07-06,1000-BANK,MYR,LY6T87A5D4AN,Fittings and hardware,Selangor Demo Hardware,0.00,1736.07,-1736.07,Materials
+GL-FY-0302,DEMO-003,2025-07-06,1000-BANK,MYR,X3RUZTF9YU34,Showroom card terminal settlement,Showroom Card Settlement,2644.45,0.00,2644.45,Sales receipts
+GL-FY-0303,DEMO-003,2025-07-08,1000-BANK,MYR,23T3YYDLQ6G9,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13127.39,0.00,13127.39,Trade receipts
+GL-FY-0304,DEMO-003,2025-07-08,1000-BANK,MYR,2UYVYLAVRB3D,Hotel furniture invoice receipt,Mutiara Demo Hotels,14785.22,0.00,14785.22,Trade receipts
+GL-FY-0305,DEMO-003,2025-07-08,1000-BANK,MYR,FJCS7MNWEK8W,Online marketplace payout,Online Marketplace Payout,4342.53,0.00,4342.53,Sales receipts
+GL-FY-0306,DEMO-003,2025-07-08,1000-BANK,MYR,S5TUES79JT3Z,Showroom card terminal settlement,Showroom Card Settlement,1236.87,0.00,1236.87,Sales receipts
+GL-FY-0307,DEMO-003,2025-07-08,1000-BANK,MYR,Y93CG9SMJX5N,Show unit furniture invoice receipt,Lembah Demo Property,18184.00,0.00,18184.00,Trade receipts
+GL-FY-0308,DEMO-003,2025-07-09,1000-BANK,MYR,29URJQDX5Y3R,Showroom card terminal settlement,Showroom Card Settlement,1617.98,0.00,1617.98,Sales receipts
+GL-FY-0309,DEMO-003,2025-07-09,1000-BANK,MYR,GF8GMEVJKFFB,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7088.31,-7088.31,Materials
+GL-FY-0310,DEMO-003,2025-07-11,1000-BANK,MYR,NE9YZP9CLSSX,Delivery charges,Rapid Demo Logistics,0.00,498.02,-498.02,Delivery
+GL-FY-0311,DEMO-003,2025-07-11,1000-BANK,MYR,TZ535RXE9BZV,Showroom card terminal settlement,Showroom Card Settlement,2517.26,0.00,2517.26,Sales receipts
+GL-FY-0312,DEMO-003,2025-07-12,1000-BANK,MYR,5PAZ5ZVDNFE7,Showroom card terminal settlement,Showroom Card Settlement,2159.16,0.00,2159.16,Sales receipts
+GL-FY-0313,DEMO-003,2025-07-12,1000-BANK,MYR,FUTT4YMB3WG9,Online marketplace payout,Online Marketplace Payout,4899.47,0.00,4899.47,Sales receipts
+GL-FY-0314,DEMO-003,2025-07-13,1000-BANK,MYR,PG9ZNMKL84SX,Showroom card terminal settlement,Showroom Card Settlement,2064.11,0.00,2064.11,Sales receipts
+GL-FY-0315,DEMO-003,2025-07-14,1000-BANK,MYR,4D88G669293W,Statutory contributions,EPF SOCSO Contributions,0.00,5268.08,-5268.08,Payroll
+GL-FY-0316,DEMO-003,2025-07-14,1000-BANK,MYR,4MD8MPZ2MLF7,Fittings and hardware,Selangor Demo Hardware,0.00,1616.45,-1616.45,Materials
+GL-FY-0317,DEMO-003,2025-07-14,1000-BANK,MYR,5ZHXP4USRZLW,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0318,DEMO-003,2025-07-14,1000-BANK,MYR,CGNHDHDCHPJ7,Monthly payroll transfer,Staff Payroll,0.00,38684.95,-38684.95,Payroll
+GL-FY-0319,DEMO-003,2025-07-14,1000-BANK,MYR,FGYKJLBLV93F,Electricity and water,Demo Power Utilities,0.00,3035.00,-3035.00,Utilities
+GL-FY-0320,DEMO-003,2025-07-14,1000-BANK,MYR,KKKHAWZ2EYTA,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0321,DEMO-003,2025-07-14,1000-BANK,MYR,VU695K3B3P4B,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4927.82,-4927.82,Materials
+GL-FY-0322,DEMO-003,2025-07-15,1000-BANK,MYR,VTX2Y6MERXEH,Showroom card terminal settlement,Showroom Card Settlement,2397.64,0.00,2397.64,Sales receipts
+GL-FY-0323,DEMO-003,2025-07-16,1000-BANK,MYR,SZQHFLV358YD,Showroom card terminal settlement,Showroom Card Settlement,2683.12,0.00,2683.12,Sales receipts
+GL-FY-0324,DEMO-003,2025-07-16,1000-BANK,MYR,YFXAGHEWMXL8,Online marketplace payout,Online Marketplace Payout,2290.39,0.00,2290.39,Sales receipts
+GL-FY-0325,DEMO-003,2025-07-17,1000-BANK,MYR,J4RGZBQF68YP,Delivery charges,Rapid Demo Logistics,0.00,608.09,-608.09,Delivery
+GL-FY-0326,DEMO-003,2025-07-17,1000-BANK,MYR,ZLMTGH5H3KLM,Showroom card terminal settlement,Showroom Card Settlement,2455.58,0.00,2455.58,Sales receipts
+GL-FY-0327,DEMO-003,2025-07-19,1000-BANK,MYR,8284AG5PLLQ2,Showroom card terminal settlement,Showroom Card Settlement,2466.40,0.00,2466.40,Sales receipts
+GL-FY-0328,DEMO-003,2025-07-19,1000-BANK,MYR,ERD3LJYZ36HZ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6616.06,-6616.06,Materials
+GL-FY-0329,DEMO-003,2025-07-20,1000-BANK,MYR,DM74GQ4LBLXL,Showroom card terminal settlement,Showroom Card Settlement,1364.38,0.00,1364.38,Sales receipts
+GL-FY-0330,DEMO-003,2025-07-20,1000-BANK,MYR,H7UPMHF7PDZ3,Show unit furniture invoice receipt,Lembah Demo Property,18490.41,0.00,18490.41,Trade receipts
+GL-FY-0331,DEMO-003,2025-07-20,1000-BANK,MYR,NSC4SC9QYVQK,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13668.06,0.00,13668.06,Trade receipts
+GL-FY-0332,DEMO-003,2025-07-20,1000-BANK,MYR,TBFZAFFZPZKR,Online marketplace payout,Online Marketplace Payout,2001.03,0.00,2001.03,Sales receipts
+GL-FY-0333,DEMO-003,2025-07-20,1000-BANK,MYR,TLWKXNZ2S3UJ,Hotel furniture invoice receipt,Mutiara Demo Hotels,15384.27,0.00,15384.27,Trade receipts
+GL-FY-0334,DEMO-003,2025-07-22,1000-BANK,MYR,7PZQDU8FQQAV,Fittings and hardware,Selangor Demo Hardware,0.00,1549.48,-1549.48,Materials
+GL-FY-0335,DEMO-003,2025-07-22,1000-BANK,MYR,JGMYAUSSKFQZ,Showroom card terminal settlement,Showroom Card Settlement,1597.85,0.00,1597.85,Sales receipts
+GL-FY-0336,DEMO-003,2025-07-23,1000-BANK,MYR,3G75GABL4DM7,Delivery charges,Rapid Demo Logistics,0.00,445.52,-445.52,Delivery
+GL-FY-0337,DEMO-003,2025-07-23,1000-BANK,MYR,T3WUT29UQTF3,Showroom card terminal settlement,Showroom Card Settlement,2907.19,0.00,2907.19,Sales receipts
+GL-FY-0338,DEMO-003,2025-07-24,1000-BANK,MYR,DXZCUBG2Z9AW,Showroom card terminal settlement,Showroom Card Settlement,2845.61,0.00,2845.61,Sales receipts
+GL-FY-0339,DEMO-003,2025-07-24,1000-BANK,MYR,QHTA28GRT4JE,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7963.05,-7963.05,Materials
+GL-FY-0340,DEMO-003,2025-07-24,1000-BANK,MYR,VFW4VBH7S7XB,Online marketplace payout,Online Marketplace Payout,4195.29,0.00,4195.29,Sales receipts
+GL-FY-0341,DEMO-003,2025-07-26,1000-BANK,MYR,HL52KTVPHWZD,Showroom card terminal settlement,Showroom Card Settlement,1963.93,0.00,1963.93,Sales receipts
+GL-FY-0342,DEMO-003,2025-08-02,1000-BANK,MYR,ESK2QM4YTD8Z,Showroom card terminal settlement,Showroom Card Settlement,2753.48,0.00,2753.48,Sales receipts
+GL-FY-0343,DEMO-003,2025-08-04,1000-BANK,MYR,77E86AALSQ32,Showroom card terminal settlement,Showroom Card Settlement,3174.72,0.00,3174.72,Sales receipts
+GL-FY-0344,DEMO-003,2025-08-04,1000-BANK,MYR,NAH8DPLFBEQZ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7740.70,-7740.70,Materials
+GL-FY-0345,DEMO-003,2025-08-04,1000-BANK,MYR,WDLMVZL668PY,Online marketplace payout,Online Marketplace Payout,2849.45,0.00,2849.45,Sales receipts
+GL-FY-0346,DEMO-003,2025-08-05,1000-BANK,MYR,KXKNUZBKHVPP,Delivery charges,Rapid Demo Logistics,0.00,588.92,-588.92,Delivery
+GL-FY-0347,DEMO-003,2025-08-05,1000-BANK,MYR,SVKPJC26D3Q9,Showroom card terminal settlement,Showroom Card Settlement,2885.98,0.00,2885.98,Sales receipts
+GL-FY-0348,DEMO-003,2025-08-06,1000-BANK,MYR,FQ6T9F8H8RPQ,Showroom card terminal settlement,Showroom Card Settlement,2407.47,0.00,2407.47,Sales receipts
+GL-FY-0349,DEMO-003,2025-08-06,1000-BANK,MYR,XDKE7CATGSBX,Fittings and hardware,Selangor Demo Hardware,0.00,1431.98,-1431.98,Materials
+GL-FY-0350,DEMO-003,2025-08-08,1000-BANK,MYR,2MLJAW6K37LZ,Hotel furniture invoice receipt,Mutiara Demo Hotels,14364.18,0.00,14364.18,Trade receipts
+GL-FY-0351,DEMO-003,2025-08-08,1000-BANK,MYR,5EE2HHVX7KYG,Showroom card terminal settlement,Showroom Card Settlement,1851.91,0.00,1851.91,Sales receipts
+GL-FY-0352,DEMO-003,2025-08-08,1000-BANK,MYR,6E2YWMK4QZUN,Online marketplace payout,Online Marketplace Payout,3450.82,0.00,3450.82,Sales receipts
+GL-FY-0353,DEMO-003,2025-08-08,1000-BANK,MYR,TB3PR68PSQ9G,Show unit furniture invoice receipt,Lembah Demo Property,15767.51,0.00,15767.51,Trade receipts
+GL-FY-0354,DEMO-003,2025-08-08,1000-BANK,MYR,YBTADM8A6WJW,Office fit-out invoice receipt,Sinar Demo Office Fitouts,11109.57,0.00,11109.57,Trade receipts
+GL-FY-0355,DEMO-003,2025-08-09,1000-BANK,MYR,3B6N4YXXK8NA,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5110.85,-5110.85,Materials
+GL-FY-0356,DEMO-003,2025-08-09,1000-BANK,MYR,C2A87D884FED,Showroom card terminal settlement,Showroom Card Settlement,2098.61,0.00,2098.61,Sales receipts
+GL-FY-0357,DEMO-003,2025-08-11,1000-BANK,MYR,2D5QTFNF4LNK,Delivery charges,Rapid Demo Logistics,0.00,743.13,-743.13,Delivery
+GL-FY-0358,DEMO-003,2025-08-11,1000-BANK,MYR,BEE3VX95LESV,Showroom card terminal settlement,Showroom Card Settlement,2673.80,0.00,2673.80,Sales receipts
+GL-FY-0359,DEMO-003,2025-08-12,1000-BANK,MYR,DMEHR4BNS9XQ,Showroom card terminal settlement,Showroom Card Settlement,2272.13,0.00,2272.13,Sales receipts
+GL-FY-0360,DEMO-003,2025-08-12,1000-BANK,MYR,RL9KVWG6RNRC,Online marketplace payout,Online Marketplace Payout,4827.04,0.00,4827.04,Sales receipts
+GL-FY-0361,DEMO-003,2025-08-12,1000-BANK,MYR,SKYFTP6AQ9SA,CNC router purchase,Teknik Demo CNC Machinery,0.00,86000.00,-86000.00,Equipment
+GL-FY-0362,DEMO-003,2025-08-13,1000-BANK,MYR,ZWXGPRLHN4ER,Showroom card terminal settlement,Showroom Card Settlement,1277.34,0.00,1277.34,Sales receipts
+GL-FY-0363,DEMO-003,2025-08-14,1000-BANK,MYR,3UDE5V32ADB7,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0364,DEMO-003,2025-08-14,1000-BANK,MYR,AN5LZ7KBZ9RJ,Statutory contributions,EPF SOCSO Contributions,0.00,5286.63,-5286.63,Payroll
+GL-FY-0365,DEMO-003,2025-08-14,1000-BANK,MYR,ARHUEGQ298TE,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8461.22,-8461.22,Materials
+GL-FY-0366,DEMO-003,2025-08-14,1000-BANK,MYR,BQVQBD44CLBZ,Monthly payroll transfer,Staff Payroll,0.00,39730.84,-39730.84,Payroll
+GL-FY-0367,DEMO-003,2025-08-14,1000-BANK,MYR,KT9FFF6JD2YZ,Fittings and hardware,Selangor Demo Hardware,0.00,1021.90,-1021.90,Materials
+GL-FY-0368,DEMO-003,2025-08-14,1000-BANK,MYR,UTNERWQHAFYX,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0369,DEMO-003,2025-08-14,1000-BANK,MYR,UYTQ68SFLTJW,Electricity and water,Demo Power Utilities,0.00,2066.70,-2066.70,Utilities
+GL-FY-0370,DEMO-003,2025-08-15,1000-BANK,MYR,BALAWML2PJLS,Showroom card terminal settlement,Showroom Card Settlement,2484.87,0.00,2484.87,Sales receipts
+GL-FY-0371,DEMO-003,2025-08-16,1000-BANK,MYR,P8ZLEZKKC9E4,Online marketplace payout,Online Marketplace Payout,3522.82,0.00,3522.82,Sales receipts
+GL-FY-0372,DEMO-003,2025-08-16,1000-BANK,MYR,PE7NAVW3XKWT,Showroom card terminal settlement,Showroom Card Settlement,2220.70,0.00,2220.70,Sales receipts
+GL-FY-0373,DEMO-003,2025-08-17,1000-BANK,MYR,ANPQEQUH8LVY,Showroom card terminal settlement,Showroom Card Settlement,1727.31,0.00,1727.31,Sales receipts
+GL-FY-0374,DEMO-003,2025-08-17,1000-BANK,MYR,F8WX9T5HMKC4,Delivery charges,Rapid Demo Logistics,0.00,409.34,-409.34,Delivery
+GL-FY-0375,DEMO-003,2025-08-19,1000-BANK,MYR,4545XRSR4YQJ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6874.14,-6874.14,Materials
+GL-FY-0376,DEMO-003,2025-08-19,1000-BANK,MYR,CFNCZSD5WBJE,Showroom card terminal settlement,Showroom Card Settlement,2745.65,0.00,2745.65,Sales receipts
+GL-FY-0377,DEMO-003,2025-08-20,1000-BANK,MYR,5XJV4GFEBNEC,Show unit furniture invoice receipt,Lembah Demo Property,18579.91,0.00,18579.91,Trade receipts
+GL-FY-0378,DEMO-003,2025-08-20,1000-BANK,MYR,97S9ZCQ9LDCU,Office fit-out invoice receipt,Sinar Demo Office Fitouts,9211.10,0.00,9211.10,Trade receipts
+GL-FY-0379,DEMO-003,2025-08-20,1000-BANK,MYR,HGAJQYDNFHQG,Showroom card terminal settlement,Showroom Card Settlement,2086.19,0.00,2086.19,Sales receipts
+GL-FY-0380,DEMO-003,2025-08-20,1000-BANK,MYR,NXE94KJ8XURH,Hotel furniture invoice receipt,Mutiara Demo Hotels,16162.67,0.00,16162.67,Trade receipts
+GL-FY-0381,DEMO-003,2025-08-20,1000-BANK,MYR,YMTZT32VX35X,Online marketplace payout,Online Marketplace Payout,4381.88,0.00,4381.88,Sales receipts
+GL-FY-0382,DEMO-003,2025-08-22,1000-BANK,MYR,FXF82TTHHRRR,Showroom card terminal settlement,Showroom Card Settlement,1713.94,0.00,1713.94,Sales receipts
+GL-FY-0383,DEMO-003,2025-08-22,1000-BANK,MYR,M4S5U3DDYNNW,Fittings and hardware,Selangor Demo Hardware,0.00,1936.82,-1936.82,Materials
+GL-FY-0384,DEMO-003,2025-08-23,1000-BANK,MYR,PT74QNPXURDP,Showroom card terminal settlement,Showroom Card Settlement,2240.28,0.00,2240.28,Sales receipts
+GL-FY-0385,DEMO-003,2025-08-23,1000-BANK,MYR,VNSETCVNPBJR,Delivery charges,Rapid Demo Logistics,0.00,358.47,-358.47,Delivery
+GL-FY-0386,DEMO-003,2025-08-24,1000-BANK,MYR,2X5VJ6XUCPMT,Online marketplace payout,Online Marketplace Payout,2345.65,0.00,2345.65,Sales receipts
+GL-FY-0387,DEMO-003,2025-08-24,1000-BANK,MYR,J7ZLKZ7N6DME,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8849.39,-8849.39,Materials
+GL-FY-0388,DEMO-003,2025-08-24,1000-BANK,MYR,JDHAZXY99SUV,Showroom card terminal settlement,Showroom Card Settlement,2964.76,0.00,2964.76,Sales receipts
+GL-FY-0389,DEMO-003,2025-08-26,1000-BANK,MYR,TNG47LMN77ZR,Showroom card terminal settlement,Showroom Card Settlement,1286.41,0.00,1286.41,Sales receipts
+GL-FY-0390,DEMO-003,2025-08-27,1000-BANK,MYR,ZBTWBXN8QGCP,Sales and service tax payment,SST Payment,0.00,8094.85,-8094.85,Taxes
+GL-FY-0391,DEMO-003,2025-09-02,1000-BANK,MYR,CYCESPF9Z7XW,Showroom card terminal settlement,Showroom Card Settlement,3019.15,0.00,3019.15,Sales receipts
+GL-FY-0392,DEMO-003,2025-09-04,1000-BANK,MYR,25WUKTRQ6U8A,Online marketplace payout,Online Marketplace Payout,4272.91,0.00,4272.91,Sales receipts
+GL-FY-0393,DEMO-003,2025-09-04,1000-BANK,MYR,KF2E4BD9YA5V,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5201.51,-5201.51,Materials
+GL-FY-0394,DEMO-003,2025-09-04,1000-BANK,MYR,XYUG2V8Z7DJY,Showroom card terminal settlement,Showroom Card Settlement,1403.76,0.00,1403.76,Sales receipts
+GL-FY-0395,DEMO-003,2025-09-05,1000-BANK,MYR,BWUZX7FA36SA,Showroom card terminal settlement,Showroom Card Settlement,3140.79,0.00,3140.79,Sales receipts
+GL-FY-0396,DEMO-003,2025-09-05,1000-BANK,MYR,L7SBN34GSA9M,Delivery charges,Rapid Demo Logistics,0.00,823.63,-823.63,Delivery
+GL-FY-0397,DEMO-003,2025-09-06,1000-BANK,MYR,2H64BVYHLNE8,Showroom card terminal settlement,Showroom Card Settlement,2296.43,0.00,2296.43,Sales receipts
+GL-FY-0398,DEMO-003,2025-09-06,1000-BANK,MYR,L9NS7YW3STLQ,Fittings and hardware,Selangor Demo Hardware,0.00,1603.74,-1603.74,Materials
+GL-FY-0399,DEMO-003,2025-09-08,1000-BANK,MYR,9HBG85ESEZZF,Showroom card terminal settlement,Showroom Card Settlement,2250.40,0.00,2250.40,Sales receipts
+GL-FY-0400,DEMO-003,2025-09-08,1000-BANK,MYR,AGZ3YRA7GLF2,Show unit furniture invoice receipt,Lembah Demo Property,15787.66,0.00,15787.66,Trade receipts
+GL-FY-0401,DEMO-003,2025-09-08,1000-BANK,MYR,QDZWGDV3EZRU,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13057.40,0.00,13057.40,Trade receipts
+GL-FY-0402,DEMO-003,2025-09-08,1000-BANK,MYR,XJSUSE8BPE5Q,Hotel furniture invoice receipt,Mutiara Demo Hotels,17617.32,0.00,17617.32,Trade receipts
+GL-FY-0403,DEMO-003,2025-09-08,1000-BANK,MYR,XL3AVYUAEWK2,Online marketplace payout,Online Marketplace Payout,4444.64,0.00,4444.64,Sales receipts
+GL-FY-0404,DEMO-003,2025-09-09,1000-BANK,MYR,H2AXR44AVXCS,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7183.57,-7183.57,Materials
+GL-FY-0405,DEMO-003,2025-09-09,1000-BANK,MYR,PTNDGFWYZTFW,Showroom card terminal settlement,Showroom Card Settlement,2597.67,0.00,2597.67,Sales receipts
+GL-FY-0406,DEMO-003,2025-09-11,1000-BANK,MYR,5XJEXMCTLK8F,Delivery charges,Rapid Demo Logistics,0.00,396.51,-396.51,Delivery
+GL-FY-0407,DEMO-003,2025-09-11,1000-BANK,MYR,PPBNRCJ5TK8U,Showroom card terminal settlement,Showroom Card Settlement,2802.45,0.00,2802.45,Sales receipts
+GL-FY-0408,DEMO-003,2025-09-12,1000-BANK,MYR,FKNW6NJ6EVC4,Showroom card terminal settlement,Showroom Card Settlement,2018.31,0.00,2018.31,Sales receipts
+GL-FY-0409,DEMO-003,2025-09-12,1000-BANK,MYR,VYRZ5UNRFBDE,Online marketplace payout,Online Marketplace Payout,4261.94,0.00,4261.94,Sales receipts
+GL-FY-0410,DEMO-003,2025-09-13,1000-BANK,MYR,KGXDEAMS4HEE,Showroom card terminal settlement,Showroom Card Settlement,2036.61,0.00,2036.61,Sales receipts
+GL-FY-0411,DEMO-003,2025-09-14,1000-BANK,MYR,74WKASNFM7K7,Statutory contributions,EPF SOCSO Contributions,0.00,5017.28,-5017.28,Payroll
+GL-FY-0412,DEMO-003,2025-09-14,1000-BANK,MYR,9RRTTDH96FD7,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0413,DEMO-003,2025-09-14,1000-BANK,MYR,FYTG6HKRWXBE,Fittings and hardware,Selangor Demo Hardware,0.00,1727.35,-1727.35,Materials
+GL-FY-0414,DEMO-003,2025-09-14,1000-BANK,MYR,G974ZP8XZ5XR,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0415,DEMO-003,2025-09-14,1000-BANK,MYR,V2MXBK8HEAVU,Monthly payroll transfer,Staff Payroll,0.00,38116.73,-38116.73,Payroll
+GL-FY-0416,DEMO-003,2025-09-14,1000-BANK,MYR,V8QMVEVFZW43,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8935.19,-8935.19,Materials
+GL-FY-0417,DEMO-003,2025-09-14,1000-BANK,MYR,WKCENVWVHHBF,Electricity and water,Demo Power Utilities,0.00,1867.37,-1867.37,Utilities
+GL-FY-0418,DEMO-003,2025-09-15,1000-BANK,MYR,EV7N65ZCH3DJ,Showroom card terminal settlement,Showroom Card Settlement,1724.45,0.00,1724.45,Sales receipts
+GL-FY-0419,DEMO-003,2025-09-16,1000-BANK,MYR,B5PDNFHLVUSA,Showroom card terminal settlement,Showroom Card Settlement,1434.40,0.00,1434.40,Sales receipts
+GL-FY-0420,DEMO-003,2025-09-16,1000-BANK,MYR,ZZG4R66GP787,Online marketplace payout,Online Marketplace Payout,4549.86,0.00,4549.86,Sales receipts
+GL-FY-0421,DEMO-003,2025-09-17,1000-BANK,MYR,45MPHQVHS6EA,Delivery charges,Rapid Demo Logistics,0.00,387.84,-387.84,Delivery
+GL-FY-0422,DEMO-003,2025-09-17,1000-BANK,MYR,BFU4L92V8TWJ,Showroom card terminal settlement,Showroom Card Settlement,2121.58,0.00,2121.58,Sales receipts
+GL-FY-0423,DEMO-003,2025-09-18,1000-BANK,MYR,WGXVMRSXB6Q4,Refund for returned desks,Sinar Demo Office Fitouts,0.00,2400.00,-2400.00,Sales refunds
+GL-FY-0424,DEMO-003,2025-09-19,1000-BANK,MYR,96KK9XV7GLN3,Showroom card terminal settlement,Showroom Card Settlement,1587.15,0.00,1587.15,Sales receipts
+GL-FY-0425,DEMO-003,2025-09-19,1000-BANK,MYR,T5SE24NWLAVR,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7758.24,-7758.24,Materials
+GL-FY-0426,DEMO-003,2025-09-20,1000-BANK,MYR,9NKRLRUFZ4NU,Hotel furniture invoice receipt,Mutiara Demo Hotels,12597.08,0.00,12597.08,Trade receipts
+GL-FY-0427,DEMO-003,2025-09-20,1000-BANK,MYR,B6KXWEXVUY95,Online marketplace payout,Online Marketplace Payout,4202.97,0.00,4202.97,Sales receipts
+GL-FY-0428,DEMO-003,2025-09-20,1000-BANK,MYR,EZN2BADJRMKY,Show unit furniture invoice receipt,Lembah Demo Property,17890.62,0.00,17890.62,Trade receipts
+GL-FY-0429,DEMO-003,2025-09-20,1000-BANK,MYR,VZG7UD9CHP7A,Showroom card terminal settlement,Showroom Card Settlement,2943.85,0.00,2943.85,Sales receipts
+GL-FY-0430,DEMO-003,2025-09-20,1000-BANK,MYR,WCKSLS9H2J5P,Office fit-out invoice receipt,Sinar Demo Office Fitouts,11109.99,0.00,11109.99,Trade receipts
+GL-FY-0431,DEMO-003,2025-09-22,1000-BANK,MYR,LSKRJBSX86GG,Fittings and hardware,Selangor Demo Hardware,0.00,1955.10,-1955.10,Materials
+GL-FY-0432,DEMO-003,2025-09-22,1000-BANK,MYR,RUF7PATJD8Y2,Showroom card terminal settlement,Showroom Card Settlement,2040.60,0.00,2040.60,Sales receipts
+GL-FY-0433,DEMO-003,2025-09-23,1000-BANK,MYR,9XNRP6G22SSX,Showroom card terminal settlement,Showroom Card Settlement,1629.58,0.00,1629.58,Sales receipts
+GL-FY-0434,DEMO-003,2025-09-23,1000-BANK,MYR,T2EWBSYVFUPT,Delivery charges,Rapid Demo Logistics,0.00,772.56,-772.56,Delivery
+GL-FY-0435,DEMO-003,2025-09-24,1000-BANK,MYR,9FBC86LAQ34T,Online marketplace payout,Online Marketplace Payout,2757.38,0.00,2757.38,Sales receipts
+GL-FY-0436,DEMO-003,2025-09-24,1000-BANK,MYR,FCSMTL58LVJ8,Showroom card terminal settlement,Showroom Card Settlement,2351.96,0.00,2351.96,Sales receipts
+GL-FY-0437,DEMO-003,2025-09-24,1000-BANK,MYR,J5A4A4WGTZPD,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7854.11,-7854.11,Materials
+GL-FY-0438,DEMO-003,2025-09-26,1000-BANK,MYR,9HZL87LG7N79,Showroom card terminal settlement,Showroom Card Settlement,2864.09,0.00,2864.09,Sales receipts
+GL-FY-0439,DEMO-003,2025-09-30,1000-BANK,MYR,GN9KW8F2W6YG,Showroom card terminal settlement,Showroom Card Settlement,1622.90,0.00,1622.90,Sales receipts
+GL-FY-0440,DEMO-003,2025-10-02,1000-BANK,MYR,BXBBSLQKCKLW,Showroom card terminal settlement,Showroom Card Settlement,2674.81,0.00,2674.81,Sales receipts
+GL-FY-0441,DEMO-003,2025-10-03,1000-BANK,MYR,5TDWPYV45AVW,Showroom card terminal settlement,Showroom Card Settlement,2315.77,0.00,2315.77,Sales receipts
+GL-FY-0442,DEMO-003,2025-10-03,1000-BANK,MYR,8AB7SQPTQ558,Online marketplace payout,Online Marketplace Payout,3783.58,0.00,3783.58,Sales receipts
+GL-FY-0443,DEMO-003,2025-10-04,1000-BANK,MYR,PNAA2FQ56ZZW,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7645.90,-7645.90,Materials
+GL-FY-0444,DEMO-003,2025-10-05,1000-BANK,MYR,3FUNTYLJ3GX5,Delivery charges,Rapid Demo Logistics,0.00,439.11,-439.11,Delivery
+GL-FY-0445,DEMO-003,2025-10-05,1000-BANK,MYR,B22EQFU64XML,Showroom card terminal settlement,Showroom Card Settlement,2512.57,0.00,2512.57,Sales receipts
+GL-FY-0446,DEMO-003,2025-10-06,1000-BANK,MYR,F57J2Y6RLWY4,Showroom card terminal settlement,Showroom Card Settlement,1495.28,0.00,1495.28,Sales receipts
+GL-FY-0447,DEMO-003,2025-10-06,1000-BANK,MYR,PKBUC8A6XYZS,Fittings and hardware,Selangor Demo Hardware,0.00,927.70,-927.70,Materials
+GL-FY-0448,DEMO-003,2025-10-07,1000-BANK,MYR,J6WGGF5MD2AJ,Showroom card terminal settlement,Showroom Card Settlement,1746.07,0.00,1746.07,Sales receipts
+GL-FY-0449,DEMO-003,2025-10-07,1000-BANK,MYR,VPAZ8ZHY2CT4,Online marketplace payout,Online Marketplace Payout,2303.31,0.00,2303.31,Sales receipts
+GL-FY-0450,DEMO-003,2025-10-08,1000-BANK,MYR,4XJBV6QKC7EQ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6996.59,-6996.59,Materials
+GL-FY-0451,DEMO-003,2025-10-08,1000-BANK,MYR,6KYTDRJ9S7GV,Show unit furniture invoice receipt,Lembah Demo Property,15036.77,0.00,15036.77,Trade receipts
+GL-FY-0452,DEMO-003,2025-10-08,1000-BANK,MYR,7DCHA8PKEHRV,Hotel furniture invoice receipt,Mutiara Demo Hotels,16678.09,0.00,16678.09,Trade receipts
+GL-FY-0453,DEMO-003,2025-10-08,1000-BANK,MYR,B7SQXEMTFBMS,Showroom card terminal settlement,Showroom Card Settlement,2580.22,0.00,2580.22,Sales receipts
+GL-FY-0454,DEMO-003,2025-10-08,1000-BANK,MYR,TQPM7LJGFDZK,Office fit-out invoice receipt,Sinar Demo Office Fitouts,9530.56,0.00,9530.56,Trade receipts
+GL-FY-0455,DEMO-003,2025-10-10,1000-BANK,MYR,372MUPYWU9BY,Showroom card terminal settlement,Showroom Card Settlement,2305.75,0.00,2305.75,Sales receipts
+GL-FY-0456,DEMO-003,2025-10-10,1000-BANK,MYR,6QMQ382MDVQ8,Online marketplace payout,Online Marketplace Payout,2188.84,0.00,2188.84,Sales receipts
+GL-FY-0457,DEMO-003,2025-10-11,1000-BANK,MYR,5MY72V5T8Y8U,Delivery charges,Rapid Demo Logistics,0.00,827.86,-827.86,Delivery
+GL-FY-0458,DEMO-003,2025-10-11,1000-BANK,MYR,EQ35D8PFQZ9X,Showroom card terminal settlement,Showroom Card Settlement,1904.76,0.00,1904.76,Sales receipts
+GL-FY-0459,DEMO-003,2025-10-12,1000-BANK,MYR,BDLQHN3T3P97,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5765.92,-5765.92,Materials
+GL-FY-0460,DEMO-003,2025-10-12,1000-BANK,MYR,RNUE6PLKR2BZ,Showroom card terminal settlement,Showroom Card Settlement,2892.97,0.00,2892.97,Sales receipts
+GL-FY-0461,DEMO-003,2025-10-13,1000-BANK,MYR,GEW2SWCJRJKQ,Showroom card terminal settlement,Showroom Card Settlement,2922.63,0.00,2922.63,Sales receipts
+GL-FY-0462,DEMO-003,2025-10-14,1000-BANK,MYR,6KTZR2YCY4W4,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0463,DEMO-003,2025-10-14,1000-BANK,MYR,97RHSB79FV9Q,Fittings and hardware,Selangor Demo Hardware,0.00,1319.18,-1319.18,Materials
+GL-FY-0464,DEMO-003,2025-10-14,1000-BANK,MYR,AKQ2F2G9JPY4,Online marketplace payout,Online Marketplace Payout,3071.22,0.00,3071.22,Sales receipts
+GL-FY-0465,DEMO-003,2025-10-14,1000-BANK,MYR,CA9E6VVFYVFW,Electricity and water,Demo Power Utilities,0.00,2883.91,-2883.91,Utilities
+GL-FY-0466,DEMO-003,2025-10-14,1000-BANK,MYR,LA8E8VGMZW7R,Monthly payroll transfer,Staff Payroll,0.00,39754.87,-39754.87,Payroll
+GL-FY-0467,DEMO-003,2025-10-14,1000-BANK,MYR,QQTXAE8MUFAR,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0468,DEMO-003,2025-10-14,1000-BANK,MYR,YZVWHXY9GAZS,Statutory contributions,EPF SOCSO Contributions,0.00,5137.32,-5137.32,Payroll
+GL-FY-0469,DEMO-003,2025-10-15,1000-BANK,MYR,K3F34PF3GN6D,Showroom card terminal settlement,Showroom Card Settlement,2502.27,0.00,2502.27,Sales receipts
+GL-FY-0470,DEMO-003,2025-10-16,1000-BANK,MYR,KY32CSZLLVKW,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6285.73,-6285.73,Materials
+GL-FY-0471,DEMO-003,2025-10-16,1000-BANK,MYR,Y8LSYNY2JRDL,Showroom card terminal settlement,Showroom Card Settlement,2112.73,0.00,2112.73,Sales receipts
+GL-FY-0472,DEMO-003,2025-10-17,1000-BANK,MYR,2AKSD575PCY6,Showroom card terminal settlement,Showroom Card Settlement,2047.29,0.00,2047.29,Sales receipts
+GL-FY-0473,DEMO-003,2025-10-17,1000-BANK,MYR,NKMTRZSRB5ET,Delivery charges,Rapid Demo Logistics,0.00,615.64,-615.64,Delivery
+GL-FY-0474,DEMO-003,2025-10-18,1000-BANK,MYR,G466CW85HPAW,Online marketplace payout,Online Marketplace Payout,4226.32,0.00,4226.32,Sales receipts
+GL-FY-0475,DEMO-003,2025-10-18,1000-BANK,MYR,NMGPA943AP23,Showroom card terminal settlement,Showroom Card Settlement,1512.20,0.00,1512.20,Sales receipts
+GL-FY-0476,DEMO-003,2025-10-20,1000-BANK,MYR,2JAL2RWZ36AT,Show unit furniture invoice receipt,Lembah Demo Property,18575.90,0.00,18575.90,Trade receipts
+GL-FY-0477,DEMO-003,2025-10-20,1000-BANK,MYR,636M52NXLRMV,Office fit-out invoice receipt,Sinar Demo Office Fitouts,13317.60,0.00,13317.60,Trade receipts
+GL-FY-0478,DEMO-003,2025-10-20,1000-BANK,MYR,G7HC9PZLVPAV,Showroom card terminal settlement,Showroom Card Settlement,1580.49,0.00,1580.49,Sales receipts
+GL-FY-0479,DEMO-003,2025-10-20,1000-BANK,MYR,J6DH4FSP3JEN,Hotel furniture invoice receipt,Mutiara Demo Hotels,12235.96,0.00,12235.96,Trade receipts
+GL-FY-0480,DEMO-003,2025-10-20,1000-BANK,MYR,J94JA36GLR5Z,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7154.08,-7154.08,Materials
+GL-FY-0481,DEMO-003,2025-10-21,1000-BANK,MYR,84TM8834UT8H,Showroom card terminal settlement,Showroom Card Settlement,3022.47,0.00,3022.47,Sales receipts
+GL-FY-0482,DEMO-003,2025-10-21,1000-BANK,MYR,HJ5YLLD8JMV2,Online marketplace payout,Online Marketplace Payout,4022.48,0.00,4022.48,Sales receipts
+GL-FY-0483,DEMO-003,2025-10-22,1000-BANK,MYR,BQKEL8H4BFGX,Fittings and hardware,Selangor Demo Hardware,0.00,839.28,-839.28,Materials
+GL-FY-0484,DEMO-003,2025-10-22,1000-BANK,MYR,GDGN6RXKBWCA,Showroom card terminal settlement,Showroom Card Settlement,2554.38,0.00,2554.38,Sales receipts
+GL-FY-0485,DEMO-003,2025-10-23,1000-BANK,MYR,5E36WJP3ULYV,Delivery charges,Rapid Demo Logistics,0.00,623.07,-623.07,Delivery
+GL-FY-0486,DEMO-003,2025-10-23,1000-BANK,MYR,VC99EW6HKDJK,Showroom card terminal settlement,Showroom Card Settlement,3069.92,0.00,3069.92,Sales receipts
+GL-FY-0487,DEMO-003,2025-10-24,1000-BANK,MYR,DJ9EGRWZMGU6,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6210.71,-6210.71,Materials
+GL-FY-0488,DEMO-003,2025-10-25,1000-BANK,MYR,7SJZ38T9RHBF,Showroom card terminal settlement,Showroom Card Settlement,3108.23,0.00,3108.23,Sales receipts
+GL-FY-0489,DEMO-003,2025-10-25,1000-BANK,MYR,XYAARZ9HZLLA,Online marketplace payout,Online Marketplace Payout,2497.04,0.00,2497.04,Sales receipts
+GL-FY-0490,DEMO-003,2025-10-26,1000-BANK,MYR,3RLSH6YG8N55,Showroom card terminal settlement,Showroom Card Settlement,2597.26,0.00,2597.26,Sales receipts
+GL-FY-0491,DEMO-003,2025-10-27,1000-BANK,MYR,J285B36FF5T9,Sales and service tax payment,SST Payment,0.00,8836.65,-8836.65,Taxes
+GL-FY-0492,DEMO-003,2025-11-02,1000-BANK,MYR,7AGJY5JSZF5X,Showroom card terminal settlement,Showroom Card Settlement,3197.69,0.00,3197.69,Sales receipts
+GL-FY-0493,DEMO-003,2025-11-03,1000-BANK,MYR,5MJVT62S6UN8,Showroom card terminal settlement,Showroom Card Settlement,1243.32,0.00,1243.32,Sales receipts
+GL-FY-0494,DEMO-003,2025-11-03,1000-BANK,MYR,HC7UAQ3UEUCK,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6465.25,-6465.25,Materials
+GL-FY-0495,DEMO-003,2025-11-03,1000-BANK,MYR,J9FHYNJJLZH9,Online marketplace payout,Online Marketplace Payout,4042.26,0.00,4042.26,Sales receipts
+GL-FY-0496,DEMO-003,2025-11-04,1000-BANK,MYR,CAKYDMXU38T4,Delivery charges,Rapid Demo Logistics,0.00,452.36,-452.36,Delivery
+GL-FY-0497,DEMO-003,2025-11-04,1000-BANK,MYR,WEUCFS7QYRBN,Showroom card terminal settlement,Showroom Card Settlement,2772.18,0.00,2772.18,Sales receipts
+GL-FY-0498,DEMO-003,2025-11-05,1000-BANK,MYR,LUQ6YGHQK7U7,Showroom card terminal settlement,Showroom Card Settlement,2613.34,0.00,2613.34,Sales receipts
+GL-FY-0499,DEMO-003,2025-11-06,1000-BANK,MYR,D2NCZ6ATE6JC,Fittings and hardware,Selangor Demo Hardware,0.00,1962.01,-1962.01,Materials
+GL-FY-0500,DEMO-003,2025-11-06,1000-BANK,MYR,T9TEB4VPC3AQ,Showroom card terminal settlement,Showroom Card Settlement,2104.04,0.00,2104.04,Sales receipts
+GL-FY-0501,DEMO-003,2025-11-06,1000-BANK,MYR,U8JL78U97WHE,Online marketplace payout,Online Marketplace Payout,4258.38,0.00,4258.38,Sales receipts
+GL-FY-0502,DEMO-003,2025-11-07,1000-BANK,MYR,566Y6FS7XYZN,Showroom card terminal settlement,Showroom Card Settlement,1616.43,0.00,1616.43,Sales receipts
+GL-FY-0503,DEMO-003,2025-11-07,1000-BANK,MYR,FQHC3BLMG2VG,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6855.92,-6855.92,Materials
+GL-FY-0504,DEMO-003,2025-11-08,1000-BANK,MYR,HK9ULCAGXFWF,Office fit-out invoice receipt,Sinar Demo Office Fitouts,9430.45,0.00,9430.45,Trade receipts
+GL-FY-0505,DEMO-003,2025-11-08,1000-BANK,MYR,Q7VTBPUFERSX,Hotel furniture invoice receipt,Mutiara Demo Hotels,15388.81,0.00,15388.81,Trade receipts
+GL-FY-0506,DEMO-003,2025-11-08,1000-BANK,MYR,YVHD3HR2NREY,Show unit furniture invoice receipt,Lembah Demo Property,16621.24,0.00,16621.24,Trade receipts
+GL-FY-0507,DEMO-003,2025-11-09,1000-BANK,MYR,4F4NWB7PDKC6,Delivery charges,Rapid Demo Logistics,0.00,378.45,-378.45,Delivery
+GL-FY-0508,DEMO-003,2025-11-09,1000-BANK,MYR,H4U8GRBXF2UM,Showroom card terminal settlement,Showroom Card Settlement,3088.66,0.00,3088.66,Sales receipts
+GL-FY-0509,DEMO-003,2025-11-09,1000-BANK,MYR,X3P564PAC474,Online marketplace payout,Online Marketplace Payout,2317.01,0.00,2317.01,Sales receipts
+GL-FY-0510,DEMO-003,2025-11-10,1000-BANK,MYR,8WC4XTMJTUC9,Showroom card terminal settlement,Showroom Card Settlement,2138.32,0.00,2138.32,Sales receipts
+GL-FY-0511,DEMO-003,2025-11-10,1000-BANK,MYR,BSCQCH7Z5W2X,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8956.02,-8956.02,Materials
+GL-FY-0512,DEMO-003,2025-11-11,1000-BANK,MYR,354YJWCTANTR,Showroom card terminal settlement,Showroom Card Settlement,2652.16,0.00,2652.16,Sales receipts
+GL-FY-0513,DEMO-003,2025-11-12,1000-BANK,MYR,CNDK5TBUR9YN,Showroom card terminal settlement,Showroom Card Settlement,2659.11,0.00,2659.11,Sales receipts
+GL-FY-0514,DEMO-003,2025-11-12,1000-BANK,MYR,U96KWVBQFUGE,Online marketplace payout,Online Marketplace Payout,3881.85,0.00,3881.85,Sales receipts
+GL-FY-0515,DEMO-003,2025-11-13,1000-BANK,MYR,K4HKQLP5VBAK,Showroom card terminal settlement,Showroom Card Settlement,2251.49,0.00,2251.49,Sales receipts
+GL-FY-0516,DEMO-003,2025-11-14,1000-BANK,MYR,3URTJNNRYDT8,Fittings and hardware,Selangor Demo Hardware,0.00,833.48,-833.48,Materials
+GL-FY-0517,DEMO-003,2025-11-14,1000-BANK,MYR,68FCLPBAN569,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7643.20,-7643.20,Materials
+GL-FY-0518,DEMO-003,2025-11-14,1000-BANK,MYR,82Q6FEWETWRY,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0519,DEMO-003,2025-11-14,1000-BANK,MYR,DHGH6HHHL2PD,Monthly payroll transfer,Staff Payroll,0.00,39468.54,-39468.54,Payroll
+GL-FY-0520,DEMO-003,2025-11-14,1000-BANK,MYR,L53GHC7KHKP5,Showroom card terminal settlement,Showroom Card Settlement,2575.02,0.00,2575.02,Sales receipts
+GL-FY-0521,DEMO-003,2025-11-14,1000-BANK,MYR,TLTYJHQGEZVD,Delivery charges,Rapid Demo Logistics,0.00,498.64,-498.64,Delivery
+GL-FY-0522,DEMO-003,2025-11-14,1000-BANK,MYR,UP9D6NLX7GPP,Statutory contributions,EPF SOCSO Contributions,0.00,5279.79,-5279.79,Payroll
+GL-FY-0523,DEMO-003,2025-11-14,1000-BANK,MYR,WWBBYR44HC5D,Electricity and water,Demo Power Utilities,0.00,2396.08,-2396.08,Utilities
+GL-FY-0524,DEMO-003,2025-11-14,1000-BANK,MYR,ZCRFSE6LP68N,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0525,DEMO-003,2025-11-15,1000-BANK,MYR,4UEPAXFYPGCB,Showroom card terminal settlement,Showroom Card Settlement,2071.76,0.00,2071.76,Sales receipts
+GL-FY-0526,DEMO-003,2025-11-16,1000-BANK,MYR,LH7CVUS6ZFTH,Online marketplace payout,Online Marketplace Payout,3070.07,0.00,3070.07,Sales receipts
+GL-FY-0527,DEMO-003,2025-11-16,1000-BANK,MYR,QTRBFCGBGJKB,Showroom card terminal settlement,Showroom Card Settlement,1791.70,0.00,1791.70,Sales receipts
+GL-FY-0528,DEMO-003,2025-11-17,1000-BANK,MYR,Y5XHC7UEXVMY,Showroom card terminal settlement,Showroom Card Settlement,1290.84,0.00,1290.84,Sales receipts
+GL-FY-0529,DEMO-003,2025-11-18,1000-BANK,MYR,J3639LX74KJX,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6914.10,-6914.10,Materials
+GL-FY-0530,DEMO-003,2025-11-18,1000-BANK,MYR,KEADJ8SWYF6L,Showroom card terminal settlement,Showroom Card Settlement,2598.05,0.00,2598.05,Sales receipts
+GL-FY-0531,DEMO-003,2025-11-19,1000-BANK,MYR,AXZBWHR22BKN,Showroom card terminal settlement,Showroom Card Settlement,1509.86,0.00,1509.86,Sales receipts
+GL-FY-0532,DEMO-003,2025-11-19,1000-BANK,MYR,CV8RLA8LAYDV,Online marketplace payout,Online Marketplace Payout,4595.18,0.00,4595.18,Sales receipts
+GL-FY-0533,DEMO-003,2025-11-19,1000-BANK,MYR,WQDAAU5BS358,Delivery charges,Rapid Demo Logistics,0.00,855.60,-855.60,Delivery
+GL-FY-0534,DEMO-003,2025-11-20,1000-BANK,MYR,RQY4LL4V7M3V,Office fit-out invoice receipt,Sinar Demo Office Fitouts,12714.80,0.00,12714.80,Trade receipts
+GL-FY-0535,DEMO-003,2025-11-20,1000-BANK,MYR,SUR5V8RU3XFQ,Hotel furniture invoice receipt,Mutiara Demo Hotels,15108.70,0.00,15108.70,Trade receipts
+GL-FY-0536,DEMO-003,2025-11-20,1000-BANK,MYR,WV4AX6SETDWL,Show unit furniture invoice receipt,Lembah Demo Property,18070.86,0.00,18070.86,Trade receipts
+GL-FY-0537,DEMO-003,2025-11-21,1000-BANK,MYR,D6PAAQF7J38E,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4943.70,-4943.70,Materials
+GL-FY-0538,DEMO-003,2025-11-21,1000-BANK,MYR,EC55HM8FMNY7,Showroom card terminal settlement,Showroom Card Settlement,2016.60,0.00,2016.60,Sales receipts
+GL-FY-0539,DEMO-003,2025-11-22,1000-BANK,MYR,CD4CHE2PUA33,Showroom card terminal settlement,Showroom Card Settlement,2367.39,0.00,2367.39,Sales receipts
+GL-FY-0540,DEMO-003,2025-11-22,1000-BANK,MYR,CMRSP5YXU9AV,Fittings and hardware,Selangor Demo Hardware,0.00,1325.44,-1325.44,Materials
+GL-FY-0541,DEMO-003,2025-11-22,1000-BANK,MYR,TXZ8RMDH96SR,Online marketplace payout,Online Marketplace Payout,2346.54,0.00,2346.54,Sales receipts
+GL-FY-0542,DEMO-003,2025-11-23,1000-BANK,MYR,M8G4RMTFXCWK,Showroom card terminal settlement,Showroom Card Settlement,2745.25,0.00,2745.25,Sales receipts
+GL-FY-0543,DEMO-003,2025-11-24,1000-BANK,MYR,6CB5GP9AKRFW,Delivery charges,Rapid Demo Logistics,0.00,348.05,-348.05,Delivery
+GL-FY-0544,DEMO-003,2025-11-24,1000-BANK,MYR,6WXD6Z58M5F6,Showroom card terminal settlement,Showroom Card Settlement,2429.61,0.00,2429.61,Sales receipts
+GL-FY-0545,DEMO-003,2025-11-24,1000-BANK,MYR,KYUWRNHJXNCD,Cheque 004163 to Kayu Demo Timber Supplies,Kayu Demo Timber Supplies,0.00,6588.00,-6588.00,Materials
+GL-FY-0546,DEMO-003,2025-11-25,1000-BANK,MYR,3RPJSLKAENPS,Online marketplace payout,Online Marketplace Payout,3046.48,0.00,3046.48,Sales receipts
+GL-FY-0547,DEMO-003,2025-11-25,1000-BANK,MYR,6E5LPFHF5HPW,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5941.60,-5941.60,Materials
+GL-FY-0548,DEMO-003,2025-11-25,1000-BANK,MYR,B47QH3N6PF6M,Showroom card terminal settlement,Showroom Card Settlement,2280.02,0.00,2280.02,Sales receipts
+GL-FY-0549,DEMO-003,2025-11-26,1000-BANK,MYR,XHL2ELXKCEUN,Showroom card terminal settlement,Showroom Card Settlement,2133.69,0.00,2133.69,Sales receipts
+GL-FY-0550,DEMO-003,2025-12-02,1000-BANK,MYR,CJ3QWT862YZP,Showroom card terminal settlement,Showroom Card Settlement,3169.77,0.00,3169.77,Sales receipts
+GL-FY-0551,DEMO-003,2025-12-03,1000-BANK,MYR,NSZ8FLJCZT9X,Showroom card terminal settlement,Showroom Card Settlement,1942.21,0.00,1942.21,Sales receipts
+GL-FY-0552,DEMO-003,2025-12-03,1000-BANK,MYR,PJMS9LAWEVPA,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5370.86,-5370.86,Materials
+GL-FY-0553,DEMO-003,2025-12-03,1000-BANK,MYR,WXMFFN2WES7V,Online marketplace payout,Online Marketplace Payout,4834.59,0.00,4834.59,Sales receipts
+GL-FY-0554,DEMO-003,2025-12-04,1000-BANK,MYR,6AS4DLW62H48,Delivery charges,Rapid Demo Logistics,0.00,359.43,-359.43,Delivery
+GL-FY-0555,DEMO-003,2025-12-04,1000-BANK,MYR,Z37W3X66G7KL,Showroom card terminal settlement,Showroom Card Settlement,1514.32,0.00,1514.32,Sales receipts
+GL-FY-0556,DEMO-003,2025-12-05,1000-BANK,MYR,8BVYPFEFRRY9,Showroom card terminal settlement,Showroom Card Settlement,2689.06,0.00,2689.06,Sales receipts
+GL-FY-0557,DEMO-003,2025-12-06,1000-BANK,MYR,DSAGAZJV6ZVQ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,8185.88,-8185.88,Materials
+GL-FY-0558,DEMO-003,2025-12-06,1000-BANK,MYR,LSXCKJSHQJKW,Showroom card terminal settlement,Showroom Card Settlement,2064.07,0.00,2064.07,Sales receipts
+GL-FY-0559,DEMO-003,2025-12-06,1000-BANK,MYR,RXLBQGZKNZM8,Fittings and hardware,Selangor Demo Hardware,0.00,1276.71,-1276.71,Materials
+GL-FY-0560,DEMO-003,2025-12-06,1000-BANK,MYR,UWRHVLTXATJC,Online marketplace payout,Online Marketplace Payout,4294.57,0.00,4294.57,Sales receipts
+GL-FY-0561,DEMO-003,2025-12-07,1000-BANK,MYR,9QWCDYGUX5KT,Showroom card terminal settlement,Showroom Card Settlement,1284.78,0.00,1284.78,Sales receipts
+GL-FY-0562,DEMO-003,2025-12-08,1000-BANK,MYR,6979YLBA9AQS,Showroom card terminal settlement,Showroom Card Settlement,2720.63,0.00,2720.63,Sales receipts
+GL-FY-0563,DEMO-003,2025-12-08,1000-BANK,MYR,BKAK5BZCJTRF,Online marketplace payout,Online Marketplace Payout,2014.57,0.00,2014.57,Sales receipts
+GL-FY-0564,DEMO-003,2025-12-08,1000-BANK,MYR,E3PN5EHAKB8Z,Show unit furniture invoice receipt,Lembah Demo Property,17475.15,0.00,17475.15,Trade receipts
+GL-FY-0565,DEMO-003,2025-12-08,1000-BANK,MYR,EKA7NURYJ545,Office fit-out invoice receipt,Sinar Demo Office Fitouts,10360.89,0.00,10360.89,Trade receipts
+GL-FY-0566,DEMO-003,2025-12-08,1000-BANK,MYR,FZQAJWCEMLAF,Showroom card terminal settlement,Showroom Card Settlement,2553.84,0.00,2553.84,Sales receipts
+GL-FY-0567,DEMO-003,2025-12-08,1000-BANK,MYR,PEM2P74YFWVN,Hotel furniture invoice receipt,Mutiara Demo Hotels,15952.99,0.00,15952.99,Trade receipts
+GL-FY-0568,DEMO-003,2025-12-08,1000-BANK,MYR,XMDEBBW38JQF,Delivery charges,Rapid Demo Logistics,0.00,302.41,-302.41,Delivery
+GL-FY-0569,DEMO-003,2025-12-09,1000-BANK,MYR,ATNHE2B2ARGJ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,5328.50,-5328.50,Materials
+GL-FY-0570,DEMO-003,2025-12-09,1000-BANK,MYR,GQ5PEGAHGHWV,Showroom card terminal settlement,Showroom Card Settlement,2741.63,0.00,2741.63,Sales receipts
+GL-FY-0571,DEMO-003,2025-12-10,1000-BANK,MYR,9JPXMVNL2HUD,Showroom card terminal settlement,Showroom Card Settlement,2496.15,0.00,2496.15,Sales receipts
+GL-FY-0572,DEMO-003,2025-12-11,1000-BANK,MYR,8AUJXYG33Q7X,Showroom card terminal settlement,Showroom Card Settlement,1363.20,0.00,1363.20,Sales receipts
+GL-FY-0573,DEMO-003,2025-12-11,1000-BANK,MYR,8B85GQA2ZAS8,Online marketplace payout,Online Marketplace Payout,4625.37,0.00,4625.37,Sales receipts
+GL-FY-0574,DEMO-003,2025-12-12,1000-BANK,MYR,2RU9KAN3BWCT,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7888.00,-7888.00,Materials
+GL-FY-0575,DEMO-003,2025-12-12,1000-BANK,MYR,D4T844VTVR45,Showroom card terminal settlement,Showroom Card Settlement,2649.89,0.00,2649.89,Sales receipts
+GL-FY-0576,DEMO-003,2025-12-12,1000-BANK,MYR,ZSD27M59GM8H,Delivery charges,Rapid Demo Logistics,0.00,608.93,-608.93,Delivery
+GL-FY-0577,DEMO-003,2025-12-13,1000-BANK,MYR,WP7QPU28NKV9,Showroom card terminal settlement,Showroom Card Settlement,2708.98,0.00,2708.98,Sales receipts
+GL-FY-0578,DEMO-003,2025-12-14,1000-BANK,MYR,3RRFVK4WENW3,Showroom card terminal settlement,Showroom Card Settlement,1939.61,0.00,1939.61,Sales receipts
+GL-FY-0579,DEMO-003,2025-12-14,1000-BANK,MYR,4KR4SB6ZMU5G,Factory rent,Shah Alam Demo Industrial Park,0.00,9500.00,-9500.00,Rent
+GL-FY-0580,DEMO-003,2025-12-14,1000-BANK,MYR,B52TBTDZV4DC,Monthly payroll transfer,Staff Payroll,0.00,38053.04,-38053.04,Payroll
+GL-FY-0581,DEMO-003,2025-12-14,1000-BANK,MYR,DSCEKPSW8FMU,Electricity and water,Demo Power Utilities,0.00,1964.57,-1964.57,Utilities
+GL-FY-0582,DEMO-003,2025-12-14,1000-BANK,MYR,GRJGWKAWVKEP,Statutory contributions,EPF SOCSO Contributions,0.00,5057.70,-5057.70,Payroll
+GL-FY-0583,DEMO-003,2025-12-14,1000-BANK,MYR,K33QPVARB2GK,Fittings and hardware,Selangor Demo Hardware,0.00,1905.00,-1905.00,Materials
+GL-FY-0584,DEMO-003,2025-12-14,1000-BANK,MYR,Q886W8KCUDAJ,Online marketplace payout,Online Marketplace Payout,3242.86,0.00,3242.86,Sales receipts
+GL-FY-0585,DEMO-003,2025-12-14,1000-BANK,MYR,WDPAC3V52X5W,Equipment loan instalment,Demo Bank Equipment Loan,0.00,4200.00,-4200.00,Loan repayment
+GL-FY-0586,DEMO-003,2025-12-15,1000-BANK,MYR,LHXHTG5YRBPQ,Showroom card terminal settlement,Showroom Card Settlement,2418.49,0.00,2418.49,Sales receipts
+GL-FY-0587,DEMO-003,2025-12-16,1000-BANK,MYR,5U2LVEVTYQLQ,Showroom card terminal settlement,Showroom Card Settlement,2304.06,0.00,2304.06,Sales receipts
+GL-FY-0588,DEMO-003,2025-12-16,1000-BANK,MYR,AYEQUX8X9FGG,Delivery charges,Rapid Demo Logistics,0.00,786.09,-786.09,Delivery
+GL-FY-0589,DEMO-003,2025-12-16,1000-BANK,MYR,KF89NC2NG5QH,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6613.60,-6613.60,Materials
+GL-FY-0590,DEMO-003,2025-12-17,1000-BANK,MYR,P2V3935ZD3XQ,Online marketplace payout,Online Marketplace Payout,3617.19,0.00,3617.19,Sales receipts
+GL-FY-0591,DEMO-003,2025-12-17,1000-BANK,MYR,XKFN2HLH5WWA,Showroom card terminal settlement,Showroom Card Settlement,1358.01,0.00,1358.01,Sales receipts
+GL-FY-0592,DEMO-003,2025-12-18,1000-BANK,MYR,PGT3M9FBARHG,Showroom card terminal settlement,Showroom Card Settlement,2344.37,0.00,2344.37,Sales receipts
+GL-FY-0593,DEMO-003,2025-12-19,1000-BANK,MYR,CF6MMXTRDPGR,Year-end bonus,Staff Payroll,0.00,45000.00,-45000.00,Payroll
+GL-FY-0594,DEMO-003,2025-12-19,1000-BANK,MYR,UFS82Z5F94WV,Timber and board purchase,Kayu Demo Timber Supplies,0.00,6247.73,-6247.73,Materials
+GL-FY-0595,DEMO-003,2025-12-19,1000-BANK,MYR,UVMGK7T3BD82,Showroom card terminal settlement,Showroom Card Settlement,2842.39,0.00,2842.39,Sales receipts
+GL-FY-0596,DEMO-003,2025-12-20,1000-BANK,MYR,3BXMHFYQCCHE,Showroom card terminal settlement,Showroom Card Settlement,1937.08,0.00,1937.08,Sales receipts
+GL-FY-0597,DEMO-003,2025-12-20,1000-BANK,MYR,9SW6T8NMG9WP,Hotel furniture invoice receipt,Mutiara Demo Hotels,17328.20,0.00,17328.20,Trade receipts
+GL-FY-0598,DEMO-003,2025-12-20,1000-BANK,MYR,CQ46TQMPZNN5,Show unit furniture invoice receipt,Lembah Demo Property,17427.20,0.00,17427.20,Trade receipts
+GL-FY-0599,DEMO-003,2025-12-20,1000-BANK,MYR,H6VXRV8AYTGC,Delivery charges,Rapid Demo Logistics,0.00,840.80,-840.80,Delivery
+GL-FY-0600,DEMO-003,2025-12-20,1000-BANK,MYR,JGPZXBKVY4FT,Office fit-out invoice receipt,Sinar Demo Office Fitouts,9158.76,0.00,9158.76,Trade receipts
+GL-FY-0601,DEMO-003,2025-12-20,1000-BANK,MYR,NZF8KTH83J4F,Online marketplace payout,Online Marketplace Payout,4280.81,0.00,4280.81,Sales receipts
+GL-FY-0602,DEMO-003,2025-12-20,1000-BANK,MYR,ZPWK72MBLKDX,Showroom card terminal settlement,Showroom Card Settlement,1675.80,0.00,1675.80,Sales receipts
+GL-FY-0603,DEMO-003,2025-12-21,1000-BANK,MYR,H7LJA9LZZDW2,Showroom card terminal settlement,Showroom Card Settlement,1262.85,0.00,1262.85,Sales receipts
+GL-FY-0604,DEMO-003,2025-12-22,1000-BANK,MYR,35642KVCM46D,Timber and board purchase,Kayu Demo Timber Supplies,0.00,4923.74,-4923.74,Materials
+GL-FY-0605,DEMO-003,2025-12-22,1000-BANK,MYR,BGG9SYE2VVFH,Showroom card terminal settlement,Showroom Card Settlement,1639.25,0.00,1639.25,Sales receipts
+GL-FY-0606,DEMO-003,2025-12-22,1000-BANK,MYR,JDX37HV6WVTP,Fittings and hardware,Selangor Demo Hardware,0.00,1589.60,-1589.60,Materials
+GL-FY-0607,DEMO-003,2025-12-22,1000-BANK,MYR,YYBQBUF3T35C,Online marketplace payout,Online Marketplace Payout,4016.82,0.00,4016.82,Sales receipts
+GL-FY-0608,DEMO-003,2025-12-23,1000-BANK,MYR,BDSPWMNTVKW9,Showroom card terminal settlement,Showroom Card Settlement,2700.86,0.00,2700.86,Sales receipts
+GL-FY-0609,DEMO-003,2025-12-24,1000-BANK,MYR,DLT8DCP6PH65,Delivery charges,Rapid Demo Logistics,0.00,758.72,-758.72,Delivery
+GL-FY-0610,DEMO-003,2025-12-24,1000-BANK,MYR,PVKJXBW6YMAX,Showroom card terminal settlement,Showroom Card Settlement,2197.96,0.00,2197.96,Sales receipts
+GL-FY-0611,DEMO-003,2025-12-25,1000-BANK,MYR,KFLREQ37CKFE,Online marketplace payout,Online Marketplace Payout,4957.32,0.00,4957.32,Sales receipts
+GL-FY-0612,DEMO-003,2025-12-25,1000-BANK,MYR,MWEZ2NCXL8FJ,Timber and board purchase,Kayu Demo Timber Supplies,0.00,7310.79,-7310.79,Materials
+GL-FY-0613,DEMO-003,2025-12-25,1000-BANK,MYR,NBW259TA5VFW,Showroom card terminal settlement,Showroom Card Settlement,2279.34,0.00,2279.34,Sales receipts
+GL-FY-0614,DEMO-003,2025-12-26,1000-BANK,MYR,HLUGMVPBJLJ2,Showroom card terminal settlement,Showroom Card Settlement,1280.71,0.00,1280.71,Sales receipts
+GL-FY-0615,DEMO-003,2025-12-27,1000-BANK,MYR,JRED8CQZ9PRV,Sales and service tax payment,SST Payment,0.00,6852.88,-6852.88,Taxes
+GL-FY-0616,DEMO-003,2025-12-29,1000-BANK,MYR,ZQQBMZS6AX7Z,Cheque 004177 to Selangor Demo Hardware,Selangor Demo Hardware,0.00,1425.00,-1425.00,Materials
+GL-FY-0617,DEMO-003,2025-12-31,1000-BANK,MYR,Y8EGFJTCGS7M,Showroom card settlement in transit,Showroom Card Settlement,2364.80,0.00,2364.80,Sales receipts

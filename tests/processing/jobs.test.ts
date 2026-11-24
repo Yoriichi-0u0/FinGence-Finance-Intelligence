@@ -67,6 +67,21 @@ describe('server processing jobs', () => {
         expect(Object.keys(job.inputs[0]).sort()).toEqual(['bytes', 'name', 'provenance', 'sha256']);
     }, 60_000);
 
+    it('runs the full-year sample as a server job: a whole year stored and re-checked to the same processing ID', async () => {
+        const fullYear = () => ['demo-bank-statement-2025-fy-myr.csv', 'demo-general-ledger-2025-fy-myr.csv', 'demo-bank-history-2024-01-to-2025-12-myr.csv'].map(n => doc('public/demo/full-year', n));
+        const { jobId } = await createJob(fullYear(), null, deps) as { jobId: string };
+        expect(await runJob(jobId, fullYear(), '127.0.0.1', deps)).toBe('COMPLETED');
+        const job = (await getJob(jobId, true, deps))!, local = await processDocuments(fullYear());
+        expect([job.status, job.outcome, job.processingId]).toEqual(['COMPLETED', 'COMPLETED_WITH_EXCEPTIONS', local.processingId]);
+        expect(job.flagged).toEqual([expect.objectContaining({ kind: 'ANOMALY_CANDIDATE', period: '2025-10', currency: 'MYR' })]);
+        const { rows } = await db.query<{ n: number }>(`select count(*)::int as n from fingence_ingestion.records x join fingence_ingestion.documents d on d.id = x.document_id where d.run_id = $1`, [job.ingestionRunId]);
+        expect(rows[0].n).toBe(local.outputs.bankRows.length + local.outputs.ledger!.rows.length + local.outputs.history.rows.length);
+        // What the browser fetches while it follows the job stays small: the result itself is rebuilt in the browser.
+        expect(JSON.stringify(await getJob(jobId, false, deps)).length).toBeLessThan(100_000);
+        const replay = await processDocuments(fullYear(), undefined, undefined, { interpreter: replayInterpreter(job.interpretations, null), job: { id: jobId, runner: 'BROWSER_DEMO_RUNNER' } });
+        expect(replay.processingId).toBe(job.processingId);
+    }, 120_000);
+
     it('lets the browser re-check a job: replaying its accepted readings gives the same processing ID', async () => {
         const { jobId } = await createJob(march(), null, deps) as { jobId: string };
         await runJob(jobId, march(), '127.0.0.1', deps);
