@@ -23,6 +23,7 @@ import { ReconciliationOutcomePanel } from './reconciliation-outcome';
 import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/statement';
 import { AiCommentary } from './commentary';
 import { MlChallenger } from './ml-forecast';
+import { ClassifiedAnalytics } from './analytics';
 import { useDemoProcessing } from './context';
 import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
 import { ConfidenceCard, CONFIDENCE_DEFINITION } from './confidence';
@@ -255,6 +256,9 @@ function Analytics({ c }: { c: Ready }) {
     const s = c.scope, o = c.outputs, days = useMemo(() => dailyCumulative(o.bankRows), [o.bankRows]);
     const months = monthlyTotals(c), multi = s.months.length > 1;
     const parties = useMemo(() => { const map = new Map<string, { in: bigint; out: bigint; n: number }>(); for (const r of o.bankRows) { const e = map.get(r.counterparty) ?? { in: 0n, out: 0n, n: 0 }; const v = toCents(r.signedAmount); if (v >= 0n) e.in += v; else e.out += v; e.n++; map.set(r.counterparty, e); } return [...map.entries()].sort((a, b) => Number((b[1].in - b[1].out) - (a[1].in - a[1].out))).slice(0, 8); }, [o.bankRows]);
+    const k = o.classification, classified = !!k && k.booksHaveCategories && k.checks.every(x => x.passed);
+    const counterparties = <div className="mt-5"><Panel title="Largest counterparties" eyebrow={multi ? 'Statement period' : 'Statement month'}><Table caption="Counterparties" numeric={[1, 2, 3]} columns={['Counterparty', 'Records', 'Cash in', 'Cash out']} rows={parties.map(([name, e]) => { const total = Number(e.in - e.out) || 1; return [<span key="n" className="grid gap-1.5"><span>{name}{classified ? <span className="ml-2 text-xs text-[var(--muted)]">{categoryOf(k!, name)}</span> : null}</span><span aria-hidden="true" className="flex h-1.5 w-full max-w-56 overflow-hidden rounded-full bg-[var(--surface-sunken)]"><span className="bg-[var(--chart-in)]" style={{ width: `${(Number(e.in) / total) * 100}%` }} /><span className="bg-[var(--chart-out)]" style={{ width: `${(Number(-e.out) / total) * 100}%` }} /></span></span>, e.n, <span key="i" className="whitespace-nowrap tabular-nums">{money(s.currency, fromCents(e.in))}</span>, <span key="o" className="whitespace-nowrap tabular-nums">{outflow(s.currency, fromCents(e.out))}</span>]; })} /></Panel></div>;
+    if (classified) return <><ClassifiedAnalytics c={c} k={k!} />{counterparties}</>;
     return <>
         <PageHeader eyebrow={resultsEyebrow(s)} title="Analytics" description="Where cash came from and went, from the checked bank records." />
         <SourceStrip context={c} />
@@ -264,9 +268,14 @@ function Analytics({ c }: { c: Ready }) {
             {months.length ? <Panel title="Cash in and out by month" eyebrow={o.history.accepted ? 'Verified history' : 'Statement months'}><div className="p-3"><LineChart ariaLabel="Monthly cash in, cash out and net" labels={months.map(m => m.p.slice(2))} series={[{ label: 'Cash in', color: 'var(--chart-in)', values: months.map(m => Number(m.credits)) }, { label: 'Cash out', color: 'var(--chart-out)', values: months.map(m => -Number(m.debits)) }, { label: 'Net', color: 'var(--chart-net)', values: months.map(m => Number(m.net)), dashed: true }]} /></div></Panel>
                 : <Unavailable title="No monthly trend yet" detail="Only the statement month is available. Add a bank history file on Data to see month-by-month cash." action={{ href: '/data', label: 'Open Data' }} />}
         </div>
-        <div className="mt-5"><Panel title="Largest counterparties" eyebrow={multi ? 'Statement period' : 'Statement month'}><Table caption="Counterparties" numeric={[1, 2, 3]} columns={['Counterparty', 'Records', 'Cash in', 'Cash out']} rows={parties.map(([name, e]) => { const total = Number(e.in - e.out) || 1; return [<span key="n" className="grid gap-1.5"><span>{name}</span><span aria-hidden="true" className="flex h-1.5 w-full max-w-56 overflow-hidden rounded-full bg-[var(--surface-sunken)]"><span className="bg-[var(--chart-in)]" style={{ width: `${(Number(e.in) / total) * 100}%` }} /><span className="bg-[var(--chart-out)]" style={{ width: `${(Number(-e.out) / total) * 100}%` }} /></span></span>, e.n, <span key="i" className="whitespace-nowrap tabular-nums">{money(s.currency, fromCents(e.in))}</span>, <span key="o" className="whitespace-nowrap tabular-nums">{outflow(s.currency, fromCents(e.out))}</span>]; })} /></Panel></div>
-        <p className="mt-4 text-xs text-[var(--muted)]">Receipts and payments are bank cash directions, not revenue or expenses; no ratios or profitability are derived without an accounting classification.</p>
+        {counterparties}
+        <p className="mt-4 text-xs text-[var(--muted)]">Receipts and payments are bank cash directions, not revenue or expenses; no ratios or profitability are derived without an accounting classification. {k && !k.booksHaveCategories ? 'Your books carry no category column, so cash is shown by payee only.' : ''}</p>
     </>;
+}
+
+/** The categories the books give a payee's records this period, joined when there are several. */
+function categoryOf(k: NonNullable<Ready['outputs']['classification']>, payee: string) {
+    return [...new Set(k.rows.filter(r => r.counterparty === payee).map(r => r.category))].join(', ');
 }
 
 function Anomalies({ c }: { c: Ready }) {
