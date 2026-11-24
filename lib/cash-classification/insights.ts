@@ -13,6 +13,19 @@ export function changePercent(current: bigint, prior: bigint | null): number | n
     if (prior === null || prior === 0n) return null;
     return Number(roundDiv((current - prior) * 10000n, abs(prior))) / 100;
 }
+export type ChangeView = { kind: 'none' } | { kind: 'new' } | { kind: 'same' } | { kind: 'percent'; percent: number; favourable: boolean };
+/**
+ * How a figure moved against the earlier one. Same sign: the change in size (a payment that grew reads +, unfavourable).
+ * Sign reversed (a net outflow became an inflow, or back): the signed change against the earlier size, so a reversal is
+ * never hidden. More money in, or less money out, is favourable.
+ */
+export function describeChange(current: bigint, prior: bigint | null): ChangeView {
+    if (prior === null) return { kind: 'none' };
+    if (prior === 0n) return current === 0n ? { kind: 'none' } : { kind: 'new' };
+    if (current === prior) return { kind: 'same' };
+    const reversed = (current < 0n) !== (prior < 0n) && current !== 0n;
+    return { kind: 'percent', percent: reversed ? changePercent(current, prior)! : changePercent(abs(current), abs(prior))!, favourable: current > prior };
+}
 /** A ratio as a one-decimal percent; null when the base is zero. */
 export function ratioPercent(part: bigint, whole: bigint): number | null {
     return whole === 0n ? null : Number(roundDiv(abs(part) * 10000n, abs(whole))) / 100;

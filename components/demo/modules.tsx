@@ -24,6 +24,7 @@ import { CATEGORY_LABEL as STATEMENT_LABEL } from '@/lib/poc-reconciliation/stat
 import { AiCommentary } from './commentary';
 import { MlChallenger } from './ml-forecast';
 import { ClassifiedAnalytics } from './analytics';
+import { CashPlanView } from './forecasting';
 import { useDemoProcessing } from './context';
 import { AtAGlanceCard, CounterpartiesCard, DashboardEditor, LastRunsCard, ReconciliationSummaryCard, useDashboardLayout, type GlanceTile } from './dashboard';
 import { ConfidenceCard, CONFIDENCE_DEFINITION } from './confidence';
@@ -316,7 +317,15 @@ function Anomalies({ c }: { c: Ready }) {
 }
 
 function Forecasting({ c }: { c: Ready }) {
-    const s = c.scope, bf = c.outputs.forecast, f = bf.forecast;
+    const s = c.scope, bf = c.outputs.forecast, f = bf.forecast, plan = c.outputs.cashPlan;
+    if (plan?.status === 'AVAILABLE') return <CashPlanView c={c} plan={plan} technical={<>
+        {f.status === 'AVAILABLE' ? <details className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 text-sm sm:p-5">
+            <summary className="inline-flex min-h-10 cursor-pointer items-center gap-1.5 font-semibold text-[var(--brand-ink)]"><ChevronRight aria-hidden="true" size={15} className="disclosure-chevron transition-transform" />The simple baseline, for comparison</summary>
+            <p className="mt-2 text-[var(--muted-strong)]">{`Six-month average for ${periodLabel(f.period)}: cash in ${money(s.currency, f.credits)}, cash out ${outflow(s.currency, f.debits)}, net ${money(s.currency, f.net)}.`}</p>
+            <div className="mt-3"><Table caption="Baseline backtest error" numeric={[1, 2, 3]} columns={['Figure', 'Last month', '3-month average', '6-month average']} rows={(['credits', 'debits', 'net'] as const).map(m => [m === 'credits' ? 'Cash in' : m === 'debits' ? 'Cash out' : 'Net', ...(['LAST_MONTH', 'MEAN_3', 'MEAN_6'] as const).map(k => { const w = f.backtest[m].methods.find(x => x.method === k)?.wape; return w === null || w === undefined ? 'n/a' : `${w}%`; })])} /></div>
+        </details> : null}
+        <MlChallenger key={c.processingId} forecast={bf} />
+    </>} />;
     return <>
         <PageHeader eyebrow={resultsEyebrow(s)} title="Forecasting" description="Next month's expected cash, shown only when there is enough history to test it." />
         <SourceStrip context={c} />

@@ -28,6 +28,7 @@ export const BANK_CHARGES = 'Bank charges', INTEREST_RECEIVED = 'Interest receiv
 const INVESTING = /\b(equipment|machine(?:ry|s)?|vehicles?|motor|plant|capex|capital expenditure|fixed assets?|property purchase|renovation|computers?|furniture and fittings)\b/i;
 const FINANCING = /\b(loans?|borrowings?|financing|hire purchase|dividends?|share capital|capital injection|director'?s? advance|overdraft repayment)\b/i;
 const INTEREST = /\binterest\b/i;
+const BANK_RULES = new Set([BANK_CHARGES, INTEREST_RECEIVED, DUPLICATE_BANK]);
 /** The published activity rule: investing or financing keywords, otherwise operating (the direct-method remainder). */
 export function activityOf(category: string): Activity {
     if (FINANCING.test(category)) return 'FINANCING';
@@ -47,7 +48,7 @@ export type CashClassification = {
     current: PeriodSummary;
     /** The preceding months of equal length from the verified bank history, classified by payee; null without them. */
     prior: (PeriodSummary & { payeeRule: string }) | null;
-    /** "Payee · in" or "Payee · out" → category learned from this period's books (only where exactly one category is used). */
+    /** "Payee · in" or "Payee · out" → the one category this period gives that payee's money (books or a stated bank rule). */
     payees: Record<string, string>;
     checks: { id: string; label: string; passed: boolean; detail: string }[];
 };
@@ -95,20 +96,23 @@ function bankOnlyCategories(periods: Pick<PeriodReconciliation, 'items'>[]): Map
     return map;
 }
 
+const STRENGTH: Record<Basis, number> = { BOOKS: 2, BANK_RULE: 1, NOT_CLASSIFIED: 0 };
 function summarize(rows: { period: string; signedCents: bigint; category: string; activity: Activity; basis: Basis }[], months: string[]): PeriodSummary {
     const cats = new Map<string, { activity: Activity; basis: Basis; in: bigint; out: bigint; n: number; byMonth: Map<string, bigint> }>();
     const act = Object.fromEntries(ACTIVITIES.map(a => [a, { in: 0n, out: 0n }])) as Record<Activity, { in: bigint; out: bigint }>;
     let net = 0n, total = 0n, classified = 0n, books = 0n;
     for (const r of rows) {
-        const key = `${r.category}\u0000${r.basis}`;
+        // One entry per category name: a category the books use and a bank rule also names is one line, its basis the strongest.
+        const key = r.category;
         const c = cats.get(key) ?? { activity: r.activity, basis: r.basis, in: 0n, out: 0n, n: 0, byMonth: new Map() };
+        if (STRENGTH[r.basis] > STRENGTH[c.basis]) c.basis = r.basis;
         if (r.signedCents >= 0n) { c.in += r.signedCents; act[r.activity].in += r.signedCents; } else { c.out += r.signedCents; act[r.activity].out += r.signedCents; }
         c.n++; c.byMonth.set(r.period, (c.byMonth.get(r.period) ?? 0n) + r.signedCents); cats.set(key, c);
         net += r.signedCents; total += abs(r.signedCents);
         if (r.basis !== 'NOT_CLASSIFIED') classified += abs(r.signedCents);
         if (r.basis === 'BOOKS') books += abs(r.signedCents);
     }
-    const categories = [...cats.entries()].map(([key, c]) => ({ category: key.split('\u0000')[0], activity: c.activity, basis: c.basis, inCents: c.in.toString(), outCents: c.out.toString(), netCents: (c.in + c.out).toString(), records: c.n, byMonth: Object.fromEntries([...c.byMonth.entries()].sort().map(([m, v]) => [m, v.toString()])) }))
+    const categories = [...cats.entries()].map(([key, c]) => ({ category: key, activity: c.activity, basis: c.basis, inCents: c.in.toString(), outCents: c.out.toString(), netCents: (c.in + c.out).toString(), records: c.n, byMonth: Object.fromEntries([...c.byMonth.entries()].sort().map(([m, v]) => [m, v.toString()])) }))
         .sort((a, b) => { const d = abs(BigInt(b.netCents)) - abs(BigInt(a.netCents)); return d > 0n ? 1 : d < 0n ? -1 : a.category.localeCompare(b.category); });
     return {
         months, categories, netCents: net.toString(),
@@ -140,7 +144,7 @@ export function classifyCash(input: { bankRows: SourceRow[]; months: string[]; l
 
     // Payee and direction → category, only where this period's books use exactly one category for that payee and direction.
     const seen = new Map<string, Set<string>>();
-    for (const r of rows) if (r.basis === 'BOOKS') { const key = payeeKey(r.counterparty, BigInt(r.signedCents)); seen.set(key, (seen.get(key) ?? new Set()).add(r.category)); }
+    for (const r of rows) if (r.basis === 'BOOKS' || r.category === BANK_CHARGES || r.category === INTEREST_RECEIVED) { const key = payeeKey(r.counterparty, BigInt(r.signedCents)); seen.set(key, (seen.get(key) ?? new Set()).add(r.category)); }
     const payees = Object.fromEntries([...seen.entries()].filter(([, s]) => s.size === 1).map(([p, s]) => [p, [...s][0]]).sort());
 
     // The preceding months of equal length, when the verified history has every one of them.
@@ -150,9 +154,9 @@ export function classifyCash(input: { bankRows: SourceRow[]; months: string[]; l
     const prior = consecutive ? {
         ...summarize(input.historyRows.filter(r => before.includes(r.period)).map(r => {
             const category = payees[payeeKey(r.counterparty, toCents(r.signedAmount))];
-            return { period: r.period, signedCents: toCents(r.signedAmount), category: category ?? NOT_CLASSIFIED, activity: category ? activityOf(category) : 'OPERATING' as Activity, basis: category ? 'BOOKS' as const : 'NOT_CLASSIFIED' as const };
+            return { period: r.period, signedCents: toCents(r.signedAmount), category: category ?? NOT_CLASSIFIED, activity: category ? activityOf(category) : 'OPERATING' as Activity, basis: !category ? 'NOT_CLASSIFIED' as const : BANK_RULES.has(category) ? 'BANK_RULE' as const : 'BOOKS' as const };
         }), before),
-        payeeRule: 'Each earlier bank record takes the category your books give the same payee, for money in the same direction, in this period; a payee with no single category stays not classified.',
+        payeeRule: 'Each earlier bank record takes the category this period gives the same payee, for money in the same direction (from your books or a stated bank rule); a payee with no single category stays not classified.',
     } : null;
 
     const bankNet = input.bankRows.reduce((t, r) => t + toCents(r.signedAmount), 0n);
