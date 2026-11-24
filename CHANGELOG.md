@@ -14,6 +14,7 @@ the new version and its date.
 - AI06 explains verified suggestions, suggestions needing review, abstentions and permanent review decisions using the approved notices (#153).
 
 ### Added
+- A Full-year sample on Data: a fictional furniture maker's whole 2025 financial year in ringgit, with two years of bank history, so every page, the annual AI report and the forecast can be shown on a busier, seasonal year (#158).
 - **Testing checklist** (`/uat`) for SAIC's acceptance testing: every signed-in tester works through the UAT tasks and records a result, kind, severity and note per task, saved as they go; Admins and Superadmins see everyone's results, the sign-off criteria and the open issues, and download them as a CSV with testers numbered rather than named. Needs `workspace-v8-uat.sql` on Production first (#154).
 - AI06 users can reject their own suggestions needing review and restore the saved decision, while unverified approval stays blocked (#150; refs #112).
 - AI06 now shows safe review-only matching proposals without changing accounting entries, and prevents incomplete suggestions from being approved (#149; refs #112).
@@ -42,6 +43,7 @@ the new version and its date.
   with counts on the navigation and fewer status chips for Finance users (#123, #124, #125).
 
 ### Fixed
+- A payment (or receipt) the bank statement shows twice under the same reference, while the books record it once, is now reported as a duplicate payment with a prepared entry "to be recovered", instead of making that month's reconciliation stop on its own checks (#159).
 - Testing checklist task 1 now asks testers to sign in with the account they were given, not an invitation code (#156).
 - Testing checklist: answers still being saved when a tester closes or reloads the tab are no longer lost (#155).
 - Signed-in users no longer see a moment of "Public demo" and "Public prototype" wording while their session loads (UAT finding, #147).

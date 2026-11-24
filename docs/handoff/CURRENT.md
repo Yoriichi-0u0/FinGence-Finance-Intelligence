@@ -1,5 +1,13 @@
 # FinGence — current technical entrypoint
 
+## ML forecast challenger at 1, 4 and 6 months — 24 November 2026
+
+The optional XGBoost challenger on `/forecasting` now forecasts 1, 4 and 6 months ahead with a picker, beside the unchanged baseline. Design, results and limits: [docs/architecture/ml-forecast-v1.md](../architecture/ml-forecast-v1.md).
+
+- **Contract.** `ml-xgboost-forecast-v2`: the worker returns a six-month `path` and per-horizon `backtests`; `scoreMl` scores each horizon in exact cents against the same six-month mean (flat). The 1-month numbers are identical to before (golden test).
+- **Test months.** With 12 months, 1, 4 and 6 months ahead are tested on 6, 3 and 1 month; fewer than 3 is shown as "Indicative only".
+- **Unchanged.** Off by default (`FINGENCE_ML_FORECAST=1`), local Python only, never on Vercel, monthly totals only, 12 months minimum. The deterministic baseline and `forecast.ts` are not changed.
+
 ## Change your own password — 13 November 2026
 
 - **Why.** Until now a password was set only when joining with an invitation code. The accounts the owner created for SAIC and Dr Sim came with passwords the team knows (#105, #111).
