@@ -78,10 +78,12 @@ export function reportDocument(c: ProcessingContext): ReportDocument | null {
     // Opening and closing cash only from month-end balances the history proves (see the cash plan).
     const plan = c.outputs.cashPlan, balances = new Map<string, bigint>();
     if (plan?.status === 'AVAILABLE') for (const h of plan.history) if (h.balance !== null) balances.set(h.period, toCents(h.balance));
-    const closing = columns.map(col => balances.get(col.months.at(-1)!) ?? null);
+    // Only for an unbroken run of months: with a gap, the balances would include movements the column leaves out.
+    const unbroken = (m: string[]) => m.every((x, i) => i === 0 || shiftMonth(m[i - 1], 1) === x);
+    const closing = columns.map(col => unbroken(col.months) ? balances.get(col.months.at(-1)!) ?? null : null);
     // The opening balance is the month-end before the period; when the history starts with the period, it is the
     // closing balance less the period's net movement (the same identity the statement shows).
-    const opening = columns.map((col, i) => balances.get(shiftMonth(col.months[0], -1)) ?? (closing[i] === null ? null : closing[i]! - netIncrease[i]));
+    const opening = columns.map((col, i) => closing[i] === null ? null : balances.get(shiftMonth(col.months[0], -1)) ?? closing[i]! - netIncrease[i]);
 
     const cur = columns[0].summary, was = columns[1]?.summary ?? null, sumIn = (s: PeriodSummary) => ACTIVITIES.reduce((t, a) => t + BigInt(s.activities[a].inCents), 0n), sumOut = (s: PeriodSummary) => ACTIVITIES.reduce((t, a) => t + BigInt(s.activities[a].outCents), 0n);
     const compare = columns[1] ? `against ${columns[1].label}` : 'no comparative available';

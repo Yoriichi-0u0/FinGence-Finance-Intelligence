@@ -62,4 +62,15 @@ describe('report document (Bursa-style cash report)', () => {
         expect(outlook.queries(index).map(q => q.tool)).toEqual(['cash_summary']);
         expect(runQueries(index, outlook.queries(index)).length + facts.length).toBeLessThanOrEqual(12);
     });
+
+    it('shows no balances for a column with a gap in its months', async () => {
+        const { summarizeMonths } = await import('../../lib/cash-classification/classify');
+        const k = year.outputs.classification!;
+        const gap = { ...year, scope: { ...year.scope!, months: ['2025-01', '2025-03'], period: '2025-01/2025-03' }, outputs: { ...year.outputs, classification: { ...k, current: summarizeMonths(k, year.outputs.history.rows, ['2025-01', '2025-03'])! } } } as ProcessingContext;
+        const d = reportDocument(gap)!;
+        expect(d.columns[0].months).toEqual(['2025-01', '2025-03']);
+        expect(d.opening[0]).toBeNull();
+        expect(d.closing[0]).toBeNull();
+        expect(d.highlights.at(-1)!.label).toBe('Net movement in cash');
+    });
 });

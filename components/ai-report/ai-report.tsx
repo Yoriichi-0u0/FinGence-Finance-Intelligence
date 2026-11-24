@@ -245,7 +245,7 @@ export function AiReport({ c }: { c: Ready }) {
                 {doc ? <div className="report-keep grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4 print:grid-cols-4">
                     {doc.highlights.map(h => <div key={h.label} className="rounded-2xl bg-[var(--brand-soft)] p-4 print:border print:border-[var(--border)]">
                         <p className="text-[12px] font-medium text-[var(--brand-ink)]">{h.label}</p>
-                        <p className="mt-2 text-[22px] font-bold leading-tight tracking-[-0.02em] tabular-nums">{money(cur, fromCents(h.value < 0n ? -h.value : h.value))}</p>
+                        <p className="mt-2 text-[22px] font-bold leading-tight tracking-[-0.02em] tabular-nums">{h.label === 'Cash paid' || h.value >= 0n ? money(cur, fromCents(h.value < 0n ? -h.value : h.value)) : `(${money(cur, fromCents(-h.value))})`}</p>
                         <p className="mt-1 text-xs text-[var(--muted-strong)]">{h.prior !== null ? `${variance(h.label === 'Cash paid' ? -h.value : h.value, h.prior === null ? null : h.label === 'Cash paid' ? -h.prior : h.prior)}% · ${h.detail}` : h.detail}</p>
                     </div>)}
                 </div> : null}
