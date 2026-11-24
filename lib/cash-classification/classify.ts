@@ -28,6 +28,7 @@ export const BANK_CHARGES = 'Bank charges', INTEREST_RECEIVED = 'Interest receiv
 const INVESTING = /\b(equipment|machine(?:ry|s)?|vehicles?|motor|plant|capex|capital expenditure|fixed assets?|property purchase|renovation|computers?|furniture and fittings)\b/i;
 const FINANCING = /\b(loans?|borrowings?|financing|hire purchase|dividends?|share capital|capital injection|director'?s? advance|overdraft repayment)\b/i;
 const INTEREST = /\binterest\b/i;
+const BANK_RULES = new Set([BANK_CHARGES, INTEREST_RECEIVED, DUPLICATE_BANK]);
 /** The published activity rule: investing or financing keywords, otherwise operating (the direct-method remainder). */
 export function activityOf(category: string): Activity {
     if (FINANCING.test(category)) return 'FINANCING';
@@ -47,7 +48,7 @@ export type CashClassification = {
     current: PeriodSummary;
     /** The preceding months of equal length from the verified bank history, classified by payee; null without them. */
     prior: (PeriodSummary & { payeeRule: string }) | null;
-    /** "Payee · in" or "Payee · out" → category learned from this period's books (only where exactly one category is used). */
+    /** "Payee · in" or "Payee · out" → the one category this period gives that payee's money (books or a stated bank rule). */
     payees: Record<string, string>;
     checks: { id: string; label: string; passed: boolean; detail: string }[];
 };
@@ -140,7 +141,7 @@ export function classifyCash(input: { bankRows: SourceRow[]; months: string[]; l
 
     // Payee and direction → category, only where this period's books use exactly one category for that payee and direction.
     const seen = new Map<string, Set<string>>();
-    for (const r of rows) if (r.basis === 'BOOKS') { const key = payeeKey(r.counterparty, BigInt(r.signedCents)); seen.set(key, (seen.get(key) ?? new Set()).add(r.category)); }
+    for (const r of rows) if (r.basis === 'BOOKS' || r.category === BANK_CHARGES || r.category === INTEREST_RECEIVED) { const key = payeeKey(r.counterparty, BigInt(r.signedCents)); seen.set(key, (seen.get(key) ?? new Set()).add(r.category)); }
     const payees = Object.fromEntries([...seen.entries()].filter(([, s]) => s.size === 1).map(([p, s]) => [p, [...s][0]]).sort());
 
     // The preceding months of equal length, when the verified history has every one of them.
@@ -150,9 +151,9 @@ export function classifyCash(input: { bankRows: SourceRow[]; months: string[]; l
     const prior = consecutive ? {
         ...summarize(input.historyRows.filter(r => before.includes(r.period)).map(r => {
             const category = payees[payeeKey(r.counterparty, toCents(r.signedAmount))];
-            return { period: r.period, signedCents: toCents(r.signedAmount), category: category ?? NOT_CLASSIFIED, activity: category ? activityOf(category) : 'OPERATING' as Activity, basis: category ? 'BOOKS' as const : 'NOT_CLASSIFIED' as const };
+            return { period: r.period, signedCents: toCents(r.signedAmount), category: category ?? NOT_CLASSIFIED, activity: category ? activityOf(category) : 'OPERATING' as Activity, basis: !category ? 'NOT_CLASSIFIED' as const : BANK_RULES.has(category) ? 'BANK_RULE' as const : 'BOOKS' as const };
         }), before),
-        payeeRule: 'Each earlier bank record takes the category your books give the same payee, for money in the same direction, in this period; a payee with no single category stays not classified.',
+        payeeRule: 'Each earlier bank record takes the category this period gives the same payee, for money in the same direction (from your books or a stated bank rule); a payee with no single category stays not classified.',
     } : null;
 
     const bankNet = input.bankRows.reduce((t, r) => t + toCents(r.signedAmount), 0n);
