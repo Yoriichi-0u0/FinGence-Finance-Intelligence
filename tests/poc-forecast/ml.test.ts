@@ -1,33 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { forecastBusiness, nextPeriod, type BusinessForecast, type ForecastRow } from '../../lib/poc-forecast/forecast';
-import { ML_MIN_MONTHS, buildMlRequest, mlRequestSchema, mlWorkerSchema, scoreMl, type MlWorkerResult } from '../../lib/poc-forecast/ml';
-
-const money = (v: number) => (v / 100).toFixed(2);
-/** One credit and one debit per month; values in cents. */
-function rows(start: string, credits: number[], debits: number[], currency = 'MYR'): ForecastRow[] {
-    const out: ForecastRow[] = [];
-    let period = start;
-    credits.forEach((c, i) => {
-        out.push({ businessId: 'B', currency, period, direction: 'Credit', amount: money(c), signedAmount: money(c) });
-        out.push({ businessId: 'B', currency, period, direction: 'Debit', amount: money(debits[i]), signedAmount: '-' + money(debits[i]) });
-        period = nextPeriod(period);
-    });
-    return out;
-}
-const credits = [6000000, 6100000, 6200000, 6150000, 6600000, 6700000, 6400000, 6900000, 6400000, 6800000, 7000000, 6900000];
-const debits = [2700000, 2800000, 2700000, 2800000, 2900000, 2900000, 2900000, 3000000, 3000000, 3100000, 3100000, 4000000];
-const TESTED = ['2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03'];
-const baseline = (n = 12): BusinessForecast => forecastBusiness(rows('2025-04', credits.slice(0, n), debits.slice(0, n)));
-
-/** A worker result that lines up with `baseline()`: tests are months 7..12 (index 6 onward). */
-const worker = (over: Partial<MlWorkerResult> = {}): MlWorkerResult => ({
-    engine: { mlforecast: '1.1.0', xgboost: '3.4.1', pandas: '2.3.3', numpy: '2.5.4', python: '3.12.3' },
-    config: { model: 'XGBRegressor', params: { n_estimators: 80 }, lags: [1, 2, 3], rolling: 'mean of the last 3 months (lag 1)', windows: 6, horizon: 1, refit: true, perMetric: true },
-    next: { period: '2026-04', credits: 7000000, debits: 3500000 },
-    backtest: credits.slice(6).map((c, i) => ({ period: TESTED[i], credits: c, debits: debits[6 + i] })),
-    importance: { credits: { lag1: 1 }, debits: { lag1: 1 } },
-    ...over,
-});
+import { forecastBusiness } from '../../lib/poc-forecast/forecast';
+import { ML_MIN_MONTHS, buildMlRequest, mlRequestSchema, mlWorkerSchema, scoreMl } from '../../lib/poc-forecast/ml';
+import { baseline, credits, debits, rows, worker, withBacktest } from './ml-fixtures';
 
 describe('ML challenger request', () => {
     it('is built from the baseline history in integer cents', () => {
@@ -39,7 +13,7 @@ describe('ML challenger request', () => {
         expect(mlRequestSchema.safeParse(built.request).success).toBe(true);
     });
     it('is refused when the baseline is unavailable, so it inherits the baseline refusals', () => {
-        const mixed = forecastBusiness([...rows('2025-04', credits, debits), ...rows('2025-04', [1], [1], 'SGD')]);
+        const mixed = forecastBusiness([...rows('2025-04', credits.slice(0, 12), debits.slice(0, 12)), ...rows('2025-04', [1], [1], 'SGD')]);
         expect(buildMlRequest(mixed)).toMatchObject({ code: 'BASELINE_UNAVAILABLE' });
     });
     it(`is refused below ${ML_MIN_MONTHS} months even when the 7-month baseline is available`, () => {
@@ -57,35 +31,76 @@ describe('ML challenger request', () => {
     });
 });
 
-describe('ML challenger scoring', () => {
-    it('scores the ML forecast and the baseline on identical months in exact cents', () => {
-        const b = baseline(), result = scoreMl(b, worker());
-        expect(result).toMatchObject({ period: '2026-04', credits: '70000.00', debits: '35000.00', net: '35000.00', tests: 6, currency: 'MYR' });
-        // A perfect ML backtest has zero error, so it is strictly lower than any baseline with error.
-        const credit = result.scores.find(s => s.metric === 'credits')!;
-        expect(credit).toMatchObject({ mlWape: '0.00', mlMae: '0.00', lowerWape: 'ML' });
-        expect(Number(credit.baselineWape)).toBeGreaterThan(0);
-        expect(result.points.map(p => p.period)).toEqual(['2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03']);
-        expect(result.points[0].baseline.credits).toBe(b.forecast.status === 'AVAILABLE' ? b.forecast.backtest.credits.points[0].forecasts.MEAN_6 : '');
+describe('ML challenger at 1, 4 and 6 months ahead', () => {
+    it('reports every horizon, with the months each can be tested on', () => {
+        const r = scoreMl(baseline(), worker());
+        expect(r.version).toBe('ml-xgboost-forecast-v2');
+        expect(r.horizons.map(h => [h.horizon, h.tests, h.last])).toEqual([[1, 6, '2026-04'], [4, 3, '2026-07'], [6, 1, '2026-09']]);
+        expect(r.path.map(s => s.period)).toEqual(['2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09']);
+        expect(r.horizons[0].points.map(p => p.period)).toEqual(['2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03']);
+        expect(r.horizons[1].points.map(p => p.period)).toEqual(['2026-01', '2026-02', '2026-03']);
+        expect(r.horizons[2].points.map(p => p.period)).toEqual(['2026-03']);
     });
-    it('derives net from ML credits minus ML debits and reports a baseline win when ML is worse', () => {
-        const bad = worker({ backtest: worker().backtest.map(p => ({ ...p, credits: 0, debits: 0 })) });
-        const result = scoreMl(baseline(), bad);
-        expect(result.scores.map(s => s.lowerWape)).toEqual(['BASELINE', 'BASELINE', 'BASELINE']);
-        expect(result.points[0].ml).toEqual({ credits: '0.00', debits: '0.00', net: '0.00' });
+    it('gives the same baseline at horizon 1 as the deterministic engine, month for month', () => {
+        const b = baseline(), r = scoreMl(b, worker());
+        if (b.forecast.status !== 'AVAILABLE') throw new Error('baseline');
+        for (const metric of ['credits', 'debits', 'net'] as const) {
+            expect(r.horizons[0].points.map(p => p.baseline[metric])).toEqual(b.forecast.backtest[metric].points.map(p => p.forecasts.MEAN_6));
+            expect(r.horizons[0].scores.find(s => s.metric === metric)!.baselineWape).toBe(b.forecast.backtest[metric].methods.find(m => m.method === 'MEAN_6')!.wape);
+        }
     });
-    it('refuses a result whose months, period or window count do not match the baseline', () => {
+    it('computes the baseline at longer horizons from only the months known at the origin, in exact cents', () => {
+        const r = scoreMl(baseline(), worker()), h4 = r.horizons[1].points, h6 = r.horizons[2].points;
+        // Horizon 4: January 2026 is forecast after September 2025 (April..September known), February after October, March after November.
+        expect(h4.map(p => p.madeAfter)).toEqual(['2025-09', '2025-10', '2025-11']);
+        expect(h4.map(p => p.baseline.credits)).toEqual(['62916.67', '63583.33', '64916.67']);
+        expect(h4[0].baseline.debits).toBe('28000.00');
+        // Horizon 6: March 2026 is forecast after September 2025, with the same six months known as the first horizon-4 test.
+        expect(h6[0]).toMatchObject({ period: '2026-03', madeAfter: '2025-09', actual: { credits: '69000.00' } });
+        expect(h6[0].baseline.credits).toBe('62916.67');
+    });
+    it('sums the forecast over each horizon, and repeats the baseline average every month', () => {
+        const r = scoreMl(baseline(), worker()), h4 = r.horizons[1], h1 = r.horizons[0];
+        expect(h4.total.ml).toEqual({ credits: '280600.00', debits: '140000.00', net: '140600.00' });
+        expect(h4.total.baseline.credits).toBe('269333.32');          // 4 x 67,333.33
+        expect(h1.total.ml.credits).toBe('70000.00');
+        expect(r.path.every(s => s.baseline.credits === '67333.33' && s.baseline.debits === '31833.33')).toBe(true);
+        // Net per month is credits minus debits of that month's forecast, never modelled separately.
+        expect(r.path[1].ml.net).toBe('35100.00');
+    });
+    it('scores each horizon on its own test months and names the lower error', () => {
+        const perfect = scoreMl(baseline(), worker());
+        for (const h of perfect.horizons) expect(h.scores.every(s => s.mlWape === '0.00' && s.mlMae === '0.00' && s.lowerWape === 'ML')).toBe(true);
+        const bad = scoreMl(baseline(), worker(12, { backtests: withBacktest(4, p => ({ ...p, credits: 0, debits: 0 })) }));
+        expect(bad.horizons[1].scores.map(s => s.lowerWape)).toEqual(['BASELINE', 'BASELINE', 'BASELINE']);
+        expect(bad.horizons[0].scores.map(s => s.lowerWape)).toEqual(['ML', 'ML', 'ML']);   // the other horizons are untouched
+    });
+    it('marks a horizon indicative when it has fewer than three test months', () => {
+        expect(scoreMl(baseline(), worker()).horizons.map(h => h.indicative)).toEqual([false, false, true]);
+        expect(scoreMl(baseline(13), worker(13)).horizons.map(h => [h.tests, h.indicative])).toEqual([[7, false], [4, false], [2, true]]);
+    });
+    it('refuses a result whose months, periods, horizons or window counts do not match the baseline', () => {
         const b = baseline();
-        expect(() => scoreMl(b, worker({ backtest: worker().backtest.slice(1) }))).toThrow('ML_BACKTEST_MONTHS_MISMATCH');
-        expect(() => scoreMl(b, worker({ backtest: worker().backtest.map((p, i) => i ? p : { ...p, period: '2025-09' }) }))).toThrow('ML_BACKTEST_MONTHS_MISMATCH');
-        expect(() => scoreMl(b, worker({ next: { period: '2026-05', credits: 1, debits: 1 } }))).toThrow('ML_PERIOD_MISMATCH');
-        expect(() => scoreMl(b, worker({ config: { ...worker().config, windows: 5 } }))).toThrow('ML_WINDOW_MISMATCH');
+        expect(() => scoreMl(b, worker(12, { backtests: withBacktest(4, (p, i) => i ? p : { ...p, period: '2025-12' }) }))).toThrow('ML_BACKTEST_MONTHS_MISMATCH');
+        expect(() => scoreMl(b, worker(12, { backtests: { ...worker().backtests, '6': [] } }))).toThrow('ML_BACKTEST_MONTHS_MISMATCH');
+        expect(() => scoreMl(b, worker(12, { backtests: { ...worker().backtests, '1': worker().backtests['1'].slice(1) } }))).toThrow('ML_BACKTEST_MONTHS_MISMATCH');
+        expect(() => scoreMl(b, worker(12, { path: worker().path.map((s, i) => i ? s : { ...s, period: '2026-05' }) }))).toThrow('ML_PERIOD_MISMATCH');
+        expect(() => scoreMl(b, worker(12, { path: worker().path.map((s, i) => i === 3 ? { ...s, period: '2026-12' } : s) }))).toThrow('ML_PERIOD_MISMATCH');
+        expect(() => scoreMl(b, worker(12, { config: { ...worker().config, windows: { '1': 6, '4': 3, '6': 2 } } }))).toThrow('ML_WINDOW_MISMATCH');
+        expect(() => scoreMl(b, worker(12, { config: { ...worker().config, horizons: [1, 3, 6] as unknown as [1, 4, 6] } }))).toThrow('ML_HORIZON_MISMATCH');
         expect(() => scoreMl(forecastBusiness([]), worker())).toThrow('ML_BASELINE_UNAVAILABLE');
+        // A result for 13 months does not line up with a 12-month baseline.
+        expect(() => scoreMl(b, worker(13))).toThrow();
     });
     it('validates the untrusted worker contract strictly', () => {
         expect(mlWorkerSchema.safeParse(worker()).success).toBe(true);
         expect(mlWorkerSchema.safeParse({ ...worker(), extra: 1 }).success).toBe(false);
-        expect(mlWorkerSchema.safeParse({ ...worker(), next: { period: '2026-04', credits: -1, debits: 1 } }).success).toBe(false);
-        expect(mlWorkerSchema.safeParse({ ...worker(), next: { period: '2026-13', credits: 1, debits: 1 } }).success).toBe(false);
+        expect(mlWorkerSchema.safeParse({ ...worker(), path: worker().path.slice(0, 5) }).success).toBe(false);
+        expect(mlWorkerSchema.safeParse({ ...worker(), path: [{ period: '2026-04', credits: -1, debits: 1 }, ...worker().path.slice(1)] }).success).toBe(false);
+        expect(mlWorkerSchema.safeParse({ ...worker(), path: [{ period: '2026-13', credits: 1, debits: 1 }, ...worker().path.slice(1)] }).success).toBe(false);
+        const missing = { '1': worker().backtests['1'], '4': worker().backtests['4'] };   // no horizon-6 backtest
+        expect(mlWorkerSchema.safeParse({ ...worker(), backtests: missing }).success).toBe(false);
+        expect(mlWorkerSchema.safeParse({ ...worker(), backtests: { ...worker().backtests, '3': [] } }).success).toBe(false);
+        expect(mlWorkerSchema.safeParse({ ...worker(), config: { ...worker().config, strategy: 'direct' } }).success).toBe(false);
     });
 });

@@ -1,18 +1,24 @@
 #!/usr/bin/env python3
-"""MLForecast + XGBoost next-month forecast for FinGence monthly bank cash totals.
+"""MLForecast + XGBoost multi-horizon forecast for FinGence monthly bank cash totals.
 
 Reads one JSON request on stdin and writes one JSON result on stdout. It has no network,
 database or credential access and writes no files. All money crosses the boundary as integer
 cents; floats exist only inside the model.
 
 Request : {"currency": "MYR", "months": [{"period": "2025-04", "credits": 6054712, "debits": 2657482}, ...]}
-Result  : {"engine": {...}, "config": {...}, "next": {...}, "backtest": [...], "importance": {...}}
+Result  : {"engine": {...}, "config": {...}, "path": [...6 months...], "backtests": {"1": [...], "4": [...], "6": [...]}, "importance": {...}}
 
 Each metric (credits, debits) is modelled separately, so one series never leaks into the other.
 Net is never modelled; the caller derives it as credits minus debits.
 
-The backtest is rolling-origin and refits on every window using only earlier months, and it tests
-exactly the months the deterministic baseline is tested on (month index BACKTEST_START onward).
+Horizons are 1, 4 and 6 months. One model per metric is refit on all months and forecasts the next six
+months recursively (each month's forecast feeds the next month's lags), so `path` holds months 1 to 6 and
+every horizon reads its first h months.
+
+A backtest for horizon h is rolling-origin: at each origin the model is refit on only the earlier months and
+forecasts h months ahead, and the entry holds the forecast of the h-th month. The first origin has
+BACKTEST_START months of history (the same as the deterministic baseline), so horizon h is tested on the target
+months BACKTEST_START + h - 1 onward: with 12 months that is 6, 3 and 1 test months for horizons 1, 4 and 6.
 Hyper-parameters are fixed in advance and are never tuned on the backtest months.
 """
 import json
@@ -23,6 +29,8 @@ import warnings
 MIN_MONTHS = 12          # ML needs more history than the 7-month baseline; see docs/architecture/ml-forecast-v1.md
 MAX_MONTHS = 120
 BACKTEST_START = 6       # must equal BACKTEST_START in lib/poc-forecast/forecast.ts
+HORIZONS = (1, 4, 6)     # must equal ML_HORIZONS in lib/poc-forecast/ml.ts
+MAX_HORIZON = max(HORIZONS)
 LAGS = [1, 2, 3]
 ROLLING_WINDOW = 3
 METRICS = ("credits", "debits")
@@ -78,9 +86,19 @@ def run(months):
 
     periods = [m["period"] for m in months]
     ds = pd.to_datetime([p + "-01" for p in periods])
-    n_windows = len(months) - BACKTEST_START
-    out = {"backtest": [{"period": p, "credits": 0, "debits": 0} for p in periods[BACKTEST_START:]], "importance": {}}
-    nxt = {"period": next_period(periods[-1])}
+    windows = {h: len(months) - BACKTEST_START - h + 1 for h in HORIZONS}
+    if min(windows.values()) < 1:
+        raise Refusal("Not enough history to test every horizon.")
+    path = [{"period": None, "credits": 0, "debits": 0} for _ in range(MAX_HORIZON)]
+    p = periods[-1]
+    for step in path:
+        p = next_period(p)
+        step["period"] = p
+    backtests = {
+        str(h): [{"period": periods[BACKTEST_START + h - 1 + i], "credits": 0, "debits": 0} for i in range(windows[h])]
+        for h in HORIZONS
+    }
+    out = {"path": path, "backtests": backtests, "importance": {}}
 
     def cents(value):
         # A forecast cash movement cannot be negative; clip, then round half away from zero to the cent.
@@ -95,27 +113,34 @@ def run(months):
                 lag_transforms={1: [RollingMean(window_size=ROLLING_WINDOW)]},
             )
 
-        cv = make().cross_validation(df, n_windows=n_windows, h=1, step_size=1, refit=True).sort_values("ds")
-        if len(cv) != n_windows or [d.strftime("%Y-%m") for d in cv["ds"]] != periods[BACKTEST_START:]:
-            raise Refusal("The backtest did not cover the expected months.")
-        for row, value in zip(out["backtest"], cv["xgb"]):
-            row[metric] = cents(value)
+        for h in HORIZONS:
+            cv = make().cross_validation(df, n_windows=windows[h], h=h, step_size=1, refit=True)
+            # Each origin forecasts h months ahead; only the last of those h forecasts is the horizon-h forecast.
+            cv = cv.sort_values(["cutoff", "ds"]).groupby("cutoff").tail(1).sort_values("ds")
+            expected = [row["period"] for row in backtests[str(h)]]
+            if [d.strftime("%Y-%m") for d in cv["ds"]] != expected:
+                raise Refusal("The backtest did not cover the expected months.")
+            for row, value in zip(backtests[str(h)], cv["xgb"]):
+                row[metric] = cents(value)
 
         final = make()
         final.fit(df)
-        pred = final.predict(1)
-        nxt[metric] = cents(pred["xgb"].iloc[0])
+        pred = final.predict(MAX_HORIZON).sort_values("ds")
+        if [d.strftime("%Y-%m") for d in pred["ds"]] != [step["period"] for step in path]:
+            raise Refusal("The forecast did not cover the expected months.")
+        for step, value in zip(path, pred["xgb"]):
+            step[metric] = cents(value)
         names = list(final.ts.features_order_)
         out["importance"][metric] = {n: round(float(v), 4) for n, v in zip(names, final.models_["xgb"].feature_importances_)}
 
-    out["next"] = nxt
     out["engine"] = {
         "mlforecast": mlforecast.__version__, "xgboost": xgboost.__version__, "pandas": pd.__version__, "numpy": np.__version__,
         "python": ".".join(map(str, sys.version_info[:3])),
     }
     out["config"] = {
         "model": "XGBRegressor", "params": XGB_PARAMS, "lags": LAGS, "rolling": f"mean of the last {ROLLING_WINDOW} months (lag 1)",
-        "windows": n_windows, "horizon": 1, "refit": True, "perMetric": True,
+        "horizons": list(HORIZONS), "strategy": "recursive", "windows": {str(h): windows[h] for h in HORIZONS},
+        "refit": True, "perMetric": True,
     }
     return out
 
