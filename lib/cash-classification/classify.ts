@@ -96,20 +96,23 @@ function bankOnlyCategories(periods: Pick<PeriodReconciliation, 'items'>[]): Map
     return map;
 }
 
+const STRENGTH: Record<Basis, number> = { BOOKS: 2, BANK_RULE: 1, NOT_CLASSIFIED: 0 };
 function summarize(rows: { period: string; signedCents: bigint; category: string; activity: Activity; basis: Basis }[], months: string[]): PeriodSummary {
     const cats = new Map<string, { activity: Activity; basis: Basis; in: bigint; out: bigint; n: number; byMonth: Map<string, bigint> }>();
     const act = Object.fromEntries(ACTIVITIES.map(a => [a, { in: 0n, out: 0n }])) as Record<Activity, { in: bigint; out: bigint }>;
     let net = 0n, total = 0n, classified = 0n, books = 0n;
     for (const r of rows) {
-        const key = `${r.category}\u0000${r.basis}`;
+        // One entry per category name: a category the books use and a bank rule also names is one line, its basis the strongest.
+        const key = r.category;
         const c = cats.get(key) ?? { activity: r.activity, basis: r.basis, in: 0n, out: 0n, n: 0, byMonth: new Map() };
+        if (STRENGTH[r.basis] > STRENGTH[c.basis]) c.basis = r.basis;
         if (r.signedCents >= 0n) { c.in += r.signedCents; act[r.activity].in += r.signedCents; } else { c.out += r.signedCents; act[r.activity].out += r.signedCents; }
         c.n++; c.byMonth.set(r.period, (c.byMonth.get(r.period) ?? 0n) + r.signedCents); cats.set(key, c);
         net += r.signedCents; total += abs(r.signedCents);
         if (r.basis !== 'NOT_CLASSIFIED') classified += abs(r.signedCents);
         if (r.basis === 'BOOKS') books += abs(r.signedCents);
     }
-    const categories = [...cats.entries()].map(([key, c]) => ({ category: key.split('\u0000')[0], activity: c.activity, basis: c.basis, inCents: c.in.toString(), outCents: c.out.toString(), netCents: (c.in + c.out).toString(), records: c.n, byMonth: Object.fromEntries([...c.byMonth.entries()].sort().map(([m, v]) => [m, v.toString()])) }))
+    const categories = [...cats.entries()].map(([key, c]) => ({ category: key, activity: c.activity, basis: c.basis, inCents: c.in.toString(), outCents: c.out.toString(), netCents: (c.in + c.out).toString(), records: c.n, byMonth: Object.fromEntries([...c.byMonth.entries()].sort().map(([m, v]) => [m, v.toString()])) }))
         .sort((a, b) => { const d = abs(BigInt(b.netCents)) - abs(BigInt(a.netCents)); return d > 0n ? 1 : d < 0n ? -1 : a.category.localeCompare(b.category); });
     return {
         months, categories, netCents: net.toString(),

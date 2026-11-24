@@ -94,3 +94,31 @@ describe('cash classification fallbacks', () => {
             .toEqual(['INVESTING', 'INVESTING', 'INVESTING', 'FINANCING', 'FINANCING', 'FINANCING', 'OPERATING', 'OPERATING', 'OPERATING']);
     });
 });
+
+describe('review fixes (#160 follow-up)', () => {
+    const row = (rowId: string, period: string, signedAmount: string, counterparty: string) => ({ rowId, sourceTransactionId: null, businessId: 'B', businessName: 'B', currency: 'MYR', date: `${period}-10`, period, description: 'fee', direction: signedAmount.startsWith('-') ? 'Debit' : 'Credit', amount: signedAmount.replace('-', ''), signedAmount, counterparty, reference: rowId }) as const;
+    it('keeps one line per category when the books and a bank rule both use it, so the prior total is not doubled', async () => {
+        const { classifyCash } = await import('../../lib/cash-classification/classify');
+        const k = classifyCash({
+            bankRows: [row('B1', '2025-02', '-10.00', 'Bank X'), row('B2', '2025-02', '-5.00', 'Bank X')], months: ['2025-02'], ledger: new Map([['L1', 'Bank charges']]),
+            periods: [{ period: '2025-02', snapshot: { results: [{ status: 'MATCH_EXACT', bankRecordId: 'B1', ledgerRecordIds: ['L1'] }] }, items: [{ bankRecordId: 'B2', ledgerRecordIds: [], category: 'BANK_CHARGE_NOT_IN_LEDGER', resolution: 'ENTRY_PREPARED', link: null }] }] as never,
+            historyRows: [row('H1', '2025-01', '-8.00', 'Bank X')],
+        });
+        expect(k.current.categories.map(c => [c.category, c.basis, c.outCents])).toEqual([['Bank charges', 'BOOKS', '-1500']]);
+        const lines = cashFlowStatement(k).flatMap(s => s.payments);
+        expect(lines.map(l => [l.category, l.current, l.prior])).toEqual([['Bank charges', -1500n, -800n]]);
+        expect(lines.reduce((t, l) => t + l.prior!, 0n)).toBe(BigInt(k.prior!.netCents));
+    });
+
+    it('shows a sign reversal as a signed change, and a change in size otherwise', async () => {
+        const { describeChange } = await import('../../lib/cash-classification/insights');
+        expect(describeChange(10000n, -10000n)).toEqual({ kind: 'percent', percent: 200, favourable: true });
+        expect(describeChange(5000n, -10000n)).toEqual({ kind: 'percent', percent: 150, favourable: true });
+        expect(describeChange(-5000n, 10000n)).toEqual({ kind: 'percent', percent: -150, favourable: false });
+        expect(describeChange(-12000n, -10000n)).toEqual({ kind: 'percent', percent: 20, favourable: false });
+        expect(describeChange(12000n, 10000n)).toEqual({ kind: 'percent', percent: 20, favourable: true });
+        expect(describeChange(5n, 0n)).toEqual({ kind: 'new' });
+        expect(describeChange(7n, 7n)).toEqual({ kind: 'same' });
+        expect(describeChange(7n, null)).toEqual({ kind: 'none' });
+    });
+});

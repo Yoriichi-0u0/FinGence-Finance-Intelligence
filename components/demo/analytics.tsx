@@ -5,7 +5,7 @@ import { LineChart } from '@/components/charts';
 import { PageHeader, Panel } from '@/components/ui';
 import { fromCents } from '@/lib/poc-anomalies/source';
 import { ACTIVITY_LABEL, ACTIVITY_RULE, type CashClassification } from '@/lib/cash-classification/classify';
-import { biggestChanges, cashFlowStatement, cashRatios, changePercent, customerConcentration, operatingByMonth, type Ratio } from '@/lib/cash-classification/insights';
+import { biggestChanges, cashFlowStatement, cashRatios, customerConcentration, describeChange, operatingByMonth, type Ratio } from '@/lib/cash-classification/insights';
 import type { ProcessingContext } from '@/lib/demo/pipeline';
 import { SourceStrip, Stat, Unavailable, money, periodLabel, resultsEyebrow } from './shared';
 
@@ -17,13 +17,13 @@ const ratioText = (r: Ratio, v: number | null) => v === null ? '—' : r.unit ==
 const label = (months: string[]) => periodLabel(months.length > 1 ? `${months[0]}/${months.at(-1)}` : months[0]);
 const short = (months: string[]) => months.length === 12 && months[0].endsWith('-01') ? months[0].slice(0, 4) : months.length > 1 ? `${months[0].slice(2)}–${months.at(-1)!.slice(2)}` : periodLabel(months[0]);
 
-/** A change in size, coloured by effect: more money in, or less money out, reads as favourable. Nothing before reads as new. */
+/** A change coloured by effect: more money in, or less money out, reads as favourable; a sign reversal keeps its sign. */
 function Change({ current, prior }: { current: bigint; prior: bigint | null }) {
-    if (prior === null) return <span className="text-[var(--muted)]">—</span>;
-    if (prior === 0n) return <span className="text-xs font-semibold text-[var(--muted)]">{current === 0n ? '—' : 'New'}</span>;
-    const p = changePercent(abs(current), abs(prior))!, better = current > prior || (current === prior);
-    if (current === prior) return <span className="tabular-nums text-[var(--muted)]">0.0%</span>;
-    return <span className={`whitespace-nowrap font-semibold tabular-nums ${better ? 'text-[var(--good-ink)]' : 'text-[var(--bad-ink)]'}`}>{p > 0 ? '+' : ''}{p.toFixed(1)}%</span>;
+    const v = describeChange(current, prior);
+    if (v.kind === 'none') return <span className="text-[var(--muted)]">—</span>;
+    if (v.kind === 'new') return <span className="text-xs font-semibold text-[var(--muted)]">New</span>;
+    if (v.kind === 'same') return <span className="tabular-nums text-[var(--muted)]">0.0%</span>;
+    return <span className={`whitespace-nowrap font-semibold tabular-nums ${v.favourable ? 'text-[var(--good-ink)]' : 'text-[var(--bad-ink)]'}`}>{v.percent > 0 ? '+' : ''}{v.percent.toFixed(1)}%</span>;
 }
 
 function Bars({ title, rows, currency, total, priorLabel }: { title: string; rows: { category: string; current: bigint; prior: bigint | null }[]; currency: string; total: bigint; priorLabel: string | null }) {
