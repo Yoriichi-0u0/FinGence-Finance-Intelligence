@@ -88,7 +88,10 @@ describe('cash plan elsewhere', () => {
     });
 
     it('verifies running balances against every record', () => {
-        const rows = [{ period: '2025-01', signedAmount: '100.00' }, { period: '2025-01', signedAmount: '-30.00' }, { period: '2025-02', signedAmount: '5.50' }] as SourceRow[];
+        const rows = [{ period: '2025-01', date: '2025-01-05', signedAmount: '100.00' }, { period: '2025-01', date: '2025-01-20', signedAmount: '-30.00' }, { period: '2025-02', date: '2025-02-03', signedAmount: '5.50' }] as SourceRow[];
+        // Records out of date order (a January record listed after February) prove no month-end balance, even when each balance follows from the one above.
+        const unordered = [{ period: '2025-01', date: '2025-01-05', signedAmount: '100.00' }, { period: '2025-02', date: '2025-02-03', signedAmount: '50.00' }, { period: '2025-01', date: '2025-01-28', signedAmount: '-20.00' }] as SourceRow[];
+        expect(verifiedClosingBalances([{ RunningBalanceMYR: '1100.00' }, { RunningBalanceMYR: '1150.00' }, { RunningBalanceMYR: '1130.00' }], unordered)).toBeNull();
         expect(verifiedClosingBalances([{ RunningBalanceMYR: '1100' }, { RunningBalanceMYR: '1070.00' }, { RunningBalanceMYR: '1075.5' }], rows)).toEqual({ '2025-01': 107000n, '2025-02': 107550n });
         expect(verifiedClosingBalances([{ RunningBalanceMYR: '1100.00' }, { RunningBalanceMYR: '1071.00' }, { RunningBalanceMYR: '1076.50' }], rows)).toBeNull();
         expect(verifiedClosingBalances([{ Other: '1' }, { Other: '2' }, { Other: '3' }], rows)).toBeNull();
