@@ -76,15 +76,18 @@ export function duplicateChoice(bank: CashSourceRow, ledger: CashSourceRow[]): {
  */
 type SharedRole = { role: 'KEPT' | 'DUPLICATE'; kept: CashSourceRow; ledger: CashSourceRow; copies: CashSourceRow[] } | { role: 'SHARED'; ledger: CashSourceRow[] };
 function sharedCandidates(snapshot: FinancePoCReconciliationV1, bankRows: Map<string, CashSourceRow>, ledgerRows: Map<string, CashSourceRow>): Map<string, SharedRole> {
-    const groups = new Map<string, string[]>();
-    for (const r of snapshot.results) if (r.status === 'AMBIGUOUS_DUPLICATE_LEDGER' && r.bankRecordId && r.ledgerRecordIds.length)
-        groups.set(r.ledgerRecordIds.join('|'), [...(groups.get(r.ledgerRecordIds.join('|')) ?? []), r.bankRecordId]);
+    // Keyed by a reversible encoding of the ledger IDs (which may contain any character); the IDs themselves are kept.
+    const groups = new Map<string, { ledgerIds: string[]; ids: string[] }>();
+    for (const r of snapshot.results) if (r.status === 'AMBIGUOUS_DUPLICATE_LEDGER' && r.bankRecordId && r.ledgerRecordIds.length) {
+        const key = JSON.stringify(r.ledgerRecordIds), group = groups.get(key) ?? { ledgerIds: r.ledgerRecordIds, ids: [] };
+        group.ids.push(r.bankRecordId); groups.set(key, group);
+    }
     const roles = new Map<string, SharedRole>();
-    for (const [key, ids] of groups) {
+    for (const { ledgerIds, ids } of groups.values()) {
         if (ids.length < 2) continue;
         const banks = ids.map(id => bankRows.get(id)).filter((x): x is CashSourceRow => !!x).sort((a, b) => a.recordId.localeCompare(b.recordId));
-        const ledger = key.split('|').map(id => ledgerRows.get(id)).filter((x): x is CashSourceRow => !!x);
-        if (banks.length !== ids.length) continue;
+        const ledger = ledgerIds.map(id => ledgerRows.get(id)).filter((x): x is CashSourceRow => !!x);
+        if (banks.length !== ids.length || ledger.length !== ledgerIds.length) continue;
         if (ledger.length === 1 && banks.every(b => b.signedCents === ledger[0].signedCents)) {
             const { kept } = duplicateChoice(ledger[0], banks);
             for (const b of banks) roles.set(b.recordId, { role: b === kept ? 'KEPT' : 'DUPLICATE', kept, ledger: ledger[0], copies: banks });

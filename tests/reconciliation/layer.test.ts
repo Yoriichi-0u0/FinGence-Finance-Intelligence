@@ -132,6 +132,11 @@ describe('several months, any one currency', () => {
         const reversed = reconcile({ ...source('bank', bank), rows: [...source('bank', bank).rows].reverse() }, source('ledger', ledger), { organizationId: 'test-org' });
         expect(reversed.periods[0].items).toEqual(r.periods[0].items);
     });
+    it('pairs the duplicate whatever characters the ledger record ID contains', () => {
+        const r = run([['B1', '2026-02-13', 'R7', '-80.00'], ['B2', '2026-02-14', 'R7', '-80.00']], [['L|1', '2026-02-13', 'R7', '-80.00']]);
+        expect(r.periods[0].items.map(i => [i.category, i.bankRecordId, i.ledgerRecordIds])).toEqual([['DUPLICATE_BANK_PAYMENT', 'B2', []], ['DUPLICATE_BANK_MATCHED', 'B1', ['L|1']]]);
+        expect(allPassed(r)).toBe(true);
+    });
     it('a received amount the bank shows twice is a duplicate receipt, to be refunded', () => {
         const r = run([['B1', '2026-02-13', 'R7', '900.00'], ['B2', '2026-02-13', 'R7', '900.00']], [['L1', '2026-02-13', 'R7', '900.00']]);
         expect(r.periods[0].items.map(i => [i.category, i.bankRecordId, i.ledgerRecordIds])).toEqual([['DUPLICATE_BANK_RECEIPT', 'B2', []], ['DUPLICATE_BANK_MATCHED', 'B1', ['L1']]]);
