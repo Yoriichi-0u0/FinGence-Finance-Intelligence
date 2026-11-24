@@ -9,6 +9,8 @@ import { detectAnomalies, DETECTOR_VERSION, type Candidate } from '../poc-anomal
 import { readReconciliation, type ReconciliationView } from '../poc-anomalies/reconciliation';
 import { cashTotals, type BankTotals } from '../poc-insights/model';
 import { forecastBusiness, FORECAST_VERSION, type BusinessForecast } from '../poc-forecast/forecast';
+import { classifyCash, ledgerCategories, type CashClassification } from '../cash-classification/classify';
+import { planCash, verifiedClosingBalances, type CashForecastPlan } from '../cash-forecast/plan';
 import type { LayoutInterpreter } from '../interpretation/contracts';
 import type { Extractor } from '../interpretation/extract';
 import { ingestDocuments, INGESTION_SCOPE, sha256Hex, type Check, type Decision, type Digest, type DocumentInput, type DocumentRole, type ProcessedDocument } from '../document-ingestion/ingest';
@@ -62,6 +64,10 @@ export type ProcessingContext = {
         anomalyResolution: AnomalyOutcome | null;
         history: { accepted: boolean; rows: SourceRow[]; months: string[] };
         forecast: BusinessForecast | null; report: ManagementSummary | null;
+        /** Every verified bank record classified by the books' own category (cash-classification v1); null before reconciliation. */
+        classification: CashClassification | null;
+        /** Category-driven cash plan for the next months with its tested range (cash-forecast v2); null before classification. */
+        cashPlan: CashForecastPlan | null;
     };
     quarantine: Quarantined[];
 };
@@ -116,7 +122,7 @@ async function processingIdentity(digest: Digest, parts: string[]) {
 export async function processDocuments(inputs: DocumentInput[], digest: Digest = sha256Hex, onStage?: (stage: Stage) => void | Promise<void>, options: ProcessingOptions = {}): Promise<ProcessingContext> {
     const stages: Stage[] = [], quarantine: Quarantined[] = [];
     const emit = async (id: StageId, decision: Decision, method: string, summary: string, checks: Check[]) => { const stage = { id, title: STAGE_TITLES[id], decision, method, summary, checks }; stages.push(stage); await onStage?.(stage); return stage; };
-    const outputs: ProcessingContext['outputs'] = { bank: null, ledger: null, bankRows: [], reconciliation: null, reconciliationView: { status: 'UNAVAILABLE', reason: 'Documents were not processed.' }, statement: null, periods: [], notReconciled: [], resolution: null, totals: null, anomalies: [], anomalyResolution: null, history: { accepted: false, rows: [], months: [] }, forecast: null, report: null };
+    const outputs: ProcessingContext['outputs'] = { bank: null, ledger: null, bankRows: [], reconciliation: null, reconciliationView: { status: 'UNAVAILABLE', reason: 'Documents were not processed.' }, statement: null, periods: [], notReconciled: [], resolution: null, totals: null, anomalies: [], anomalyResolution: null, history: { accepted: false, rows: [], months: [] }, forecast: null, report: null, classification: null, cashPlan: null };
     const conventions = ['Bank: Credit adds cash, Debit removes cash; SignedCashMovementMYR must equal the signed BankAmountMYR.', 'Ledger: cash account 1000-BANK; Debit adds cash, Credit removes cash; SignedCashMovementMYR must equal Debit − Credit.', 'One currency per processing, as the documents state it; no foreign-exchange conversion.'];
     const finish = async (status: ProcessingContext['status'], scope: ProcessingContext['scope']) => {
         // An AI-interpreted document is identified by its bytes AND the accepted mapping, so a different accepted reading is a different processing.
@@ -257,6 +263,7 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
     outputs.totals = cashTotals(bankRows);
     outputs.anomalies = detectAnomalies(bankRows);
     outputs.anomalyResolution = resolveAnomalies(outputs.anomalies, layer);
+    outputs.classification = classifyCash({ bankRows, months: scope.months, ledger: ledgerCategories(ledgerRaw), periods: layer.periods, historyRows: outputs.history.accepted ? outputs.history.rows : [] });
     for (const a of outputs.anomalyResolution.items) if (a.resolution === 'FLAGGED') quarantine.push({ kind: 'ANOMALY_CANDIDATE', reference: a.row.rowId, status: a.severity, reason: `${a.rule} ${a.findings.map(f => f.rationale).join(' ')}` });
     const ar = outputs.anomalyResolution;
     await emit('ANALYZE', 'AUTO_ACCEPTED', `Exact cent arithmetic; ${DETECTOR_VERSION}; ${ar.version}`, `Net signed bank movement ${scope.currency} ${outputs.totals.net}; ${outputs.anomalies.length} anomaly candidate${outputs.anomalies.length === 1 ? '' : 's'}: ${ar.corroborated} confirmed by the books, ${ar.flagged} flagged.`, [
@@ -266,6 +273,15 @@ export async function processDocuments(inputs: DocumentInput[], digest: Digest =
 
     // 7. Forecast only from an accepted consecutive monthly history; otherwise the engine's own refusal is shown.
     outputs.forecast = forecastBusiness(outputs.history.accepted ? outputs.history.rows : bankRows);
+    if (outputs.classification && outputs.classification.checks.every(k => k.passed)) {
+        // Month-end balances only from a history whose running balances agree with every one of its records.
+        let closing: Record<string, bigint> | null = null;
+        if (outputs.history.accepted && historyDoc) {
+            const raw = Papa.parse<Record<string, string>>(new TextDecoder().decode(bytesOf(historyDoc)).replace(/^\uFEFF/, ''), { header: true, skipEmptyLines: 'greedy' }).data;
+            if (history.length === historyScoped.length) closing = verifiedClosingBalances(raw, history);
+        }
+        outputs.cashPlan = planCash({ classification: outputs.classification, historyRows: outputs.history.accepted ? outputs.history.rows : bankRows, months: outputs.history.accepted ? outputs.history.months : scope.months, currency: scope.currency, closing, balanceSource: closing && historyDoc ? historyDoc.name : null });
+    }
     const f = outputs.forecast.forecast;
     await emit('FORECAST', f.status === 'AVAILABLE' ? 'AUTO_ACCEPTED' : 'UNAVAILABLE', `${FORECAST_VERSION} (six-month mean, rolling backtests)`, f.status === 'AVAILABLE' ? `${f.period} baseline from ${f.basis.months} months with ${f.tests} backtests.` : f.detail, [
         check('history', 'At least seven consecutive observed months', f.status === 'AVAILABLE', `${outputs.forecast.history.length} month${outputs.forecast.history.length === 1 ? '' : 's'} observed`),
