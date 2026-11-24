@@ -73,3 +73,26 @@ describe('full-year sample', () => {
         expect(c.outputs.forecast!.forecast).toMatchObject({ status: 'AVAILABLE', period: '2026-01' });
     });
 });
+
+describe('full-year sample with one payment the bank made twice under the same reference', () => {
+    // In memory only: the second Selangor Demo Hardware payment of MYR 1,684.20 (BANK-FY-0237, 14 May) takes the
+    // reference of the first (BANK-FY-0229, 13 May), which the books record once (GL-FY-0224). The pinned bytes are unchanged.
+    let d: ProcessingContext;
+    beforeAll(async () => {
+        const text = bytes(BANK).toString('utf8'), edited = text.replace('2025-05,W7VVQ5KPFDYR,', '2025-05,KE6CV2GAFDHM,');
+        expect(edited).not.toBe(text);
+        d = await processDocuments([{ name: BANK, bytes: new TextEncoder().encode(edited), provenance: 'PUBLIC_SYNTHETIC_SAMPLE' }, doc(LEDGER), doc(HISTORY)]);
+    });
+    it('reports the second payment as a duplicate payment and passes every check', () => {
+        expect(d.stages.map(s => `${s.id}:${s.decision}`)).toContain('RECONCILE:AUTO_ACCEPTED');
+        expect(d.stages.flatMap(s => s.checks).filter(k => !k.passed)).toEqual([]);
+        const may = d.outputs.resolution!.periods.find(p => p.period === '2025-05')!;
+        expect(may.status).toBe('BALANCED_AFTER_ENTRIES');
+        expect(may.items.filter(i => i.reference === 'KE6CV2GAFDHM').map(i => [i.category, i.resolution, i.bankRecordId, i.ledgerRecordIds, i.effect])).toEqual([
+            ['DUPLICATE_BANK_PAYMENT', 'ENTRY_PREPARED', 'BANK-FY-0237', [], '-1684.20'],
+            ['DUPLICATE_BANK_MATCHED', 'MATCHED_BY_AMOUNT', 'BANK-FY-0229', ['GL-FY-0224'], '0.00'],
+        ]);
+        expect(d.outputs.resolution!.totals).toMatchObject({ transactions: 609, unexplained: '0.00', resolutions: { MATCHED_LATE: 2, MATCHED_BY_AMOUNT: 1, TIMING_CLEARED: 12, TIMING_OPEN: 2, ENTRY_PREPARED: 18, UNEXPLAINED: 0 } });
+        expect(d.outputs.resolution!.entries.find(e => e.sourceRecordIds[0] === 'BANK-FY-0237')).toMatchObject({ debit: { account: 'Duplicate payments to be recovered', amount: '1684.20' }, cashEffect: '-1684.20' });
+    });
+});

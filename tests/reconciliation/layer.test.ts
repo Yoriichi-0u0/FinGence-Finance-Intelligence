@@ -113,6 +113,42 @@ describe('several months, any one currency', () => {
         expect(r.periods.flatMap(p => p.items).some(i => i.link)).toBe(false);
         expect(allPassed(r)).toBe(true);
     });
+    it('reports a payment the bank made twice under one reference, booked once, as a duplicate payment', () => {
+        // The matcher never clears either bank copy (Phase 1 rule); the statement pairs the closest one with the ledger entry.
+        const bank: Row[] = [['B1', '2026-02-13', 'R7', '-1684.20', 'Hardware supplier'], ['B2', '2026-02-14', 'R7', '-1684.20', 'Hardware supplier'], ['B3', '2026-02-20', 'R8', '500.00']];
+        const ledger: Row[] = [['L1', '2026-02-14', 'R7', '-1684.20'], ['L2', '2026-02-20', 'R8', '500.00']];
+        const r = run(bank, ledger);
+        expect(r.periods[0].snapshot.counts.AMBIGUOUS_DUPLICATE_LEDGER).toBe(2);
+        expect(r.periods[0].items.map(i => [i.category, i.resolution, i.bankRecordId, i.ledgerRecordIds, i.effect, i.adjustment])).toEqual([
+            ['DUPLICATE_BANK_PAYMENT', 'ENTRY_PREPARED', 'B1', [], '-1684.20', '-1684.20'],
+            ['DUPLICATE_BANK_MATCHED', 'MATCHED_BY_AMOUNT', 'B2', ['L1'], '0.00', '0.00'],
+        ]);
+        expect(r.entries.map(e => [e.debit.account, e.credit.account, e.debit.amount, e.cashEffect, e.sourceRecordIds])).toEqual([['Duplicate payments to be recovered', 'Cash at bank (1000-BANK)', '1684.20', '-1684.20', ['B1', 'B2', 'L1']]]);
+        expect(r.periods[0].items[0].summary).toBe('SGD 1,684.20 left the bank a second time under the same reference; your books record the payment once. FinGence prepared the entry for the second payment, marked "to be recovered".');
+        expect(r.status).toBe('BALANCED_AFTER_ENTRIES');
+        expect(r.totals).toMatchObject({ transactions: 2, unexplained: '0.00', resolutions: { MATCHED_BY_AMOUNT: 1, ENTRY_PREPARED: 1, UNEXPLAINED: 0 } });
+        expect(allPassed(r)).toBe(true);
+        // Record order does not change which copy is kept.
+        const reversed = reconcile({ ...source('bank', bank), rows: [...source('bank', bank).rows].reverse() }, source('ledger', ledger), { organizationId: 'test-org' });
+        expect(reversed.periods[0].items).toEqual(r.periods[0].items);
+    });
+    it('pairs the duplicate whatever characters the ledger record ID contains', () => {
+        const r = run([['B1', '2026-02-13', 'R7', '-80.00'], ['B2', '2026-02-14', 'R7', '-80.00']], [['L|1', '2026-02-13', 'R7', '-80.00']]);
+        expect(r.periods[0].items.map(i => [i.category, i.bankRecordId, i.ledgerRecordIds])).toEqual([['DUPLICATE_BANK_PAYMENT', 'B2', []], ['DUPLICATE_BANK_MATCHED', 'B1', ['L|1']]]);
+        expect(allPassed(r)).toBe(true);
+    });
+    it('a received amount the bank shows twice is a duplicate receipt, to be refunded', () => {
+        const r = run([['B1', '2026-02-13', 'R7', '900.00'], ['B2', '2026-02-13', 'R7', '900.00']], [['L1', '2026-02-13', 'R7', '900.00']]);
+        expect(r.periods[0].items.map(i => [i.category, i.bankRecordId, i.ledgerRecordIds])).toEqual([['DUPLICATE_BANK_RECEIPT', 'B2', []], ['DUPLICATE_BANK_MATCHED', 'B1', ['L1']]]);
+        expect(r.entries.map(e => [e.debit.account, e.credit.account, e.cashEffect])).toEqual([['Cash at bank (1000-BANK)', 'Duplicate receipts to be refunded', '900.00']]);
+        expect(allPassed(r)).toBe(true);
+    });
+    it('keeps every identity when several bank copies share ledger entries that are not one identical transaction', () => {
+        const r = run([['B1', '2026-02-13', 'R7', '-50.00'], ['B2', '2026-02-14', 'R7', '-50.00']], [['L1', '2026-02-13', 'R7', '-50.00'], ['L2', '2026-02-14', 'R7', '-50.00']]);
+        expect(r.periods[0].items.map(i => [i.category, i.bankRecordId, i.ledgerRecordIds, i.effect])).toEqual([['UNEXPLAINED', 'B1', ['L1', 'L2'], '50.00'], ['UNEXPLAINED', 'B2', [], '-50.00']]);
+        expect(r.status).toBe('UNEXPLAINED_DIFFERENCE');
+        expect(allPassed(r)).toBe(true);
+    });
     it('is independent of record order', () => {
         const bank: Row[] = [['B1', '2026-01-10', 'R1', '100.00'], ['B2', '2026-02-02', 'R2', '250.00'], ['B3', '2026-02-14', 'FEE', '-3.00', 'Service charge']];
         const ledger: Row[] = [['L1', '2026-01-10', 'R1', '100.00'], ['L2', '2026-01-30', 'R2', '250.00'], ['L3', '2026-02-11', 'R4', '9.00']];

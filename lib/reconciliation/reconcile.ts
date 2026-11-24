@@ -180,9 +180,13 @@ export function reconcile(bank: CashSource, ledger: CashSource, options: { organ
                     return resolved({}, 'TIMING_OPEN', item.category === 'DEPOSIT_IN_TRANSIT' ? `${amount} you recorded on ${longDate(row.date)} had not reached the bank by the end of ${monthName(period)}. FinGence expects it on the next statement.` : `A cheque of ${amount} you recorded on ${longDate(row.date)} had not been cashed by the end of ${monthName(period)}. FinGence expects it on a coming statement.`);
                 }
                 case 'REFERENCE_ONLY': return resolved({}, 'MATCHED_BY_AMOUNT', `The same amount, ${money(abs(cents(bankRows.get(item.bankRecordId!)!.signedCents)), currency)}, was recorded on the same day on both sides; only the reference differs.`);
+                case 'DUPLICATE_BANK_MATCHED': return resolved({}, 'MATCHED_BY_AMOUNT', `Found in both the bank statement and your books (${money(abs(cents(bankRows.get(item.bankRecordId!)!.signedCents)), currency)}). The bank shows it more than once; the repeat is listed separately.`);
                 case 'UNEXPLAINED': return resolved({}, 'UNEXPLAINED', `FinGence could not explain ${amount} here. It has been flagged for your technical team.`);
                 default: {
-                    const made = correctingEntries(item, period, currency, bankRows, ledgerRows, entries.length);
+                    // A duplicate bank record's entry names the bank copy that matches the books, and that ledger entry.
+                    const original = item.category === 'DUPLICATE_BANK_PAYMENT' || item.category === 'DUPLICATE_BANK_RECEIPT'
+                        ? listed.find(o => o.category === 'DUPLICATE_BANK_MATCHED' && o.reference === item.reference && bankRows.get(o.bankRecordId!)?.signedCents === bankRows.get(item.bankRecordId!)?.signedCents) : undefined;
+                    const made = correctingEntries(item, period, currency, bankRows, ledgerRows, entries.length, original ? [original.bankRecordId!, ...original.ledgerRecordIds] : []);
                     entries.push(...made);
                     const plain: Partial<Record<ItemCategory, string>> = {
                         BANK_CHARGE_NOT_IN_LEDGER: `The bank charged a fee of ${amount} that was not in your books. FinGence prepared the entry to add it.`,
@@ -190,6 +194,8 @@ export function reconcile(bank: CashSource, ledger: CashSource, options: { organ
                         PAYMENT_NOT_IN_LEDGER: `${amount} left the bank but was not in your books. FinGence prepared the entry to add it, marked "to be identified".`,
                         LEDGER_AMOUNT_ERROR: `Your books show a different amount from the bank. FinGence prepared a correction of ${amount} to match the bank.`,
                         DUPLICATE_LEDGER_POSTING: `This was recorded more than once in your books. FinGence prepared the entry to remove the extra copy.`,
+                        DUPLICATE_BANK_PAYMENT: `${amount} left the bank a second time under the same reference; your books record the payment once. FinGence prepared the entry for the second payment, marked "to be recovered".`,
+                        DUPLICATE_BANK_RECEIPT: `${amount} arrived at the bank a second time under the same reference; your books record it once. FinGence prepared the entry for the second receipt, marked "to be refunded".`,
                     };
                     return resolved({}, 'ENTRY_PREPARED', plain[item.category] ?? `FinGence prepared a correcting entry of ${amount}.`, null, made.map(e => e.id));
                 }
@@ -251,7 +257,8 @@ export function reconcile(bank: CashSource, ledger: CashSource, options: { organ
             'Each calendar month is matched by the unchanged deterministic matcher: a unique reference, currency and signed amount within two days.',
             `An unmatched record is linked to one on the other side with the same reference and amount when each is the other's only candidate: receipts within ${CLEARING_DAYS.receipt} days, payments within ${CLEARING_DAYS.payment} days, and late ledger bookings within ${CLEARING_DAYS.ledgerLate} days.`,
             'An item that should have cleared within its window on the statements supplied, and did not, is unexplained.',
-            'Correcting entries are prepared automatically: bank charges, receipts and payments missing from the ledger, ledger amount errors and duplicate postings. Unidentified receipts and payments go to a "to be identified" account. They are prepared for the books, not posted to any accounting system.',
+            'A reference the bank shows more than once with identical amounts, recorded once in the ledger, is matched to the bank copy closest to the ledger date; each other copy is a duplicate payment or receipt.',
+            'Correcting entries are prepared automatically: bank charges, receipts and payments missing from the ledger, ledger amount errors, duplicate postings and duplicate bank payments or receipts. Unidentified receipts and payments go to a "to be identified" account. They are prepared for the books, not posted to any accounting system.',
             'Months that only one side covers are reported and not reconciled.',
         ],
     };
@@ -262,7 +269,7 @@ const statementItem = (i: ResolvedItem): StatementItem => ({
     date: i.date, reference: i.reference, description: i.description, rule: i.rule, note: i.note,
 });
 
-function correctingEntries(item: StatementItem, period: string, currency: string, bankRows: Map<string, CashSourceRow>, ledgerRows: Map<string, CashSourceRow>, offset: number): CorrectingEntry[] {
+function correctingEntries(item: StatementItem, period: string, currency: string, bankRows: Map<string, CashSourceRow>, ledgerRows: Map<string, CashSourceRow>, offset: number, original: string[] = []): CorrectingEntry[] {
     const make = (n: number, date: string, description: string, cash: bigint, other: string, sourceRecordIds: string[]): CorrectingEntry => {
         const amount = formatCents(abs(cash)), cashLine = { account: CASH_ACCOUNT, amount }, otherLine = { account: other, amount };
         return { id: `CE-${period}-${String(offset + n + 1).padStart(3, '0')}`, period, date, category: item.category, description, debit: cash > 0n ? cashLine : otherLine, credit: cash > 0n ? otherLine : cashLine, cashEffect: formatCents(cash), sourceRecordIds, rule: item.rule };
@@ -273,6 +280,8 @@ function correctingEntries(item: StatementItem, period: string, currency: string
         case 'BANK_CHARGE_NOT_IN_LEDGER': return [make(0, bank!.date, `Bank charge: ${bank!.description}`, adjustment, 'Bank charges', [bank!.recordId])];
         case 'RECEIPT_NOT_IN_LEDGER': return [make(0, bank!.date, `Receipt on the bank statement: ${bank!.description}`, adjustment, 'Receipts to be identified', [bank!.recordId])];
         case 'PAYMENT_NOT_IN_LEDGER': return [make(0, bank!.date, `Payment on the bank statement: ${bank!.description}`, adjustment, 'Payments to be identified', [bank!.recordId])];
+        case 'DUPLICATE_BANK_PAYMENT': return [make(0, bank!.date, `Duplicate payment on the bank statement: ${bank!.description} (reference ${bank!.reference}${original[0] ? `, also ${original[0]}` : ''})`, adjustment, 'Duplicate payments to be recovered', [bank!.recordId, ...original])];
+        case 'DUPLICATE_BANK_RECEIPT': return [make(0, bank!.date, `Duplicate receipt on the bank statement: ${bank!.description} (reference ${bank!.reference}${original[0] ? `, also ${original[0]}` : ''})`, adjustment, 'Duplicate receipts to be refunded', [bank!.recordId, ...original])];
         case 'LEDGER_AMOUNT_ERROR': {
             const entry = ledgerRows.get(item.ledgerRecordIds[0])!;
             return [make(0, entry.date, `Correct ${entry.recordId} to the bank amount (${money(abs(BigInt(bank!.signedCents)), currency)})`, adjustment, `Account of ${entry.recordId} (correction)`, [entry.recordId, bank!.recordId])];
