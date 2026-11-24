@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ArrowRight, CalendarRange, ChartNoAxesCombined, Check, ChevronRight, FileBarChart, FileSpreadsheet, FileText, Fingerprint, HardDrive, House, LoaderCircle, MessageSquareText, Play, ReceiptText, RefreshCw, RotateCcw, Server, ShieldAlert, Sparkles, TrendingUp, Upload } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CalendarDays, CalendarRange, ChartNoAxesCombined, Check, ChevronRight, FileBarChart, FileSpreadsheet, FileText, Fingerprint, HardDrive, House, LoaderCircle, MessageSquareText, Play, ReceiptText, RefreshCw, RotateCcw, Server, ShieldAlert, Sparkles, TrendingUp, Upload } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
 import { STAGE_TITLES, type DocumentInput, type StageId } from '@/lib/demo/pipeline';
 import { useDemoProcessing } from './context';
@@ -16,6 +16,8 @@ import { Callout, DecisionBadge, PendingBadge, Stat, Table, button, chip, money,
 const SAMPLE = ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
 /** A second fictional business: one quarter (January to March 2026) in SGD, with timing differences that clear across months. */
 const QUARTER = ['quarter/demo-bank-statement-2026-q1-sgd.csv', 'quarter/demo-general-ledger-2026-q1-sgd.csv', 'quarter/demo-bank-history-2025-04-to-2026-03-sgd.csv'];
+/** A third fictional business: a full financial year (January to December 2025) in MYR, with two years of bank history. */
+const FULL_YEAR = ['full-year/demo-bank-statement-2025-fy-myr.csv', 'full-year/demo-general-ledger-2025-fy-myr.csv', 'full-year/demo-bank-history-2024-01-to-2025-12-myr.csv'];
 /** The same fictional transactions in unfamiliar layouts (needs the AI gateway), plus the canonical history for the forecast. */
 const UNFAMILIAR = ['unfamiliar/bank-statement-march-2026-export.csv', 'unfamiliar/general-ledger-cash-march-2026.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
 /** The same documents as an Excel workbook, as text PDFs and as scans (all need the AI gateway), plus the canonical history. */
@@ -46,7 +48,7 @@ export default function DemoDataWorkspace() {
     async function loadSample(paths = SAMPLE) {
         setLoading(true); setNotice(null);
         try {
-            const manifests = Object.fromEntries(await Promise.all(['', 'unfamiliar/', 'quarter/'].map(async dir => [dir, (await (await fetch(`/demo/${dir}manifest.json`, { cache: 'no-store' })).json() as { files: Record<string, { sha256: string }> }).files] as const)));
+            const manifests = Object.fromEntries(await Promise.all(['', 'unfamiliar/', 'quarter/', 'full-year/'].map(async dir => [dir, (await (await fetch(`/demo/${dir}manifest.json`, { cache: 'no-store' })).json() as { files: Record<string, { sha256: string }> }).files] as const)));
             const files = await Promise.all(paths.map(async path => {
                 const bytes = new Uint8Array(await (await fetch(`/demo/${path}`, { cache: 'no-store' })).arrayBuffer());
                 const [dir, name] = path.includes('/') ? [path.slice(0, path.lastIndexOf('/') + 1), path.slice(path.lastIndexOf('/') + 1)] : ['', path];
@@ -115,6 +117,7 @@ export default function DemoDataWorkspace() {
                     <div className="grid gap-2.5 sm:grid-cols-2">
                         <button type="button" className={tile} disabled={busy} onClick={() => void loadSample()}><span className={tileIcon}><FileSpreadsheet aria-hidden="true" size={18} /></span><span className="min-w-0"><span className="block font-semibold">Sample documents</span><span className="block text-xs font-normal text-[var(--muted)]">One month · March 2026 · MYR</span></span></button>
                         <button type="button" className={tile} disabled={busy} onClick={() => void loadSample(QUARTER)}><span className={tileIcon}><CalendarRange aria-hidden="true" size={18} /></span><span className="min-w-0"><span className="block font-semibold">Quarter sample</span><span className="block text-xs font-normal text-[var(--muted)]">3 months · January to March 2026 · SGD</span></span></button>
+                        <button type="button" className={`${tile} sm:col-span-2`} disabled={busy} onClick={() => void loadSample(FULL_YEAR)}><span className={tileIcon}><CalendarDays aria-hidden="true" size={18} /></span><span className="min-w-0"><span className="block font-semibold">Full-year sample</span><span className="block text-xs font-normal text-[var(--muted)]">12 months · January to December 2025 · MYR</span></span></button>
                     </div>
                     <label className="flex min-h-20 cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed border-[var(--border-strong)] bg-[var(--surface-subtle)] px-4 py-4 text-center text-sm transition-colors hover:border-[var(--brand)] hover:bg-[var(--brand-soft)] has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
                         <span className="inline-flex items-center gap-2 font-semibold text-[var(--brand-ink)]"><Upload aria-hidden="true" size={17} />Choose files</span>
@@ -127,7 +130,7 @@ export default function DemoDataWorkspace() {
                     </div> : null}
                     <details className="text-xs text-[var(--muted)]">
                         <summary className="inline-flex min-h-9 cursor-pointer items-center gap-1 font-semibold text-[var(--muted-strong)]"><ChevronRight aria-hidden="true" size={14} className="disclosure-chevron transition-transform" />About the samples and your own files</summary>
-                        <p className="mt-1 leading-relaxed">Sample: a fictional bank statement and cash-account ledger for March 2026, plus 12 months of bank history (generated by <code>scripts/generate-demo-documents.mjs</code>). The quarter sample is a second fictional business with three months in Singapore dollars, where timing differences clear from one month to the next (<code>scripts/generate-quarter-documents.mjs</code>). You may instead choose your own files: CSV, Excel (.xlsx), PDF statements, or scans and photos (PDF, PNG, JPEG); you do not need to label them. Use only fictional or non-confidential test data.{ai?.available ? ` The unfamiliar-layout samples are the same fictional transactions exported with other headings, date and number formats; the Excel, PDF and scanned samples hold the same documents in those formats. They are read by the AI interpreter and checked against the arithmetic in each document. Scans are read by OCR ${serverJobs ? 'on the server and again in this browser' : 'in this browser'}, which can take up to a minute, and an OCR misreading of a reference code shows up as a reconciliation item to review.` : ''}</p>
+                        <p className="mt-1 leading-relaxed">Sample: a fictional bank statement and cash-account ledger for March 2026, plus 12 months of bank history (generated by <code>scripts/generate-demo-documents.mjs</code>). The quarter sample is a second fictional business with three months in Singapore dollars, where timing differences clear from one month to the next (<code>scripts/generate-quarter-documents.mjs</code>). The full-year sample is a third fictional business, a furniture maker, with a whole financial year in ringgit and two years of bank history: seasonal sales, a new trade customer from July, an equipment purchase and a year-end bonus (<code>scripts/generate-full-year-documents.mjs</code>). You may instead choose your own files: CSV, Excel (.xlsx), PDF statements, or scans and photos (PDF, PNG, JPEG); you do not need to label them. Use only fictional or non-confidential test data.{ai?.available ? ` The unfamiliar-layout samples are the same fictional transactions exported with other headings, date and number formats; the Excel, PDF and scanned samples hold the same documents in those formats. They are read by the AI interpreter and checked against the arithmetic in each document. Scans are read by OCR ${serverJobs ? 'on the server and again in this browser' : 'in this browser'}, which can take up to a minute, and an OCR misreading of a reference code shows up as a reconciliation item to review.` : ''}</p>
                     </details>
                     {notice ? <Callout role="alert" tone="bad">{notice}</Callout> : null}
                     <div>
