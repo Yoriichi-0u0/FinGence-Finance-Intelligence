@@ -14,6 +14,7 @@ the new version and its date.
 - AI06 explains verified suggestions, suggestions needing review, abstentions and permanent review decisions using the approved notices (#153).
 
 ### Added
+- **Analytics** now explains what drove your cash using the categories your own books use: net cash from operating, investing and financing activities, a statement of cash flows against the previous period, where cash went and came from, customer concentration, key cash ratios, the biggest changes, and operating cash month by month (#160).
 - A Full-year sample on Data: a fictional furniture maker's whole 2025 financial year in ringgit, with two years of bank history, so every page, the annual AI report and the forecast can be shown on a busier, seasonal year (#158).
 - **Testing checklist** (`/uat`) for SAIC's acceptance testing: every signed-in tester works through the UAT tasks and records a result, kind, severity and note per task, saved as they go; Admins and Superadmins see everyone's results, the sign-off criteria and the open issues, and download them as a CSV with testers numbered rather than named. Needs `workspace-v8-uat.sql` on Production first (#154).
 - AI06 users can reject their own suggestions needing review and restore the saved decision, while unverified approval stays blocked (#150; refs #112).
