@@ -175,6 +175,23 @@ export function classifyCash(input: { bankRows: SourceRow[]; months: string[]; l
 /** The payee rule's key: a payee and the direction of the money, so a customer's refund keeps its own category. */
 export const payeeKey = (counterparty: string, signed: bigint) => `${counterparty} · ${signed < 0n ? 'out' : 'in'}`;
 
+/**
+ * Any set of months summarized the same way: statement months exactly as classified, earlier months by the payee rule.
+ * Null when one of the months is neither a statement month nor in the verified history.
+ */
+export function summarizeMonths(k: CashClassification, historyRows: SourceRow[], months: string[]): PeriodSummary | null {
+    const current = new Set(k.current.months), known = new Set([...current, ...historyRows.map(r => r.period)]);
+    if (!months.length || !months.every(m => known.has(m))) return null;
+    const rows = [
+        ...k.rows.filter(r => months.includes(r.period)).map(r => ({ period: r.period, signedCents: BigInt(r.signedCents), category: r.category, activity: r.activity, basis: r.basis })),
+        ...historyRows.filter(r => months.includes(r.period) && !current.has(r.period)).map(r => {
+            const signed = toCents(r.signedAmount), category = k.payees[payeeKey(r.counterparty, signed)];
+            return { period: r.period, signedCents: signed, category: category ?? NOT_CLASSIFIED, activity: category ? activityOf(category) : 'OPERATING' as Activity, basis: !category ? 'NOT_CLASSIFIED' as const : BANK_RULES.has(category) ? 'BANK_RULE' as const : 'BOOKS' as const };
+        }),
+    ];
+    return summarize(rows, [...months].sort());
+}
+
 export function nextMonth(period: string) {
     const [y, m] = period.split('-').map(Number);
     return m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`;
