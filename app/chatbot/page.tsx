@@ -8,7 +8,7 @@ import { assertObsidianDemoAccess, obsidianDemoModeEnabled } from '@/lib/server/
 import ObsidianDemoChat from '@/components/obsidian-demo/chat';
 import { selectChatbotRuntime } from '@/lib/server/obsidian-demo/chatbot-mode';
 
-export const metadata = { title: 'Fin' };
+export const metadata = { title: 'AI assistant' };
 
 /** One entry point; the opt-in local mode selects Groq over verified uploaded data. */
 export default async function Page() {

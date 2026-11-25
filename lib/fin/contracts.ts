@@ -5,13 +5,18 @@
  * FinGence itself (Fin replies as a guide) or about this business's money (Fin hands a self-contained question to the
  * grounded Q&A, whose plan/answer gates fill every figure from verified records). A reply that contains a figure,
  * an unknown link or anything outside the schema is withheld by `verifyFinReply`, never shown.
+ *
+ * Fin is the assistant's default name: each person may rename theirs (`cleanAssistantName`), kept per member in the
+ * workspace (supabase/sql/workspace-v9-assistant.sql) or, with the workspace off, in this browser.
  */
 import { z } from 'zod';
 import { MAX_QUESTION } from '../grounded-qa/contracts';
 import type { GroundedRun } from '../grounded-qa/client';
 
-export const FIN_VERSION = 'fingence-fin-v1';
+export const FIN_VERSION = 'fingence-fin-v2';
+/** The assistant's default name, until a person gives theirs another. */
 export const FIN_NAME = 'Fin';
+export const MAX_NAME = 20;
 export const MAX_MESSAGE = 600;
 export const MAX_TURNS = 8;
 export const MAX_REPLY = 700;
@@ -21,14 +26,14 @@ export const FIN_PAGES = {
     '/': { label: 'Overview', about: 'what needs attention first, the processing confidence and a card for every page' },
     '/data': { label: 'Data', about: 'choose a sample or your own documents, process them, and see what FinGence read beside each document' },
     '/history': { label: 'History', about: 'every run you processed, saved with its documents, to reopen exactly as it was' },
-    '/transactions': { label: 'Transactions', about: 'every bank and ledger record FinGence verified' },
+    '/transactions': { label: 'Transactions', about: 'every bank and ledger record FinGence read and checked' },
     '/reconciliation': { label: 'Reconciliation', about: 'bank against books: what matched, what was resolved by a stated rule, and what is still unexplained' },
-    '/analytics': { label: 'Analytics', about: 'money in and out by counterparty and by month' },
-    '/forecasting': { label: 'Forecasting', about: 'a next-month cash baseline (an average of recent months, not a prediction), with an experimental challenger where enabled' },
-    '/anomalies': { label: 'Anomalies', about: 'payments worth a second look; a candidate is a reason to review, never a finding' },
-    '/reports': { label: 'Reports', about: 'the management report, ready to print or save as PDF' },
-    '/ai-report': { label: 'AI report', about: 'a quarterly or annual style report written by AI over the verified figures, every figure filled in and checked by FinGence' },
-    '/chatbot': { label: 'Fin', about: 'a full-page conversation with Fin' },
+    '/analytics': { label: 'Analytics', about: 'what drove your cash: a cash flow statement and the biggest changes, sorted by the categories your own books use, with counterparties and months' },
+    '/forecasting': { label: 'Forecasting', about: 'your cash for the next six months, planned category by category from your verified history, with the range past forecasts actually missed by' },
+    '/anomalies': { label: 'Anomalies', about: 'unusual bank records, each checked against your books; a candidate is a reason to review, never a fraud finding' },
+    '/reports': { label: 'Reports', about: 'a management summary of the same figures, to print or save as PDF' },
+    '/ai-report': { label: 'AI report', about: 'a report laid out like a Bursa-listed company\'s quarterly or annual report: statements and notes computed by FinGence, commentary written by AI, every figure checked' },
+    '/chatbot': { label: 'Assistant', about: 'a full-page conversation with your assistant' },
     '/uat': { label: 'Testing checklist', about: 'the acceptance-testing tasks, where you record how each one went and submit your results' },
     '/account': { label: 'Your account', about: 'who you are signed in as, and changing your own password' },
 } as const;
@@ -42,9 +47,10 @@ export const finPage = (path: string): FinPage | null => {
 const turn = z.strictObject({ role: z.enum(['user', 'fin']), text: z.string().min(1).max(MAX_MESSAGE) });
 export type FinTurn = z.infer<typeof turn>;
 
-/** What the browser sends: the conversation's words, the page, and the run's scope. Never amounts or records. */
+/** What the browser sends: the assistant's name, the conversation's words, the page, and the run's scope. Never amounts or records. */
 export const finRequestSchema = z.strictObject({
     version: z.literal(FIN_VERSION),
+    name: z.string().max(MAX_NAME * 2).refine(n => cleanAssistantName(n) === n, 'Not a valid assistant name.'),
     page: z.enum(FIN_LINKS).nullable(),
     turns: z.array(turn).min(1).max(MAX_TURNS).refine(t => t.at(-1)?.role === 'user', 'The last turn must be the user\'s.'),
     run: z.strictObject({ businessName: z.string().max(120), period: z.string().max(17), currency: z.string().regex(/^[A-Z]{3}$/) }).nullable(),
@@ -86,9 +92,32 @@ export function verifyFinReply(content: unknown, req: Pick<FinRequest, 'run'>): 
     return { decision: 'SHOWN', reply: { ...reply, links } };
 }
 
-/** The words Fin says when it cannot use the model, so the panel always answers something honest. */
+/**
+ * A name a person gives their assistant: letters (any script), single spaces, hyphens and apostrophes, at most twenty
+ * characters, and never a figure, a currency code or a number word, so the name can never carry a figure into a reply.
+ * Returns the cleaned name, or null when it cannot be used. The database checks the same length and refuses digits and
+ * symbols (fingence_workspace.valid_assistant).
+ */
+const NAME_SHAPE = /^\p{L}[\p{L}\p{M}'’ -]*$/u;
+export function cleanAssistantName(raw: unknown): string | null {
+    if (typeof raw !== 'string') return null;
+    const name = raw.normalize('NFC').replace(/\s+/g, ' ').trim();
+    if (!name || [...name].length > MAX_NAME || !NAME_SHAPE.test(name) || FIGURE.test(name) || NUMBER_WORD.test(name)) return null;
+    return name;
+}
+/** What is kept for each member: the assistant's name. */
+export const assistantSettingsSchema = z.strictObject({
+    v: z.literal(1),
+    name: z.string().max(MAX_NAME * 2).refine(n => cleanAssistantName(n) === n, 'Not a valid assistant name.'),
+});
+export type AssistantSettings = z.infer<typeof assistantSettingsSchema>;
+
+/** How the assistant introduces itself: by its name, and plainly as an AI. */
+export const finGreeting = (name: string) => `Hi, I'm ${name}, your FinGence AI assistant. I can show you around FinGence and answer questions about the figures in your latest run. What would you like to know?`;
+
+/** The words the assistant says when it cannot use the model, so the panel always answers something honest. */
 export const FIN_FALLBACK = {
-    greeting: `Hi, I'm ${FIN_NAME}. I can show you around FinGence and answer questions about the figures in your latest run. What would you like to know?`,
+    greeting: finGreeting(FIN_NAME),
     unavailable: 'I can\'t reach my AI right now, so I\'ll answer with FinGence\'s fixed rules instead. Questions about your figures still work.',
     withheld: 'I started to answer, but my reply didn\'t pass FinGence\'s checks, so I\'ve held it back. Could you ask that another way?',
     noRun: 'I can answer that once there are figures to read. Process a sample or your own documents on Data, then ask me again.',

@@ -7,7 +7,8 @@ import { useState } from "react";
 import { DemoProcessingProvider, useDemoProcessing } from "@/components/demo/context";
 import { attentionCounts } from "@/lib/demo/attention";
 import { DemoBanner } from "@/components/demo/banner";
-import { FinDock, FinProvider } from "@/components/fin/fin";
+import { FinDock, FinProvider, useFin } from "@/components/fin/fin";
+import { FIN_NAME } from "@/lib/fin/contracts";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { atLeast, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
 import { OutsideView, ViewingAs } from "@/components/workspace/view-switch";
@@ -99,9 +100,15 @@ function useNavBadges(): (href: string) => { count: number; tone: "attention" | 
 }
 const BADGE = { attention: "bg-[var(--attention)]", caution: "bg-[var(--caution)]" };
 const needsLabel = (n: number) => `${n} need${n === 1 ? "s" : ""} you`;
+/** The assistant's page is labelled with the name each person gave their assistant. */
+function useNavLabel() {
+  const name = useFin()?.name ?? FIN_NAME;
+  return (item: NavItem) => item.href === financeQuestions.href ? `Ask ${name}` : item.label;
+}
+function NavLabel({ item }: { item: NavItem }) { return <>{useNavLabel()(item)}</>; }
 
 function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label: string; items: NavItem[]; pathname: string; onNavigate?: () => void; rail?: boolean }) {
-  const badgeFor = useNavBadges();
+  const badgeFor = useNavBadges(), labelOf = useNavLabel();
   if (!items.length) return null;
   return (
     <div>
@@ -116,8 +123,8 @@ function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label:
                 href={item.href}
                 onClick={onNavigate}
                 aria-current={active ? "page" : undefined}
-                aria-label={rail ? (badge ? `${item.label}, ${needsLabel(badge.count)}` : item.label) : undefined}
-                title={rail ? item.label : undefined}
+                aria-label={rail ? (badge ? `${labelOf(item)}, ${needsLabel(badge.count)}` : labelOf(item)) : undefined}
+                title={rail ? labelOf(item) : undefined}
                 className={`group relative flex min-h-10 items-center gap-3 rounded-xl text-[14px] font-medium transition-colors ${rail ? "justify-center px-0" : "px-3"} ${
                   active ? "bg-white/[0.09] text-white" : "text-[var(--rail-ink)]/80 hover:bg-white/[0.05] hover:text-white"
                 }`}
@@ -129,7 +136,7 @@ function NavGroup({ label, items, pathname, onNavigate, rail = false }: { label:
                   strokeWidth={active ? 2.2 : 1.8}
                   className={active ? "text-[#93bdff]" : "text-[var(--rail-muted)] group-hover:text-white"}
                 />
-                {rail ? null : item.label}
+                {rail ? null : labelOf(item)}
                 {badge ? rail
                   ? <span aria-hidden="true" className={`absolute right-1.5 top-1 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[11px] font-bold text-white ring-2 ring-[var(--rail)] ${BADGE[badge.tone]}`}>{badge.count}</span>
                   : <span className={`ml-auto grid h-6 min-w-6 place-items-center rounded-full px-1.5 text-[12px] font-bold tabular-nums text-white ${BADGE[badge.tone]}`}><span aria-hidden="true">{badge.count}</span><span className="sr-only">{needsLabel(badge.count)}</span></span>
@@ -230,7 +237,7 @@ function BottomBar({ onMore, chatbotAvailable }: { onMore: () => void; chatbotAv
                   <Icon aria-hidden="true" size={20} strokeWidth={active ? 2.3 : 1.8} />
                   {badge ? <span aria-hidden="true" className={`absolute -right-3 -top-2 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[11px] font-bold text-white ring-2 ring-[var(--surface)] ${BADGE[badge.tone]}`}>{badge.count}</span> : null}
                 </span>
-                {item.label}
+                <NavLabel item={item} />
                 {badge ? <span className="sr-only">, {needsLabel(badge.count)}</span> : null}
               </Link>
             </li>
@@ -292,7 +299,7 @@ export function AppShell({ children, localFinancialConsumers = false, localAdmin
             </button>
             <Brand compact />
           </div>
-          {current ? <span className="truncate rounded-full bg-white/[0.08] px-3 py-1 text-xs font-medium text-white/90">{current.label}</span> : null}
+          {current ? <span className="truncate rounded-full bg-white/[0.08] px-3 py-1 text-xs font-medium text-white/90"><NavLabel item={current} /></span> : null}
         </header>
 
         <main className="mx-auto min-h-dvh w-full max-w-[1480px] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-28 pt-5 sm:pl-[max(1.5rem,env(safe-area-inset-left))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pt-6 lg:pb-10 xl:px-10 xl:pt-8">

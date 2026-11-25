@@ -116,6 +116,7 @@ export function plainMessage(code: string | undefined | null): string {
         case 'ROLE_NOT_ALLOWED': case 'FORBIDDEN': return 'Your role cannot make this change.';
         case 'SESSION_ENDED': case 'SIGN_IN_REQUIRED': return 'You have been signed out. Please sign in again.';
         case 'WORKSPACE_UNAVAILABLE': return 'FinGence cannot reach its database right now. Please try again in a moment.';
+        case 'INVALID_SETTINGS': return 'Choose a name of up to 20 letters. Spaces, hyphens and apostrophes are fine; numbers and symbols are not.';
         default: return 'Something went wrong. Please try again; if it keeps happening, tell your Admin.';
     }
 }

@@ -34,7 +34,7 @@ export const UAT_TASKS: UatTask[] = [
         expected: 'A quarterly report for the first quarter ended 31 March 2026, compared with October to December 2025. Each section is marked either “Written by AI · figures checked” or shows FinGence’s own summary where the AI text did not pass the checks; every highlighted figure matches the tables.',
         question: 'Does it read like a quarterly report you would give management? What is missing?' },
     { id: 7, title: 'Ask Fin', links: [],
-        steps: ['Open **Ask Fin** (the button at the bottom right, or Ctrl/⌘ K).', 'Ask: “Where do I see what did not match?”', 'Ask: “How much did we pay Tiong Flour Mills this quarter?”', 'Ask: “Should we take a loan?”'],
+        steps: ['Open **Ask Fin** (the button at the bottom right, or Ctrl/⌘ K). Fin is the AI assistant\'s default name; you can rename yours with the pencil button.', 'Ask: “Where do I see what did not match?”', 'Ask: “How much did we pay Tiong Flour Mills this quarter?”', 'Ask: “Should we take a loan?”'],
         expected: 'Fin guides you to the right page; the money question is answered with checked figures from your run; the loan question is politely declined, because advice is outside what cash records support.',
         question: 'Did Fin answer the way a helpful colleague would?' },
     { id: 8, title: 'Reopen a run from History', links: [{ href: '/history', label: 'Open History' }],
