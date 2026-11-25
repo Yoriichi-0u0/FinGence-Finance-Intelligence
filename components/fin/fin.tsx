@@ -234,9 +234,9 @@ const TONE_OF_MOOD: Record<MoodView['mood'], string> = {
 
 /** One line under the assistant's header saying what it noticed, from code, with a link to where to look. Not in quiet mode. */
 function MoodLine({ className = '', onNavigate }: { className?: string; onNavigate?: () => void }) {
-    const fin = useFin();
+    const fin = useFin(), here = finPage(usePathname());
     if (!fin || fin.prefs.quiet || !fin.mood.line) return null;
-    const { mood, line, link } = fin.mood;
+    const { mood, line } = fin.mood, link = fin.mood.link === here ? null : fin.mood.link;
     return <p className={`rise-in flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] leading-snug ${TONE_OF_MOOD[mood]} ${className}`}>
         <span>{line}</span>
         {link ? <Link href={link} onClick={onNavigate} className="inline-flex min-h-8 items-center gap-1 font-semibold underline decoration-current/40 underline-offset-2">Open {FIN_PAGES[link].label}<ArrowUpRight aria-hidden="true" size={13} /></Link> : null}
@@ -320,8 +320,8 @@ export function FinDock() {
                 <Link href="/chatbot" onClick={() => fin.setOpen(false)} className="hidden size-11 place-items-center rounded-xl text-[var(--muted-strong)] hover:bg-[var(--surface-subtle)] lg:grid" aria-label="Open the full page" title="Full page"><Expand aria-hidden="true" size={18} /></Link>
                 <button type="button" onClick={() => fin.setOpen(false)} className="grid size-11 place-items-center rounded-xl text-[var(--muted-strong)] hover:bg-[var(--surface-subtle)]" aria-label={`Close ${fin.name}`}><X aria-hidden="true" size={20} /></button>
             </header>
-            {settings ? <AssistantSettingsPanel onDone={() => setSettings(false)} className="max-h-[55%] overflow-y-auto border-b border-[var(--border)] px-4 py-3" /> : <MoodLine className="border-b border-[var(--border)] px-4 py-2.5" onNavigate={() => fin.setOpen(false)} />}
-            <FinConversation compact />
+            {settings ? <AssistantSettingsPanel onDone={() => setSettings(false)} className="min-h-0 flex-1 overflow-y-auto px-4 py-4" />
+                : <><MoodLine className="border-b border-[var(--border)] px-4 py-2.5" onNavigate={() => fin.setOpen(false)} /><FinConversation compact /></>}
         </section> : null}
     </>;
 }
