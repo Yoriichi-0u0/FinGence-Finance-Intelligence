@@ -5,6 +5,7 @@ import { PageHeader, Panel } from '@/components/ui';
 import { button, chip, field, Stat, Table } from '@/components/demo/shared';
 import { featureLabel } from '@/lib/ai-calls/features';
 import { useWorkspace } from './context';
+import { Waiting } from '@/components/waiting';
 
 type LogDocument = { name: string; role: string | null; format: string; decision: string; method: string; model: string | null; receiptMode: string | null;
     inputTokens: number | null; outputTokens: number | null; estimatedUsd: number | string | null; checks: number; failedChecks: number };
@@ -75,7 +76,7 @@ export function TechnicalLog() {
         actions={<div className="flex flex-wrap gap-2"><button type="button" className={button} onClick={() => void load(days)} disabled={loading}>{loading ? <LoaderCircle aria-hidden="true" size={16} className="animate-spin" /> : <RefreshCw aria-hidden="true" size={16} />}Refresh</button>
             {data ? <button type="button" className={button} onClick={() => exportCsv(data)}><Download aria-hidden="true" size={16} />Export CSV</button> : null}</div>} />;
     if (error) return <>{header}<Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel></>;
-    if (!data) return <>{header}<p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin" size={16} />Loading…</p></>;
+    if (!data) return <>{header}<Waiting what="Loading the Technical log" shape="rows" count={6} /></>;
 
     // The tiles and the chart cover the whole period; the timeline below shows the latest events only (see the limits).
     const t = data.totals, truncated = t.runs > data.runs.length || t.aiCalls > data.aiCalls.length;

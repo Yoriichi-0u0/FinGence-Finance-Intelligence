@@ -1,9 +1,10 @@
 'use client';
 import Link from 'next/link';
-import { ArrowRight, LoaderCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useDemoProcessing } from './context';
 import { DemoModule, isReady, type DemoView } from './modules';
 import { primaryButton } from './shared';
+import { Waiting } from '@/components/waiting';
 
 const TITLES: Record<DemoView, string> = { overview: 'Overview', transactions: 'Transactions', reconciliation: 'Reconciliation', analytics: 'Analytics', anomalies: 'Anomalies', forecasting: 'Forecasting', reports: 'Reports', 'ai-report': 'AI report', ask: 'Finance Q&A' };
 
@@ -23,7 +24,7 @@ export function DemoGate({ view, illustrative }: { view: DemoView; illustrative?
         <section className="panel-shadow relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-8">
             <div aria-hidden="true" className="ledger-grid pointer-events-none absolute inset-0 [mask-image:linear-gradient(120deg,black,transparent_65%)]" />
             <div className="relative">
-            {status === 'loading' || status === 'processing' ? <p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin text-[var(--brand)]" size={16} />{status === 'processing' ? 'Processing documents…' : 'Loading the processing context…'}</p> : <>
+            {status === 'loading' || status === 'processing' ? <Waiting what={status === 'processing' ? 'Processing your documents' : 'Loading your results'} shape="cards" /> : <>
                 <p className="text-[12px] font-semibold text-[var(--brand)]">{quarantined ? 'Nothing to show' : 'Start on Data'}</p>
                 <h2 className="mt-1 text-xl font-semibold tracking-[-0.02em] sm:text-2xl">{quarantined ? 'The last documents were quarantined' : 'No documents processed yet'}</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--muted-strong)]">{quarantined ? 'They did not pass identification or verification, so no figures are shown. Open Data to see the exact checks.' : 'Process a bank statement and general ledger once on the Data page. This page then shows results from that same verified processing, computed in your browser.'}</p>

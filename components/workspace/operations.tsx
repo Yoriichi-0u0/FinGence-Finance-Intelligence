@@ -1,10 +1,11 @@
 'use client';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { CirclePause, CirclePlay, LoaderCircle, Power, PowerOff, RefreshCw } from 'lucide-react';
+import { CirclePause, CirclePlay, Power, PowerOff, RefreshCw } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
 import { button, primaryButton, Table } from '@/components/demo/shared';
 import { canManage, ROLE_LABEL, useWorkspace, type WorkspaceRole } from './context';
+import { Waiting } from '@/components/waiting';
 
 type Session = { memberId: string; email: string; role: WorkspaceRole; openedAt: string; lastSeenAt: string; expiresAt: string; current: boolean };
 type AuditEntry = { at: string; action: string; actor: string | null; targetId: string | null; detail: Record<string, unknown> };
@@ -50,7 +51,7 @@ export function OperationsConsole() {
     }
 
     if (error) return <><PageHeader title="Operations" description="Backend processing, sessions and controls." /><Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel></>;
-    if (!data) return <><PageHeader title="Operations" description="Backend processing, sessions and controls." /><p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin" size={16} />Loading…</p></>;
+    if (!data) return <><PageHeader title="Operations" description="Backend processing, sessions and controls." /><Waiting what="Loading operations" shape="rows" /></>;
     // The AI switch and audit trail follow the role being viewed ("Switch view"); the server still checks the real role.
     const viewRole = workspace.viewRole ?? data.role, superadmin = viewRole === 'SUPERADMIN', p = data.processing, ai = data.ai;
     return <>

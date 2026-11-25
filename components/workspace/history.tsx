@@ -8,6 +8,7 @@ import { useDemoProcessing } from '@/components/demo/context';
 import type { DocumentInput } from '@/lib/demo/pipeline';
 import type { RestoreBundle } from '@/lib/history/saved-run';
 import { atLeast, plainMessage, useWorkspace } from './context';
+import { Waiting } from '@/components/waiting';
 
 type Confidence = { status: 'MEASURED' | 'INCOMPLETE'; percent?: number; band?: 'HIGH' | 'CHECK' | 'LOW'; reason?: string };
 type Run = { id: string; at: string; by: string | null; mine: boolean; processingId: string; status: string; businessId: string | null; businessName: string | null; period: string | null; currency: string | null;
@@ -76,7 +77,7 @@ export function HistoryPage() {
         </div> : null}
         {notice ? <p role="status" className="mb-4 rounded-xl bg-[var(--surface)] px-3 py-2 text-sm ring-1 ring-inset ring-[var(--border)]">{notice}</p> : null}
         {error ? <Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel>
-            : !data ? <p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" size={16} className="animate-spin" />Loading…</p>
+            : !data ? <Waiting what="Loading your saved runs" shape="rows" />
             : <>
                 {data.runs.length ? <ol className="grid min-w-0 gap-3">{data.runs.map(run => <li key={run.id} className="min-w-0 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 shadow-[var(--shadow-panel)] sm:p-5">
                     <div className="flex flex-wrap items-start gap-x-5 gap-y-3">

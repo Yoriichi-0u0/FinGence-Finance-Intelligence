@@ -8,6 +8,7 @@ import { GroundedAnswer } from '@/components/demo/grounded-answer';
 import { useDemoProcessing } from '@/components/demo/context';
 import { button, field, primaryButton } from '@/components/demo/shared';
 import { plainMessage, useWorkspace } from '@/components/workspace/context';
+import { TypingDots } from '@/components/waiting';
 import { askGrounded, gatewayQaModel, type GroundedRun } from '@/lib/grounded-qa/client';
 import { preCheck } from '@/lib/grounded-qa/gates';
 import { catalogue, groundingIndex } from '@/lib/grounded-qa/tools';
@@ -205,12 +206,12 @@ export function FinConversation({ compact = false }: { compact?: boolean }) {
                 ? <div key={m.id} className="flex justify-end"><p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-tr-md bg-[var(--brand-solid)] px-3.5 py-2.5 text-sm leading-relaxed text-white">{m.text}</p></div>
                 : <div key={m.id} className="flex gap-2.5"><Avatar mood={m.pending || m.grounded === 'PENDING' ? 'thinking' : 'idle'} />
                     <div className="min-w-0 flex-1 space-y-2">
-                        {m.pending ? <p role="status" className="inline-flex items-center gap-2 rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-2.5 text-sm text-[var(--muted)] ring-1 ring-inset ring-[var(--border)]"><LoaderCircle aria-hidden="true" size={15} className="animate-spin" />{fin.name} is thinking…</p>
+                        {m.pending ? <p role="status" className="rise-in inline-flex items-center gap-2.5 rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-3 text-sm text-[var(--muted)] ring-1 ring-inset ring-[var(--border)]"><TypingDots className="text-[var(--brand)]" /><span>{fin.name} is thinking</span></p>
                             : <div className="rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-2.5 text-sm leading-relaxed ring-1 ring-inset ring-[var(--border)]">
                                 <p className="whitespace-pre-wrap">{m.text}</p>
                                 {m.links.length ? <p className="mt-2 flex flex-wrap gap-2">{m.links.map(href => <Link key={href} href={href} onClick={() => compact && fin.setOpen(pathname === href)} className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--brand-line)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--brand-ink)] hover:bg-[var(--brand-soft)]">{FIN_PAGES[href].label}<ArrowUpRight aria-hidden="true" size={13} /></Link>)}</p> : null}
                             </div>}
-                        {m.grounded === 'PENDING' ? <p role="status" className="inline-flex items-center gap-2 text-xs text-[var(--muted)]"><LoaderCircle aria-hidden="true" size={13} className="animate-spin" />Reading the verified records…</p>
+                        {m.grounded === 'PENDING' ? <p role="status" className="rise-in inline-flex items-center gap-2 text-xs text-[var(--muted)]"><TypingDots className="text-[var(--brand)]" />Reading the verified records</p>
                             : m.grounded ? <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3.5 text-sm">{m.run && m.run.id !== demo.context?.processingId ? <p className="mb-2 rounded-lg bg-[var(--warn-soft)] px-2.5 py-1.5 text-xs text-[var(--warn-ink)]">From an earlier run: {m.run.label}. Your current figures may differ.</p> : null}<GroundedAnswer run={m.grounded} fallback={m.rule ? 'Here is FinGence\'s fixed-rule answer instead.' : ''} /></div> : null}
                         {m.rule ? <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-3.5 text-sm"><p className="font-semibold">{m.rule.headline}</p><p className="mt-1 text-[var(--muted-strong)]">{m.rule.interpretation}</p></div> : null}
                     </div>

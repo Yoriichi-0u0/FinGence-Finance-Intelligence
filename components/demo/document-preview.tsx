@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Papa from 'papaparse';
-import { Eye, FileWarning, LoaderCircle } from 'lucide-react';
+import { Eye, FileWarning } from 'lucide-react';
 import { Panel } from '@/components/ui';
 import type { DocumentInput } from '@/lib/demo/pipeline';
 import { chip } from './shared';
+import { Waiting } from '@/components/waiting';
 
 /**
  * The documents exactly as chosen, before anything is processed: the pages of a PDF or a scan, or the first rows of a
@@ -60,7 +61,7 @@ export function DocumentPreview({ documents }: { documents: DocumentInput[] }) {
             {documents.map((d, i) => <button key={`${d.name}-${i}`} type="button" role="tab" aria-selected={d === current} className={`${chip(d === current)} shrink-0`} onClick={() => setIndex(i)}>{d.name}</button>)}
         </div> : null}
         <div className="p-4 sm:p-5">
-            {!ready ? <p role="status" className="flex items-center gap-2 text-sm text-[var(--muted-strong)]"><LoaderCircle aria-hidden="true" size={16} className="animate-spin" />Drawing {current.name}…</p>
+            {!ready ? <Waiting what={`Drawing ${current.name}`} shape="page" />
                 : ready.kind === 'none' ? <p className="flex items-center gap-2 text-sm text-[var(--muted-strong)]"><FileWarning aria-hidden="true" size={16} className="text-[var(--muted)]" />{ready.reason}</p>
                 : ready.kind === 'pages' ? <>
                     <div className="thin-scrollbar flex max-h-[34rem] gap-3 overflow-auto rounded-xl bg-[var(--surface-sunken)] p-3 ring-1 ring-inset ring-[var(--border)]">

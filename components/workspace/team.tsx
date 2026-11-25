@@ -1,9 +1,10 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
-import { Copy, LoaderCircle, UserPlus } from 'lucide-react';
+import { Copy, UserPlus } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
 import { button, primaryButton, Table } from '@/components/demo/shared';
 import { canManage, grantable, ROLE_LABEL, useWorkspace, type WorkspaceRole } from './context';
+import { Waiting } from '@/components/waiting';
 
 type Member = { id: string; email: string; role: WorkspaceRole; active: boolean; version: number; joinedAt: string; openSessions: number };
 type Invitation = { id: string; email: string; role: WorkspaceRole; createdAt: string; expiresAt: string };
@@ -59,7 +60,7 @@ export function TeamConsole() {
     }
 
     if (error) return <><PageHeader title="Team" description="Members, roles and invitations." /><Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel></>;
-    if (!team) return <><PageHeader title="Team" description="Members, roles and invitations." /><p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" className="animate-spin" size={16} />Loading the team…</p></>;
+    if (!team) return <><PageHeader title="Team" description="Members, roles and invitations." /><Waiting what="Loading the team" shape="rows" count={5} /></>;
     return <>
         <PageHeader title="Team" description={`Who can sign in to ${team.organization}, and with which role. Finance users process documents and read the results; Admins also manage Finance users and can pause processing; Superadmins also manage Admins and the AI switch.`} />
         {notice ? <p role="status" className="mb-4 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--ink)] p-3 text-sm">{notice}</p> : null}

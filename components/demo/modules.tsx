@@ -33,6 +33,7 @@ import { processingConfidence } from '@/lib/confidence';
 import { attentionCounts } from '@/lib/demo/attention';
 import { cardSpans, offered, type CardId, type Layout } from '@/lib/dashboard/layout';
 import { DecisionBadge, SourceStrip, Stat, Table, Unavailable, resultsEyebrow, button, chip, field, usesOwnDocuments, money, outflow, periodLabel, primaryButton } from './shared';
+import { Waiting } from '@/components/waiting';
 
 export type DemoView = 'overview' | 'transactions' | 'reconciliation' | 'analytics' | 'anomalies' | 'forecasting' | 'reports' | 'ai-report' | 'ask';
 type Ready = ProcessingContext & { scope: NonNullable<ProcessingContext['scope']>; outputs: ProcessingContext['outputs'] & { reconciliation: NonNullable<ProcessingContext['outputs']['reconciliation']>; totals: NonNullable<ProcessingContext['outputs']['totals']>; forecast: NonNullable<ProcessingContext['outputs']['forecast']>; report: NonNullable<ProcessingContext['outputs']['report']> } };
@@ -175,7 +176,7 @@ function Overview({ c, layout: initial }: { c: Ready; layout?: Layout }) {
         <SourceStrip context={c} />
         {editing ? null : <NeedsYou items={needs} />}
         {editing ? <DashboardEditor draft={draft} admin={dashboard.admin} where={dashboard.where} saving={saving} error={error} onChange={update => { if (!saving) setDraft(d => d && update(d)); }} onDone={() => void done()} onCancel={close} /> : null}
-        {!dashboard.ready ? <div aria-busy="true" aria-label="Loading your dashboard" className="min-h-[40vh]" />
+        {!dashboard.ready ? <Waiting what="Loading your dashboard" shape="cards" count={6} />
             : visible.length ? <div className="grid min-w-0 gap-5 xl:grid-cols-3">{visible.map((x, i) => <div key={x.id} id={`card-${x.id}`} data-card={x.id} className={`grid min-w-0 scroll-mt-20 ${spans[i]}`}>{cards[x.id]}</div>)}</div>
             : <p className="rounded-2xl border border-dashed border-[var(--border-strong)] px-4 py-8 text-center text-sm text-[var(--muted-strong)]">Every card is hidden. Use Customise dashboard to show them again.</p>}
         <p className="mt-4 text-xs text-[var(--muted)]">Bank cash movement is not revenue, expenses or profit. No accounting classification is inferred from bank receipts or payments.</p>

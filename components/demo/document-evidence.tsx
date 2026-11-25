@@ -1,11 +1,12 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, FileSearch, FileText, LoaderCircle, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowRight, FileSearch, FileText, ZoomIn, ZoomOut } from 'lucide-react';
 import { Panel } from '@/components/ui';
 import type { DocumentInput, ProcessedDocument, ProcessingContext } from '@/lib/demo/pipeline';
 import type { PageCoords } from '@/lib/interpretation/extract';
 import type { CellBox, RowGeometry } from '@/lib/interpretation/positioned';
 import { chip, money } from './shared';
+import { Waiting } from '@/components/waiting';
 
 /**
  * Side by side: the document as supplied (left) and what FinGence read from it (right). Each verified record points to
@@ -199,7 +200,7 @@ function Pages({ input, coords, geometry, read, ai, active, setActive, cellField
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => { reveal(ref.current); }, [active, zoom]);
     if (failed) return <p className="p-3 text-sm text-[var(--muted)]">The document could not be drawn in this browser.</p>;
-    if (!pages) return <p className="flex items-center gap-2 p-3 text-sm text-[var(--muted)]"><LoaderCircle aria-hidden="true" className="animate-spin" size={14} />Drawing the document…</p>;
+    if (!pages) return <Waiting what="Drawing the document" shape="page" className="p-3" />;
     const pct = (v: number, of: number) => `${(v / of) * 100}%`;
     return <div className="space-y-3 bg-[var(--surface-sunken)] p-2 sm:p-3" style={{ width: `${zoom * 100}%` }}>
         {pages.map(p => <div key={p.number} className="relative mx-auto w-full bg-white shadow-md ring-1 ring-black/5">
