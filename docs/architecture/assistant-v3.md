@@ -46,3 +46,17 @@ still reads.
 - No guilt, no streaks, no notifications outside the app.
 - The AI is disclosed in the greeting and the footer.
 - A test keeps every mood line free of exclamation marks, money and "missed you".
+
+## The narrated run (PR 3)
+
+On Data, Step 2 is the assistant's live narration of the eight stages (`components/fin/run-trace.tsx`,
+`lib/fin/narrate.ts`).
+
+- **While processing:** each finished stage gets one line written by code from its own decision and checks ("Matched the
+  bank to the books · 54 of 54 checks"), followed by what is running now ("Matching the bank to the books…").
+- **A stage that was set aside or could not run** shows the stage's own summary as the reason.
+- **When the run ends:** a closing line counted from the stages ("Done: all 8 stages passed and 72 of 72 checks
+  passed."), then the assistant's mood line with a link ("1 payment is worth a second look. Open Anomalies").
+- **Every check:** the full stage list folds behind "Show every check", and stays open for a quarantined run.
+- **No model calls:** the narration can say nothing the pipeline did not report. `tests/fin/narrate.test.ts` checks it
+  stage by stage against all three samples.
