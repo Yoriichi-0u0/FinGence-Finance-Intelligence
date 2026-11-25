@@ -57,4 +57,10 @@ describe('assistant mood', () => {
         expect(drawn[faces.indexOf('paused')]).not.toContain('fin-sparkle');
         expect(drawn[faces.indexOf('found')]).toContain('fin-alert');
     });
+    it('hops only when pleased and asked to (once per run, decided by the provider)', () => {
+        const svg = (mood: FinMood, hop: boolean) => renderToStaticMarkup(createElement(FinMascot, { mood, hop }));
+        expect(svg('happy', true)).toContain('fin-hop');
+        expect(svg('happy', false)).not.toContain('fin-hop');
+        expect(svg('found', true)).not.toContain('fin-hop');
+    });
 });

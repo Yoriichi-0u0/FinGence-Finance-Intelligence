@@ -67,6 +67,16 @@ async function memberPrefs(): Promise<AssistantPrefs | null> {
     } catch { return null; }
 }
 
+const HOPPED = 'fingence-assistant-hopped';
+function hoppedBefore(runId: string) {
+    if (typeof window === 'undefined') return true;
+    try { return (JSON.parse(sessionStorage.getItem(HOPPED) ?? '[]') as string[]).includes(runId); } catch { return false; }
+}
+function rememberHop(runId: string) {
+    try { const list = JSON.parse(sessionStorage.getItem(HOPPED) ?? '[]') as string[]; sessionStorage.setItem(HOPPED, JSON.stringify([...list.filter(id => id !== runId), runId].slice(-20))); }
+    catch { /* storage unavailable: it may hop again on the next page, which is harmless */ }
+}
+
 /** Without the model, Fin still says what the current page is for, and where to start. */
 function offlineGuide(page: FinPage | null) {
     const here = page && page !== '/chatbot' ? ` You're on ${FIN_PAGES[page].label}, which shows ${FIN_PAGES[page].about}.` : '';
@@ -215,17 +225,32 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
             period: context?.scope ? periodLabel(context.scope.period) : null,
         });
     }, [processing, busy, ai, issue, context]);
+    // "Pleased" hops once per run, not on every page or panel open: it is meant to be rare.
+    const runId = context?.processingId ?? null;
+    const [hoppedRun, setHoppedRun] = useState<string | null>(null);
+    const hop = mood.mood === 'pleased' && !prefs.quiet && !!runId && runId !== hoppedRun && !hoppedBefore(runId);
+    useEffect(() => {
+        if (!hop || !runId) return;
+        const timer = setTimeout(() => { rememberHop(runId); setHoppedRun(runId); }, 1200);
+        return () => clearTimeout(timer);
+    }, [hop, runId]);
     const value = useMemo(() => ({ open, setOpen, messages, busy, send, reset, ai, name, rename, prefs, savePrefs, mood }), [open, messages, busy, send, reset, ai, name, rename, prefs, savePrefs, mood]);
-    const look = useMemo(() => ({ character: prefs.character }), [prefs.character]);
-    return <FinContext.Provider value={value}><AssistantLook.Provider value={look}>{children}</AssistantLook.Provider></FinContext.Provider>;
+    const look = useMemo(() => ({ character: prefs.character, hop }), [prefs.character, hop]);
+    // Only "found something" is announced, once per change, on every screen size, so screen-reader users hear what needs
+    // them and no chatter.
+    const announce = !prefs.quiet && mood.mood === 'found' ? mood.line ?? '' : '';
+    return <FinContext.Provider value={value}><AssistantLook.Provider value={look}>
+        {children}
+        <p className="sr-only" role="status" aria-live="polite">{announce}</p>
+    </AssistantLook.Provider></FinContext.Provider>;
 }
 
 function Avatar({ size = 32, mood = 'idle' }: { size?: number; mood?: FinMood }) {
     return <span aria-hidden="true" className="grid shrink-0 place-items-center" style={{ width: size, height: size }}><AssistantFace size={size} mood={mood} /></span>;
 }
 
-/** The face for the assistant's current mood; quiet mode keeps it resting. */
-function useFace(): FinMood {
+/** The face for the assistant's current mood; quiet mode keeps it resting. Used by the dock, the page and the phone tab. */
+export function useFace(): FinMood {
     const fin = useFin();
     if (!fin) return 'idle';
     return fin.prefs.quiet && fin.mood.mood !== 'working' ? 'idle' : MASCOT_FACE[fin.mood.mood];
@@ -304,11 +329,8 @@ export function FinDock() {
     const [settings, setSettings] = useState(false);
     useEffect(() => { if (wasOpen.current && !fin?.open) launcher.current?.focus(); wasOpen.current = !!fin?.open; }, [fin?.open]);
     if (!fin || pathname === '/chatbot') return null;
-    const { count, line } = fin.mood, quiet = fin.prefs.quiet;
-    // Only "found something" is announced, once per change, so screen-reader users hear what needs them and no chatter.
-    const announce = !quiet && fin.mood.mood === 'found' ? line ?? '' : '';
+    const { count, line } = fin.mood;
     return <>
-        <p className="sr-only" role="status" aria-live="polite">{announce}</p>
         {fin.open ? null : <button ref={launcher} type="button" onClick={() => fin.setOpen(true)} aria-label={`Ask ${fin.name}, your FinGence AI assistant${count && line ? `. ${line}` : ''}`} title={`Ask ${fin.name} (Ctrl K)`}
             className="fixed bottom-6 right-6 z-40 hidden h-14 items-center gap-2 rounded-full bg-[var(--brand-solid)] pl-2 pr-5 text-sm font-semibold text-white shadow-lg ring-4 ring-[var(--canvas)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--brand-solid-hover)] lg:inline-flex print:hidden">
             <span className="relative grid size-11 place-items-center rounded-full bg-white"><AssistantFace size={38} mood={face} />

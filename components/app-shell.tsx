@@ -7,7 +7,8 @@ import { useState } from "react";
 import { DemoProcessingProvider, useDemoProcessing } from "@/components/demo/context";
 import { attentionCounts } from "@/lib/demo/attention";
 import { DemoBanner } from "@/components/demo/banner";
-import { FinDock, FinProvider, useFin } from "@/components/fin/fin";
+import { FinDock, FinProvider, useFace, useFin } from "@/components/fin/fin";
+import { AssistantFace } from "@/components/fin/mascot";
 import { FIN_NAME } from "@/lib/fin/contracts";
 import { ThemeSwitch } from "@/components/theme-switch";
 import { atLeast, useWorkspace, WorkspaceProvider } from "@/components/workspace/context";
@@ -210,6 +211,9 @@ function Sidebar({ onNavigate, rail = false, onToggle, localFinancialConsumers =
   );
 }
 
+/** The assistant's tab on a phone shows its face in its current mood, as the floating button does on a desktop. */
+function TabFace() { return <AssistantFace size={22} mood={useFace()} className="-my-px" />; }
+
 /** Phone navigation: the four most used pages in a bottom bar, and everything else behind "More". */
 function BottomBar({ onMore, chatbotAvailable }: { onMore: () => void; chatbotAvailable: boolean }) {
   const badgeFor = useNavBadges();
@@ -234,7 +238,7 @@ function BottomBar({ onMore, chatbotAvailable }: { onMore: () => void; chatbotAv
             <li key={item.href}>
               <Link href={item.href} aria-current={active ? "page" : undefined} className={`flex min-h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-[var(--brand)]" : "text-[var(--muted)]"}`}>
                 <span className="relative">
-                  <Icon aria-hidden="true" size={20} strokeWidth={active ? 2.3 : 1.8} />
+                  {item.href === "/chatbot" ? <TabFace /> : <Icon aria-hidden="true" size={20} strokeWidth={active ? 2.3 : 1.8} />}
                   {badge ? <span aria-hidden="true" className={`absolute -right-3 -top-2 grid h-[18px] min-w-[18px] place-items-center rounded-full px-1 text-[11px] font-bold text-white ring-2 ring-[var(--surface)] ${BADGE[badge.tone]}`}>{badge.count}</span> : null}
                 </span>
                 <NavLabel item={item} />

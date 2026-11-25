@@ -15,11 +15,11 @@ export type FinMood = 'idle' | 'thinking' | 'happy' | 'found' | 'unsure' | 'paus
  * of it stops when the person prefers reduced motion or turns motion off. Decorative: the caller labels the control it
  * sits in.
  */
-export function FinMascot({ size = 40, mood = 'idle', className = '' }: { size?: number; mood?: FinMood; className?: string }) {
+export function FinMascot({ size = 40, mood = 'idle', hop = false, className = '' }: { size?: number; mood?: FinMood; hop?: boolean; className?: string }) {
     const id = useId().replace(/:/g, ''), body = `fin-body-${id}`, belly = `fin-belly-${id}`, shine = `fin-shine-${id}`;
     const look = mood === 'thinking' ? 'translate(1.4 -1.6)' : mood === 'found' ? 'translate(1.6 -0.4)' : mood === 'unsure' ? 'translate(-1 1)' : undefined;
     const wide = mood === 'found';
-    return <svg aria-hidden="true" focusable="false" viewBox="0 0 64 64" width={size} height={size} data-mood={mood} className={`fin-mascot fin-${mood} shrink-0 overflow-visible ${className}`}>
+    return <svg aria-hidden="true" focusable="false" viewBox="0 0 64 64" width={size} height={size} data-mood={mood} className={`fin-mascot fin-${mood} ${hop && mood === 'happy' ? 'fin-hop' : ''} shrink-0 overflow-visible ${className}`}>
         <defs>
             <linearGradient id={body} x1="14" y1="10" x2="50" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#60A5FA" /><stop offset="0.55" stopColor="#2563EB" /><stop offset="1" stopColor="#1D4ED8" /></linearGradient>
             <linearGradient id={belly} x1="32" y1="28" x2="32" y2="58" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#EFF6FF" /><stop offset="1" stopColor="#DBEAFE" /></linearGradient>
@@ -70,12 +70,12 @@ export function FinMascot({ size = 40, mood = 'idle', className = '' }: { size?:
 }
 
 /** Whether to draw the character at all: a person may choose a plain, text-only assistant. */
-export const AssistantLook = createContext<{ character: boolean }>({ character: true });
+export const AssistantLook = createContext<{ character: boolean; hop: boolean }>({ character: true, hop: false });
 
 /** The assistant as the person chose to see it: the mascot in its mood, or a plain chat icon. Decorative. */
 export function AssistantFace({ size = 40, mood = 'idle', className = '' }: { size?: number; mood?: FinMood; className?: string }) {
-    const { character } = useContext(AssistantLook);
-    if (character) return <FinMascot size={size} mood={mood} className={className} />;
+    const { character, hop } = useContext(AssistantLook);
+    if (character) return <FinMascot size={size} mood={mood} hop={hop} className={className} />;
     return <span aria-hidden="true" data-mood={mood} className={`grid shrink-0 place-items-center rounded-full bg-[var(--brand-soft)] text-[var(--brand)] ${className}`} style={{ width: size, height: size }}>
         <MessageSquareText size={Math.round(size * 0.5)} strokeWidth={1.75} />
     </span>;
