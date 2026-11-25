@@ -22,7 +22,8 @@ export const MAX_ROWS = 20;
 export const UNTRUSTED_FIELDS = new Set(['description', 'reference', 'counterparty', 'name', 'category', 'rationale']);
 
 type Draft = Omit<Fact, 'id' | 'query'>;
-type Ran = { drafts: Draft[]; total: number };
+/** `total` counts every matching row; `truncated` is set when the wrapped code listed fewer than matched. */
+type Ran = { drafts: Draft[]; total: number; truncated?: boolean };
 export type ToolResult = { tool: string; ok: true; facts: Fact[]; total: number; truncated: boolean } | { tool: string; ok: false; error: string };
 
 const abs = (v: bigint) => v < 0n ? -v : v;
@@ -34,7 +35,14 @@ const direction = z.enum(['IN', 'OUT', 'ANY']);
 const grounded = (tool: ToolCall['tool']) => (index: GroundingIndex, args: object): Ran => {
     const call = toolCallSchema(catalogue(index)).parse({ tool, ...args });
     const drafts = runQueries(index, [call]).map(f => ({ label: f.label, primary: f.primary, fields: f.fields, sources: f.sources }));
-    return { drafts, total: drafts.length };
+    // The grounded tools list a bounded number of rows (a limit, or eight); their first fact counts every match. Keep that
+    // full count, so a bounded list is never mistaken for a complete one.
+    const countOf = (field: string) => { const v = drafts[0]?.fields[field]; return v?.kind === 'COUNT' ? v.n : drafts.length - 1; };
+    const matching = call.tool === 'transactions' ? countOf('matching') : call.tool === 'reconciliation' ? countOf('selected') : call.tool === 'anomalies' ? countOf('candidates')
+        : call.tool === 'counterparties' ? new Set(index.rows.filter(r => call.direction === 'ANY' || (call.direction === 'IN') === (toCents(r.signedAmount) > 0n)).map(r => r.counterparty)).size : null;
+    if (matching === null) return { drafts, total: drafts.length };
+    const listed = call.tool === 'counterparties' ? drafts.length : drafts.length - 1;
+    return { drafts, total: matching + drafts.length - listed, truncated: listed < matching };
 };
 
 // ---- Read: reconciliation exceptions, one exception, and the records that might settle it ---------------------------
@@ -267,14 +275,15 @@ export const FIN_TOOL_NAMES = Object.keys(FIN_TOOLS) as FinToolName[];
  * back as a result the model can read and recover from, never as an exception.
  */
 export function runFinTool(index: GroundingIndex, call: { name: string; arguments: unknown }, ledger: Fact[]): ToolResult {
-    const tool = (FIN_TOOLS as Record<string, Tool>)[call.name];
+    // Only the registry's own entries: never an inherited name such as toString or __proto__.
+    const tool = Object.hasOwn(FIN_TOOLS, call.name) ? (FIN_TOOLS as Record<string, Tool>)[call.name] : undefined;
     if (!tool) return { tool: call.name, ok: false, error: `There is no tool called ${call.name}.` };
     const args = tool.args.safeParse(call.arguments);
     if (!args.success) return { tool: call.name, ok: false, error: `The arguments do not fit: ${args.error.issues.map(i => `${i.path.join('.') || 'arguments'} ${i.message}`).join('; ')}`.slice(0, 300) };
     try {
-        const { drafts, total } = tool.run(index, args.data as never, ledger);
+        const { drafts, total, truncated } = tool.run(index, args.data as never, ledger);
         const kept = drafts.slice(0, MAX_ROWS), query = new Set(ledger.map(f => f.query)).size;
-        return { tool: call.name, ok: true, facts: kept.map((d, n) => ({ ...d, id: `F${ledger.length + n + 1}`, query })), total, truncated: drafts.length > MAX_ROWS || total > kept.length };
+        return { tool: call.name, ok: true, facts: kept.map((d, n) => ({ ...d, id: `F${ledger.length + n + 1}`, query })), total, truncated: !!truncated || drafts.length > MAX_ROWS || total > kept.length };
     } catch (error) {
         if (error instanceof ToolError) return { tool: call.name, ok: false, error: error.message };
         if (error instanceof z.ZodError) return { tool: call.name, ok: false, error: 'Those values are not in this run (for example a month or counterparty it does not have).' };

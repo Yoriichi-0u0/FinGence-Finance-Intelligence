@@ -131,6 +131,17 @@ describe('guard rails', () => {
         expect(runFinTool(index, { name: 'transactions', arguments: { direction: 'SIDEWAYS' } }, [])).toMatchObject({ ok: false });
         expect(runFinTool(index, { name: 'cash_summary', arguments: { period: '1999-01' } }, [])).toMatchObject({ ok: false, error: expect.stringContaining('not in this run') });
         expect(runFinTool(index, { name: 'categories', arguments: { limit: 8, sneaky: true } }, [])).toMatchObject({ ok: false });
+        for (const name of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) expect(runFinTool(index, { name, arguments: {} }, []), name).toEqual({ tool: name, ok: false, error: `There is no tool called ${name}.` });
+    });
+    it('says when a wrapped list was bounded, with the full count of what matched', () => {
+        const { index } = runs['full year'];
+        const tx = runFinTool(index, { name: 'transactions', arguments: { direction: 'ANY', counterparty: null, sort: 'LARGEST', limit: 3 } }, []);
+        expect(tx).toMatchObject({ ok: true, truncated: true });
+        if (tx.ok) { expect(tx.facts).toHaveLength(4); expect(tx.total).toBe((tx.facts[0].fields.matching as { n: number }).n + 1); }
+        const cp = runFinTool(index, { name: 'counterparties', arguments: { direction: 'ANY', limit: 2 } }, []);
+        expect(cp).toMatchObject({ ok: true, truncated: true });
+        if (cp.ok) expect(cp.total).toBe(new Set(index.rows.map(r => r.counterparty)).size);
+        expect(runFinTool(index, { name: 'cash_summary', arguments: { period: index.scope.period } }, [])).toMatchObject({ ok: true, truncated: false });
     });
     it('has only read and compute tools: nothing can apply, write or propose yet', () => {
         expect(new Set(Object.values(FIN_TOOLS).map(t => t.tier))).toEqual(new Set(['READ', 'COMPUTE']));
