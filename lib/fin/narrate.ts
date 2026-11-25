@@ -53,9 +53,9 @@ export function traceOf(stages: Stage[], processing: boolean): TraceLine[] {
 export function closingLine(stages: Stage[]): string {
     const ran = stages.length, total = stages.flatMap(s => s.checks).length, passed = stages.flatMap(s => s.checks).filter(c => c.passed).length;
     const setAside = stages.find(s => s.decision === 'QUARANTINED');
-    if (setAside) return `Stopped at "${STAGE_TITLES[setAside.id]}": the documents were set aside, so no figures are shown. ${passed} of ${total} checks passed before that.`;
+    if (setAside) return `Stopped at "${STAGE_TITLES[setAside.id]}": the documents were set aside, so no figures are shown. ${passed} of ${total} ${total === 1 ? 'check' : 'checks'} passed before that.`;
     const notRun = stages.filter(s => s.decision !== 'AUTO_ACCEPTED');
-    const allChecks = `${passed} of ${total} checks passed`;
+    const allChecks = `${passed} of ${total} ${total === 1 ? 'check' : 'checks'} passed`;
     return notRun.length
         ? `Done: ${ran - notRun.length} of ${STAGE_ORDER.length} stages passed and ${allChecks}. ${notRun.map(s => `"${STAGE_TITLES[s.id]}"`).join(' and ')} could not run, as it says above.`
         : `Done: all ${STAGE_ORDER.length} stages passed and ${allChecks}.`;
