@@ -184,7 +184,9 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
             const grounded: GroundedRun = refusedAsAsked
                 ? { question: text, status: 'REFUSED', refusal: { reason: refusedAsAsked, by: 'PRE_CHECK' }, queries: [], planChecks: [], facts: [], verdict: null, receipts: [], error: null }
                 : await askGrounded(index, reply.financeQuestion, gatewayQaModel);
+            // The verified Q&A makes its own AI calls: a limit or outage there pauses the assistant too.
             if (grounded.status === 'WITHHELD') setIssue('WITHHELD');
+            else if (grounded.status === 'UNAVAILABLE') setIssue(issueOf(grounded.error ?? 'UNREACHABLE'));
             set({ grounded, rule: grounded.status === 'ANSWERED' || !facts ? undefined : answerQuestion(facts, reply.financeQuestion) });
         } finally { setBusy(false); }
     }, [ai, busy, context, facts, index, name, pathname, prefs.tone, update]);
