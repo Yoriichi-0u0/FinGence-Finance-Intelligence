@@ -35,6 +35,7 @@ await db.exec(readFileSync('supabase/sql/workspace-v6-saved-runs.sql', 'utf8'));
 await db.exec(readFileSync('supabase/sql/workspace-v7-password.sql', 'utf8'));
 await db.exec(readFileSync('supabase/sql/workspace-v8-uat.sql', 'utf8'));
 await db.exec(readFileSync('supabase/sql/workspace-v9-assistant.sql', 'utf8'));
+await db.exec(readFileSync('supabase/sql/workspace-v10-assistant-controls.sql', 'utf8'));
 // One statement at a time, like a single database connection.
 let queue = Promise.resolve();
 const serial = work => (queue = queue.then(work, work));

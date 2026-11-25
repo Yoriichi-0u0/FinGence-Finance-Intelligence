@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { FinMascot } from '@/components/fin/mascot';
+import { AssistantFace } from '@/components/fin/mascot';
 
 /**
  * Waiting, made calm and alive: the assistant's mascot thinking beside a plain line that says what is loading, typing
@@ -71,7 +71,7 @@ export function Waiting({ what, shape = 'rows', count, className = '' }: { what:
         <div role="status" aria-live="polite" className="rise-in flex items-center gap-3">
             <span aria-hidden="true" className="relative grid size-12 shrink-0 place-items-center">
                 <span className="wait-halo absolute inset-0 rounded-full bg-[var(--brand-soft)]" />
-                <FinMascot size={40} mood="thinking" className="relative" />
+                <AssistantFace size={40} mood="thinking" className="relative" />
             </span>
             <span className="min-w-0">
                 <span className="flex items-center gap-2 text-sm font-semibold text-[var(--ink)]">{what}<TypingDots className="text-[var(--brand)]" /></span>

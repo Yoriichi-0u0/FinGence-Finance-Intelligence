@@ -46,6 +46,8 @@ FinGence-Production Supabase project (v1 applied on 4 November with 0 organizati
 - **Assistant name:** each member may rename their assistant, Fin by default (`workspace-v9-assistant.sql`, one strict
   shape `{v, name}` checked in the browser, server and database; the database also refuses digits and symbols). Only the
   member reads or changes theirs. Not audited, like dashboard preferences.
+  `workspace-v10-assistant-controls.sql` adds the controls beside the name (`{v: 2, name, tone, quiet, character,
+  motion}`); a v1 row stays valid.
 - **Sessions:** HttpOnly, SameSite=Lax cookie, Secure in production, 12 hours. A role change, turning access off or
   ending a session takes effect on the next request.
 - **Attempts:** sign-in and join are limited to 10 a minute per client and 30 an hour per email.

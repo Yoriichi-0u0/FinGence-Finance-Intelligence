@@ -8,7 +8,7 @@ import { useTechnicalDetail } from '@/components/workspace/context';
 import { groupDigits } from '@/lib/poc-anomalies/format';
 
 const BAND: Record<Band, { label: string; line: string; tone: string; ring: string; bar: string }> = {
-    HIGH: { label: 'High confidence', line: 'Nearly all of the money was read, checked and explained. Nothing needs you.', tone: 'text-[var(--good-ink)]', ring: 'ring-[var(--good-line)] bg-[var(--good-soft)]', bar: 'bg-[var(--good)]' },
+    HIGH: { label: 'High confidence', line: 'Nearly all of the money was read, checked and explained.', tone: 'text-[var(--good-ink)]', ring: 'ring-[var(--good-line)] bg-[var(--good-soft)]', bar: 'bg-[var(--good)]' },
     CHECK: { label: 'Check advised', line: 'Most of the money is accounted for. Look at what fell short below.', tone: 'text-[var(--warn-ink)]', ring: 'ring-[var(--warn-line)] bg-[var(--warn-soft)]', bar: 'bg-[var(--warn)]' },
     LOW: { label: 'Low confidence', line: 'A large share of the money could not be fully accounted for. Do not rely on these figures yet.', tone: 'text-[var(--bad-ink)]', ring: 'ring-[var(--bad-line)] bg-[var(--bad-soft)]', bar: 'bg-[var(--bad)]' },
 };

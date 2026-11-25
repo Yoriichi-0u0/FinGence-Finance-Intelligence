@@ -50,6 +50,17 @@ describe('Naming the assistant: each member keeps their own', () => {
         expect((await load(finance))[1].settings.name).toBe('Mei Ling');
         expect(await rows()).toBe(1);
     });
+    it('keeps the controls beside the name (v2), and still reads a name-only row (v1)', async () => {
+        const v2 = { v: 2, name: 'Kira', tone: 'friendly', quiet: true, character: false, motion: 'off' };
+        expect((await save(finance2, v2))[0]).toBe(200);
+        expect((await load(finance2))[1].settings).toEqual(v2);
+        for (const bad of [{ ...v2, tone: 'cheeky' }, { ...v2, motion: 'fast' }, { ...v2, quiet: 'yes' }, { ...v2, extra: 1 }]) {
+            expect((await save(finance2, bad))[0], JSON.stringify(bad)).toBe(400);
+            expect(await rpc('fingence_workspace_save_assistant', { p_token_hash: token(finance2), p_settings: bad }, store, deps.transport), JSON.stringify(bad)).toEqual({ ok: false, error: 'INVALID_SETTINGS' });
+        }
+        expect((await save(finance2, { v: 1, name: 'Kira' }))[0]).toBe(200);
+        expect((await save(finance2, null))[0]).toBe(200);
+    });
     it('keeps names in any script', async () => {
         expect((await save(finance2, { v: 1, name: '小金' }))[0]).toBe(200);
         expect((await load(finance2))[1].settings.name).toBe('小金');
@@ -103,6 +114,7 @@ describe('Naming the assistant: each member keeps their own', () => {
     it('the migration can run again on an existing store without losing names', async () => {
         const { readFileSync } = await import('node:fs');
         await db.exec(readFileSync('supabase/sql/workspace-v9-assistant.sql', 'utf8'));
+        await db.exec(readFileSync('supabase/sql/workspace-v10-assistant-controls.sql', 'utf8'));
         expect((await load(finance))[1].settings.name).toBe('Mei Ling');
     });
 });
