@@ -335,7 +335,7 @@ details[open] > summary .disclosure-chevron {
 .skeleton {
   position: relative;
   overflow: hidden;
-  background: var(--surface-subtle);
+  background: color-mix(in srgb, var(--border-strong) 55%, var(--surface-subtle));
 }
 .skeleton::after {
   content: "";
