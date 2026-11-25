@@ -1,6 +1,6 @@
 -- FinGence workspace v9: each member's own assistant settings, today the name they gave their assistant (the default is
--- "Fin"). Requires workspace-v1.sql and workspace-v2-saic.sql. Not yet applied to FinGence-Production: apply it before the
--- deploy that uses it, with the owner's go-ahead.
+-- "Fin"). Requires workspace-v1.sql and workspace-v2-saic.sql. Applied to FinGence-Production on 25 Nov 2026
+-- (fingence_workspace_v9_assistant).
 --   - One row per member. Nothing financial is stored: only {"v": 1, "name": <name>}, no other keys.
 --   - The member is always the one behind the session token; no function takes a member ID, so nobody reads or renames
 --     another person's assistant.
