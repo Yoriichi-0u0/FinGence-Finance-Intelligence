@@ -103,10 +103,12 @@ function exceptionDetail(index: GroundingIndex, args: { id: string }): Ran {
  * Records on the other side that might settle an exception, ranked by code: a shared reference token, the amount (exact,
  * within 1%, within 5%), then how many days apart. A candidate is only a lead for a person to judge, never a match.
  */
-export function rankCandidates(target: { amount: bigint; date: string; reference: string; exclude: Set<string> }, pool: Rec[]) {
+export function rankCandidates(target: { amount: bigint; date: string; reference: string; exclude: Set<string>; direction?: 'IN' | 'OUT' }, pool: Rec[]) {
+    // Bank and books share one cash-direction convention, so a receipt can never settle a payment: keep the same direction.
+    const sameDirection = (r: Rec) => !target.direction || (BigInt(r.signedCents) > 0n) === (target.direction === 'IN');
     const tokens = (s: string) => new Set(s.toUpperCase().match(/[A-Z0-9]{3,}/g) ?? []);
     const mine = tokens(target.reference), day = (d: string) => Date.parse(`${d}T00:00:00Z`) / 86_400_000;
-    return pool.filter(r => !target.exclude.has(r.recordId)).map(r => {
+    return pool.filter(r => !target.exclude.has(r.recordId) && sameDirection(r)).map(r => {
         const amount = abs(BigInt(r.signedCents)), gap = abs(amount - target.amount);
         const amountScore = gap === 0n ? 3 : gap * 100n <= target.amount ? 2 : gap * 20n <= target.amount ? 1 : 0;
         const shared = [...tokens(r.reference)].filter(t => mine.has(t));
@@ -122,7 +124,11 @@ function candidateMatches(index: GroundingIndex, args: { id: string; limit: numb
     if (side === 'BOTH') return { drafts: [{ label: 'Possible matches', primary: 'status', fields: { status: text('This item already has records on both sides.') }, sources: itemSources(i) }], total: 1 };
     const { bank, ledger } = records(index);
     const pool = [...(side === 'BANK' ? ledger : bank).values()];
-    const ranked = rankCandidates({ amount: abs(toCents(i.effect)), date: i.date, reference: i.reference, exclude: new Set([...(i.bankRecordId ? [i.bankRecordId] : []), ...i.ledgerRecordIds]) }, pool);
+    // The direction comes from the item's own record (its effect on bank minus books is signed the other way for a books
+    // record), and so does the amount when the record is found.
+    const own = side === 'BANK' ? bank.get(i.bankRecordId!) : ledger.get(i.ledgerRecordIds[0]);
+    const amount = own ? abs(BigInt(own.signedCents)) : abs(toCents(i.effect)), direction = own ? (BigInt(own.signedCents) > 0n ? 'IN' as const : 'OUT' as const) : undefined;
+    const ranked = rankCandidates({ amount, direction, date: i.date, reference: i.reference, exclude: new Set([...(i.bankRecordId ? [i.bankRecordId] : []), ...i.ledgerRecordIds]) }, pool);
     const AMOUNT = ['different amount', 'within 5%', 'within 1%', 'same amount'];
     return {
         drafts: ranked.slice(0, args.limit).map((c, n) => {

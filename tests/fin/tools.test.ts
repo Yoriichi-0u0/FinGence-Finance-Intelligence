@@ -98,6 +98,10 @@ describe('exceptions and the records that might settle them', () => {
         const ranked = rankCandidates({ amount: 10000n, date: '2026-03-05', reference: 'Payment INV-829', exclude: new Set(['SELF']) }, pool as never);
         // A and C: same amount and a shared token (A shares two); D: same invoice, different amount; B: close amount only.
         expect(ranked.map(c => c.record.recordId)).toEqual(['A', 'C', 'D', 'B']);
+        // A same-day receipt of the same size and reference can never settle a payment: it is left out once the direction is known.
+        const withReceipt = [...pool, row('R', '10000', '2026-03-05', 'INV-829')];
+        expect(rankCandidates({ amount: 10000n, date: '2026-03-05', reference: 'Payment INV-829', exclude: new Set(['SELF']) }, withReceipt as never)[0].record.recordId).toBe('R');
+        expect(rankCandidates({ amount: 10000n, direction: 'OUT', date: '2026-03-05', reference: 'Payment INV-829', exclude: new Set(['SELF']) }, withReceipt as never).map(c => c.record.recordId)).toEqual(['A', 'C', 'D', 'B']);
         expect(ranked[0]).toMatchObject({ amountScore: 3, shared: ['INV', '829'], days: 15 });
     });
     it('accepts the reconciliation layer\'s full item IDs, however many ledger records they join', () => {
@@ -114,6 +118,8 @@ describe('exceptions and the records that might settle them', () => {
         if (r.ok) for (const f of r.facts) { expect(f.label).toMatch(/a lead, not confirmed/); for (const own of [item.bankRecordId, ...item.ledgerRecordIds]) expect(f.sources.map(s => s.id)).not.toContain(own); }
         // The bank payout the wrong ledger amount belongs to (its own reference differs) is the first lead: within 5%, same day.
         expect(r.ok && r.facts[0].fields).toMatchObject({ recordId: { text: 'BANK-DEMO-0003' }, side: { text: 'Bank statement' }, amountMatch: { text: 'within 5%' }, daysApart: { n: 0 } });
+        // Every lead runs the same way as the books record (money in), never against it.
+        if (r.ok) for (const f of r.facts) expect(f.fields.direction).toEqual({ kind: 'TEXT', text: 'Money in' });
     });
 });
 
