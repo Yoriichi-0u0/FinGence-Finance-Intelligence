@@ -330,6 +330,55 @@ details[open] > summary .disclosure-chevron {
   animation: rise-in 0.35s ease-out both;
 }
 
+/* Waiting (components/waiting.tsx): a shimmer sweeps the outline of what is coming, the assistant's halo breathes and
+   the typing dots take turns. All of it stops for reduced motion. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-subtle);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--surface) 75%, transparent), transparent);
+  animation: wait-shimmer 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes wait-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+.wait-halo {
+  animation: wait-halo 2.4s ease-in-out infinite;
+}
+@keyframes wait-halo {
+  0%, 100% { transform: scale(0.88); opacity: 0.45; }
+  50% { transform: scale(1.06); opacity: 0.9; }
+}
+.wait-dots > span {
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: wait-dot 1.2s ease-in-out infinite;
+}
+.wait-dots > span:nth-child(2) { animation-delay: 0.15s; }
+.wait-dots > span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes wait-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+  30% { transform: translateY(-3px); opacity: 1; }
+}
+.wait-stagger > * {
+  animation: rise-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after, .wait-halo, .wait-dots > span, .wait-stagger > * { animation: none; }
+  .wait-dots > span { opacity: 0.6; }
+}
+
 /* Printed reports are always light, whatever theme is on screen. */
 @media print {
   :root,

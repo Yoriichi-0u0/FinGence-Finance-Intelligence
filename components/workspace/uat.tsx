@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, ArrowRight, CheckCircle2, CircleDashed, ClipboardCheck, Download, LoaderCircle, RefreshCw, Send } from 'lucide-react';
+import { AlertTriangle, ArrowRight, CheckCircle2, CircleDashed, ClipboardCheck, Download, RefreshCw, Send } from 'lucide-react';
 import { PageHeader, Panel } from '@/components/ui';
 import { button, chip, field, primaryButton } from '@/components/demo/shared';
 import {
@@ -9,6 +9,7 @@ import {
     type Tester, type UatAnswers, type UatKind, type UatResult, type UatSeverity,
 } from '@/lib/uat/tasks';
 import { atLeast, plainMessage, ROLE_LABEL, useWorkspace } from './context';
+import { Waiting } from '@/components/waiting';
 
 /**
  * Saves answers. Within the browser's 64 KB limit for requests that outlive the page, the request is sent so that it
@@ -47,7 +48,7 @@ export function TestingChecklist() {
         {admin ? <div role="group" aria-label="Whose results" className="mb-4 flex flex-wrap gap-2">
             {([['mine', 'My checklist'], ['all', 'Everyone’s results']] as const).map(([k, label]) => <button key={k} type="button" aria-pressed={shown === k} className={chip(shown === k)} onClick={() => setTab(k)}>{label}</button>)}
         </div> : null}
-        {workspace.loading ? <p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" size={16} className="animate-spin" />Loading…</p>
+        {workspace.loading ? <Waiting what="Checking your sign-in" shape="none" />
             : shown === 'all' ? <EveryonesResults /> : <MyChecklist admin={admin} />}
     </>;
 }
@@ -126,7 +127,7 @@ function MyChecklist({ admin }: { admin: boolean }) {
     };
 
     if (loadError) return <Panel><p className="p-4 text-sm sm:p-5">{loadError}</p></Panel>;
-    if (!answers) return <p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" size={16} className="animate-spin" />Loading…</p>;
+    if (!answers) return <Waiting what="Loading your testing checklist" shape="rows" count={5} />;
 
     const tasks = tasksFor(admin), done = progress(answers, admin);
     async function submit() {
@@ -229,7 +230,7 @@ function EveryonesResults() {
     useEffect(() => { queueMicrotask(() => void load()); }, [load]);
 
     if (error) return <Panel><p className="p-4 text-sm sm:p-5">{error}</p></Panel>;
-    if (!testers) return <p role="status" className="flex items-center gap-2 text-sm"><LoaderCircle aria-hidden="true" size={16} className="animate-spin" />Loading…</p>;
+    if (!testers) return <Waiting what="Loading everyone's results" shape="rows" count={3} />;
     const all = issues(testers), sign = signOff(testers), submitted = testers.filter(t => t.submittedAt).length;
     function exportCsv() {
         const url = URL.createObjectURL(new Blob([resultsCsv(testers!)], { type: 'text/csv;charset=utf-8' }));
