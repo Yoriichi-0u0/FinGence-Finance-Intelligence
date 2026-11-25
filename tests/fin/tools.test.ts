@@ -59,6 +59,13 @@ describe('the assistant\'s tools on every sample', () => {
         const theirs = runQueries(index, [{ tool: 'counterparties', direction: 'IN', limit: 5 }]);
         expect(mine.ok && mine.facts.map(f => f.fields)).toEqual(theirs.map(f => f.fields));
     });
+    it('tells an unchanged earlier period apart from no earlier period at all', () => {
+        const { index } = runs['full year'], k = index.context.outputs.classification!;
+        const withPrior = (prior: typeof k.prior): GroundingIndex => ({ ...index, context: { ...index.context, outputs: { ...index.context.outputs, classification: { ...k, prior } } } });
+        const status = (i: GroundingIndex) => { const r = runFinTool(i, { name: 'biggest_changes', arguments: { limit: 4 } }, []); return r.ok ? r.facts[0].fields.status : null; };
+        expect(status(withPrior({ ...k.current, payeeRule: 'same as now' }))).toEqual({ kind: 'TEXT', text: 'No category changed against the earlier period.' });
+        expect(status(withPrior(null))).toEqual({ kind: 'TEXT', text: 'No earlier period of the same length to compare with.' });
+    });
     it('agrees with the pages: categories, the cash plan and confidence come from the same functions', () => {
         const { index, context } = runs['full year'], o = context.outputs;
         const cats = runFinTool(index, { name: 'categories', arguments: { limit: 19 } }, []);
@@ -92,6 +99,12 @@ describe('exceptions and the records that might settle them', () => {
         // A and C: same amount and a shared token (A shares two); D: same invoice, different amount; B: close amount only.
         expect(ranked.map(c => c.record.recordId)).toEqual(['A', 'C', 'D', 'B']);
         expect(ranked[0]).toMatchObject({ amountScore: 3, shared: ['INV', '829'], days: 15 });
+    });
+    it('accepts the reconciliation layer\'s full item IDs, however many ledger records they join', () => {
+        const { index } = runs['march, one ledger amount wrong'], long = `2026-03:BANK-DEMO-0003|${Array.from({ length: 12 }, (_, i) => `GL-DEMO-${String(i).padStart(4, '0')}`).join('|')}`;
+        expect(long.length).toBeGreaterThan(80);
+        // A valid long ID gets past validation and is looked up (it is not in this run, so the answer says so).
+        expect(runFinTool(index, { name: 'exception_detail', arguments: { id: long } }, [])).toEqual({ tool: 'exception_detail', ok: false, error: `No reconciliation item ${long} in this run.` });
     });
     it('offers leads for a real unexplained item, labelled as leads', () => {
         const { index, context } = runs['march, one ledger amount wrong'], item = context.outputs.resolution!.attention[0];

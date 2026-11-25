@@ -188,7 +188,7 @@ function cashFlow(index: GroundingIndex): Ran {
 }
 function changes(index: GroundingIndex, args: { limit: number }): Ran {
     const k = classification(index), currency = index.currency, list = biggestChanges(k, args.limit);
-    if (!list.length) return { drafts: [{ label: 'Biggest changes', primary: 'status', fields: { status: text('No earlier period of the same length to compare with.') }, sources: [] }], total: 1 };
+    if (!list.length) return { drafts: [{ label: 'Biggest changes', primary: 'status', fields: { status: text(k.prior ? 'No category changed against the earlier period.' : 'No earlier period of the same length to compare with.') }, sources: k.prior ? [{ kind: 'HISTORY', id: index.scope.period }] : [] }], total: 1 };
     return { drafts: list.map((c, n): Draft => ({ label: `Change #${n + 1} against the earlier period`, primary: 'change', fields: { category: text(c.category), current: money(c.current, currency), prior: money(c.prior, currency), change: money(c.change, currency), percent: percentValue(c.percent) }, sources: [{ kind: 'TOTALS', id: index.scope.period }, { kind: 'HISTORY', id: index.scope.period }] })), total: list.length };
 }
 
@@ -248,7 +248,9 @@ function compute(_index: GroundingIndex, args: { op: 'sum' | 'difference' | 'per
 // ---- The registry --------------------------------------------------------------------------------------------------
 export class ToolError extends Error {}
 type Tool = { tier: 'READ' | 'COMPUTE'; description: string; args: z.ZodType; run: (index: GroundingIndex, args: never, ledger: Fact[]) => Ran };
-const id = z.string().min(1).max(80);
+// Reconciliation item IDs join the period, the bank ID and every ledger ID (lib/reconciliation/reconcile.ts), so they can be
+// long; the bound only keeps a request sane.
+const id = z.string().min(1).max(2000);
 export const FIN_TOOLS = {
     cash_summary: { tier: 'READ', description: 'Money in, money out, net and counts for one month, or for the whole statement period.', args: z.strictObject({ period: z.string().describe('A month as YYYY-MM, or the statement period') }), run: grounded('cash_summary') },
     transactions: { tier: 'READ', description: 'Bank transactions, filtered by direction and counterparty, sorted, with record IDs.', args: z.strictObject({ direction, counterparty: z.string().nullable(), sort: z.enum(['LARGEST', 'EARLIEST', 'LATEST']), limit: z.number().int().min(1).max(8) }), run: grounded('transactions') },
