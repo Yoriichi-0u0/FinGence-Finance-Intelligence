@@ -1,5 +1,5 @@
--- FinGence workspace v10: the assistant's controls beside its name. Requires workspace-v9-assistant.sql. Not yet applied to
--- FinGence-Production: apply it before the deploy that uses it, with the owner's go-ahead.
+-- FinGence workspace v10: the assistant's controls beside its name. Requires workspace-v9-assistant.sql. Applied to
+-- FinGence-Production on 26 Nov 2026 (fingence_workspace_v10_assistant_controls).
 --   - A member's settings are now one of two strict shapes, and nothing else:
 --       version 1 (from v9):  {"v": 1, "name": <name>}
 --       version 2:            {"v": 2, "name": <name>, "tone": "concise" | "friendly", "quiet": <boolean>,
