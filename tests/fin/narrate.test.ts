@@ -48,6 +48,15 @@ describe('narration wording', () => {
         expect(closingLine(stages)).toBe('Done: 7 of 8 stages passed and 16 of 16 checks passed. "Supported forecast" could not run, as it says above.');
         expect(closingLine([ok('IDENTIFY'), { ...stage('QUARANTINED', [false]), id: 'EXTRACT' }])).toMatch(/^Stopped at "Extract and normalize records": the documents were set aside/);
     });
+    it('never says "Done" for a run that failed or stopped before every stage reported', () => {
+        const ok = (id: Stage['id']): Stage => ({ ...stage('AUTO_ACCEPTED'), id, title: id });
+        const partial = STAGE_ORDER.slice(0, 3).map(ok);
+        expect(closingLine(partial, true)).toBe('Processing stopped before "Independent verification" and did not finish, so no results were kept. 6 of 6 checks passed up to then.');
+        expect(closingLine(partial)).toMatch(/^Processing stopped before "Independent verification"/);
+        // Every stage reported, but the run itself failed afterwards (for example, the server job timed out): still not done.
+        expect(closingLine(STAGE_ORDER.map(ok), true)).toBe('Processing stopped and did not finish, so no results were kept. 16 of 16 checks passed up to then.');
+        expect(closingLine(STAGE_ORDER.map(ok))).toBe('Done: all 8 stages passed and 16 of 16 checks passed.');
+    });
     it('never writes an exclamation mark, and never a figure the stages did not give it', () => {
         for (const id of STAGE_ORDER) for (const d of ['AUTO_ACCEPTED', 'QUARANTINED', 'UNAVAILABLE'] as const) expect(narrateStage({ ...stage(d, []), id }).text).not.toMatch(/!|\d/);
     });

@@ -13,11 +13,11 @@ import type { Stage } from '@/lib/demo/pipeline';
  * decision, checks and summary (lib/fin/narrate.ts). When the run ends, the assistant's mood says what it means for you.
  * The detailed stage list beside it stays for anyone who wants every check.
  */
-export function RunTrace({ stages, processing, ended }: { stages: Stage[]; processing: boolean; ended: boolean }) {
+export function RunTrace({ stages, processing, ended, failed = false }: { stages: Stage[]; processing: boolean; ended: boolean; failed?: boolean }) {
     const fin = useFin(), face = useFace();
     const name = fin?.name ?? FIN_NAME, lines = traceOf(stages, processing);
     if (!lines.length) return null;
-    const mood = fin?.mood, showMood = ended && mood?.line && !fin?.prefs.quiet && mood.mood !== 'working';
+    const mood = fin?.mood, showMood = ended && !failed && mood?.line && !fin?.prefs.quiet && mood.mood !== 'working';
     return <div className="border-b border-[var(--border)] px-4 py-4 sm:px-5">
         <div className="flex items-center gap-3">
             <span aria-hidden="true" className="relative grid size-11 shrink-0 place-items-center">
@@ -30,7 +30,7 @@ export function RunTrace({ stages, processing, ended }: { stages: Stage[]; proce
             {lines.map(line => <TraceItem key={line.id} line={line} />)}
         </ol>
         {ended ? <div className="rise-in mt-3 space-y-2 rounded-2xl bg-[var(--surface-subtle)] px-3.5 py-3 text-sm ring-1 ring-inset ring-[var(--border)]">
-            <p className="font-semibold">{closingLine(stages)}</p>
+            <p className="font-semibold">{closingLine(stages, failed)}</p>
             {showMood && mood ? <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-[var(--muted-strong)]">
                 <span>{mood.line}</span>
                 {mood.link && mood.link !== '/data' ? <Link href={mood.link} className="inline-flex min-h-8 items-center gap-1 font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2">Open {FIN_PAGES[mood.link].label}<ArrowUpRight aria-hidden="true" size={13} /></Link> : null}

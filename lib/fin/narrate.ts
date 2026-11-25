@@ -49,14 +49,22 @@ export function traceOf(stages: Stage[], processing: boolean): TraceLine[] {
     return lines;
 }
 
-/** The closing line once the run has ended: how many stages ran and how many checks passed, all counted from the stages. */
-export function closingLine(stages: Stage[]): string {
-    const ran = stages.length, total = stages.flatMap(s => s.checks).length, passed = stages.flatMap(s => s.checks).filter(c => c.passed).length;
+/**
+ * The closing line once the run has ended: how many stages ran and how many checks passed, all counted from the stages.
+ * It says "Done" only when every stage reported and the run did not fail; a run that stopped early says where.
+ */
+export function closingLine(stages: Stage[], failed = false): string {
+    const total = stages.flatMap(s => s.checks).length, passed = stages.flatMap(s => s.checks).filter(c => c.passed).length;
+    const checks = `${passed} of ${total} ${total === 1 ? 'check' : 'checks'} passed`;
     const setAside = stages.find(s => s.decision === 'QUARANTINED');
-    if (setAside) return `Stopped at "${STAGE_TITLES[setAside.id]}": the documents were set aside, so no figures are shown. ${passed} of ${total} ${total === 1 ? 'check' : 'checks'} passed before that.`;
+    if (setAside) return `Stopped at "${STAGE_TITLES[setAside.id]}": the documents were set aside, so no figures are shown. ${checks} before that.`;
+    const reported = STAGE_ORDER.filter(id => stages.some(s => s.id === id));
+    if (failed || reported.length < STAGE_ORDER.length) {
+        const next = STAGE_ORDER.find(id => !reported.includes(id));
+        return `Processing stopped${next ? ` before "${STAGE_TITLES[next]}"` : ''} and did not finish, so no results were kept. ${checks} up to then.`;
+    }
     const notRun = stages.filter(s => s.decision !== 'AUTO_ACCEPTED');
-    const allChecks = `${passed} of ${total} ${total === 1 ? 'check' : 'checks'} passed`;
     return notRun.length
-        ? `Done: ${ran - notRun.length} of ${STAGE_ORDER.length} stages passed and ${allChecks}. ${notRun.map(s => `"${STAGE_TITLES[s.id]}"`).join(' and ')} could not run, as it says above.`
-        : `Done: all ${STAGE_ORDER.length} stages passed and ${allChecks}.`;
+        ? `Done: ${STAGE_ORDER.length - notRun.length} of ${STAGE_ORDER.length} stages passed and ${checks}. ${notRun.map(s => `"${STAGE_TITLES[s.id]}"`).join(' and ')} could not run, as it says above.`
+        : `Done: all ${STAGE_ORDER.length} stages passed and ${checks}.`;
 }
