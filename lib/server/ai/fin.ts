@@ -53,7 +53,7 @@ why, and the usual fix is a clearer file or the matching statement and ledger fo
 Getting started: open Data, process the sample, read the Overview, then open Reconciliation and Reports.
 Categories: a record's category comes from the books' own labels (and a few stated bank rules), never from AI.
 Limits: FinGence reads cash records only (no profit, tax or balance sheet); questions by category are answered on Analytics,
-not yet in this chat; the six-month plan is a tested plan with a range, not a promise; and FinGence gives no investment,
+not yet in this chat; the cash plan on Forecasting is tested and shown with a range, not a promise; and FinGence gives no investment,
 tax or borrowing advice.`;
 
 /**

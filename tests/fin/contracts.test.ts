@@ -104,9 +104,16 @@ describe('Naming the assistant', () => {
 describe('Fin knowledge', () => {
     it('describes Analytics, Forecasting and the AI report as they are now', () => {
         expect(FIN_PAGES['/analytics'].about).toContain('cash flow statement');
-        expect(FIN_PAGES['/forecasting'].about).toContain('six months');
+        expect(FIN_PAGES['/forecasting'].about).toContain('category by category');
         expect(FIN_PAGES['/ai-report'].about).toContain('Bursa');
         expect(FIN_SYSTEM).not.toMatch(/baseline average|not classified/);
+    });
+    it('describes every page without a figure or a number word, so repeating a description never gets a reply withheld', () => {
+        for (const [href, page] of Object.entries(FIN_PAGES))
+            expect(verifyFinReply(guide(`${page.label} shows ${page.about}.`), { run: null }).decision, href).toBe('SHOWN');
+        const knowledge = FIN_SYSTEM.slice(FIN_SYSTEM.indexOf('What FinGence is:'));
+        for (let at = 0; at < knowledge.length; at += 600)
+            expect(verifyFinReply(guide(knowledge.slice(at, at + 600)), { run: null }).decision, knowledge.slice(at, at + 600)).toBe('SHOWN');
     });
     it('uses the confidence definition word for word', () => {
         expect(FIN_CONFIDENCE).toBe(CONFIDENCE_DEFINITION);

@@ -29,7 +29,7 @@ export const FIN_PAGES = {
     '/transactions': { label: 'Transactions', about: 'every bank and ledger record FinGence read and checked' },
     '/reconciliation': { label: 'Reconciliation', about: 'bank against books: what matched, what was resolved by a stated rule, and what is still unexplained' },
     '/analytics': { label: 'Analytics', about: 'what drove your cash: a cash flow statement and the biggest changes, sorted by the categories your own books use, with counterparties and months' },
-    '/forecasting': { label: 'Forecasting', about: 'your cash for the next six months, planned category by category from your verified history, with the range past forecasts actually missed by' },
+    '/forecasting': { label: 'Forecasting', about: 'your cash for the coming months, planned category by category from your verified history, with the range past forecasts actually missed by' },
     '/anomalies': { label: 'Anomalies', about: 'unusual bank records, each checked against your books; a candidate is a reason to review, never a fraud finding' },
     '/reports': { label: 'Reports', about: 'a management summary of the same figures, to print or save as PDF' },
     '/ai-report': { label: 'AI report', about: 'a report laid out like a Bursa-listed company\'s quarterly or annual report: statements and notes computed by FinGence, commentary written by AI, every figure checked' },
