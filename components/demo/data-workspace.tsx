@@ -12,6 +12,7 @@ import { InterpretationPanel } from './interpretation-panel';
 import { SaveRun, SavedToHistory } from './save-run';
 import { useTechnicalDetail, useWorkspace } from '@/components/workspace/context';
 import { Callout, DecisionBadge, PendingBadge, Stat, Table, button, chip, money, periodLabel, primaryButton } from './shared';
+import { RunTrace } from '@/components/fin/run-trace';
 
 const SAMPLE = ['demo-bank-statement-2026-03.csv', 'demo-general-ledger-2026-03.csv', 'demo-bank-history-2025-04-to-2026-03.csv'];
 /** A second fictional business: one quarter (January to March 2026) in SGD, with timing differences that clear across months. */
@@ -71,8 +72,9 @@ export default function DemoDataWorkspace() {
 
     const stageDone = stages.filter(x => x.stage).length;
     const quarantinedRun = ended && (status === 'failed' || context?.status === 'QUARANTINED');
-    // The stage list shows while processing; once a run has passed it folds into one line. A quarantined run keeps it open to show why.
-    const [showStages, setShowStages] = useState(false), listOpen = status === 'processing' || quarantinedRun || showStages;
+    // The assistant narrates the run (RunTrace); the full stage list with every check folds away unless asked for. A
+    // quarantined run keeps it open to show exactly why.
+    const [showStages, setShowStages] = useState(false), listOpen = quarantinedRun || showStages;
     const current: Step = status === 'ready' && context ? 3 : selected.length || status === 'processing' ? 2 : 1;
     // When a run finishes here, bring its results into view (they sit below the fold, especially on a phone).
     const previous = useRef(status);
@@ -146,11 +148,12 @@ export default function DemoDataWorkspace() {
             </Panel>
             <Panel className="scroll-mt-20" id="process" title="Process and check" eyebrow={`Step 2 · ${serverJobs ? 'on the FinGence server' : 'in this browser'}`}>
                 <div className="border-b border-[var(--border)] px-4 py-3 sm:px-5">
-                    <div className="flex items-center justify-between gap-3 text-xs"><span className="font-semibold text-[var(--ink)]">{status === 'processing' ? `Stage ${Math.min(stageDone + 1, stages.length)} of ${stages.length}: ${stages[stageDone]?.title ?? 'finishing'}` : stageDone ? `${stageDone} of ${stages.length} stages · ${passed} of ${checks.length} checks passed` : 'Not started'}</span>{stageDone && status !== 'processing' ? <button type="button" className="min-h-9 shrink-0 font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2" aria-expanded={listOpen} onClick={() => setShowStages(v => !v)}>{listOpen ? 'Hide stages' : 'Show stages'}</button> : null}</div>
+                    <div className="flex items-center justify-between gap-3 text-xs"><span className="font-semibold text-[var(--ink)]">{status === 'processing' ? `Stage ${Math.min(stageDone + 1, stages.length)} of ${stages.length}: ${stages[stageDone]?.title ?? 'finishing'}` : stageDone ? `${stageDone} of ${stages.length} stages · ${passed} of ${checks.length} checks passed` : 'Not started'}</span>{stageDone ? <button type="button" className="min-h-9 shrink-0 font-semibold text-[var(--brand-ink)] underline decoration-[var(--brand-line)] underline-offset-2" aria-expanded={listOpen} onClick={() => setShowStages(v => !v)}>{listOpen ? 'Hide every check' : 'Show every check'}</button> : null}</div>
                     <div role="progressbar" aria-label="Processing progress" aria-valuemin={0} aria-valuemax={stages.length} aria-valuenow={stageDone} className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--surface-sunken)]"><span className={`block h-full rounded-full transition-[width] duration-500 ${quarantinedRun ? 'bg-[var(--warn)]' : status === 'ready' ? 'bg-[var(--good)]' : 'bg-[var(--brand)]'}`} style={{ width: `${(stageDone / stages.length) * 100}%` }} /></div>
                 </div>
+                <RunTrace stages={liveStages} processing={status === 'processing'} ended={ended && stageDone > 0} />
                 {context && technical ? <p className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-[var(--border)] bg-[var(--surface-subtle)] px-4 py-2 text-xs text-[var(--muted)] sm:px-5"><Fingerprint aria-hidden="true" size={14} className="text-[var(--brand)]" /><span>Processing ID <code className="break-all text-[var(--ink)]">{context.processingId}</code> · same documents always give the same ID{context.job ? <> · server job <code className="break-all text-[var(--ink)]">{context.job.id}</code>, results stored, re-checked in this browser</> : null}</span></p> : null}
-                {listOpen ? <ol className="px-4 py-3 sm:px-5" aria-live="polite">
+                {listOpen ? <ol className="px-4 py-3 sm:px-5" aria-label="Every stage and its checks">
                     {stages.map(({ id, title, stage }, i) => {
                         const tone = stage ? stage.decision === 'AUTO_ACCEPTED' ? 'bg-[var(--good)] text-white' : stage.decision === 'QUARANTINED' ? 'bg-[var(--warn)] text-white' : 'bg-[var(--border-strong)] text-[var(--ink)]' : status === 'processing' && i === stageDone ? 'bg-[var(--brand-soft)] text-[var(--brand)] ring-2 ring-[var(--brand)]' : 'bg-[var(--surface-sunken)] text-[var(--muted)]';
                         return <li key={id} className="relative flex gap-3 pb-3 last:pb-0">
