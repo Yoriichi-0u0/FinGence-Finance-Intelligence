@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
-import { FIN_LINKS, FIN_NAME, FIN_PAGES, FIN_VERSION, assistantSettingsSchema, cleanAssistantName, finGreeting, finPage, finRequestSchema, verifiedContext, verifyFinReply } from '../../lib/fin/contracts';
+import { DEFAULT_PREFS, FIN_LINKS, FIN_NAME, FIN_PAGES, FIN_VERSION, assistantSettingsSchema, cleanAssistantName, finGreeting, finPage, finRequestSchema, prefsOf, storedPrefs, verifiedContext, verifyFinReply } from '../../lib/fin/contracts';
 import type { GroundedRun } from '../../lib/grounded-qa/client';
 import { FIN_CONFIDENCE, FIN_SYSTEM, finUserMessage } from '../../lib/server/ai/fin';
 import { CONFIDENCE_DEFINITION } from '../../components/demo/confidence';
@@ -59,7 +59,8 @@ describe('Fin requests', () => {
     });
     it('sends only the assistant\'s name, the words, the page and the run scope', () => {
         const message = JSON.parse(finUserMessage(finRequestSchema.parse(req([{ role: 'user', text: 'Hi' }], { name: 'Kira' }))));
-        expect(Object.keys(message).sort()).toEqual(['assistantName', 'conversation', 'latestRun', 'page']);
+        expect(Object.keys(message).sort()).toEqual(['assistantName', 'conversation', 'latestRun', 'page', 'tone']);
+        expect(message.tone).toBe('concise');
         expect(message.assistantName).toBe('Kira');
     });
     it('carries only a valid assistant name, and no request without one', () => {
@@ -85,10 +86,27 @@ describe('Naming the assistant', () => {
             expect(cleanAssistantName(bad), String(bad)).toBeNull();
         expect(cleanAssistantName('A'.repeat(20))).toBe('A'.repeat(20));
     });
-    it('stores one strict shape: the version and the name', () => {
+    it('stores one of two strict shapes: the name alone (v1), or the name with the controls (v2)', () => {
+        const v2 = { v: 2, name: 'Kira', tone: 'friendly', quiet: true, character: false, motion: 'off' };
         expect(assistantSettingsSchema.safeParse({ v: 1, name: 'Kira' }).success).toBe(true);
-        for (const bad of [{ v: 2, name: 'Kira' }, { v: 1, name: 'Kira', tone: 'warm' }, { v: 1, name: 'Kira 2' }, { v: 1 }])
+        expect(assistantSettingsSchema.safeParse(v2).success).toBe(true);
+        for (const bad of [{ v: 2, name: 'Kira' }, { v: 1, name: 'Kira', tone: 'warm' }, { v: 1, name: 'Kira 2' }, { v: 1 }, { ...v2, tone: 'cheeky' }, { ...v2, motion: 'fast' }, { ...v2, quiet: 'yes' }, { ...v2, v: 3 }])
             expect(assistantSettingsSchema.safeParse(bad).success, JSON.stringify(bad)).toBe(false);
+    });
+    it('reads an old name-only row as the defaults with that name, and stores nothing for the defaults', () => {
+        expect(prefsOf({ v: 1, name: 'Kira' })).toEqual({ ...DEFAULT_PREFS, name: 'Kira' });
+        expect(prefsOf({ v: 9 })).toEqual(DEFAULT_PREFS);
+        expect(prefsOf(null)).toEqual(DEFAULT_PREFS);
+        expect(storedPrefs(DEFAULT_PREFS)).toBeNull();
+        expect(storedPrefs({ ...DEFAULT_PREFS, quiet: true })).toEqual({ v: 2, ...DEFAULT_PREFS, quiet: true });
+        expect(prefsOf(storedPrefs({ ...DEFAULT_PREFS, name: 'Siti', tone: 'friendly' }))).toEqual({ ...DEFAULT_PREFS, name: 'Siti', tone: 'friendly' });
+    });
+    it('asks for a tone, concise unless the person chose friendly', () => {
+        const req = (turns: { role: 'user' | 'fin'; text: string }[], extra: object = {}) => ({ version: FIN_VERSION, name: FIN_NAME, page: '/reconciliation', turns, run, ...extra });
+        expect(finRequestSchema.parse(req([{ role: 'user', text: 'Hi' }])).tone).toBe('concise');
+        expect(finRequestSchema.parse(req([{ role: 'user', text: 'Hi' }], { tone: 'friendly' })).tone).toBe('friendly');
+        expect(finRequestSchema.safeParse(req([{ role: 'user', text: 'Hi' }], { tone: 'sarcastic' })).success).toBe(false);
+        expect(FIN_SYSTEM).toContain('"tone"');
     });
     it('introduces itself by its name, and as an AI', () => {
         expect(finGreeting('Kira')).toMatch(/^Hi, I'm Kira, your FinGence AI assistant\./);

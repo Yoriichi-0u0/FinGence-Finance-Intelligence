@@ -17,6 +17,9 @@ export const FIN_VERSION = 'fingence-fin-v2';
 /** The assistant's default name, until a person gives theirs another. */
 export const FIN_NAME = 'Fin';
 export const MAX_NAME = 20;
+/** How the assistant writes: concise (the default) leads with the answer; friendly is a little warmer and longer. */
+export const TONES = ['concise', 'friendly'] as const;
+export type Tone = typeof TONES[number];
 export const MAX_MESSAGE = 600;
 export const MAX_TURNS = 8;
 export const MAX_REPLY = 700;
@@ -51,6 +54,7 @@ export type FinTurn = z.infer<typeof turn>;
 export const finRequestSchema = z.strictObject({
     version: z.literal(FIN_VERSION),
     name: z.string().max(MAX_NAME * 2).refine(n => cleanAssistantName(n) === n, 'Not a valid assistant name.'),
+    tone: z.enum(TONES).default('concise'),
     page: z.enum(FIN_LINKS).nullable(),
     turns: z.array(turn).min(1).max(MAX_TURNS).refine(t => t.at(-1)?.role === 'user', 'The last turn must be the user\'s.'),
     run: z.strictObject({ businessName: z.string().max(120), period: z.string().max(17), currency: z.string().regex(/^[A-Z]{3}$/) }).nullable(),
@@ -105,12 +109,31 @@ export function cleanAssistantName(raw: unknown): string | null {
     if (!name || [...name].length > MAX_NAME || !NAME_SHAPE.test(name) || FIGURE.test(name) || NUMBER_WORD.test(name)) return null;
     return name;
 }
-/** What is kept for each member: the assistant's name. */
-export const assistantSettingsSchema = z.strictObject({
-    v: z.literal(1),
-    name: z.string().max(MAX_NAME * 2).refine(n => cleanAssistantName(n) === n, 'Not a valid assistant name.'),
-});
+const nameField = z.string().max(MAX_NAME * 2).refine(n => cleanAssistantName(n) === n, 'Not a valid assistant name.');
+/**
+ * What is kept for each member (workspace v9 and v10). Version 1 holds only the name; version 2 adds the controls:
+ * tone, quiet (no badge, status line or announcements), character (the mascot, or a plain icon) and motion (follow the
+ * device, or off). New saves are version 2; a version 1 row still reads.
+ */
+export const assistantSettingsSchema = z.union([
+    z.strictObject({ v: z.literal(1), name: nameField }),
+    z.strictObject({ v: z.literal(2), name: nameField, tone: z.enum(TONES), quiet: z.boolean(), character: z.boolean(), motion: z.enum(['device', 'off']) }),
+]);
 export type AssistantSettings = z.infer<typeof assistantSettingsSchema>;
+export type AssistantPrefs = Omit<Extract<AssistantSettings, { v: 2 }>, 'v'>;
+export const DEFAULT_PREFS: AssistantPrefs = { name: FIN_NAME, tone: 'concise', quiet: false, character: true, motion: 'device' };
+/** A stored row made whole: anything unreadable gives the defaults. */
+export function prefsOf(stored: unknown): AssistantPrefs {
+    const parsed = assistantSettingsSchema.safeParse(stored);
+    if (!parsed.success) return DEFAULT_PREFS;
+    const d = parsed.data;
+    return d.v === 1 ? { ...DEFAULT_PREFS, name: d.name } : { name: d.name, tone: d.tone, quiet: d.quiet, character: d.character, motion: d.motion };
+}
+/** What to store for these choices: nothing when every one is the default. */
+export function storedPrefs(p: AssistantPrefs): AssistantSettings | null {
+    const same = (Object.keys(DEFAULT_PREFS) as (keyof AssistantPrefs)[]).every(k => p[k] === DEFAULT_PREFS[k]);
+    return same ? null : { v: 2, ...p };
+}
 
 /** How the assistant introduces itself: by its name, and plainly as an AI. */
 export const finGreeting = (name: string) => `Hi, I'm ${name}, your FinGence AI assistant. I can show you around FinGence and answer questions about the figures in your latest run. What would you like to know?`;

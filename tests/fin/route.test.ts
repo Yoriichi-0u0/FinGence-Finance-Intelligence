@@ -27,7 +27,7 @@ describe('Fin gateway', () => {
         const sent = JSON.parse((fetch.mock.calls[0] as unknown as [string, RequestInit])[1].body as string);
         expect(sent.response_format.json_schema).toMatchObject({ name: 'fin_reply', strict: true });
         expect(sent.messages[0].content).toContain('You are the AI assistant inside FinGence');
-        expect(Object.keys(JSON.parse(sent.messages[1].content)).sort()).toEqual(['assistantName', 'conversation', 'latestRun', 'page']);
+        expect(Object.keys(JSON.parse(sent.messages[1].content)).sort()).toEqual(['assistantName', 'conversation', 'latestRun', 'page', 'tone']);
     });
     it('rejects malformed bodies before any provider call', async () => {
         const fetch = groq(200, completion(REPLY)); vi.stubGlobal('fetch', fetch);
