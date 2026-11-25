@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { assistantMood, MASCOT_FACE, type MoodInput } from '../../lib/fin/mood';
+import { assistantMood, issueOf, MASCOT_FACE, type MoodInput } from '../../lib/fin/mood';
 import { FinMascot, type FinMood } from '../../components/fin/mascot';
 
 const calm: MoodInput = { processing: false, busy: false, ai: true, issue: null, attention: { reconciliation: 0, anomalies: 0, documents: 0 }, confidence: 'HIGH', period: 'March 2026' };
@@ -29,6 +29,12 @@ describe('assistant mood', () => {
         expect(assistantMood({ ...calm, ai: false })).toMatchObject({ mood: 'paused' });
         expect(assistantMood({ ...calm, issue: 'OFF' }).mood).toBe('paused');
         expect(assistantMood({ ...calm, issue: 'LIMITED' }).line).toContain('own checks still work');
+        expect(assistantMood({ ...calm, issue: 'UNREACHABLE' })).toMatchObject({ mood: 'paused', line: expect.stringContaining('can\'t reach') });
+    });
+    it('reads every budget-gate refusal as "at its limit", the AI switch as off, anything else as unreachable', () => {
+        for (const code of ['RATE_LIMITED', 'CLIENT_RATE_LIMITED', 'CLIENT_DAILY_LIMIT', 'DAILY_LIMIT', 'DAILY_BUDGET_EXHAUSTED', 'BUDGET_EXHAUSTED']) expect(issueOf(code), code).toBe('LIMITED');
+        expect(issueOf('AI_OFF')).toBe('OFF');
+        for (const code of ['BUDGET_UNAVAILABLE', 'UNREACHABLE', 'HTTP_502']) expect(issueOf(code), code).toBe('UNREACHABLE');
     });
     it('is working above everything while processing or replying', () => {
         expect(assistantMood({ ...calm, processing: true, issue: 'WITHHELD' })).toMatchObject({ mood: 'working', link: '/data' });

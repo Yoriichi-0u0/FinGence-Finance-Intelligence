@@ -16,7 +16,7 @@ import { answerQuestion, type QaAnswer } from '@/lib/poc-finance-qa/answer';
 import { qaFacts } from '@/lib/demo/questions';
 import { attentionCounts } from '@/lib/demo/attention';
 import { processingConfidence } from '@/lib/confidence';
-import { assistantMood, MASCOT_FACE, type Issue, type MoodView } from '@/lib/fin/mood';
+import { assistantMood, issueOf, MASCOT_FACE, type Issue, type MoodView } from '@/lib/fin/mood';
 import { DEFAULT_PREFS, FIN_FALLBACK, FIN_NAME, FIN_PAGES, FIN_VERSION, MAX_MESSAGE, MAX_NAME, MAX_TURNS, cleanAssistantName, finGreeting, finPage, prefsOf, storedPrefs, verifiedContext, verifyFinReply, type AssistantPrefs, type FinPage, type FinRequest, type FinTurn, type Tone } from '@/lib/fin/contracts';
 import { MAX_QUESTION } from '@/lib/grounded-qa/contracts';
 
@@ -164,9 +164,10 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
             const req: FinRequest = { version: FIN_VERSION, name, tone: prefs.tone, page: finPage(pathname), turns, run: run ? { businessName: run.businessName, period: run.period, currency: run.currency } : null };
             const answer = await askFin(req);
             if ('code' in answer) {
-                setIssue(answer.code === 'RATE_LIMITED' || answer.code === 'BUDGET_EXHAUSTED' ? 'LIMITED' : answer.code === 'AI_OFF' ? 'OFF' : null);
+                const issue = issueOf(answer.code);
+                setIssue(issue);
                 if (facts) set({ pending: false, text: FIN_FALLBACK.unavailable, rule: answerQuestion(facts, text.slice(0, MAX_QUESTION)) });
-                else set({ pending: false, text: answer.code === 'BUDGET_EXHAUSTED' || answer.code === 'RATE_LIMITED' ? 'I\'ve used up my AI allowance for the moment. Please try again a little later.' : offlineGuide(finPage(pathname)), links: ['/data'] });
+                else set({ pending: false, text: issue === 'LIMITED' ? 'I\'ve used up my AI allowance for the moment. Please try again a little later.' : offlineGuide(finPage(pathname)), links: ['/data'] });
                 return;
             }
             const verdict = verifyFinReply(answer.content, req);
@@ -201,8 +202,10 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
     // what needs a person in this run and its confidence. Counts are code's; the model never sets a mood.
     const processing = demo.status === 'processing';
     const mood = useMemo(() => {
+        // Confidence is measured for any finished run, so a run set aside before reconciliation is "unsure" and says why;
+        // what needs a person is only counted when there are results.
         const ready = !!context?.scope && !!context.outputs.reconciliation;
-        const confidence = ready && context ? processingConfidence(context) : null;
+        const confidence = context ? processingConfidence(context) : null;
         return assistantMood({
             processing, busy, ai, issue,
             attention: ready ? attentionCounts(context) : null,
