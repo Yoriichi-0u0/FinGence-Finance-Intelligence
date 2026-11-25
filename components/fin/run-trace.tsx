@@ -52,7 +52,7 @@ function TraceItem({ line }: { line: TraceLine }) {
     return <li className="rise-in flex gap-2.5">
         <span aria-hidden="true" className="mt-0.5 shrink-0">{ICON[line.state]}</span>
         <div className="min-w-0 text-sm">
-            <p><span className="font-medium">{line.text}</span>{line.checks?.total ? <span className="tabular-nums text-[var(--muted)]"> · {line.checks.passed} of {line.checks.total} checks</span> : null}
+            <p><span className="font-medium">{line.text}</span>{line.checks?.total ? <span className="tabular-nums text-[var(--muted)]"> · {line.checks.passed} of {line.checks.total} {line.checks.total === 1 ? 'check' : 'checks'}</span> : null}
                 <span className="sr-only">{line.state === 'done' ? ', passed' : line.state === 'set-aside' ? ', set aside' : ', not run'}</span></p>
             {line.detail && line.state !== 'done' ? <p className="mt-0.5 text-[13px] leading-snug text-[var(--muted-strong)]">{line.detail}</p> : null}
         </div>
