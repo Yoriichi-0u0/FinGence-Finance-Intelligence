@@ -69,6 +69,23 @@ export function resolutionFacts(index: GroundingIndex): Omit<Fact, 'id' | 'query
     }];
 }
 
+/** The cash plan's next month, its planned closing balance and its regular payments, as verified facts for the outlook. */
+export function cashPlanFacts(index: GroundingIndex): Omit<Fact, 'id' | 'query'>[] {
+    const plan = index.context.outputs.cashPlan, cur = index.currency;
+    if (plan?.status !== 'AVAILABLE') return [];
+    const next = plan.projection[0], end = plan.projection.at(-1)!, last = plan.history.at(-1)!;
+    return [
+        { label: `Cash plan for ${next.period}, planned category by category from the verified history (not a promise)`, primary: 'net',
+            fields: { period: { kind: 'PERIOD', ym: next.period }, moneyIn: money(toCents(next.receipts), cur), moneyOut: money(-toCents(next.payments), cur), net: money(toCents(next.net), cur), ...(next.range ? { typicalMiss: money(toCents(next.range), cur) } : {}) } as Record<string, Value>,
+            sources: [{ kind: 'FORECAST', id: next.period }] },
+        ...(end.balance !== null ? [{ label: `Planned cash balance at the end of ${end.period}, from the verified balance at the end of ${last.period}`, primary: 'balance',
+            fields: { period: { kind: 'PERIOD', ym: end.period }, balance: money(toCents(end.balance), cur), ...(end.low && end.high ? { likelyLow: money(toCents(end.low), cur), likelyHigh: money(toCents(end.high), cur) } : {}), from: { kind: 'PERIOD', ym: last.period }, fromBalance: money(toCents(last.balance!), cur) } as Record<string, Value>,
+            sources: [{ kind: 'FORECAST' as const, id: end.period }, { kind: 'HISTORY' as const, id: last.period }] }] : []),
+        { label: `Regular and scheduled payments over ${plan.commitments.months[0]} to ${plan.commitments.months.at(-1)}`, primary: 'total',
+            fields: { total: money(-toCents(plan.commitments.total), cur), categories: count(plan.commitments.items.length) }, sources: [{ kind: 'FORECAST', id: 'commitments' }] },
+    ];
+}
+
 /**
  * Laid out like a listed company's quarterly or annual report (management discussion, financial review,
  * controls, matters for review, outlook), within what verified cash records can support: no profit, revenue or
@@ -101,8 +118,11 @@ export const AI_REPORT_SECTIONS: readonly AiReportSection[] = [
     },
     {
         id: 'outlook', title: 'Commentary on prospects',
-        question: 'Describe the next-month cash baseline in up to three short sentences: money in, money out and the net, and the months it averages, with a placeholder for every number including the count of months. Say it is an average of recent months, not a prediction.',
-        queries: index => [{ tool: 'forecast' }, { tool: 'cash_summary', period: index.scope.period }],
+        question: 'Describe the cash outlook in up to three short sentences, with a placeholder for every number: expected money in, money out and net for the next month, its typical miss if listed, and the planned cash balance if listed. Say it is planned from recent months, not a promise.',
+        // The six-month cash plan (the Forecasting page) when there is one, so the report and the page never disagree;
+        // otherwise the next-month baseline.
+        queries: index => cashPlanFacts(index).length ? [{ tool: 'cash_summary', period: index.scope.period }] : [{ tool: 'forecast' }, { tool: 'cash_summary', period: index.scope.period }],
+        extra: cashPlanFacts,
     },
 ];
 

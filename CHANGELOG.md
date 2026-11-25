@@ -14,6 +14,7 @@ the new version and its date.
 - AI06 explains verified suggestions, suggestions needing review, abstentions and permanent review decisions using the approved notices (#153).
 
 ### Added
+- The **AI report** now reads like a Bursa-listed company's quarterly or annual report: a cover with highlights, an unaudited statement of cash flows against the corresponding period with opening and closing balances, Part A explanatory notes (seasonality, unusual items, capital spending, borrowings, receipts by segment), and Part B commentary written by AI, whose outlook now follows the six-month cash plan. Printing gives A4 pages with a running header and page numbers (#162).
 - **Forecasting** is now a six-month cash plan: the cash balance month by month with the range past forecasts missed by, each category planned by how it behaves (every month, every few months, or left out as a one-off), the regular and scheduled payments coming up, and how accurate the plan has been on months already known (#161).
 - **Analytics** now explains what drove your cash using the categories your own books use: net cash from operating, investing and financing activities, a statement of cash flows against the previous period, where cash went and came from, customer concentration, key cash ratios, the biggest changes, and operating cash month by month (#160).
 - A Full-year sample on Data: a fictional furniture maker's whole 2025 financial year in ringgit, with two years of bank history, so every page, the annual AI report and the forecast can be shown on a busier, seasonal year (#158).

@@ -133,9 +133,11 @@ describe('AI report page', async () => {
     });
     it('renders the whole report from the processed run without AI, with FinGence’s own summaries', () => {
         const text = render(month);
-        for (const s of ['Monthly report', 'Cash report for the month ended 31 March 2026', 'Summary of results', 'Increase (decrease)', '1. Review of performance', '2. Cash received and paid', '3. Reconciliation with the books', '4. Matters for review', '5. Commentary on prospects', 'Notes: basis of preparation'])
-            expect(text).toContain(s);
+        for (const s of ['Monthly report', 'MONTHLY REPORT FOR THE MONTH ENDED 31 MARCH 2026'.toLowerCase(), 'Unaudited condensed statement of cash flows', 'Cash flows from operating activities', 'Cash and bank balances at the end of the period', 'Part A · Explanatory notes', 'A1 Basis of preparation', 'A2 Seasonal or cyclical factors', 'A3 Unusual items', 'A6 Receipts by segment', 'Part B · Review and commentary', 'Increase (decrease)', 'B1 Review of performance', 'B2 Cash received and paid', 'B3 Reconciliation with the books', 'B4 Matters for review', 'B5 Commentary on prospects'])
+            expect(text.toLowerCase()).toContain(s.toLowerCase());
         expect(text).toContain('cash in was MYR 68,633.32');
+        // The outlook follows the six-month cash plan, the same figures the Forecasting page shows.
+        expect(text).toContain('FinGence plans cash in of MYR 67,054.32');
         expect(text).toContain('AI writing is not switched on here');
         expect(text).not.toContain('Write with AI');
     });

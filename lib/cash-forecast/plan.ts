@@ -194,15 +194,19 @@ export function planCash(input: { classification: CashClassification; historyRow
 }
 
 /**
- * Month-end bank balances from a history file's running balance column, only when every record's balance equals the
- * previous balance plus its own signed amount (in file order). Otherwise null: a balance is never assumed.
+ * Month-end bank balances from a history file's running balance column, only when the records are in date order and
+ * every record's balance equals the previous balance plus its own signed amount. Otherwise null: a balance is never assumed.
  */
 export function verifiedClosingBalances(raw: Record<string, string>[], rows: SourceRow[]): Record<string, bigint> | null {
     const column = ['RunningBalanceMYR', 'RunningBalance', 'Balance'].find(c => raw.length && c in raw[0]);
     if (!column || raw.length !== rows.length) return null;
     const out: Record<string, bigint> = {};
-    let previous: bigint | null = null;
+    let previous: bigint | null = null, lastDate = '';
     for (const [i, r] of rows.entries()) {
+        // Month-end balances need the records in date order: a record dated before the one above it means the last
+        // balance listed in a month need not be that month's closing balance.
+        if (r.date < lastDate || r.period !== r.date.slice(0, 7)) return null;
+        lastDate = r.date;
         const text = (raw[i][column] ?? '').trim();
         if (!/^-?\d{1,14}(?:\.\d{1,2})?$/.test(text)) return null;
         const [whole, fraction = ''] = text.split('.'), balance = toCents(`${whole}.${fraction.padEnd(2, '0')}`), signed = toCents(r.signedAmount);
