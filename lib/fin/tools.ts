@@ -193,9 +193,10 @@ function cashFlow(index: GroundingIndex): Ran {
     return { drafts, total: drafts.length };
 }
 function changes(index: GroundingIndex, args: { limit: number }): Ran {
-    const k = classification(index), currency = index.currency, list = biggestChanges(k, args.limit);
+    // Every changed category first, so the total says how many changed; then the largest `limit` of them.
+    const k = classification(index), currency = index.currency, all = biggestChanges(k, Number.MAX_SAFE_INTEGER), list = all.slice(0, args.limit);
     if (!list.length) return { drafts: [{ label: 'Biggest changes', primary: 'status', fields: { status: text(k.prior ? 'No category changed against the earlier period.' : 'No earlier period of the same length to compare with.') }, sources: k.prior ? [{ kind: 'HISTORY', id: index.scope.period }] : [] }], total: 1 };
-    return { drafts: list.map((c, n): Draft => ({ label: `Change #${n + 1} against the earlier period`, primary: 'change', fields: { category: text(c.category), current: money(c.current, currency), prior: money(c.prior, currency), change: money(c.change, currency), percent: percentValue(c.percent) }, sources: [{ kind: 'TOTALS', id: index.scope.period }, { kind: 'HISTORY', id: index.scope.period }] })), total: list.length };
+    return { drafts: list.map((c, n): Draft => ({ label: `Change #${n + 1} against the earlier period`, primary: 'change', fields: { category: text(c.category), current: money(c.current, currency), prior: money(c.prior, currency), change: money(c.change, currency), percent: percentValue(c.percent) }, sources: [{ kind: 'TOTALS', id: index.scope.period }, { kind: 'HISTORY', id: index.scope.period }] })), total: all.length };
 }
 
 // ---- Read: the cash plan and the run's confidence ------------------------------------------------------------------

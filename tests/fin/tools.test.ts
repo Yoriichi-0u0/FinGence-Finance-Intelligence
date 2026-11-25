@@ -7,6 +7,7 @@ import { groundingIndex, runQueries, type GroundingIndex } from '../../lib/groun
 import type { Fact } from '../../lib/grounded-qa/facts';
 import { processingConfidence } from '../../lib/confidence';
 import { toCents } from '../../lib/poc-anomalies/source';
+import { biggestChanges } from '../../lib/cash-classification/insights';
 import { FIN_TOOLS, FIN_TOOL_NAMES, MAX_ROWS, UNTRUSTED_FIELDS, rankCandidates, runFinTool, tenthsOf } from '../../lib/fin/tools';
 
 const read = (dir: string, name: string) => readFileSync(join('public/demo', dir, name), 'utf8');
@@ -58,6 +59,11 @@ describe('the assistant\'s tools on every sample', () => {
         const mine = runFinTool(index, { name: 'counterparties', arguments: { direction: 'IN', limit: 5 } }, []);
         const theirs = runQueries(index, [{ tool: 'counterparties', direction: 'IN', limit: 5 }]);
         expect(mine.ok && mine.facts.map(f => f.fields)).toEqual(theirs.map(f => f.fields));
+    });
+    it('counts every changed category, so the largest few are not mistaken for all of them', () => {
+        const { index } = runs['full year'], changed = biggestChanges(index.context.outputs.classification!, Number.MAX_SAFE_INTEGER).length;
+        expect(changed).toBeGreaterThan(1);
+        expect(runFinTool(index, { name: 'biggest_changes', arguments: { limit: 1 } }, [])).toMatchObject({ ok: true, total: changed, truncated: true });
     });
     it('tells an unchanged earlier period apart from no earlier period at all', () => {
         const { index } = runs['full year'], k = index.context.outputs.classification!;
