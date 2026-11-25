@@ -2,17 +2,18 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, Expand, LoaderCircle, RotateCcw, Send, X } from 'lucide-react';
+import { ArrowUpRight, Check, Expand, LoaderCircle, Pencil, RotateCcw, Send, X } from 'lucide-react';
 import { FinMascot, type FinMood } from './mascot';
 import { GroundedAnswer } from '@/components/demo/grounded-answer';
 import { useDemoProcessing } from '@/components/demo/context';
-import { field, primaryButton } from '@/components/demo/shared';
+import { button, field, primaryButton } from '@/components/demo/shared';
+import { plainMessage, useWorkspace } from '@/components/workspace/context';
 import { askGrounded, gatewayQaModel, type GroundedRun } from '@/lib/grounded-qa/client';
 import { preCheck } from '@/lib/grounded-qa/gates';
 import { catalogue, groundingIndex } from '@/lib/grounded-qa/tools';
 import { answerQuestion, type QaAnswer } from '@/lib/poc-finance-qa/answer';
 import { qaFacts } from '@/lib/demo/questions';
-import { FIN_FALLBACK, FIN_NAME, FIN_PAGES, FIN_VERSION, MAX_MESSAGE, MAX_TURNS, finPage, verifiedContext, verifyFinReply, type FinPage, type FinRequest, type FinTurn } from '@/lib/fin/contracts';
+import { FIN_FALLBACK, FIN_NAME, FIN_PAGES, FIN_VERSION, MAX_MESSAGE, MAX_NAME, MAX_TURNS, assistantSettingsSchema, cleanAssistantName, finGreeting, finPage, verifiedContext, verifyFinReply, type AssistantSettings, type FinPage, type FinRequest, type FinTurn } from '@/lib/fin/contracts';
 import { MAX_QUESTION } from '@/lib/grounded-qa/contracts';
 
 /**
@@ -31,9 +32,31 @@ function load(): FinMessage[] {
 }
 function save(list: FinMessage[]) { try { sessionStorage.setItem(STORE, JSON.stringify(list.slice(-KEEP))); } catch { /* storage unavailable: the conversation lasts for this page only */ } }
 
-type FinValue = { open: boolean; setOpen: (open: boolean) => void; messages: FinMessage[]; busy: boolean; send: (text: string) => Promise<void>; reset: () => void; ai: boolean | null };
+type FinValue = {
+    open: boolean; setOpen: (open: boolean) => void; messages: FinMessage[]; busy: boolean; send: (text: string) => Promise<void>; reset: () => void; ai: boolean | null;
+    /** The assistant's name: the one this person gave it, or Fin. */
+    name: string;
+    /** Rename the assistant, or return to Fin with null. Resolves to an error message, or null when saved. */
+    rename: (next: string | null) => Promise<string | null>;
+};
 const FinContext = createContext<FinValue | null>(null);
 export const useFin = () => useContext(FinContext);
+
+/** With the workspace off, the name is kept in this browser; signed in, it is kept for the member (workspace v9). */
+const NAME_STORE = 'fingence-assistant-v1';
+const NAME_RULE = `Choose a name of up to ${MAX_NAME} letters. Spaces, hyphens and apostrophes are fine; numbers and symbols are not.`;
+function browserName() {
+    try { const s = assistantSettingsSchema.safeParse(JSON.parse(localStorage.getItem(NAME_STORE) ?? 'null')); return s.success ? s.data.name : FIN_NAME; }
+    catch { return FIN_NAME; }
+}
+async function memberName(): Promise<string | null> {
+    try {
+        const r = await fetch('/api/workspace/assistant', { cache: 'no-store' });
+        if (!r.ok) return null;
+        const s = assistantSettingsSchema.safeParse((await r.json() as { settings?: unknown }).settings);
+        return s.success ? s.data.name : FIN_NAME;
+    } catch { return null; }
+}
 
 /** Without the model, Fin still says what the current page is for, and where to start. */
 function offlineGuide(page: FinPage | null) {
@@ -54,7 +77,10 @@ async function askFin(req: FinRequest): Promise<{ content: unknown } | { code: s
 }
 
 export function FinProvider({ children }: { children: React.ReactNode }) {
-    const pathname = usePathname(), demo = useDemoProcessing();
+    const pathname = usePathname(), demo = useDemoProcessing(), workspace = useWorkspace();
+    const [name, setName] = useState(FIN_NAME);
+    // Bumped by every rename, so a load that started before it can never put back the old name.
+    const nameEdits = useRef(0);
     const [open, setOpen] = useState(false), [messages, setMessages] = useState<FinMessage[]>([]), [busy, setBusy] = useState(false), [ai, setAi] = useState<boolean | null>(null);
     const next = useRef(1), latest = useRef<FinMessage[]>([]);
     useEffect(() => {
@@ -63,6 +89,33 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
         setMessages(list);
     }, []);
     useEffect(() => { let live = true; finAvailable().then(a => { if (live) setAi(a); }); return () => { live = false; }; }, []);
+    // The name follows the person: from the workspace when signed in, from this browser when the workspace is off.
+    const email = workspace.session?.email ?? null;
+    useEffect(() => {
+        if (workspace.loading) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- browser-only state, read after hydration
+        if (!workspace.enabled) { setName(browserName()); return; }
+        if (!email) { setName(FIN_NAME); return; }
+        let live = true;
+        const edits = nameEdits.current;
+        void memberName().then(n => { if (live && n && nameEdits.current === edits) setName(n); });
+        return () => { live = false; };
+    }, [workspace.enabled, workspace.loading, email]);
+    const rename = useCallback(async (next: string | null) => {
+        const clean = next === null ? FIN_NAME : cleanAssistantName(next);
+        if (!clean) return NAME_RULE;
+        const settings: AssistantSettings | null = clean === FIN_NAME ? null : { v: 1, name: clean };
+        if (!workspace.enabled) {
+            try { if (settings) localStorage.setItem(NAME_STORE, JSON.stringify(settings)); else localStorage.removeItem(NAME_STORE); }
+            catch { nameEdits.current++; setName(clean); return `This browser does not let FinGence keep the name, so ${clean} lasts until you leave this page.`; }
+            nameEdits.current++; setName(clean); return null;
+        }
+        try {
+            const r = await fetch('/api/workspace/assistant', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings }) });
+            if (!r.ok) { const code = (await r.json().catch(() => ({})) as { code?: string }).code; return code === 'INVALID_SETTINGS' ? NAME_RULE : plainMessage(code); }
+        } catch { return plainMessage('WORKSPACE_UNAVAILABLE'); }
+        nameEdits.current++; setName(clean); return null;
+    }, [workspace.enabled]);
     const update = useCallback((fn: (list: FinMessage[]) => FinMessage[]) => { setMessages(prev => { const list = fn(prev); latest.current = list; save(list); return list; }); }, []);
 
     const context = demo.context;
@@ -87,7 +140,7 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
                 return;
             }
             const run = index ? catalogue(index).scope : null;
-            const req: FinRequest = { version: FIN_VERSION, page: finPage(pathname), turns, run: run ? { businessName: run.businessName, period: run.period, currency: run.currency } : null };
+            const req: FinRequest = { version: FIN_VERSION, name, page: finPage(pathname), turns, run: run ? { businessName: run.businessName, period: run.period, currency: run.currency } : null };
             const answer = await askFin(req);
             if ('code' in answer) {
                 if (facts) set({ pending: false, text: FIN_FALLBACK.unavailable, rule: answerQuestion(facts, text.slice(0, MAX_QUESTION)) });
@@ -109,7 +162,7 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
                 : await askGrounded(index, reply.financeQuestion, gatewayQaModel);
             set({ grounded, rule: grounded.status === 'ANSWERED' || !facts ? undefined : answerQuestion(facts, reply.financeQuestion) });
         } finally { setBusy(false); }
-    }, [ai, busy, context, facts, index, pathname, update]);
+    }, [ai, busy, context, facts, index, name, pathname, update]);
 
     const reset = useCallback(() => update(() => []), [update]);
     // Ctrl/⌘ K opens and closes Fin from anywhere; Escape closes it.
@@ -120,7 +173,7 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
         };
         window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
     }, []);
-    const value = useMemo(() => ({ open, setOpen, messages, busy, send, reset, ai }), [open, messages, busy, send, reset, ai]);
+    const value = useMemo(() => ({ open, setOpen, messages, busy, send, reset, ai, name, rename }), [open, messages, busy, send, reset, ai, name, rename]);
     return <FinContext.Provider value={value}>{children}</FinContext.Provider>;
 }
 
@@ -147,12 +200,12 @@ export function FinConversation({ compact = false }: { compact?: boolean }) {
     const hasRun = !!(demo.context && groundingIndex(demo.context));
     return <div className="flex min-h-0 flex-1 flex-col">
         <div className={`min-h-0 flex-1 space-y-4 overflow-y-auto ${compact ? 'px-4 py-4' : 'py-2'}`} aria-live="polite">
-            <div className="flex gap-2.5"><Avatar /><div className="rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-2.5 text-sm leading-relaxed ring-1 ring-inset ring-[var(--border)]">{FIN_FALLBACK.greeting}</div></div>
+            <div className="flex gap-2.5"><Avatar /><div className="rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-2.5 text-sm leading-relaxed ring-1 ring-inset ring-[var(--border)]">{finGreeting(fin.name)}</div></div>
             {fin.messages.map(m => m.role === 'user'
                 ? <div key={m.id} className="flex justify-end"><p className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-tr-md bg-[var(--brand-solid)] px-3.5 py-2.5 text-sm leading-relaxed text-white">{m.text}</p></div>
                 : <div key={m.id} className="flex gap-2.5"><Avatar mood={m.pending || m.grounded === 'PENDING' ? 'thinking' : 'idle'} />
                     <div className="min-w-0 flex-1 space-y-2">
-                        {m.pending ? <p role="status" className="inline-flex items-center gap-2 rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-2.5 text-sm text-[var(--muted)] ring-1 ring-inset ring-[var(--border)]"><LoaderCircle aria-hidden="true" size={15} className="animate-spin" />{FIN_NAME} is thinking…</p>
+                        {m.pending ? <p role="status" className="inline-flex items-center gap-2 rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-2.5 text-sm text-[var(--muted)] ring-1 ring-inset ring-[var(--border)]"><LoaderCircle aria-hidden="true" size={15} className="animate-spin" />{fin.name} is thinking…</p>
                             : <div className="rounded-2xl rounded-tl-md bg-[var(--surface-subtle)] px-3.5 py-2.5 text-sm leading-relaxed ring-1 ring-inset ring-[var(--border)]">
                                 <p className="whitespace-pre-wrap">{m.text}</p>
                                 {m.links.length ? <p className="mt-2 flex flex-wrap gap-2">{m.links.map(href => <Link key={href} href={href} onClick={() => compact && fin.setOpen(pathname === href)} className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[var(--brand-line)] bg-[var(--surface)] px-3 text-xs font-semibold text-[var(--brand-ink)] hover:bg-[var(--brand-soft)]">{FIN_PAGES[href].label}<ArrowUpRight aria-hidden="true" size={13} /></Link>)}</p> : null}
@@ -167,13 +220,13 @@ export function FinConversation({ compact = false }: { compact?: boolean }) {
         </div>
         <form className={`border-t border-[var(--border)] ${compact ? 'p-3' : 'pt-3'}`} onSubmit={e => { e.preventDefault(); submit(); }}>
             <div className="flex items-end gap-2">
-                <label htmlFor={compact ? 'fin-input-panel' : 'fin-input-page'} className="sr-only">Message {FIN_NAME}</label>
+                <label htmlFor={compact ? 'fin-input-panel' : 'fin-input-page'} className="sr-only">Message {fin.name}</label>
                 <textarea id={compact ? 'fin-input-panel' : 'fin-input-page'} ref={input} rows={1} maxLength={MAX_MESSAGE} value={draft} onChange={e => setDraft(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(); } }}
-                    placeholder={`Message ${FIN_NAME}`} className={`${field} max-h-32 min-h-11 resize-none py-2.5 leading-snug`} />
+                    placeholder={`Message ${fin.name}`} className={`${field} max-h-32 min-h-11 resize-none py-2.5 leading-snug`} />
                 <button type="submit" className={`${primaryButton} size-11 shrink-0 px-0`} disabled={!draft.trim() || fin.busy} aria-label="Send">{fin.busy ? <LoaderCircle aria-hidden="true" size={17} className="animate-spin" /> : <Send aria-hidden="true" size={17} />}</button>
             </div>
-            <p className="mt-2 text-[11px] leading-snug text-[var(--muted)]">{fin.ai === false ? 'AI is off here, so Fin answers with fixed rules. ' : ''}{FIN_NAME} never types a figure: every number comes from your verified records.</p>
+            <p className="mt-2 text-[11px] leading-snug text-[var(--muted)]">{fin.ai === false ? `AI is off here, so ${fin.name} answers with fixed rules. ` : ''}{fin.name} is an AI and never types a figure: every number comes from your verified records.</p>
         </form>
     </div>;
 }
@@ -181,22 +234,25 @@ export function FinConversation({ compact = false }: { compact?: boolean }) {
 /** The floating button and side panel, mounted once by the app shell; desktop only (phones use the Chat tab and the full page). */
 export function FinDock() {
     const fin = useFin(), pathname = usePathname(), launcher = useRef<HTMLButtonElement>(null), wasOpen = useRef(false);
+    const [renaming, setRenaming] = useState(false);
     useEffect(() => { if (wasOpen.current && !fin?.open) launcher.current?.focus(); wasOpen.current = !!fin?.open; }, [fin?.open]);
     if (!fin || pathname === '/chatbot') return null;
     return <>
-        {fin.open ? null : <button ref={launcher} type="button" onClick={() => fin.setOpen(true)} aria-label={`Ask ${FIN_NAME}, your FinGence assistant`} title={`Ask ${FIN_NAME} (Ctrl K)`}
+        {fin.open ? null : <button ref={launcher} type="button" onClick={() => fin.setOpen(true)} aria-label={`Ask ${fin.name}, your FinGence AI assistant`} title={`Ask ${fin.name} (Ctrl K)`}
             className="fixed bottom-6 right-6 z-40 hidden h-14 items-center gap-2 rounded-full bg-[var(--brand-solid)] pl-2 pr-5 text-sm font-semibold text-white shadow-lg ring-4 ring-[var(--canvas)] transition-transform hover:-translate-y-0.5 hover:bg-[var(--brand-solid-hover)] lg:inline-flex print:hidden">
-            <span className="grid size-11 place-items-center rounded-full bg-white"><FinMascot size={38} /></span>Ask {FIN_NAME}
+            <span className="grid size-11 place-items-center rounded-full bg-white"><FinMascot size={38} /></span>Ask {fin.name}
         </button>}
-        {fin.open ? <section role="dialog" aria-modal="false" aria-label={`${FIN_NAME}, your FinGence assistant`}
+        {fin.open ? <section role="dialog" aria-modal="false" aria-label={`${fin.name}, your FinGence AI assistant`}
             className="fixed inset-0 z-50 flex flex-col bg-[var(--surface)] pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)] lg:inset-auto lg:bottom-6 lg:right-6 lg:h-[min(680px,calc(100dvh-3rem))] lg:w-[420px] lg:rounded-3xl lg:border lg:border-[var(--border)] lg:shadow-2xl print:hidden">
             <header className="flex items-center gap-3 border-b border-[var(--border)] px-4 py-3">
                 <Avatar size={42} mood={fin.busy ? 'thinking' : 'happy'} />
-                <div className="min-w-0 flex-1"><h2 className="text-base font-semibold leading-tight">{FIN_NAME}</h2><p className="truncate text-xs text-[var(--muted)]">Your FinGence guide and assistant</p></div>
+                <div className="min-w-0 flex-1"><h2 className="truncate text-base font-semibold leading-tight">{fin.name}</h2><p className="truncate text-xs text-[var(--muted)]">Your AI assistant</p></div>
+                <button type="button" onClick={() => setRenaming(r => !r)} aria-expanded={renaming} className="grid size-11 place-items-center rounded-xl text-[var(--muted-strong)] hover:bg-[var(--surface-subtle)]" aria-label={`Rename ${fin.name}`} title="Rename"><Pencil aria-hidden="true" size={17} /></button>
                 <button type="button" onClick={fin.reset} disabled={!fin.messages.length || fin.busy} className="grid size-11 place-items-center rounded-xl text-[var(--muted-strong)] hover:bg-[var(--surface-subtle)] disabled:opacity-40" aria-label="Start a new conversation" title="New conversation"><RotateCcw aria-hidden="true" size={18} /></button>
                 <Link href="/chatbot" onClick={() => fin.setOpen(false)} className="hidden size-11 place-items-center rounded-xl text-[var(--muted-strong)] hover:bg-[var(--surface-subtle)] lg:grid" aria-label="Open the full page" title="Full page"><Expand aria-hidden="true" size={18} /></Link>
-                <button type="button" onClick={() => fin.setOpen(false)} className="grid size-11 place-items-center rounded-xl text-[var(--muted-strong)] hover:bg-[var(--surface-subtle)]" aria-label={`Close ${FIN_NAME}`}><X aria-hidden="true" size={20} /></button>
+                <button type="button" onClick={() => fin.setOpen(false)} className="grid size-11 place-items-center rounded-xl text-[var(--muted-strong)] hover:bg-[var(--surface-subtle)]" aria-label={`Close ${fin.name}`}><X aria-hidden="true" size={20} /></button>
             </header>
+            {renaming ? <RenameAssistant onDone={() => setRenaming(false)} className="border-b border-[var(--border)] px-4 py-3" /> : null}
             <FinConversation compact />
         </section> : null}
     </>;
@@ -204,8 +260,12 @@ export function FinDock() {
 
 /** The full-page conversation on /chatbot. */
 export function FinPage() {
+    const fin = useFin(), [renaming, setRenaming] = useState(false);
+    const name = fin?.name ?? FIN_NAME;
     return <div className="mx-auto flex h-[calc(100dvh-14rem-env(safe-area-inset-bottom))] max-w-3xl flex-col lg:h-[calc(100dvh-7rem)]">
-        <header className="mb-4 flex items-center gap-4"><FinPageAvatar /><div><p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">Assistant</p><h1 className="text-2xl font-semibold">{FIN_NAME}</h1><p className="text-sm text-[var(--muted-strong)]">Your guide to FinGence, and a colleague who reads your verified figures with you.</p></div></header>
+        <header className="mb-4 flex items-center gap-4"><FinPageAvatar /><div className="min-w-0 flex-1"><p className="text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">AI assistant</p><h1 className="truncate text-2xl font-semibold">{name}</h1><p className="text-sm text-[var(--muted-strong)]">Your guide to FinGence, and a colleague who reads your verified figures with you.</p></div>
+            {fin ? <button type="button" onClick={() => setRenaming(r => !r)} aria-expanded={renaming} className={`${button} shrink-0`}><Pencil aria-hidden="true" size={16} />Rename</button> : null}</header>
+        {renaming ? <RenameAssistant onDone={() => setRenaming(false)} className="mb-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4" /> : null}
         <FinConversation />
     </div>;
 }
@@ -213,4 +273,30 @@ export function FinPage() {
 function FinPageAvatar() {
     const fin = useFin();
     return <span className="grid size-16 shrink-0 place-items-center rounded-3xl bg-[var(--brand-soft)] ring-1 ring-inset ring-[var(--brand-line)]"><FinMascot size={52} mood={fin?.busy ? 'thinking' : 'happy'} /></span>;
+}
+
+/** Give the assistant a name of your own, or go back to Fin. Kept for you on every device when signed in. */
+function RenameAssistant({ onDone, className = '' }: { onDone: () => void; className?: string }) {
+    const fin = useFin(), { enabled } = useWorkspace();
+    const [draft, setDraft] = useState(fin?.name ?? FIN_NAME), [error, setError] = useState<string | null>(null), [saving, setSaving] = useState(false);
+    const input = useRef<HTMLInputElement>(null);
+    useEffect(() => { input.current?.focus(); input.current?.select(); }, []);
+    if (!fin) return null;
+    const save = async (next: string | null) => {
+        setSaving(true); setError(null);
+        const problem = await fin.rename(next);
+        setSaving(false);
+        if (problem) setError(problem); else onDone();
+    };
+    return <form className={className} onSubmit={e => { e.preventDefault(); void save(draft); }} onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); onDone(); } }}>
+        <label htmlFor="assistant-name" className="text-sm font-semibold">Your assistant&apos;s name</label>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input id="assistant-name" ref={input} value={draft} maxLength={MAX_NAME} onChange={e => { setDraft(e.target.value); setError(null); }} aria-invalid={!!error} aria-describedby="assistant-name-help" autoComplete="off" spellCheck={false} className={`${field} min-h-11 w-44 flex-1`} />
+            <button type="submit" disabled={saving || !draft.trim()} className={`${primaryButton} min-h-11`}>{saving ? <LoaderCircle aria-hidden="true" size={16} className="animate-spin" /> : <Check aria-hidden="true" size={16} />}Save</button>
+            {fin.name !== FIN_NAME ? <button type="button" disabled={saving} onClick={() => void save(null)} className={`${button} min-h-11`}>Use {FIN_NAME}</button> : null}
+        </div>
+        <p id="assistant-name-help" className={`mt-2 text-xs leading-snug ${error ? 'text-[var(--bad-ink)]' : 'text-[var(--muted)]'}`} role={error ? 'alert' : undefined}>
+            {error ?? `Letters only, up to ${MAX_NAME}. ${enabled ? 'Only you see this name, on any device you sign in on.' : 'Kept in this browser.'}`}
+        </p>
+    </form>;
 }

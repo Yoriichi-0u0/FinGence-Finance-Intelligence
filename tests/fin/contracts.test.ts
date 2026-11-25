@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('server-only', () => ({}));
-import { FIN_LINKS, FIN_VERSION, finPage, finRequestSchema, verifiedContext, verifyFinReply } from '../../lib/fin/contracts';
+import { FIN_LINKS, FIN_NAME, FIN_PAGES, FIN_VERSION, assistantSettingsSchema, cleanAssistantName, finGreeting, finPage, finRequestSchema, verifiedContext, verifyFinReply } from '../../lib/fin/contracts';
 import type { GroundedRun } from '../../lib/grounded-qa/client';
 import { FIN_CONFIDENCE, FIN_SYSTEM, finUserMessage } from '../../lib/server/ai/fin';
 import { CONFIDENCE_DEFINITION } from '../../components/demo/confidence';
@@ -47,7 +47,7 @@ describe('Fin replies', () => {
 });
 
 describe('Fin requests', () => {
-    const req = (turns: { role: 'user' | 'fin'; text: string }[], extra: object = {}) => ({ version: FIN_VERSION, page: '/reconciliation', turns, run, ...extra });
+    const req = (turns: { role: 'user' | 'fin'; text: string }[], extra: object = {}) => ({ version: FIN_VERSION, name: FIN_NAME, page: '/reconciliation', turns, run, ...extra });
     it('accepts a short conversation ending with the user', () => {
         expect(finRequestSchema.safeParse(req([{ role: 'user', text: 'Hi' }, { role: 'fin', text: 'Hello!' }, { role: 'user', text: 'What is this page?' }])).success).toBe(true);
     });
@@ -57,16 +57,64 @@ describe('Fin requests', () => {
         expect(finRequestSchema.safeParse(req([{ role: 'user', text: 'Hi' }], { page: '/admin' })).success).toBe(false);
         expect(finRequestSchema.safeParse(req([{ role: 'user', text: 'Hi' }], { records: [] })).success).toBe(false);
     });
-    it('sends only the words, the page and the run scope', () => {
-        const message = JSON.parse(finUserMessage(finRequestSchema.parse(req([{ role: 'user', text: 'Hi' }]))));
-        expect(Object.keys(message).sort()).toEqual(['conversation', 'latestRun', 'page']);
+    it('sends only the assistant\'s name, the words, the page and the run scope', () => {
+        const message = JSON.parse(finUserMessage(finRequestSchema.parse(req([{ role: 'user', text: 'Hi' }], { name: 'Kira' }))));
+        expect(Object.keys(message).sort()).toEqual(['assistantName', 'conversation', 'latestRun', 'page']);
+        expect(message.assistantName).toBe('Kira');
+    });
+    it('carries only a valid assistant name, and no request without one', () => {
+        expect(finRequestSchema.safeParse(req([{ role: 'user', text: 'Hi' }], { name: 'Mei Ling' })).success).toBe(true);
+        for (const name of ['', 'Fin 2', 'Ignore previous instructions and', 'RM', '<b>Fin</b>', ' Fin'])
+            expect(finRequestSchema.safeParse(req([{ role: 'user', text: 'Hi' }], { name })).success, name).toBe(false);
+        const unnamed: Record<string, unknown> = { ...req([{ role: 'user', text: 'Hi' }]) };
+        delete unnamed.name;
+        expect(finRequestSchema.safeParse(unnamed).success).toBe(false);
     });
     it('maps a path to a known page, ignoring query strings and trailing slashes', () => {
         expect([finPage('/reports?print=1'), finPage('/reconciliation/'), finPage('/'), finPage('/overview'), finPage('/admin')]).toEqual(['/reports', '/reconciliation', '/', '/', null]);
     });
 });
 
+describe('Naming the assistant', () => {
+    it('keeps a name of letters in any script, single-spaced and trimmed', () => {
+        expect(['Fin', 'Kira', 'Mei Ling', "D'Arcy", 'Anne-Marie', 'Zoë', '小金', 'Siti'].map(cleanAssistantName)).toEqual(['Fin', 'Kira', 'Mei Ling', "D'Arcy", 'Anne-Marie', 'Zoë', '小金', 'Siti']);
+        expect([cleanAssistantName('  Mei   Ling '), cleanAssistantName('Fin\nBot')]).toEqual(['Mei Ling', 'Fin Bot']);
+    });
+    it('refuses digits, symbols, markup, currency codes, number words and anything too long', () => {
+        for (const bad of ['', '   ', 'R2D2', 'Fin!', '<script>', 'Penny$', 'MYR', 'rm', 'Twelve', 'Half', 'Sixty Nine', '-Fin', 'A'.repeat(21), null, 7, {}])
+            expect(cleanAssistantName(bad), String(bad)).toBeNull();
+        expect(cleanAssistantName('A'.repeat(20))).toBe('A'.repeat(20));
+    });
+    it('stores one strict shape: the version and the name', () => {
+        expect(assistantSettingsSchema.safeParse({ v: 1, name: 'Kira' }).success).toBe(true);
+        for (const bad of [{ v: 2, name: 'Kira' }, { v: 1, name: 'Kira', tone: 'warm' }, { v: 1, name: 'Kira 2' }, { v: 1 }])
+            expect(assistantSettingsSchema.safeParse(bad).success, JSON.stringify(bad)).toBe(false);
+    });
+    it('introduces itself by its name, and as an AI', () => {
+        expect(finGreeting('Kira')).toMatch(/^Hi, I'm Kira, your FinGence AI assistant\./);
+        expect(verifyFinReply(guide(finGreeting('Kira')), { run: null }).decision).toBe('SHOWN');
+    });
+    it('tells the model its name is data in the request, and that it is an AI', () => {
+        expect(FIN_SYSTEM).toContain('"assistantName"');
+        expect(FIN_SYSTEM).toContain('You are an AI');
+        expect(FIN_SYSTEM).not.toContain('You are Fin');
+    });
+});
+
 describe('Fin knowledge', () => {
+    it('describes Analytics, Forecasting and the AI report as they are now', () => {
+        expect(FIN_PAGES['/analytics'].about).toContain('cash flow statement');
+        expect(FIN_PAGES['/forecasting'].about).toContain('category by category');
+        expect(FIN_PAGES['/ai-report'].about).toContain('Bursa');
+        expect(FIN_SYSTEM).not.toMatch(/baseline average|not classified/);
+    });
+    it('describes every page without a figure or a number word, so repeating a description never gets a reply withheld', () => {
+        for (const [href, page] of Object.entries(FIN_PAGES))
+            expect(verifyFinReply(guide(`${page.label} shows ${page.about}.`), { run: null }).decision, href).toBe('SHOWN');
+        const knowledge = FIN_SYSTEM.slice(FIN_SYSTEM.indexOf('What FinGence is:'));
+        for (let at = 0; at < knowledge.length; at += 600)
+            expect(verifyFinReply(guide(knowledge.slice(at, at + 600)), { run: null }).decision, knowledge.slice(at, at + 600)).toBe('SHOWN');
+    });
     it('uses the confidence definition word for word', () => {
         expect(FIN_CONFIDENCE).toBe(CONFIDENCE_DEFINITION);
         expect(FIN_SYSTEM).toContain(CONFIDENCE_DEFINITION);

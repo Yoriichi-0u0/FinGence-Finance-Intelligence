@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { runPayloadSchema } from '../../document-ingestion/run-payload';
 import { layoutSchema } from '../../dashboard/layout';
 import { answersSchema } from '../../uat/tasks';
+import { assistantSettingsSchema } from '../../fin/contracts';
 import { boundedJson, noStoreJson as json, sameOrigin } from '../ai/request';
 import { hashPassword, passwordAcceptable, verifyPassword } from './password';
 import { attemptAllowed, caller, clearedCookie, requireRole, SESSION_HOURS, sessionCookie } from './session';
@@ -223,6 +224,29 @@ export async function preferencesChange(request: Request, deps: Deps) {
     const result = await rpc('fingence_workspace_save_preferences', { p_token_hash: who.tokenHash, p_dashboard: body.data.dashboard }, deps.store, deps.transport);
     if (result.ok) return json(result.value);
     return result.error === 'INVALID_LAYOUT' ? json({ code: 'INVALID_LAYOUT' }, 400) : fail(result.error);
+}
+
+/** Any signed-in member: their own assistant settings (the name they gave it), or null for the default. */
+export async function assistantSettings(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const result = await rpc('fingence_workspace_assistant', { p_token_hash: who.tokenHash }, deps.store, deps.transport);
+    return result.ok ? json(result.value) : fail(result.error);
+}
+const assistantBody = z.object({ settings: assistantSettingsSchema.nullable() }).strict();
+/** Any signed-in member: rename their own assistant, or return to the default name with { settings: null }. */
+export async function assistantSettingsChange(request: Request, deps: Deps) {
+    if (!deps.store) return notFound();
+    const read = await boundedJson(request, 1_000);
+    if ('refusal' in read) return read.refusal;
+    const body = assistantBody.safeParse(read.body);
+    if (!body.success) return json({ code: 'INVALID_SETTINGS' }, 400);
+    const who = await requireRole(request.headers, 'FINANCE', deps.store, deps.transport);
+    if ('refusal' in who) return refuse(who.refusal);
+    const result = await rpc('fingence_workspace_save_assistant', { p_token_hash: who.tokenHash, p_settings: body.data.settings }, deps.store, deps.transport);
+    if (result.ok) return json(result.value);
+    return result.error === 'INVALID_SETTINGS' ? json({ code: 'INVALID_SETTINGS' }, 400) : fail(result.error);
 }
 
 /** The deployment the answers were saved against: Vercel's commit, or "local" off Vercel. */

@@ -10,7 +10,7 @@ export const AI_FEATURES = {
     'ai03-proposal': { label: 'Ingestion experiment (increment 03)', owner: 'Yuen Kai' },
     'ingestion-proposal': { label: 'Ingestion experiment (OpenAI)', owner: 'Yuen Kai' },
     'finance-chat': { label: 'Finance chatbot', owner: 'Jason' },
-    'fin-assistant': { label: 'Fin assistant', owner: 'Yuen Kai' },
+    'fin-assistant': { label: 'AI assistant (Fin)', owner: 'Yuen Kai' },
     'recon-suggest': { label: 'Reconciliation suggestions', owner: 'Celester' },
     'report-explain': { label: 'AI report', owner: 'Yuen Kai' },
     'forecast-note': { label: 'Forecast notes', owner: 'Frederick' },
