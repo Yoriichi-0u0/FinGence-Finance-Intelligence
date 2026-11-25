@@ -79,6 +79,8 @@ async function askFin(req: FinRequest): Promise<{ content: unknown } | { code: s
 export function FinProvider({ children }: { children: React.ReactNode }) {
     const pathname = usePathname(), demo = useDemoProcessing(), workspace = useWorkspace();
     const [name, setName] = useState(FIN_NAME);
+    // Bumped by every rename, so a load that started before it can never put back the old name.
+    const nameEdits = useRef(0);
     const [open, setOpen] = useState(false), [messages, setMessages] = useState<FinMessage[]>([]), [busy, setBusy] = useState(false), [ai, setAi] = useState<boolean | null>(null);
     const next = useRef(1), latest = useRef<FinMessage[]>([]);
     useEffect(() => {
@@ -95,7 +97,8 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
         if (!workspace.enabled) { setName(browserName()); return; }
         if (!email) { setName(FIN_NAME); return; }
         let live = true;
-        void memberName().then(n => { if (live && n) setName(n); });
+        const edits = nameEdits.current;
+        void memberName().then(n => { if (live && n && nameEdits.current === edits) setName(n); });
         return () => { live = false; };
     }, [workspace.enabled, workspace.loading, email]);
     const rename = useCallback(async (next: string | null) => {
@@ -104,14 +107,14 @@ export function FinProvider({ children }: { children: React.ReactNode }) {
         const settings: AssistantSettings | null = clean === FIN_NAME ? null : { v: 1, name: clean };
         if (!workspace.enabled) {
             try { if (settings) localStorage.setItem(NAME_STORE, JSON.stringify(settings)); else localStorage.removeItem(NAME_STORE); }
-            catch { setName(clean); return `This browser does not let FinGence keep the name, so ${clean} lasts until you leave this page.`; }
-            setName(clean); return null;
+            catch { nameEdits.current++; setName(clean); return `This browser does not let FinGence keep the name, so ${clean} lasts until you leave this page.`; }
+            nameEdits.current++; setName(clean); return null;
         }
         try {
             const r = await fetch('/api/workspace/assistant', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ settings }) });
             if (!r.ok) { const code = (await r.json().catch(() => ({})) as { code?: string }).code; return code === 'INVALID_SETTINGS' ? NAME_RULE : plainMessage(code); }
         } catch { return plainMessage('WORKSPACE_UNAVAILABLE'); }
-        setName(clean); return null;
+        nameEdits.current++; setName(clean); return null;
     }, [workspace.enabled]);
     const update = useCallback((fn: (list: FinMessage[]) => FinMessage[]) => { setMessages(prev => { const list = fn(prev); latest.current = list; save(list); return list; }); }, []);
 
