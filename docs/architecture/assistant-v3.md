@@ -60,3 +60,30 @@ On Data, Step 2 is the assistant's live narration of the eight stages (`componen
 - **Every check:** the full stage list folds behind "Show every check", and stays open for a quarantined run.
 - **No model calls:** the narration can say nothing the pipeline did not report. `tests/fin/narrate.test.ts` checks it
   stage by stage against all three samples.
+
+## The assistant's tools (PR 4)
+
+`lib/fin/tools.ts` gives the assistant sixteen tools. They are read-only or compute only: none applies, writes or
+proposes anything. Each one wraps code FinGence already has, runs without a model or I/O, and returns facts in the
+grounded Q&A's shape:
+- typed values with the record IDs behind them;
+- at most 20 rows, with a `truncated` flag;
+- facts numbered F1, F2… across one task, so an answer can cite a figure only as a placeholder such as `{F3.net}`.
+
+| Tools | Wraps |
+|---|---|
+| `cash_summary`, `transactions`, `counterparties`, `monthly_history`, `reconciliation`, `anomalies` | The grounded Q&A tools, unchanged, with the run's own months and counterparties checked |
+| `exceptions`, `exception_detail` | The reconciliation layer's unexplained items, their records and any correcting entry |
+| `candidate_matches` | New pure code that ranks records on the other side by a shared reference token and the amount (exact, within 1%, within 5%), then days apart; labelled as leads, never matches |
+| `anomaly_detail` | One anomaly candidate, the rules it met and what the books say |
+| `categories`, `cash_flow_statement`, `biggest_changes` | Cash classification and its insights (the books' own categories) |
+| `cash_plan`, `confidence` | The six-month cash plan with its backtest, and processing confidence |
+| `compute` | Sum, difference, percent change or share of amounts already in the task: the only way to derive a new figure |
+
+Guard rails:
+- **Errors are results:** a bad tool name, bad arguments or a value not in the run comes back as a readable error result,
+  never an exception.
+- **Untrusted document text:** fields holding text from the documents (`UNTRUSTED_FIELDS`: description, reference,
+  counterparty, name, category, rationale) are quoted to the model as untrusted data.
+- **Tests:** `tests/fin/tools.test.ts` runs every tool on the three samples, plus a March run with one ledger amount
+  changed in memory to create a real unexplained item.

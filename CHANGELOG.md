@@ -14,6 +14,7 @@ the new version and its date.
 - AI06 explains verified suggestions, suggestions needing review, abstentions and permanent review decisions using the approved notices (#153).
 
 ### Added
+- **Groundwork for the assistant's investigations:** sixteen read-only tools it will use to look things up (exceptions and possible matches, anomalies, categories, the cash plan, confidence) and to compute any derived figure in code, each citing the records behind it. Nothing visible changes yet (#169).
 - **The assistant narrates each run:** on Data, the assistant tells the processing stage by stage as it happens, with each stage's checks, then closes with how many checks passed and what needs you; the full list of checks is one click away (#170).
 - **The assistant's mood on phones:** the assistant's tab shows its face in its current mood, "found something" is announced to screen readers on every screen size, and the pleased hop plays once per run (#167).
 - **The assistant shows how things stand:** its face and a one-line status follow FinGence's own checks (working, found something with a count, unsure, paused, or pleased only when everything is verified), and each person can choose its tone, quiet mode, a plain icon instead of the character, and motion off. Needs `workspace-v10-assistant-controls.sql` on Production first (#166).
