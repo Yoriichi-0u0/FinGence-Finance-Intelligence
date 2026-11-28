@@ -117,10 +117,10 @@ describe('AI report page', async () => {
     const { reportKind, periodEnded, priorPeriod } = await import('../../components/ai-report/ai-report');
     const { DemoModule, isReady } = await import('../../components/demo/modules');
     const { DemoProcessingProvider } = await import('../../components/demo/context');
-    const render = (context: ProcessingContext) => {
+    const render = (context: ProcessingContext, view: 'ai-report' | 'reports' = 'ai-report') => {
         if (!isReady(context)) throw Error('sample did not process');
         const Provider = DemoProcessingProvider as (props: { enabled: boolean; children?: React.ReactNode }) => React.ReactNode;
-        return renderToStaticMarkup(createElement(Provider, { enabled: true }, createElement(DemoModule, { view: 'ai-report', context }))).replace(/<[^>]+>/g, ' ').replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, ' ');
+        return renderToStaticMarkup(createElement(Provider, { enabled: true }, createElement(DemoModule, { view, context }))).replace(/<[^>]+>/g, ' ').replace(/&#x27;|&#39;/g, "'").replace(/\s+/g, ' ');
     };
     it('is titled like a listed company’s interim report', () => {
         expect([reportKind(['2026-03']), periodEnded(['2026-03'])]).toEqual(['Monthly report', 'for the month ended 31 March 2026']);
@@ -149,6 +149,13 @@ describe('AI report page', async () => {
         const unexplained = quarter.outputs.resolution!.totals.resolutions.UNEXPLAINED;
         expect(text).toContain(`${unexplained} unexplained after rules`);
         expect(text).not.toMatch(/\d+ remain open/);
+    });
+    it('renders the standard report as a complete deterministic evidence pack', () => {
+        const text = render(quarter, 'reports');
+        for (const section of ['Quarterly report · Q1 2026', 'Report scope and purpose', 'Monthly cash breakdown and period total', 'Equal-length previous-period comparison', 'Reconciliation statement (proposed)', 'Unusual bank records and their disposition', 'Verification and processing evidence'])
+            expect(text).toContain(section);
+        for (const item of quarter.outputs.anomalyResolution?.items ?? []) expect(text).toContain(item.row.reference);
+        expect(text).toContain('remains available when the AI service is unavailable');
     });
 });
 

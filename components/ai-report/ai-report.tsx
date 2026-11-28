@@ -267,6 +267,7 @@ export function AiReport({ c }: { c: Ready }) {
                         <li>Every bank record takes the category the books give it, through the reconciliation; records the books do not show are named by stated bank rules. Operating, investing and financing follow a published rule.</li>
                         <li>{CONFIDENCE_DEFINITION}</li>
                         <li>Every figure is computed by FinGence from the verified records. Where a note says it was written by AI, the model chose only the words; FinGence filled in each figure and checked each sentence.</li>
+                        <li>AI commentary is optional and review-required. Provider minute or daily limits, network failures, or temporary unavailability can delay or prevent generation; FinGence&apos;s deterministic figures and fallback summaries remain available.</li>
                         {rep.limitations.map(l => <li key={l}>{l}</li>)}
                     </ul>
                 </Note>
