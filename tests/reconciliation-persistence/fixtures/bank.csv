@@ -1,0 +1,2 @@
+BankTransactionID,BusinessID,BusinessName,AccountNumber,Currency,ValueDate,StatementMonth,BankReference,BankDescription,BankDirection,BankAmountMYR,SignedCashMovementMYR,Counterparty,SourceTransactionID
+BANK-BUS-001-V2-00458,BUS-001,Kopi Kita Cafe Sdn. Bhd.,****4821,MYR,2026-03-01,2026-03,S5GWFDM1KYMJ,[credit] Pos Sales Settlement,Credit,6380.53,06380.53,POS Sales Settlement,BUS-001-V2-00458

@@ -1,0 +1,166 @@
+{
+  "source": "901109b9057bfeb927367955bdc69d2e346a09e4",
+  "base": "cb5db4625ceca1cb94867a90a8a3edddbcf1e6ba",
+  "files": [
+    {
+      "file": "lib/reconciliation-dashboard.ts",
+      "sourcePath": "lib/reconciliation-dashboard.ts",
+      "sourceSHA256": "d9046c865c45cec3b5586633e4087651b7eb570a97790aaa73ec44b4bd9cba24",
+      "currentSHA256": "56efa4c523741215baeb50447c14847f42b1f5ff15284d755d89128cfec9eeee",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai02/fuzzy.ts",
+      "sourcePath": "lib/server/reconciliation/ai02/fuzzy.ts",
+      "sourceSHA256": "d372e3b07f02a3bc91adbb306925ccfef682f241977537e76250cb7547b0c472",
+      "currentSHA256": "4a16dfda5693351626564555d63d292c841abb765644b3ac174f50e688726e8d",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai02/scoring.ts",
+      "sourcePath": "lib/server/reconciliation/ai02/scoring.ts",
+      "sourceSHA256": "1a0df52022856718956be69a6a0fb348cebfe8e2020d93786620bc99b99d6c2f",
+      "currentSHA256": "ed5f99e0af19ab67b0abe44630c739f9c9c7fe11789f353d7ec5391b96b35c96",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai02/types.ts",
+      "sourcePath": "lib/server/reconciliation/ai02/types.ts",
+      "sourceSHA256": "7762bbaedf87e1711313c9fffaabfeaadb589f1e5f4343994e339390bdfa06ff",
+      "currentSHA256": "b3d01cae665e807f090cb11d907f821175a112f2d4774ebdefdf1280f6143514",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai03/model-config.json",
+      "sourcePath": "lib/server/reconciliation/ai03/model-config.json",
+      "sourceSHA256": "af18dec0cb5b71f990f7024bb12b32af424eec52084302ebb8444886e7202075",
+      "currentSHA256": "4a5aa217d2f4f53e6be816ad935c33e2c7a7cb96a915b1df39ec5c3e054d9f37",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai03/model-loader.ts",
+      "sourcePath": "lib/server/reconciliation/ai03/model-loader.ts",
+      "sourceSHA256": "f6889233f8aa8231a4e297fb185813670bf22d3bb7b2f5ce3481620067442788",
+      "currentSHA256": "41a852fcee89b25a7b6688fc2ac8c67975163ed67fa1cbdd816b16fd07862288",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai03/model-worker.mjs",
+      "sourcePath": "lib/server/reconciliation/ai03/model-worker.mjs",
+      "sourceSHA256": "b836c1b4162782a4b185cab39d4f544e5dc025e1d5af1b4bc8df78eb5ce5c857",
+      "currentSHA256": "a343dcb66af8e6685353c6c29702227ff8b03508019c55c30489e003d2b2e39d",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai03/text-features.ts",
+      "sourcePath": "lib/server/reconciliation/ai03/text-features.ts",
+      "sourceSHA256": "6939b7dc10d03face5cca7f770a48de787e7f5606c9040c3cc37387d4a8fc5c5",
+      "currentSHA256": "faa6842143bc4810562555f426983544ce679a4911f7bb41794eae9851c99b0d",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ai03/types.ts",
+      "sourcePath": "lib/server/reconciliation/ai03/types.ts",
+      "sourceSHA256": "310e780dcfd41531c604cd1a79dfc9be12e305aae7e73a085fc36e769f3483ff",
+      "currentSHA256": "010c87f383134804fb1608143a5b2a807de8cb1591e2ff66ef8c445db5932cde",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/backend.ts",
+      "sourcePath": "lib/server/reconciliation/backend.ts",
+      "sourceSHA256": "53d35300a5ecfd3ff01579c08e8dcdc04889f5a46cc7c62a7ca572781eb4a1cd",
+      "currentSHA256": "a5076f169e83ee16f4dca0805bbcac403781a1d85becf4400fcab8698da4fc77",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": false
+    },
+    {
+      "file": "lib/server/reconciliation/financial-views.ts",
+      "sourcePath": "lib/server/reconciliation/financial-views.ts",
+      "sourceSHA256": "936f1bd645767fff610d6dd98603d86b538dc80ad004bc2b5d9034d2259dde06",
+      "currentSHA256": "80608783c74b8864ecbf053f5c82df2bfaf22665be840d32d11ac65573816e5f",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/processing.ts",
+      "sourcePath": "lib/server/reconciliation/processing.ts",
+      "sourceSHA256": "20e6753b29224f429efc8ae7857212d7696b3ea75d6d3d17401ef16117576560",
+      "currentSHA256": "cea943d431c1225649ab048047ccc3fcc32c79725673b018f6fd95594f8e776e",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/proposal-verification.ts",
+      "sourcePath": "lib/server/reconciliation/proposal-verification.ts",
+      "sourceSHA256": "f2b6cdbd3e8a758e1c5171369fbd3411f440986c2babc54c133ae4ca6aa0f643",
+      "currentSHA256": "064609444c99973a24a10532e1c2b34382601c284db560395649e5b822d7c3f3",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/ranking.ts",
+      "sourcePath": "lib/server/reconciliation/ranking.ts",
+      "sourceSHA256": "7552c24dfef2595b41f9df827b02fef872b309b7604dc1fdf157a072a662aef4",
+      "currentSHA256": "693910940785e3fd21b6b41a7dc8a7d1ee939d977397ec29fa1bfd39910dc7c9",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/service.ts",
+      "sourcePath": "lib/server/reconciliation/service.ts",
+      "sourceSHA256": "5fad83fdf3c9e245a6adafa3180be6409c348ff468e2095e71d8eada9fb5c44d",
+      "currentSHA256": "043887aa4595142d45254be9c3093ba35f4720f7d7e6febc9cc85b3aca45348f",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "lib/server/reconciliation/trusted-ingestion.ts",
+      "sourcePath": "lib/server/reconciliation/trusted-ingestion.ts",
+      "sourceSHA256": "3b02e515bb4e9d8dc16492eb971c48d34ed198f1ce920e02cf611acdfa9ed393",
+      "currentSHA256": "69fc8fbd321813f6f9c13eabc2f6f870dea8c5f496e6652b7cc2ba863d83fdc1",
+      "byteIdentical": false,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "tests/reconciliation-persistence/sql/db04-001-reconciliation.sql",
+      "sourcePath": "supabase/sql/db04-001-reconciliation.sql",
+      "sourceSHA256": "911a0abe2c63f9e60d18f224a795732285b80df1155f19adf9c8d76b89d9d1ef",
+      "currentSHA256": "911a0abe2c63f9e60d18f224a795732285b80df1155f19adf9c8d76b89d9d1ef",
+      "byteIdentical": true,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "tests/reconciliation-persistence/sql/db04-002-reconciliation-security.sql",
+      "sourcePath": "supabase/sql/db04-002-reconciliation-security.sql",
+      "sourceSHA256": "d132ac1b200784a180abce94034387d429c08646668b6cf754caae4030325094",
+      "currentSHA256": "d132ac1b200784a180abce94034387d429c08646668b6cf754caae4030325094",
+      "byteIdentical": true,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "tests/reconciliation-persistence/sql/db04-003-ranking-evidence.sql",
+      "sourcePath": "supabase/sql/db04-003-ranking-evidence.sql",
+      "sourceSHA256": "2a811e833f1454a315ad54bbc3cdd1081ee8f2dd8459c9be4128af2976809661",
+      "currentSHA256": "2a811e833f1454a315ad54bbc3cdd1081ee8f2dd8459c9be4128af2976809661",
+      "byteIdentical": true,
+      "contentIdenticalIgnoringLineEndings": true
+    },
+    {
+      "file": "tests/reconciliation-persistence/sql/db04-004-proposal-verification.sql",
+      "sourcePath": "supabase/sql/db04-004-proposal-verification.sql",
+      "sourceSHA256": "5272f0b3da11510be341403962849440392c698811c9666f3d4511663232595b",
+      "currentSHA256": "5272f0b3da11510be341403962849440392c698811c9666f3d4511663232595b",
+      "byteIdentical": true,
+      "contentIdenticalIgnoringLineEndings": true
+    }
+  ]
+}

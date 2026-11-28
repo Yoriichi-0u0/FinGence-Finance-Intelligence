@@ -1,0 +1,342 @@
+{
+  "date": "2026-11-03",
+  "startingCommit": "51f8820dba29e3886af019238a003e7ee5c0611f",
+  "environment": "DISPOSABLE_LOCAL_POSTGRESQL_18_6",
+  "targetGroupProject": "zmtdozblpvtjniehwjrw",
+  "hostedGroupConnection": false,
+  "hostedGroupWrites": false,
+  "hostedTestsExecuted": 0,
+  "command": "DB04_E5_SMOKE=1 pnpm exec vitest run tests/reconciliation-persistence tests/persistence tests/integration/grouped-consultation.test.ts tests/demo tests/security tests/api --maxWorkers=1 --reporter=json --outputFile=outputs/db04-ai06/group-combined-complete.json",
+  "passed": 641,
+  "failed": 0,
+  "skipped": 1,
+  "db04AndGroupPackage": {
+    "passed": 101,
+    "failed": 0,
+    "skipped": 0
+  },
+  "nativeDB04AndPackage": {
+    "passed": 37,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checks": {
+    "typeScript": "PASS",
+    "focusedEslintZeroWarnings": "PASS",
+    "serverBoundary": "PASS",
+    "reviewedSQLChecksums": "PASS"
+  },
+  "syntheticScenario": {
+    "environment": "LOCAL_SYNTHETIC",
+    "checks": [
+      "REGISTERED_SOURCE_FINGERPRINTS",
+      "RUNTIME_RESTRICTED_AUTHENTICATION",
+      "BROKER_RESTRICTED_AUTHENTICATION",
+      "ELEVEN_FORCED_RLS_TABLES",
+      "NO_PUBLIC_FINANCIAL_GRANTS",
+      "NO_RUNTIME_FOUNDATION_ACCESS",
+      "NO_BROKER_FINANCIAL_ACCESS",
+      "NO_CAPABILITY_READ_DENIED",
+      "BACKEND_PROCESS_SUPPORTED",
+      "TWO_TRANSACTIONS_PERSISTED",
+      "EXACT_SOURCE_VALUES",
+      "SOURCE_LINEAGE_STORED",
+      "DETERMINISTIC_SUGGESTION",
+      "FUZZY_EVIDENCE",
+      "ACTUAL_E5_EVIDENCE",
+      "INDEPENDENT_VERIFICATION_STORED",
+      "FIVE_FINANCIAL_READ_MODELS",
+      "NO_AUTOMATIC_FINANCIAL_APPROVAL",
+      "DUPLICATE_REUSE",
+      "CONCURRENT_DUPLICATE_REUSE",
+      "RECONNECTED_BACKEND_RETRIEVAL",
+      "OTHER_ORGANIZATION_DENIED"
+    ],
+    "passed": 22,
+    "failed": 0,
+    "processingId": "a15395c79e003c92d7e186d39da2d3cf9cc92c9a57c2f1ed5689defa013bb325",
+    "exactNet": "6380.53",
+    "acknowledgedFinancialCommits": true,
+    "realProductionAuthenticationVerified": false
+  },
+  "recovery": {
+    "exactRowsAndSecurityMetadataEqual": true,
+    "isolatedRestore": true,
+    "hostedRecovery": false,
+    "postgres17Recovery": false
+  },
+  "initialLocalStops": [
+    {
+      "stage": "GENERATED_SQL",
+      "code": "42601",
+      "resolved": "Corrected dollar-quote generation before hosted use"
+    },
+    {
+      "stage": "ACTIVATION_GUARD",
+      "code": "42601",
+      "resolved": "Parenthesized CASE expression; exact final SQL executed locally"
+    },
+    {
+      "stage": "SCENARIO_LINEAGE_ASSERTION",
+      "resolved": "Verified actual stored scope keys under a lease rather than requiring fields absent from the read DTO"
+    },
+    {
+      "stage": "LOCAL_DUPLICATE_RUNTIME_POOLS",
+      "code": "DATABASE_UNAVAILABLE",
+      "resolved": "Closed fixture idle pools before standalone scenario; broker connection limit remains 2"
+    }
+  ],
+  "skippedSuites": [
+    {
+      "file": "tests/demo/pipeline.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 1
+    }
+  ],
+  "limitations": [
+    "No approved group connection or owner mutation approval available",
+    "Reported empty group catalog not independently checked here",
+    "Synthetic authority is not Jason or Supabase Auth",
+    "Public DB01/DB02 runtime is closed pending approved team ownership policies",
+    "No hosted recovery or PostgreSQL 17.11 compatibility proof",
+    "No frozen AI01–AI05 benchmark modification or new evaluation claim",
+    "Full project suite not rerun; previously documented unchanged-main failures remain"
+  ],
+  "suites": [
+    {
+      "file": "tests/api/batch-contract.test.ts",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/batch-query.integration.test.ts",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/batch-query.test.ts",
+      "passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/pglite-connection-turnover.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/pglite-protocol-recovery.test.ts",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-contract.test.ts",
+      "passed": 45,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-detail-query.test.ts",
+      "passed": 38,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-query.integration.test.ts",
+      "passed": 30,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/api/transaction-query.test.ts",
+      "passed": 35,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/demo/notices.test.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/demo/pipeline.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "file": "tests/integration/grouped-consultation.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/cli.test.ts",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/database-target.test.ts",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/db02.integrity.test.ts",
+      "passed": 32,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/grouped.integration.test.ts",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/grouped.postgres.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/map.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/postgres.test.ts",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/repository.integration.test.ts",
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/repository.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/service.test.ts",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/source-file.test.ts",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/persistence/validate.test.ts",
+      "passed": 75,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/backend.test.ts",
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/e5-local.test.ts",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/financial-views.test.ts",
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/group-package.native.test.ts",
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/group-target.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/native.postgres.test.ts",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/processing.test.ts",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/proposal-verification.test.ts",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/ranking.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/reconciliation-persistence/trusted-ingestion.test.ts",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/audit-store.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/audit.test.ts",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/authorization.test.ts",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/secure-cursor.test.ts",
+      "passed": 11,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "tests/security/transaction-guard.test.ts",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}
