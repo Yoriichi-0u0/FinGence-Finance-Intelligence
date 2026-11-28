@@ -359,7 +359,9 @@ function Reports({ c }: { c: Ready }) {
         ['Net movement', rep.cash.net, prior.totals.net],
     ] as const).map(([label, current, previous]) => {
         const now = toCents(current), before = toCents(previous), delta = now - before;
-        const percent = before === 0n ? 'n/a' : `${Number((delta * 1000n) / (before < 0n ? -before : before)) / 10}%`;
+        const den = before < 0n ? -before : before, num = delta * 1000n;
+        const tenths = before === 0n ? null : (num + (num < 0n ? -den / 2n : den / 2n)) / den;
+        const percent = tenths === null ? 'n/a' : `${(Number(tenths) / 10).toFixed(1)}%`;
         return [label, money(s.currency, current), money(s.currency, previous), money(s.currency, fromCents(delta)), percent];
     }) : [];
     const [accepted, setAccepted] = useState<{ processingId: string; run: GroundedRun } | null>(null);

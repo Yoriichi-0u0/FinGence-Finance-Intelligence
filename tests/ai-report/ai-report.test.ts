@@ -156,6 +156,7 @@ describe('AI report page', async () => {
             expect(text).toContain(section);
         for (const item of quarter.outputs.anomalyResolution?.items ?? []) expect(text).toContain(item.row.reference);
         expect(text).toContain('remains available when the AI service is unavailable');
+        expect(text).toMatch(/Equal-length previous-period comparison.*(?:\+|-)?\d+\.\d%/);
     });
 });
 
